@@ -1,0 +1,24 @@
+{
+  "v": 3,
+  "assetGroups": {},
+  "blobs": {},
+  "createdOnFiles": {
+    "at": "2026-10-18T21:25:00Z",
+    "v": 1
+  },
+  "docs": {
+    "sections": []
+  },
+  "groups": [],
+  "lastChange": {
+    "at": "2026-10-18T21:25:00Z",
+    "by": "Daniel",
+    "note": "First version, from cooking-mode direction B (Kräutergarten)",
+    "via": "Claude chat"
+  },
+  "layout": "files",
+  "libraries": [],
+  "namespace": "Yumdoor",
+  "sections": {},
+  "title": "Yumdoor"
+}

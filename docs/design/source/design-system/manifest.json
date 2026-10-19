@@ -1,0 +1,54 @@
+{
+  "manifestVersion": 3,
+  "name": "Yumdoor",
+  "namespace": "Yumdoor",
+  "files": [
+    "components/Button/README.md",
+    "components/FilterChip/README.md",
+    "components/IngredientRow/README.md",
+    "components/RecipeCard/README.md",
+    "components/ServingsPicker/README.md",
+    "components/StepDots/README.md",
+    "components/TimerChip/README.md",
+    "tokens.css"
+  ],
+  "libraries": [],
+  "components": [
+    {
+      "name": "Button",
+      "group": "Actions",
+      "summary": "Pill and round buttons in four roles: ink primary for navigation, sage accent for the one main action, outline secondary, and round icon buttons."
+    },
+    {
+      "name": "FilterChip",
+      "group": "Search",
+      "summary": "Selectable chips that build a search: ingredients (\"enthält Karotten\"), keywords, rating, time, last cooked."
+    },
+    {
+      "name": "IngredientRow",
+      "group": "Cooking",
+      "summary": "An ingredient with a tick-off circle and its amount, used in cooking mode, on the recipe screen and (with a supermarket category) in the shopping list."
+    },
+    {
+      "name": "RecipeCard",
+      "group": "Recipe",
+      "summary": "A recipe in search results, lists, recommendations and the week planner."
+    },
+    {
+      "name": "ServingsPicker",
+      "group": "Recipe",
+      "summary": "The stepper that sets servings before cooking starts."
+    },
+    {
+      "name": "StepDots",
+      "group": "Cooking",
+      "summary": "Numbered dots showing progress through a recipe's steps in cooking mode."
+    },
+    {
+      "name": "TimerChip",
+      "group": "Cooking",
+      "summary": "A running timer, and the inline highlight that marks a detected duration in step text."
+    }
+  ],
+  "assetGroups": []
+}
