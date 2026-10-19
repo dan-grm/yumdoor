@@ -1,0 +1,167 @@
+# Tandoor API notes (verified against 2.6.15)
+
+What Yumdoor relies on in the Tandoor API, checked against the source at tag
+[`2.6.15`](https://github.com/TandoorRecipes/recipes/tree/2.6.15) (commit `7e1c427`).
+Paths below are relative to the Tandoor repo. When the pinned version is bumped, re-check
+every section and update this file in the same PR.
+
+## Schema
+
+- `GET /openapi/` serves the schema (drf-spectacular, `cookbook/urls.py:128`). It is **not** under `/api/`.
+  YAML by default; `?format=json` for JSON. No authentication needed (spectacular's default `SERVE_PERMISSIONS`).
+- Tandoor does not commit a schema. Its own Vue client (`vue3/src/openapi/`) is generated with
+  openapi-generator from this endpoint, so that generator is known to handle the schema.
+- A custom post-processing hook (`cookbook/helper/drf_spectacular_hooks.py`) makes **every `id` field optional
+  and writable** so nested writes work. In generated Dart code every `id` is nullable; the mappers in
+  `lib/data/` turn that into non-null ids on domain models.
+
+## Authentication
+
+- Auth classes: Django session and OAuth2 bearer token (`recipes/settings.py:396`). Header: `Authorization: Bearer <token>`.
+- `POST /api-token-auth/` with `username` and `password` (form or JSON) returns
+  `{id, token, scope, expires, user_id}` (`cookbook/views/api.py:2567`).
+  - Tokens look like `tda_<uuid>`, scope `read write app`, expiry **5 years**.
+  - **It reuses** an existing unexpired read+write token for that user if one exists. Every device that logs in
+    with a password gets the same token, so revoking it logs out all of them.
+  - Throttled to **10 requests per day per IP** for anonymous callers. The login screen must handle HTTP 429
+    clearly. Tests and the seed script must not log in repeatedly; they create tokens once.
+  - Accounts that only use SSO have no password; they must paste a token (created in Tandoor under
+    settings → API tokens).
+- Per-device tokens: with a valid token, `POST /api/access-token/` `{scope: "read write", expires}` creates a new
+  token. The full token is returned only within 15 seconds of creation; afterwards it is masked
+  (`cookbook/serializer.py:1905`). Yumdoor uses this to get its own token per device, so logout can
+  `DELETE /api/access-token/{id}/` without logging out other devices.
+- Scope check: safe methods need `read`, everything else `write` (`CustomTokenHasReadWriteScope`).
+  The meal-plan endpoints also accept a `mealplan`-only scope.
+- `GET /api/server-settings/current/` is public and returns `version`; used for the login version check.
+- Tandoor has a `feature-frontend-auth` branch in development (allauth headless). Auth may change in a later
+  2.x release; recheck on every version bump.
+
+## CORS and deployment
+
+- CORS headers are sent **only for `/api/bookmarklet-import*`** (`CORS_URLS_REGEX`, `recipes/settings.py:691`),
+  and this is not configurable by environment variable.
+- Consequence: **the web build only works same-origin with its Tandoor server** (served from the same host, e.g.
+  under `/app/`, or behind a reverse proxy that serves both). A server URL that differs from the PWA's origin
+  is only usable from native builds. The login screen explains this instead of failing with an opaque
+  network error.
+
+## Recipe search
+
+`GET /api/recipe/` (`cookbook/views/api.py:1722`, logic in `cookbook/helper/recipe_search.py`, `cookbook/managers.py`).
+Paginated: `page`, `page_size` (default 25, max 100). List items use `RecipeOverview` (no steps).
+
+| Need | Parameters |
+|---|---|
+| Text | `query` (search mode and fields come from the user's `SearchPreference`; fuzzy/trigram only on Postgres) |
+| Food ("contains carrots") | `foods`/`foods_or`, `foods_and`, `foods_or_not`, `foods_and_not` (ids, repeat param). `include_children` (default true) includes child foods of the food tree. |
+| Keyword | `keywords`/`keywords_or`, `keywords_and`, `keywords_or_not`, `keywords_and_not` |
+| Book | `books`/`books_or`, `books_and`, … |
+| Rating | `rating` (exact; `0` = unrated), `rating_gte`, `rating_lte` |
+| Last cooked | `cookedon_gte`, `cookedon_lte` (dates) |
+| Times cooked | `timescooked`, `timescooked_gte`, `timescooked_lte` |
+| Created / updated / viewed | `createdon*`, `updatedon*`, `viewedon_gte/lte`, `createdby` |
+| Cookable from on-hand foods | `makenow` (true, or an int = number of allowed missing foods) |
+| Saved filter | `filter` (CustomFilter id) |
+| Sort | `sort_order`: `score, name, lastcooked, rating, times_cooked, created_at, lastviewed` (prefix `-` for descending), or `random=true` |
+
+**Mismatch with our assumption:** `rating`, `lastcooked` and `timescooked` are computed **only from the requesting
+user's own cook logs** (`managers.py:51-75`), not the household's or the space's. "Highly rated" in search means
+"rated highly by me". Recommendations that need other people's ratings or cooking history read `/api/cook-log/`
+directly.
+
+Food and keyword pickers use `GET /api/food/?query=` and `GET /api/keyword/?query=` (trees; `root`, `tree` params).
+
+## Recipe detail and step text
+
+- `GET /api/recipe/{id}/` returns steps, and each step has its **own** `ingredients` list, which matches
+  "ingredients per step" in cooking mode directly. `Step.time` is an explicit duration in minutes (use it as a
+  timer in addition to durations detected in the text).
+- `Recipe.servings` is the base for scaling. `Ingredient` has `amount`, `no_amount`, `is_header`, `unit`, `food`,
+  `note`, `original_text` and plural flags.
+- **Do not use `instructions_markdown`.** It is server-rendered HTML that contains Vue-only custom elements
+  (`<scalable-number>`, `<plural-name>`, `cookbook/helper/template_helper.py`). Render the raw `instruction`
+  ourselves with a safe Markdown renderer.
+- Step text can contain Jinja templates: `{{ ingredients[0] }}`, `{{ ingredients[0].amount }}`, `.unit`, `.food`,
+  `.note`, and `{{ scale(100) }}`. Yumdoor implements this small subset in the domain layer (pure Dart,
+  no template execution) so the values scale with servings. Unknown template syntax is shown as plain text.
+- Same for `MealPlan.note_markdown`: use `note`, not the HTML.
+- Images: `PUT /api/recipe/{id}/image/` (multipart `image`, or `image_url`).
+
+## Cook log (ratings, comments, feed)
+
+- `CookLog` fields: `recipe`, `servings` (integer), `rating` (integer, nullable), `comment` (text, nullable),
+  `created_by`, `created_at` (settable, defaults to now) (`cookbook/models.py:1492`).
+- `GET /api/cook-log/` returns the **whole space**, readable by every member; only the owner or an admin may
+  edit or delete. The only filter is `recipe`. Ordering is by **id ascending** with no ordering parameter, so a
+  newest-first feed reads `count` and then fetches pages from the end. `page_size` max 200.
+- The legacy `Comment` model has no API in v2. Comments live in `CookLog.comment`, as assumed.
+- **Mismatch with the mockups:** CookLog has **no image field**. Screen 08 ("Fertig gekocht") shows a photo; that
+  is not possible in 2.6.15 without a workaround. Options are in the roadmap.
+
+## Households, meal plans and sharing
+
+- **Mismatch with our assumption:** meal-plan "sharing" in v2 is **household-based**. `MealPlan` still has a `shared`
+  many-to-many field, but the serializer does not expose it and the queryset ignores it. A user sees meal plans
+  created by themselves and by anyone in their household (`cookbook/views/api.py:1503`). There is nothing to
+  configure per plan.
+- Same for shopping list entries and shopping-list recipes: visible to the creator and their household.
+- A **normal user cannot list household members.** `/api/household/` is space-owner only, and `/api/user-space/`
+  returns only the caller's own row for non-admins (that row does include their `household`). `/api/user/` lists all
+  users in the space without household information. "What my household cooked" can only be approximated
+  (see `docs/ARCHITECTURE.md`, Recommendations).
+- `GET /api/meal-plan/?from_date=&to_date=&meal_type=`. Defaults: today − 90 days to today + 360 days.
+  Fields: `recipe`, `title`, `servings` (decimal), `note`, `from_date`, `to_date` (datetimes), `meal_type`,
+  `shopping` (read-only: is it on the shopping list), `addshopping` (write-only).
+- `GET /api/meal-type/` returns the space's meal types (name, order, color, time).
+
+## On-hand foods
+
+- `Food.food_onhand` is a boolean that is true if **any household member** has marked the food on hand
+  (`CustomOnHandField`, `cookbook/serializer.py:152`). Writing it via `PATCH /api/food/{id}/` sets or clears it for
+  the whole household.
+- `Food.ignore_shopping` marks foods that never go on the list (salt, water).
+- Side effect: if the user preference `shopping_add_onhand` is on, checking a shopping entry marks its food on hand
+  for the household, and unchecking clears it. **Gotcha:** `ShoppingListEntrySerializer.update` clears on-hand
+  whenever `checked` is missing or false in a PATCH (`serializer.py:1602`). Use the bulk endpoint for checking off,
+  and include `checked` in every entry PATCH.
+
+## Meal plan → shopping list
+
+There are two server paths and one client path:
+
+1. Creating a meal plan with `addshopping: true` makes the server add the recipe's ingredients. It honors the
+   **creator's** preferences `mealplan_autoexclude_onhand` (default true) and `mealplan_autoinclude_related`, and
+   skips `ignore_shopping` foods. Updating a meal plan's servings rescales its linked entries.
+2. `PUT /api/recipe/{id}/shopping/` exists, but its `mealplan` argument is read from raw request data (not in the
+   schema) and an integer id does not work (`shopping_helper.py:48`). Do not use it for meal plans.
+3. What Tandoor's own Vue frontend does, and what Yumdoor does:
+   compute the entries client-side (scale by servings, skip `food_onhand` and `ignore_shopping`), then
+   `POST /api/shopping-list-recipe/ {recipe, servings, mealplan}` followed by
+   `POST /api/shopping-list-recipe/{id}/bulk_create_entries/ {entries: [{amount, food_id, unit_id, ingredient_id}], shopping_lists_ids}`.
+
+Each meal plan becomes its own `ShoppingListRecipe` with one entry per ingredient. The server does **not** merge
+amounts across recipes; merging per food and unit for display is our job. "Add the week" skips meal plans whose
+`shopping` flag is already true, to avoid duplicates.
+
+## Shopping list
+
+- `GET /api/shopping-list-entry/`: unchecked entries plus entries completed within the user's
+  `shopping_recent_days` (max 14), **capped at 1000 rows**. `updated_after` (ISO timestamp) for incremental sync.
+  Each entry embeds `food` (with `supermarket_category`), `unit`, `list_recipe_data`.
+- Check off: `POST /api/shopping-list-entry/bulk/ {ids, checked}`.
+- Supermarket categories: `Food.supermarket_category`. Per-store ordering:
+  `GET /api/supermarket/` → each supermarket has `category_to_supermarket` relations with an `order`.
+  Group by category, order by the chosen supermarket, uncategorized last.
+- v2 also has named lists (`/api/shopping-list/`, `ShoppingListEntry.shopping_lists` many-to-many). A food can
+  have default lists. Yumdoor shows all entries in M3 and adds list filtering later.
+
+## Recipe books
+
+`/api/recipe-book/` (name, description, `shared` users, `filter` → a saved search that makes the book dynamic),
+`/api/recipe-book-entry/?book=&recipe=`. Search can also filter by `books`.
+
+## Other useful endpoints
+
+`/api/user/` (space members, `display_name`), `/api/user-preference/{user_id}/`, `/api/space/current/`,
+`/api/view-log/` (own views only), `/api/unit/`, `/api/supermarket-category/`.
