@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Einkaufsliste</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#23261E}a:hover{color:#4F6B3A}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #FAF6EE; color: #23261E; font-family: 'Nunito', sans-serif; display: flex; flex-direction: column">
+<div style="flex: 1; min-height: 0; overflow: hidden; padding: 12px 20px 0">
+<div style="margin-top: 8px; display: flex; align-items: flex-start; justify-content: space-between">
+<div>
+<h1 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 800">Einkaufsliste</h1>
+<div style="font-size: 13px; line-height: 18px; font-weight: 700; color: #5E6553">Geteilt mit Lena und Tom · 7 offen</div>
+</div>
+<button type="button" aria-label="Weitere Aktionen" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #E2DDD0; background: #FFFDF8; color: #23261E; display: flex; align-items: center; justify-content: center; padding: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg></button>
+</div>
+<div style="margin-top: 12px; height: 52px; box-sizing: border-box; padding: 0 4px 0 16px; border-radius: 26px; background: #FFFDF8; border: 2px solid #7D856D; display: flex; align-items: center; gap: 8px">
+<label for="neu" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Artikel hinzufügen</label>
+<input id="neu" type="text" placeholder="Artikel hinzufügen, z. B. 2 Zitronen" style="flex: 1; min-width: 0; height: 44px; border: 0; background: transparent; color: #23261E; font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 600; outline: none">
+<button type="button" aria-label="Hinzufügen" style="width: 40px; height: 40px; flex-shrink: 0; border-radius: 20px; border: 0; background: #4F6B3A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+</div>
+<h2 style="margin: 18px 0 6px; font-size: 13px; line-height: 16px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #5E6553">Obst und Gemüse</h2>
+<ul style="list-style: none; margin: 0; padding: 0 12px 0 0; border-radius: 22px; background: #FFFDF8; border: 1px solid #E2DDD0">
+<li style="height: 58px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #E2DDD0">
+<button type="button" aria-pressed="false" aria-label="Karotten abhaken" style="width: 48px; height: 44px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; box-sizing: border-box; border-radius: 13px; border: 2px solid #7D856D"></span></button>
+<div style="flex: 1; min-width: 0"><div style="font-size: 17px; line-height: 22px; font-weight: 600">Karotten</div><div style="font-size: 12px; line-height: 16px; font-weight: 700; color: #5E6553; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Ofenkarotten, Linsen-Bolognese</div></div>
+<span style="padding: 4px 12px; border-radius: 999px; background: #E3EAD6; font-size: 15px; font-weight: 800">1,1 kg</span>
+</li>
+<li style="height: 58px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #E2DDD0">
+<button type="button" aria-pressed="false" aria-label="Hokkaido-Kürbis abhaken" style="width: 48px; height: 44px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; box-sizing: border-box; border-radius: 13px; border: 2px solid #7D856D"></span></button>
+<div style="flex: 1; min-width: 0"><div style="font-size: 17px; line-height: 22px; font-weight: 600">Hokkaido-Kürbis</div><div style="font-size: 12px; line-height: 16px; font-weight: 700; color: #5E6553">Kürbis-Risotto</div></div>
+<span style="padding: 4px 12px; border-radius: 999px; background: #E3EAD6; font-size: 15px; font-weight: 800">1 Stück</span>
+</li>
+<li style="height: 58px; display: flex; align-items: center; gap: 4px">
+<button type="button" aria-pressed="false" aria-label="Petersilie abhaken" style="width: 48px; height: 44px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; box-sizing: border-box; border-radius: 13px; border: 2px solid #7D856D"></span></button>
+<div style="flex: 1; min-width: 0"><div style="font-size: 17px; line-height: 22px; font-weight: 600">Petersilie</div><div style="font-size: 12px; line-height: 16px; font-weight: 700; color: #5E6553">Ofenkarotten</div></div>
+<span style="padding: 4px 12px; border-radius: 999px; background: #E3EAD6; font-size: 15px; font-weight: 800">½ Bund</span>
+</li>
+</ul>
+<h2 style="margin: 18px 0 6px; font-size: 13px; line-height: 16px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #5E6553">Kühlregal</h2>
+<ul style="list-style: none; margin: 0; padding: 0 12px 0 0; border-radius: 22px; background: #FFFDF8; border: 1px solid #E2DDD0">
+<li style="height: 58px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #E2DDD0">
+<button type="button" aria-pressed="false" aria-label="Feta abhaken" style="width: 48px; height: 44px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; box-sizing: border-box; border-radius: 13px; border: 2px solid #7D856D"></span></button>
+<div style="flex: 1; min-width: 0"><div style="font-size: 17px; line-height: 22px; font-weight: 600">Feta</div><div style="font-size: 12px; line-height: 16px; font-weight: 700; color: #5E6553">Ofenkarotten</div></div>
+<span style="padding: 4px 12px; border-radius: 999px; background: #E3EAD6; font-size: 15px; font-weight: 800">200 g</span>
+</li>
+<li style="height: 58px; display: flex; align-items: center; gap: 4px">
+<button type="button" aria-pressed="false" aria-label="Parmesan abhaken" style="width: 48px; height: 44px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; box-sizing: border-box; border-radius: 13px; border: 2px solid #7D856D"></span></button>
+<div style="flex: 1; min-width: 0"><div style="font-size: 17px; line-height: 22px; font-weight: 600">Parmesan</div><div style="font-size: 12px; line-height: 16px; font-weight: 700; color: #5E6553">Kürbis-Risotto</div></div>
+<span style="padding: 4px 12px; border-radius: 999px; background: #E3EAD6; font-size: 15px; font-weight: 800">80 g</span>
+</li>
+</ul>
+<h2 style="margin: 18px 0 6px; font-size: 13px; line-height: 16px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #5E6553">Vorrat</h2>
+<ul style="list-style: none; margin: 0; padding: 0 12px 0 0; border-radius: 22px; background: #FFFDF8; border: 1px solid #E2DDD0">
+<li style="height: 58px; display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #E2DDD0">
+<button type="button" aria-pressed="false" aria-label="Risottoreis abhaken" style="width: 48px; height: 44px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; box-sizing: border-box; border-radius: 13px; border: 2px solid #7D856D"></span></button>
+<div style="flex: 1; min-width: 0"><div style="font-size: 17px; line-height: 22px; font-weight: 600">Risottoreis</div><div style="font-size: 12px; line-height: 16px; font-weight: 700; color: #5E6553">Kürbis-Risotto</div></div>
+<span style="padding: 4px 12px; border-radius: 999px; background: #E3EAD6; font-size: 15px; font-weight: 800">320 g</span>
+</li>
+<li style="height: 58px; display: flex; align-items: center; gap: 4px">
+<button type="button" aria-pressed="false" aria-label="Zitronen abhaken" style="width: 48px; height: 44px; border: 0; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center"><span style="width: 26px; height: 26px; box-sizing: border-box; border-radius: 13px; border: 2px solid #7D856D"></span></button>
+<div style="flex: 1; min-width: 0"><div style="font-size: 17px; line-height: 22px; font-weight: 600">Zitronen</div><div style="font-size: 12px; line-height: 16px; font-weight: 700; color: #5E6553">von Lena hinzugefügt</div></div>
+<span style="padding: 4px 12px; border-radius: 999px; background: #E3EAD6; font-size: 15px; font-weight: 800">2</span>
+</li>
+</ul>
+<button type="button" aria-expanded="false" style="margin-top: 12px; width: 100%; height: 44px; border: 0; background: transparent; color: #5E6553; font-family: 'Nunito', sans-serif; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; padding: 0 4px">Erledigt · 3<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+</div>
+<nav aria-label="Hauptnavigation" style="height: 76px; flex-shrink: 0; box-sizing: border-box; padding: 8px 8px 12px; background: #FFFDF8; border-top: 1px solid #E2DDD0; display: flex">
+<a href="Start.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #5E6553; text-decoration: none; font-size: 12px; font-weight: 700"><span style="width: 56px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg></span>Start</a>
+<a href="Suche.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #5E6553; text-decoration: none; font-size: 12px; font-weight: 700"><span style="width: 56px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg></span>Suchen</a>
+<a href="Wochenplan.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #5E6553; text-decoration: none; font-size: 12px; font-weight: 700"><span style="width: 56px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg></span>Planer</a>
+<a href="#" aria-current="page" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #23261E; text-decoration: none; font-size: 12px; font-weight: 800"><span style="width: 56px; height: 30px; border-radius: 15px; background: #E3EAD6; color: #4F6B3A; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L21 8H6"></path><circle cx="10" cy="20" r="1"></circle><circle cx="17" cy="20" r="1"></circle></svg></span>Einkauf</a>
+<a href="Buecher.dc.html" style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; color: #5E6553; text-decoration: none; font-size: 12px; font-weight: 700"><span style="width: 56px; height: 30px; display: flex; align-items: center; justify-content: center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2z"></path><path d="M5 18a2 2 0 0 1 2-2h12"></path></svg></span>Bücher</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!-- @dsCard height=288 -->
+<div style="position: relative; width: 960px; height: 288px; background: var(--bg); overflow: hidden; font-family: var(--font-sans)">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&amp;display=swap" rel="stylesheet">
+<style>
+.c-sage{fill:var(--sage)}
+.c-butter{fill:var(--butter)}
+.c-ink{fill:var(--ink)}
+.c-cut{fill:var(--bg)}
+.c-ring{fill:none;stroke:var(--bg);stroke-width:2.5px}
+.r-l{rx:var(--radius-l);ry:var(--radius-l)}
+</style>
+<svg width="960" height="288" viewBox="0 0 960 288" style="position: absolute; left: 0; top: 0" aria-hidden="true">
+<!-- blocks: sage 200x232 slab, butter 200x112 block bleeding right, ink disc 88 (size-touch x2) -->
+<!-- arrangement: tall sage slab bleeding off the top, butter slab to its right bleeding off the right edge, ink disc low right -->
+<!-- pattern: discs (soft, friendly, large radii) - the StepDots motif cut out of the sage slab: two done, one current ring, one upcoming -->
+<!-- scales: dots size-dot 28px at 40px pitch (space-8 + space-2), corners radius-l 28px, gaps space-5 20px -->
+<rect class="c-sage r-l" x="560" y="-28" width="200" height="232"></rect>
+<rect class="c-butter r-l" x="780" y="56" width="220" height="112"></rect>
+<circle class="c-ink" cx="870" cy="232" r="44"></circle>
+<circle class="c-cut" cx="602" cy="164" r="14"></circle>
+<circle class="c-cut" cx="642" cy="164" r="14"></circle>
+<circle class="c-ring" cx="682" cy="164" r="12.75"></circle>
+<circle class="c-cut" cx="722" cy="164" r="6"></circle>
+</svg>
+<div style="position: absolute; left: 40px; bottom: 40px; max-width: 440px">
+<div style="font-size: 100px; line-height: 0.92; font-weight: 800; letter-spacing: -0.02em; color: var(--ink)">Yumdoor</div>
+<div style="margin-top: 16px; font-size: 14px; font-weight: 700; color: var(--ink-muted)">Kochen, planen, einkaufen – für dein Tandoor.</div>
+</div>
+</div>
