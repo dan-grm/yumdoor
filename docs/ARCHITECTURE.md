@@ -131,9 +131,9 @@ shows the origin and explains the constraint.
 - Service worker: Flutter has deprecated its generated service worker, so we ship our own small one in `web/`. It
   precaches the app shell for offline start and versions its cache by the build's `version.json`. API requests
   are never cached by the service worker; offline data lives in Drift.
-- Local development has the same constraint. `flutter run -d chrome` serves on its own port, so dev requests to
-  Tandoor are proxied: either Flutter's `web_dev_config.yaml` proxy rules (Flutter 3.35+) or, as a fallback, an
-  nginx service in the dev compose file that serves Tandoor and the Flutter dev server under one origin.
+- Local development has the same constraint. `flutter run -d chrome` serves on its own port (8081), so dev
+  requests to Tandoor's paths (`/api/`, `/api-token-auth/`, `/openapi/`, `/media/`) are proxied to the local
+  Tandoor by Flutter's `web_dev_config.yaml` proxy rules (Flutter 3.35+).
 
 ## Offline cache
 

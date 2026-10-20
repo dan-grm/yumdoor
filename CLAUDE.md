@@ -60,6 +60,21 @@ docker build -f docker/web/Dockerfile -t yumdoor .   # serve with BASE_PATH=/app
 Integration tests and the seed script refuse to run against anything but `localhost` or the CI service.
 Never point them at a real instance.
 
+### Local Tandoor
+
+```sh
+docker compose -f docker/tandoor/compose.yml up -d --wait   # start; --wait blocks until the healthcheck passes
+docker compose -f docker/tandoor/compose.yml logs -f web_recipes
+docker compose -f docker/tandoor/compose.yml down           # stop, keep data
+docker compose -f docker/tandoor/compose.yml down -v        # reset: delete database and media volumes
+```
+
+- First start takes about a minute (migrations, collectstatic). Tandoor listens on `127.0.0.1:8080` only.
+- Settings come from `docker/tandoor/.env.example` (dev-only, public values). For local changes copy it to
+  `docker/tandoor/.env` (git-ignored); values there override the example.
+- `flutter run -d chrome` serves the app on `http://localhost:8081` and proxies `/api/`, `/api-token-auth/`,
+  `/openapi/` and `/media/` to Tandoor (`web_dev_config.yaml`), so the app is same-origin with it.
+
 ## Workflow
 
 - One issue → one branch → one PR. Branch names: `<type>/<issue>-<slug>`, e.g. `feat/12-login-screen`.
@@ -76,7 +91,8 @@ Never point them at a real instance.
 
 Do it deliberately, in its own PR (`build(tandoor): bump to X.Y.Z`):
 
-1. Change `TANDOOR_VERSION` (used by the dev compose file, CI and schema tooling).
+1. Change `TANDOOR_VERSION` (used by CI and schema tooling) and the default image tag in
+   `docker/tandoor/compose.yml` (a test fails if they differ).
 2. `docker compose -f docker/tandoor/compose.yml up -d` and `dart run tool/fetch_schema.dart` → writes
    `packages/tandoor_api/schema/openapi-<version>.json`; delete the old one.
 3. `dart run tool/generate_api.dart`, then fix compile errors. They should only appear in `lib/data/`.
