@@ -1,0 +1,8 @@
+# `flutter gen-l10n` (also runs on `flutter pub get`). German is the template:
+# every key is added to app_de.arb first, then translated in app_en.arb.
+arb-dir: lib/l10n
+template-arb-file: app_de.arb
+output-dir: lib/l10n/generated
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false

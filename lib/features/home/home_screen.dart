@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/l10n.dart';
+
 /// Placeholder start screen until search (#11) replaces it.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Product name only; real strings go through AppLocalizations (#7).
-    return const Scaffold(body: Center(child: Text('Yumdoor')));
+    return Scaffold(body: Center(child: Text(context.l10n.appTitle)));
   }
 }
