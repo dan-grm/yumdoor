@@ -65,12 +65,20 @@ Paginated: `page`, `page_size` (default 25, max 100). List items use `RecipeOver
 | Saved filter | `filter` (CustomFilter id) |
 | Sort | `sort_order`: `score, name, lastcooked, rating, times_cooked, created_at, lastviewed` (prefix `-` for descending), or `random=true` |
 
+**Text search only matches recipe names by default.** A new user's `SearchPreference` is `plain` with `icontains`,
+`trigram` and `unaccent` on `name` only and no fulltext fields (checked on a fresh 2.6.15). `query=Karotte` does not
+find a recipe that only has carrots as an ingredient; "contains carrots" needs the `foods` filter.
+
 **Mismatch with our assumption:** `rating`, `lastcooked` and `timescooked` are computed **only from the requesting
 user's own cook logs** (`managers.py:51-75`), not the household's or the space's. "Highly rated" in search means
 "rated highly by me". Recommendations that need other people's ratings or cooking history read `/api/cook-log/`
 directly.
 
 Food and keyword pickers use `GET /api/food/?query=` and `GET /api/keyword/?query=` (trees; `root`, `tree` params).
+`parent` is read-only; the tree is changed with `PUT /api/food/{id}/move/{parent_id}/` (`0` = root).
+`POST /api/food/`, `/api/keyword/`, `/api/unit/` and the nested writes in a recipe are get-or-create **by name**
+(case-insensitive for foods and units): if the name exists, the existing object is returned and the other fields
+in the request are ignored.
 
 ## Recipe detail and step text
 
@@ -110,7 +118,8 @@ Food and keyword pickers use `GET /api/food/?query=` and `GET /api/keyword/?quer
   returns only the caller's own row for non-admins (that row does include their `household`). `/api/user/` lists all
   users in the space without household information. "What my household cooked" can only be approximated
   (see `docs/ARCHITECTURE.md`, Recommendations).
-- `GET /api/meal-plan/?from_date=&to_date=&meal_type=`. Defaults: today − 90 days to today + 360 days.
+- `GET /api/meal-plan/?from_date=&to_date=&meal_type=` (paginated: `{count, results}`). Defaults: today − 90 days to
+  today + 360 days.
   Fields: `recipe`, `title`, `servings` (decimal), `note`, `from_date`, `to_date` (datetimes), `meal_type`,
   `shopping` (read-only: is it on the shopping list), `addshopping` (write-only).
 - `GET /api/meal-type/` returns the space's meal types (name, order, color, time).
@@ -139,6 +148,8 @@ There are two server paths and one client path:
    compute the entries client-side (scale by servings, skip `food_onhand` and `ignore_shopping`), then
    `POST /api/shopping-list-recipe/ {recipe, servings, mealplan}` followed by
    `POST /api/shopping-list-recipe/{id}/bulk_create_entries/ {entries: [{amount, food_id, unit_id, ingredient_id}], shopping_lists_ids}`.
+   `shopping_lists_ids` is optional in the schema, but the view reads it unconditionally
+   (`cookbook/views/api.py:2251`), so always send it (`[]` for none).
 
 Each meal plan becomes its own `ShoppingListRecipe` with one entry per ingredient. The server does **not** merge
 amounts across recipes; merging per food and unit for display is our job. "Add the week" skips meal plans whose

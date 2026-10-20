@@ -72,6 +72,9 @@ docker compose -f docker/tandoor/compose.yml down -v        # reset: delete data
 - First start takes about a minute (migrations, collectstatic). Tandoor listens on `127.0.0.1:8080` only.
 - Settings come from `docker/tandoor/.env.example` (dev-only, public values). For local changes copy it to
   `docker/tandoor/.env` (git-ignored); values there override the example.
+- `dart run tool/seed.dart` creates the users `admin`, `anna`, `ben` (Anna and Ben share a household; password
+  `<name>-dev-only`), ~25 DE/EN recipes, cook logs, books, this week's meal plans and a shopping list. Re-running is
+  a no-op; `--reset` deletes the seeded space and starts over. Tokens go to `.seed/credentials.json`.
 - `flutter run -d chrome` serves the app on `http://localhost:8081` and proxies `/api/`, `/api-token-auth/`,
   `/openapi/` and `/media/` to Tandoor (`web_dev_config.yaml`), so the app is same-origin with it.
 
