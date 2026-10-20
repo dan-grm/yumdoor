@@ -1,0 +1,7 @@
+{
+  "@@locale": "de",
+  "appTitle": "Yumdoor",
+  "@appTitle": {
+    "description": "Product name, shown as the browser tab title and on the start screen."
+  }
+}
