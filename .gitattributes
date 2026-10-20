@@ -17,6 +17,7 @@
 
 # Generated code: collapse in GitHub diffs
 packages/tandoor_api/lib/** linguist-generated=true
+packages/tandoor_api/schema/** linguist-generated=true
 **/*.g.dart        linguist-generated=true
 **/*.freezed.dart  linguist-generated=true
 lib/l10n/generated/** linguist-generated=true

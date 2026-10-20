@@ -90,12 +90,37 @@ web/                        index.html, manifest.json, icons, service worker, dr
 | State | Riverpod 3 with `riverpod_generator` | Repositories are exposed as providers, so tests override them with fakes. |
 | Navigation | go_router | Deep links (`/recipe/42`, `/recipe/42/cook`) work in the PWA. |
 | HTTP | Dio | Used by the generated client; one interceptor adds the token, another maps errors. |
-| API client | openapi-generator `dart-dio` (pinned Docker image), output in `packages/tandoor_api` | Tandoor's own frontend uses openapi-generator on the same schema. Output is committed; CI regenerates and fails on a diff. |
+| API client | openapi-generator `dart-dio` with built_value (pinned Docker image), output in `packages/tandoor_api` | Tandoor's own frontend uses openapi-generator on the same schema. Output is committed; CI regenerates and fails on a diff. See [API client](#api-client). |
 | Domain models | `freezed` | Immutable, value equality, `copyWith`. |
 | Cache | Drift (`drift/wasm.dart` on web, `sqlite3` native) | Web needs `sqlite3.wasm` and `drift_worker.js` in `web/`. |
 | Markdown | `markdown` package (parse to AST) rendered to Flutter widgets | No HTML is rendered; see Security. |
 | Localization | `flutter_localizations` + `intl` with ARB files, `de` and `en` | Default from the device locale, switchable in settings. |
 | Fonts | Nunito bundled as an asset (SIL OFL) | The design README says "hosted font"; we bundle it instead, for offline use and to avoid third-party requests. |
+
+## API client
+
+`packages/tandoor_api` is generated, committed and a member of the pub workspace in the root `pubspec.yaml`, so a
+fresh clone needs only `flutter pub get`.
+
+- `tool/fetch_schema.dart` stores the local Tandoor's schema as `schema/openapi-<version>.json`, pretty-printed with
+  sorted keys so a re-fetch is byte-identical.
+- `tool/generate_api.dart` patches a copy of it (every read-only field optional and nullable, see
+  `docs/TANDOOR_API.md#schema`), runs openapi-generator `dart-dio` from a Docker image pinned by digest, then
+  build_runner and `dart format`. Running it twice produces no diff.
+- The package's `pubspec.yaml` and `README.md` are written by hand (`.openapi-generator-ignore`); its dependencies
+  are pinned like the app's.
+
+**Decision (spike for #5, generator 7.26.0, Tandoor 2.6.15): `dart-dio` with its default built_value serialization.**
+
+| Option | Result |
+|---|---|
+| `dart-dio` + built_value | Compiles as generated (4 lint warnings in generated code, excluded from analysis). Nullable `allOf` refs become nullable fields; enums get a fallback value with `enumUnknownDefaultCase`; unknown keys are ignored. The 6 `oneOf` blank-able URL/email fields become `OneOf` wrappers. |
+| `dart-dio` + json_serializable | Does not compile without workarounds: the generated `pubspec.yaml` sets a language version too old for the null-aware map entries json_serializable emits, the 6 `oneOf` fields become empty classes that fail to parse, and a list default (`AutoMealPlan.keywords = []`) is not const. Would need schema patches on top. |
+| `swagger_parser` | Not evaluated: the issue makes it the fallback if `dart-dio` fails, and the built_value variant did not. |
+
+built_value's builders and `BuiltList` are more verbose than plain classes, but only the mappers in `lib/data/`
+see them. The read-only patch is needed with any generator: both serializers enforce `required`, and Tandoor's schema
+over-declares it.
 
 ## Authentication and session
 
