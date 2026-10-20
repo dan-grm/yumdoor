@@ -34,7 +34,26 @@ dev_dependencies:
   # tool/check_imports.dart
   analyzer: 14.5.0
   path: 1.9.1
+  # tool/gen_tokens.dart
+  dart_style: 3.1.14
+  pub_semver: 2.2.1
 
 flutter:
   generate: true
   uses-material-design: true
+
+  # Bundled, not loaded from Google Fonts: no third-party requests, works offline.
+  # License: assets/fonts/nunito/OFL.txt, registered with LicenseRegistry in main.dart.
+  assets:
+    - assets/fonts/nunito/OFL.txt
+  fonts:
+    - family: Nunito
+      fonts:
+        - asset: assets/fonts/nunito/Nunito-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/nunito/Nunito-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/nunito/Nunito-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/nunito/Nunito-ExtraBold.ttf
+          weight: 800
