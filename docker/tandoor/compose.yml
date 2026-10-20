@@ -1,0 +1,53 @@
+# Local Tandoor for development, CI and the seed script. Dev only: the secrets
+# in .env.example are public, and Tandoor listens on 127.0.0.1 only.
+#
+#   docker compose -f docker/tandoor/compose.yml up -d      # start (waits for nothing; see --wait)
+#   docker compose -f docker/tandoor/compose.yml down       # stop, keep data
+#   docker compose -f docker/tandoor/compose.yml down -v    # reset: delete database and media
+#
+# The image tag defaults to the version in /TANDOOR_VERSION (a test keeps them
+# in sync); CI passes TANDOOR_VERSION explicitly.
+
+name: yumdoor-tandoor
+
+services:
+  db_recipes:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file: &env
+      - path: .env.example
+      - path: .env # optional local overrides, git-ignored
+        required: false
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  web_recipes:
+    image: vabene1111/recipes:${TANDOOR_VERSION:-2.6.15}
+    restart: unless-stopped
+    env_file: *env
+    volumes:
+      - staticfiles:/opt/recipes/staticfiles
+      - mediafiles:/opt/recipes/mediafiles
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      db_recipes:
+        condition: service_healthy
+    healthcheck:
+      # Public endpoint; answers once migrations ran and gunicorn is up.
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/api/server-settings/current/"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+      start_period: 180s
+      start_interval: 2s
+
+volumes:
+  postgres:
+  staticfiles:
+  mediafiles:

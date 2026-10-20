@@ -25,8 +25,7 @@ coverage/
 **/ios/Runner/GeneratedPluginRegistrant.*
 **/xcuserdata/
 
-# Local Tandoor dev stack (volumes and secrets)
-docker/tandoor/data/
+# Local Tandoor dev stack (data lives in Docker volumes)
 docker/tandoor/.env
 .seed/
 

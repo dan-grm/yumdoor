@@ -1,0 +1,15 @@
+# Dev server for `flutter run -d chrome`. Tandoor sends no CORS headers for
+# /api/, so the app must reach it same-origin: these paths are proxied to the
+# local Tandoor from docker/tandoor/compose.yml.
+server:
+  host: localhost
+  port: 8081
+  proxy:
+    - prefix: /api/
+      target: http://localhost:8080/
+    - prefix: /api-token-auth/
+      target: http://localhost:8080/
+    - prefix: /openapi/
+      target: http://localhost:8080/
+    - prefix: /media/
+      target: http://localhost:8080/
