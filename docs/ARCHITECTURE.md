@@ -132,7 +132,8 @@ over-declares it.
    - Pasted token: used as is.
 3. The token goes into `TokenStore`:
    - native: `flutter_secure_storage` (Keychain / Keystore).
-   - web: IndexedDB via the same package. **There is no real secure storage in a browser**; any script on the
+   - web: `localStorage` via the same package (AES-GCM encrypted, but the key is stored next to it, so this is
+     obfuscation, not protection). **There is no real secure storage in a browser**; any script on the
      origin can read it. Because the PWA shares its origin with Tandoor, a stored-XSS bug in Tandoor's own UI
      could read our token, just as it could already act with the user's Tandoor session. This risk is accepted
      and documented in the settings screen's About section.
@@ -181,7 +182,7 @@ Each service is an abstract class in `lib/platform/<name>/` with implementations
 |---|---|---|
 | `WakeLockService` | Screen Wake Lock API, reacquired on `visibilitychange`. Reports `unsupported` where missing; cooking mode then shows a hint to keep the screen on. iOS home-screen PWAs had a WebKit bug here (fixed in 18.4 according to WebKit's notes; verify on device). | `wakelock_plus` |
 | `TimerAlertService` | Timers store their end time, not a countdown, so they survive the tab being suspended; they are recomputed on resume. Alert by sound + vibration (where available) when visible; `Notification` when permitted. Background alerts on iOS PWAs are not possible; the UI says so once. | Local notifications scheduled at start |
-| `TokenStore` | IndexedDB (see Authentication) | Keychain / Keystore |
+| `TokenStore` | `flutter_secure_storage`: `localStorage`, not secure (see Authentication) | Keychain / Keystore |
 | `ConnectivityService` | `navigator.onLine` + request failures | `connectivity_plus` + request failures |
 
 ## Domain services
