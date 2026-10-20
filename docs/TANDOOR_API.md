@@ -14,6 +14,19 @@ every section and update this file in the same PR.
 - A custom post-processing hook (`cookbook/helper/drf_spectacular_hooks.py`) makes **every `id` field optional
   and writable** so nested writes work. In generated Dart code every `id` is nullable; the mappers in
   `lib/data/` turn that into non-null ids on domain models.
+- **Read-only fields are declared required and non-null, but often aren't.** drf-spectacular marks every read-only
+  field required. Against the seeded 2.6.15, Tandoor sends `null` for `Food.parent` and `Keyword.parent` (root
+  nodes), `MealPlan.recipe_name` (plan without a recipe) and `User.display_name`, and leaves out
+  `RecipeOverview.recent` unless `num_recent` is set (it is a queryset annotation, `cookbook/helper/recipe_search.py`;
+  DRF skips a read-only field whose attribute is missing). 138 read-only fields are affected, so
+  `tool/generate_api.dart` makes **every read-only field optional and nullable** before generating. The committed
+  schema stays as fetched.
+- The schema models auth as an API key in the `Authorization` header (`ApiKeyAuth`), so the generated client
+  takes the whole header value: `setApiKey('ApiKeyAuth', 'Bearer <token>')`.
+- Blank-able Django URL and email fields are `oneOf: [uri/email string, empty string]` (6 fields, e.g.
+  `ConnectorConfig.url`, `InviteLink.email`). `dart-dio` with built_value wraps them in a `OneOf` class.
+- `makenow` on the recipe search is a boolean in the schema, although the server also accepts an int (number of
+  allowed missing foods). The generated client can only send `true`/`false`.
 
 ## Authentication
 

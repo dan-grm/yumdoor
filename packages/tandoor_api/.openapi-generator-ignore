@@ -1,0 +1,9 @@
+# Files openapi-generator must not write into packages/tandoor_api/.
+# The package's pubspec, README and analysis settings are maintained by hand;
+# docs and test stubs are not useful to us.
+.gitignore
+README.md
+analysis_options.yaml
+pubspec.yaml
+doc/**
+test/**
