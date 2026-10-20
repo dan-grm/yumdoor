@@ -23,6 +23,9 @@ dev_dependencies:
   riverpod_generator: 4.0.9
   freezed: 4.0.3
   json_serializable: 6.15.1
+  # tool/check_imports.dart
+  analyzer: 14.5.0
+  path: 1.9.1
 
 flutter:
   uses-material-design: true
