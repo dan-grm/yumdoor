@@ -5,6 +5,9 @@ version: 0.1.0+1
 
 environment:
   sdk: ^3.13.5
+  # Exact, like the dependencies: CI installs this version (subosito/flutter-action
+  # reads it from here), so formatting and analysis match on every machine.
+  flutter: 3.47.7
 
 workspace:
   - packages/tandoor_api

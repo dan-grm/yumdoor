@@ -1,0 +1,99 @@
+# Checks every PR and every push to main. Mirrors the "Before opening a PR"
+# list in CLAUDE.md; integration tests against Tandoor are in integration.yml.
+#
+# Actions are pinned by commit SHA (the tag is in the comment). Flutter comes
+# from `environment.flutter` in pubspec.yaml.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    name: Format, analyze, test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version-file: pubspec.yaml
+          cache: true
+          pub-cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: dart format --set-exit-if-changed .
+      - run: flutter analyze
+      - run: dart run tool/check_imports.dart
+      - name: Generated code is up to date
+        run: |
+          dart run build_runner build -d
+          flutter gen-l10n
+          dart run tool/gen_tokens.dart
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --short
+            git diff
+            echo "::error::Generated code is out of date. Run the codegen commands from CLAUDE.md and commit the result."
+            exit 1
+          fi
+      - run: flutter test --exclude-tags integration
+
+  api-client:
+    name: API client is up to date
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version-file: pubspec.yaml
+          cache: true
+          pub-cache: true
+      - run: flutter pub get --enforce-lockfile
+      # Regenerates packages/tandoor_api/lib/ from the committed schema with the
+      # pinned generator image; needs Docker, not Tandoor.
+      - run: dart run tool/generate_api.dart
+      - name: No diff
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --short
+            echo "::error::packages/tandoor_api is out of date. Run \`dart run tool/generate_api.dart\` and commit the result."
+            exit 1
+          fi
+
+  build-web:
+    name: Web build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version-file: pubspec.yaml
+          cache: true
+          pub-cache: true
+      - run: flutter pub get --enforce-lockfile
+      # Same flags as the Docker image; it replaces the base href placeholder
+      # with BASE_PATH at container start.
+      - run: flutter build web --release --no-web-resources-cdn --base-href /__BASE_PATH__/
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: web
+          path: build/web
+          retention-days: 7
+          if-no-files-found: error
