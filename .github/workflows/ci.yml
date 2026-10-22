@@ -47,7 +47,16 @@ jobs:
             echo "::error::Generated code is out of date. Run the codegen commands from CLAUDE.md and commit the result."
             exit 1
           fi
+      # Includes the golden tests, which only run on Linux (test/widget/golden.dart).
       - run: flutter test --exclude-tags integration
+      - name: Upload golden failures
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: golden-failures
+          path: test/**/failures/
+          retention-days: 7
+          if-no-files-found: ignore
 
   api-client:
     name: API client is up to date
