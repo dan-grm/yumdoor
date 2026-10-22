@@ -88,6 +88,8 @@ docker compose -f docker/tandoor/compose.yml down -v        # reset: delete data
 - Before opening a PR: format, analyze, import check, unit/widget tests. Run integration tests when touching
   `lib/data/` or the seed. CI (`.github/workflows/ci.yml`) runs the same checks, plus the web build, and fails if
   regenerated code (build_runner, gen-l10n, tokens, `tool/generate_api.dart`) differs from what is committed.
+  `.github/workflows/integration.yml` starts Tandoor in Docker, seeds it, runs the integration tests and fails if
+  `tool/fetch_schema.dart` changes the committed schema; on failure it prints the Tandoor logs.
 - Flutter is pinned exactly in `pubspec.yaml` (`environment.flutter`); CI installs that version. Bump it in its own
   PR (`build: bump Flutter to X.Y.Z`) and commit the `pubspec.lock` and formatting changes it brings.
 - PR description: what and why, how it was tested, screenshots for UI changes (DE, 390 px wide).
