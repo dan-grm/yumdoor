@@ -46,7 +46,13 @@ every section and update this file in the same PR.
   `DELETE /api/access-token/{id}/` without logging out other devices.
 - Scope check: safe methods need `read`, everything else `write` (`CustomTokenHasReadWriteScope`).
   The meal-plan endpoints also accept a `mealplan`-only scope.
+- **A missing or invalid token gets 403, not 401** (checked on 2.6.15). Session authentication comes first and
+  sends no `WWW-Authenticate` header, so DRF answers `NotAuthenticated` with 403. The `detail` text is translated by
+  `Accept-Language` ("Anmeldedaten fehlen."), and a valid token without permission also gets 403, so the two can't
+  be told apart. Yumdoor treats every 401 and 403 as `UnauthorizedFailure` (`lib/data/api/api_failures.dart`).
 - `GET /api/server-settings/current/` is public and returns `version`; used for the login version check.
+  Unknown paths outside `/api/` redirect (302) to Tandoor's HTML login page, so a wrong base path gets HTML with
+  status 200 after the redirect, not a 404.
 - Tandoor has a `feature-frontend-auth` branch in development (allauth headless). Auth may change in a later
   2.x release; recheck on every version bump.
 
@@ -62,7 +68,8 @@ every section and update this file in the same PR.
 ## Recipe search
 
 `GET /api/recipe/` (`cookbook/views/api.py:1722`, logic in `cookbook/helper/recipe_search.py`, `cookbook/managers.py`).
-Paginated: `page`, `page_size` (default 25, max 100). List items use `RecipeOverview` (no steps).
+Paginated: `page`, `page_size` (default 25, max 100). List items use `RecipeOverview` (no steps; keywords only as
+`{id, label}`). A page past the end is a 404; use `next` to know whether there is another page.
 
 | Need | Parameters |
 |---|---|
@@ -99,7 +106,10 @@ in the request are ignored.
   "ingredients per step" in cooking mode directly. `Step.time` is an explicit duration in minutes (use it as a
   timer in addition to durations detected in the text).
 - `Recipe.servings` is the base for scaling. `Ingredient` has `amount`, `no_amount`, `is_header`, `unit`, `food`,
-  `note`, `original_text` and plural flags.
+  `note` and `original_text`; there are no plural flags in 2.6.15 (`Food` and `Unit` have `plural_name`). A header
+  ingredient has its title in `note`, no food or unit, and `no_amount` set.
+- Empty text fields come as `""` rather than `null` (`description`, `servings_text`, `note`).
+  `User.display_name` is first and last name joined by a space, so it can end in one ("Anna ").
 - **Do not use `instructions_markdown`.** It is server-rendered HTML that contains Vue-only custom elements
   (`<scalable-number>`, `<plural-name>`, `cookbook/helper/template_helper.py`). Render the raw `instruction`
   ourselves with a safe Markdown renderer.

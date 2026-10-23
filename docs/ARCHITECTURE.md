@@ -77,7 +77,7 @@ packages/
 docker/
   tandoor/                  docker-compose for local Tandoor 2.6.15 + Postgres
   web/                      Dockerfile and nginx config for the PWA image
-tool/                       Dart scripts: fetch_schema, generate_api, seed, check_imports, gen_tokens
+tool/                       Dart scripts: fetch_schema, generate_api, seed, record_fixtures, check_imports, gen_tokens
 test/                       unit/ (domain), widget/, integration/ (against docker Tandoor)
 web/                        index.html, manifest.json, icons, service worker, drift worker + sqlite3.wasm
 ```
@@ -139,7 +139,8 @@ over-declares it.
      and documented in the settings screen's About section.
 4. Logout deletes the device token on the server (`DELETE /api/access-token/{id}/`) when online, then clears the
    `TokenStore` and the Drift database. If the token was pasted, Yumdoor does not delete it on the server.
-5. A 401 anywhere ends the session and returns to login with the server URL prefilled.
+5. A 401 or 403 anywhere (`UnauthorizedFailure`; Tandoor answers an invalid token with 403) ends the session and
+   returns to login with the server URL prefilled.
 
 ## Server URL and deployment
 
@@ -257,7 +258,7 @@ A redesign replaces `tokens.json` (and possibly component widgets in `lib/design
 
 | Kind | Where | Runs against |
 |---|---|---|
-| Unit | `test/unit/` | Domain services, mappers (with recorded JSON fixtures from the seeded Tandoor) |
+| Unit | `test/unit/` | Domain services, mappers (with JSON fixtures recorded from the seeded Tandoor by `tool/record_fixtures.dart`) |
 | Widget | `test/widget/` | Key screens with fake repositories via provider overrides; golden tests for cooking mode in DE at 390 px |
 | Integration | `test/integration/` | Repositories against the dockerized Tandoor 2.6.15 with seed data (`flutter test --tags integration`, Dart VM, no browser, so no CORS) |
 
