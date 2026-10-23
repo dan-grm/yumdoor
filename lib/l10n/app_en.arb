@@ -23,5 +23,18 @@
   "recipeScaledFrom": "Recipe is for {servings}, amounts converted",
   "recipeNoIngredients": "This recipe has no ingredients.",
   "recipeStepTitle": "Step {number}",
+  "cookingClose": "Leave cooking mode",
+  "cookingStepOf": "Step {current} of {total}",
+  "cookingStepProgress": "{current} / {total}",
+  "cookingLastStep": "Step {number} · Last",
+  "cookingForServings": "for {servings}",
+  "cookingPrevious": "Back to step {number}",
+  "cookingNext": "Next: step {number}",
+  "cookingDone": "Done",
+  "cookingNoSteps": "This recipe has no steps.",
+  "cookingScreenOn": "Screen stays on",
+  "cookingScreenOff": "Keep screen on",
+  "cookingScreenUnavailable": "Screen can't stay on",
+  "cookingWakeLockHint": "Your device can't keep the screen on here. Set a longer auto-lock while cooking.",
   "recipeStartCooking": "Start cooking · {servings}"
 }
