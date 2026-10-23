@@ -1,0 +1,68 @@
+# Integration tests against the pinned Tandoor (TANDOOR_VERSION) from
+# docker/tandoor/compose.yml, seeded with tool/seed.dart, plus a check that the
+# committed OpenAPI schema is the one this Tandoor serves.
+#
+# Actions are pinned by commit SHA (the tag is in the comment). Flutter comes
+# from `environment.flutter` in pubspec.yaml.
+
+name: Integration
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  COMPOSE: docker compose -f docker/tandoor/compose.yml
+
+jobs:
+  integration:
+    name: Integration tests against Tandoor
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Started first so migrations run while Flutter is set up.
+      - name: Start Tandoor
+        run: |
+          echo "TANDOOR_VERSION=$(cat TANDOOR_VERSION)" >> "$GITHUB_ENV"
+          TANDOOR_VERSION=$(cat TANDOOR_VERSION) $COMPOSE up -d
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version-file: pubspec.yaml
+          cache: true
+          pub-cache: true
+      - run: flutter pub get --enforce-lockfile
+      - name: Wait for the Tandoor healthcheck
+        id: tandoor
+        run: $COMPOSE up -d --wait
+      - name: Schema matches the committed one
+        run: |
+          dart run tool/fetch_schema.dart
+          if [ -n "$(git status --porcelain)" ]; then
+            git diff --stat
+            echo "::error::Tandoor $TANDOOR_VERSION serves a different OpenAPI schema than packages/tandoor_api/schema/. See \"Bumping the Tandoor version\" in CLAUDE.md."
+            exit 1
+          fi
+      # Bootstrap (users, space, tokens through `docker compose exec`), then
+      # the synthetic data over the REST API.
+      # Runs even if the schema check failed, so both results are reported.
+      - name: Seed
+        id: seed
+        if: ${{ !cancelled() && steps.tandoor.outcome == 'success' }}
+        run: dart run tool/seed.dart
+      - name: Integration tests
+        if: ${{ !cancelled() && steps.seed.outcome == 'success' }}
+        run: flutter test --tags integration
+      - name: Tandoor logs
+        if: failure()
+        run: $COMPOSE logs --no-color --timestamps
