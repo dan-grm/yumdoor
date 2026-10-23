@@ -29,6 +29,11 @@ class SeededTandoor {
   /// The API token of a seeded user (`admin`, `anna`, `ben`).
   String token(String username) =>
       (_users[username] as Map<String, dynamic>)['token'] as String;
+
+  /// The password of a seeded user. Password logins count against
+  /// Tandoor's limit of 10 a day per IP address; use them sparingly.
+  String password(String username) =>
+      (_users[username] as Map<String, dynamic>)['password'] as String;
 }
 
 /// [food] and every food below it in the seeded food tree.

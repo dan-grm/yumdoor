@@ -27,6 +27,14 @@ final class UnauthorizedFailure extends Failure {
   String toString() => 'UnauthorizedFailure';
 }
 
+/// The username or password is wrong.
+final class InvalidCredentialsFailure extends Failure {
+  const InvalidCredentialsFailure();
+
+  @override
+  String toString() => 'InvalidCredentialsFailure';
+}
+
 /// Too many requests (HTTP 429), e.g. more than 10 password logins a day.
 final class ThrottledFailure extends Failure {
   const ThrottledFailure({this.retryAfter});
