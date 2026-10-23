@@ -82,7 +82,7 @@ packages:
     source: hosted
     version: "2.16.2"
   built_collection:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: built_collection
       sha256: "44922ecebd8e3d0cef743dadd3b54df4e87e2a4c52a29465a1872aa9e192caa8"
@@ -186,7 +186,7 @@ packages:
     source: hosted
     version: "3.1.14"
   dio:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: dio
       sha256: "852ec3b48cc431ac04fff978413c541502b67ffc3e26921e74e3d994694192c1"
