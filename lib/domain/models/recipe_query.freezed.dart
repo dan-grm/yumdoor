@@ -19,7 +19,11 @@ mixin _$RecipeQuery {
 /// preference; by default only recipe names.
  String get text;/// The recipe contains each of these foods, or one of its child foods.
  Set<int> get foodIds;/// The recipe has each of these keywords.
- Set<int> get keywordIds;
+ Set<int> get keywordIds;/// The current user rated it at least this, 1 to 5. Tandoor only counts
+/// the user's own cook logs.
+ int? get minRating;/// The current user last cooked it on or before this day (the date part
+/// counts). Tandoor only counts the user's own cook logs.
+ DateTime? get lastCookedBefore;
 /// Create a copy of RecipeQuery
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -31,20 +35,20 @@ $RecipeQueryCopyWith<RecipeQuery> get copyWith => _$RecipeQueryCopyWithImpl<Reci
 @override
 bool operator ==(Object other) {
   final _this = this as RecipeQuery;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecipeQuery&&(identical(other.text, _this.text) || other.text == _this.text)&&const DeepCollectionEquality().equals(other.foodIds, _this.foodIds)&&const DeepCollectionEquality().equals(other.keywordIds, _this.keywordIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecipeQuery&&(identical(other.text, _this.text) || other.text == _this.text)&&const DeepCollectionEquality().equals(other.foodIds, _this.foodIds)&&const DeepCollectionEquality().equals(other.keywordIds, _this.keywordIds)&&(identical(other.minRating, _this.minRating) || other.minRating == _this.minRating)&&(identical(other.lastCookedBefore, _this.lastCookedBefore) || other.lastCookedBefore == _this.lastCookedBefore));
 }
 
 
 @override
 int get hashCode {
   final _this = this as RecipeQuery;
-  return Object.hash(runtimeType,_this.text,const DeepCollectionEquality().hash(_this.foodIds),const DeepCollectionEquality().hash(_this.keywordIds));
+  return Object.hash(runtimeType,_this.text,const DeepCollectionEquality().hash(_this.foodIds),const DeepCollectionEquality().hash(_this.keywordIds),_this.minRating,_this.lastCookedBefore);
 }
 
 @override
 String toString() {
   final _this = this as RecipeQuery;
-  return 'RecipeQuery(text: ${_this.text}, foodIds: ${_this.foodIds}, keywordIds: ${_this.keywordIds})';
+  return 'RecipeQuery(text: ${_this.text}, foodIds: ${_this.foodIds}, keywordIds: ${_this.keywordIds}, minRating: ${_this.minRating}, lastCookedBefore: ${_this.lastCookedBefore})';
 }
 
 
@@ -55,7 +59,7 @@ abstract mixin class $RecipeQueryCopyWith<$Res>  {
   factory $RecipeQueryCopyWith(RecipeQuery value, $Res Function(RecipeQuery) _then) = _$RecipeQueryCopyWithImpl;
 @useResult
 $Res call({
- String text, Set<int> foodIds, Set<int> keywordIds
+ String text, Set<int> foodIds, Set<int> keywordIds, int? minRating, DateTime? lastCookedBefore
 });
 
 
@@ -72,12 +76,14 @@ class _$RecipeQueryCopyWithImpl<$Res>
 
 /// Create a copy of RecipeQuery
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? text = null,Object? foodIds = null,Object? keywordIds = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? text = null,Object? foodIds = null,Object? keywordIds = null,Object? minRating = freezed,Object? lastCookedBefore = freezed,}) {
   return _then(RecipeQuery(
 text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,foodIds: null == foodIds ? _self.foodIds : foodIds // ignore: cast_nullable_to_non_nullable
 as Set<int>,keywordIds: null == keywordIds ? _self.keywordIds : keywordIds // ignore: cast_nullable_to_non_nullable
-as Set<int>,
+as Set<int>,minRating: freezed == minRating ? _self.minRating : minRating // ignore: cast_nullable_to_non_nullable
+as int?,lastCookedBefore: freezed == lastCookedBefore ? _self.lastCookedBefore : lastCookedBefore // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -162,10 +168,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String text,  Set<int> foodIds,  Set<int> keywordIds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String text,  Set<int> foodIds,  Set<int> keywordIds,  int? minRating,  DateTime? lastCookedBefore)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RecipeQuery() when $default != null:
-return $default(_that.text,_that.foodIds,_that.keywordIds);case _:
+return $default(_that.text,_that.foodIds,_that.keywordIds,_that.minRating,_that.lastCookedBefore);case _:
   return orElse();
 
 }
@@ -183,10 +189,10 @@ return $default(_that.text,_that.foodIds,_that.keywordIds);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String text,  Set<int> foodIds,  Set<int> keywordIds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String text,  Set<int> foodIds,  Set<int> keywordIds,  int? minRating,  DateTime? lastCookedBefore)  $default,) {final _that = this;
 switch (_that) {
 case _RecipeQuery():
-return $default(_that.text,_that.foodIds,_that.keywordIds);case _:
+return $default(_that.text,_that.foodIds,_that.keywordIds,_that.minRating,_that.lastCookedBefore);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -203,10 +209,10 @@ return $default(_that.text,_that.foodIds,_that.keywordIds);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String text,  Set<int> foodIds,  Set<int> keywordIds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String text,  Set<int> foodIds,  Set<int> keywordIds,  int? minRating,  DateTime? lastCookedBefore)?  $default,) {final _that = this;
 switch (_that) {
 case _RecipeQuery() when $default != null:
-return $default(_that.text,_that.foodIds,_that.keywordIds);case _:
+return $default(_that.text,_that.foodIds,_that.keywordIds,_that.minRating,_that.lastCookedBefore);case _:
   return null;
 
 }
@@ -217,8 +223,8 @@ return $default(_that.text,_that.foodIds,_that.keywordIds);case _:
 /// @nodoc
 
 
-class _RecipeQuery implements RecipeQuery {
-  const _RecipeQuery({this.text = '',  Set<int> foodIds = const {},  Set<int> keywordIds = const {}}): _foodIds = foodIds,_keywordIds = keywordIds;
+class _RecipeQuery extends RecipeQuery {
+  const _RecipeQuery({this.text = '',  Set<int> foodIds = const {},  Set<int> keywordIds = const {}, this.minRating, this.lastCookedBefore}): _foodIds = foodIds,_keywordIds = keywordIds,super._();
   
 
 /// Free text. Which fields it searches is the user's Tandoor search
@@ -242,6 +248,12 @@ class _RecipeQuery implements RecipeQuery {
   return EqualUnmodifiableSetView(_keywordIds);
 }
 
+/// The current user rated it at least this, 1 to 5. Tandoor only counts
+/// the user's own cook logs.
+@override final  int? minRating;
+/// The current user last cooked it on or before this day (the date part
+/// counts). Tandoor only counts the user's own cook logs.
+@override final  DateTime? lastCookedBefore;
 
 /// Create a copy of RecipeQuery
 /// with the given fields replaced by the non-null parameter values.
@@ -253,18 +265,18 @@ _$RecipeQueryCopyWith<_RecipeQuery> get copyWith => __$RecipeQueryCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RecipeQuery&&(identical(other.text, text) || other.text == text)&&const DeepCollectionEquality().equals(other.foodIds, _foodIds)&&const DeepCollectionEquality().equals(other.keywordIds, _keywordIds));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RecipeQuery&&(identical(other.text, text) || other.text == text)&&const DeepCollectionEquality().equals(other.foodIds, _foodIds)&&const DeepCollectionEquality().equals(other.keywordIds, _keywordIds)&&(identical(other.minRating, minRating) || other.minRating == minRating)&&(identical(other.lastCookedBefore, lastCookedBefore) || other.lastCookedBefore == lastCookedBefore));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,text,const DeepCollectionEquality().hash(_foodIds),const DeepCollectionEquality().hash(_keywordIds));
+    return Object.hash(runtimeType,text,const DeepCollectionEquality().hash(_foodIds),const DeepCollectionEquality().hash(_keywordIds),minRating,lastCookedBefore);
 }
 
 @override
 String toString() {
-    return 'RecipeQuery(text: $text, foodIds: $foodIds, keywordIds: $keywordIds)';
+    return 'RecipeQuery(text: $text, foodIds: $foodIds, keywordIds: $keywordIds, minRating: $minRating, lastCookedBefore: $lastCookedBefore)';
 }
 
 
@@ -275,7 +287,7 @@ abstract mixin class _$RecipeQueryCopyWith<$Res> implements $RecipeQueryCopyWith
   factory _$RecipeQueryCopyWith(_RecipeQuery value, $Res Function(_RecipeQuery) _then) = __$RecipeQueryCopyWithImpl;
 @override @useResult
 $Res call({
- String text, Set<int> foodIds, Set<int> keywordIds
+ String text, Set<int> foodIds, Set<int> keywordIds, int? minRating, DateTime? lastCookedBefore
 });
 
 
@@ -292,12 +304,14 @@ class __$RecipeQueryCopyWithImpl<$Res>
 
 /// Create a copy of RecipeQuery
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? text = null,Object? foodIds = null,Object? keywordIds = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? text = null,Object? foodIds = null,Object? keywordIds = null,Object? minRating = freezed,Object? lastCookedBefore = freezed,}) {
   return _then(_RecipeQuery(
 text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,foodIds: null == foodIds ? _self._foodIds : foodIds // ignore: cast_nullable_to_non_nullable
 as Set<int>,keywordIds: null == keywordIds ? _self._keywordIds : keywordIds // ignore: cast_nullable_to_non_nullable
-as Set<int>,
+as Set<int>,minRating: freezed == minRating ? _self.minRating : minRating // ignore: cast_nullable_to_non_nullable
+as int?,lastCookedBefore: freezed == lastCookedBefore ? _self.lastCookedBefore : lastCookedBefore // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

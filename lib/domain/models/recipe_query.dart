@@ -15,5 +15,23 @@ abstract class RecipeQuery with _$RecipeQuery {
 
     /// The recipe has each of these keywords.
     @Default({}) Set<int> keywordIds,
+
+    /// The current user rated it at least this, 1 to 5. Tandoor only counts
+    /// the user's own cook logs.
+    int? minRating,
+
+    /// The current user last cooked it on or before this day (the date part
+    /// counts). Tandoor only counts the user's own cook logs.
+    DateTime? lastCookedBefore,
   }) = _RecipeQuery;
+
+  const RecipeQuery._();
+
+  /// Whether anything narrows the search; an empty query lists all recipes.
+  bool get isEmpty =>
+      text.trim().isEmpty &&
+      foodIds.isEmpty &&
+      keywordIds.isEmpty &&
+      minRating == null &&
+      lastCookedBefore == null;
 }

@@ -172,7 +172,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ThrottledFailure() => l10n.loginErrorThrottled,
       OfflineFailure() => l10n.loginServerUnreachable,
       IncompatibleServerFailure() => l10n.loginServerNotTandoor,
-      NotFoundFailure() || ServerFailure() => l10n.loginServerError,
+      NotFoundFailure() ||
+      CancelledFailure() ||
+      ServerFailure() => l10n.loginServerError,
     };
   }
 

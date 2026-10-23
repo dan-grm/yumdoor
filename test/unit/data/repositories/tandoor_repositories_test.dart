@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tandoor_api/tandoor_api.dart' as api;
+import 'package:yumdoor/core/cancellation.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/data/api/tandoor_dio.dart';
 import 'package:yumdoor/data/repositories/tandoor_food_repository.dart';
@@ -58,6 +61,33 @@ void main() {
       expect(page.items, hasLength(3));
       expect(page.totalCount, 25);
       expect(page.hasMore, isTrue);
+    });
+
+    test('filters by the current user\'s rating and last cooked day', () async {
+      final adapter = FakeHttpAdapter(
+        (_) => jsonResponse(tandoorFixture('recipe_list.json')),
+      );
+
+      await TandoorRecipeRepository(client(adapter)).search(
+        RecipeQuery(minRating: 4, lastCookedBefore: DateTime(2026, 9, 1, 18)),
+      );
+
+      final query = adapter.requests.single.uri.queryParameters;
+      expect(query['rating_gte'], '4');
+      expect(query['cookedon_lte'], '2026-09-01');
+    });
+
+    test('cancels the request with its CancelSignal', () async {
+      final response = Completer<ResponseBody>();
+      final adapter = FakeHttpAdapter((_) => response.future);
+      final cancel = CancelSignal();
+
+      final search = TandoorRecipeRepository(client(adapter))
+          .search(const RecipeQuery(), cancel: cancel);
+      cancel.cancel();
+
+      await expectLater(search, throwsA(isA<CancelledFailure>()));
+      response.complete(jsonResponse(tandoorFixture('recipe_list.json')));
     });
 
     test('leaves out empty filters', () async {
@@ -125,6 +155,34 @@ void main() {
     expect(query['query'], 'Karotte');
     expect(query['page_size'], '5');
     expect(foods.single.name, 'Karotte');
+  });
+
+  Object? firstResult(String fixture) =>
+      ((tandoorFixture(fixture)! as Map<String, Object?>)['results']!
+              as List<Object?>)
+          .first;
+
+  test('TandoorFoodRepository fetches a food by id', () async {
+    final adapter = FakeHttpAdapter(
+      (_) => jsonResponse(firstResult('food_list.json')),
+    );
+
+    final food = await TandoorFoodRepository(client(adapter)).fetchFood(178);
+
+    expect(adapter.requests.single.uri.path, '/tandoor/api/food/178/');
+    expect(food.pluralName, 'Karotten');
+  });
+
+  test('TandoorKeywordRepository fetches a keyword by id', () async {
+    final adapter = FakeHttpAdapter(
+      (_) => jsonResponse(firstResult('keyword_list.json')),
+    );
+
+    final keyword = await TandoorKeywordRepository(client(adapter))
+        .fetchKeyword(45);
+
+    expect(adapter.requests.single.uri.path, '/tandoor/api/keyword/45/');
+    expect(keyword.name, 'Suppe');
   });
 
   group('TandoorServerRepository', () {

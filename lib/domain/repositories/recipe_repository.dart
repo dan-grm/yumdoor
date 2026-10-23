@@ -1,3 +1,4 @@
+import '../../core/cancellation.dart';
 import '../../core/failures.dart';
 import '../models/recipe.dart';
 import '../models/recipe_query.dart';
@@ -7,11 +8,12 @@ import '../models/result_page.dart';
 /// Recipes of the current space. Methods throw a [Failure].
 abstract interface class RecipeRepository {
   /// Recipes matching [query], in the server's order. [page] starts at 1;
-  /// [pageSize] is at most 100.
+  /// [pageSize] is at most 100. [cancel] aborts the request.
   Future<ResultPage<RecipeSummary>> search(
     RecipeQuery query, {
     int page = 1,
     int pageSize = 25,
+    CancelSignal? cancel,
   });
 
   /// The recipe with its steps. Throws [NotFoundFailure] if it doesn't exist

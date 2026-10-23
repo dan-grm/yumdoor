@@ -36,6 +36,13 @@ void main() {
     test('returns at most limit foods', () async {
       expect(await repositories.foods.autocomplete('', limit: 3), hasLength(3));
     });
+
+    test('fetches a food by id', () async {
+      final karotte = (await repositories.foods.autocomplete('Karotte'))
+          .singleWhere((f) => f.name == 'Karotte');
+
+      expect(await repositories.foods.fetchFood(karotte.id), karotte);
+    });
   });
 
   group('KeywordRepository', () {
@@ -43,6 +50,13 @@ void main() {
       final keywords = await repositories.keywords.autocomplete('supp');
 
       expect(keywords.map((k) => k.name), contains('Suppe'));
+    });
+
+    test('fetches a keyword by id', () async {
+      final suppe = (await repositories.keywords.autocomplete('Suppe'))
+          .singleWhere((k) => k.name == 'Suppe');
+
+      expect(await repositories.keywords.fetchKeyword(suppe.id), suppe);
     });
 
     test('returns at most limit keywords', () async {
