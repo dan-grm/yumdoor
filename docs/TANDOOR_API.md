@@ -33,6 +33,9 @@ every section and update this file in the same PR.
 - Auth classes: Django session and OAuth2 bearer token (`recipes/settings.py:396`). Header: `Authorization: Bearer <token>`.
 - `POST /api-token-auth/` with `username` and `password` (form or JSON) returns
   `{id, token, scope, expires, user_id}` (`cookbook/views/api.py:2567`).
+  - **The schema is wrong here:** it declares the `AuthToken` request body (`username`, `password`, `token`) as the
+    response, so the generated client can't read it. `TandoorAuthRepository` calls this endpoint with plain Dio.
+  - Wrong credentials: **400** `{"non_field_errors": ["Unable to log in with provided credentials."]}`.
   - Tokens look like `tda_<uuid>`, scope `read write app`, expiry **5 years**.
   - **It reuses** an existing unexpired read+write token for that user if one exists. Every device that logs in
     with a password gets the same token, so revoking it logs out all of them.
@@ -44,6 +47,18 @@ every section and update this file in the same PR.
   token. The full token is returned only within 15 seconds of creation; afterwards it is masked
   (`cookbook/serializer.py:1905`). Yumdoor uses this to get its own token per device, so logout can
   `DELETE /api/access-token/{id}/` without logging out other devices.
+  - `expires` is required (400 `{"expires": ["This field is required."]}` without it). Yumdoor asks for 5 years,
+    like `/api-token-auth/`.
+  - A token can delete itself (204); afterwards it gets 403. Other tokens of the user keep working.
+- A cheap request to check a token: `GET /api/user-preference/` returns a list with only the caller's own row.
+- **Session cookies beat the bearer token** (checked on 2.6.15). Session authentication comes first, so if the
+  browser also holds a Tandoor session (the user is logged into Tandoor's UI on the same origin, which the web build
+  shares), every request is authenticated **as the session's user**, and every POST, PUT, PATCH and DELETE without a
+  CSRF token fails with 403 `CSRF Failed: CSRF token missing.`, `/api-token-auth/` included. Fix: send the
+  `csrftoken` cookie (not HttpOnly) as `X-CSRFToken`, like Tandoor's frontend (`lib/data/api/csrf_interceptor.dart`,
+  `lib/platform/csrf/`). Requests then work, but still act as the session's user; if that is a different user than
+  the one logged into Yumdoor, Yumdoor shows that user's data. A token check can't detect a bad token in that state.
+  Native apps don't share cookies and are not affected.
 - Scope check: safe methods need `read`, everything else `write` (`CustomTokenHasReadWriteScope`).
   The meal-plan endpoints also accept a `mealplan`-only scope.
 - **A missing or invalid token gets 403, not 401** (checked on 2.6.15). Session authentication comes first and

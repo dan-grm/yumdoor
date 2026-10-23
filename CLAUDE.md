@@ -122,6 +122,8 @@ Details and source references are in `docs/TANDOOR_API.md`.
 - Shopping entries for a meal plan are built client-side, then created with `bulk_create_entries`.
 - Check shopping entries off with the bulk endpoint; a PATCH without `checked` can clear the on-hand flag.
 - A missing or invalid token gets **403**, not 401. Both map to `UnauthorizedFailure`.
+- On the web, a Tandoor session cookie in the same browser wins over the bearer token, and unsafe requests need
+  `X-CSRFToken` (`CsrfInterceptor`). `/api-token-auth/`'s response doesn't match the schema; it's called with plain Dio.
 
 ## Contributions
 

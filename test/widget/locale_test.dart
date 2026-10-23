@@ -5,6 +5,8 @@ import 'package:yumdoor/app/app.dart';
 import 'package:yumdoor/app/locale.dart';
 import 'package:yumdoor/features/home/home_screen.dart';
 
+import '../fakes/app_overrides.dart';
+
 void main() {
   Future<Locale> activeLocale(
     WidgetTester tester, {
@@ -13,7 +15,9 @@ void main() {
   }) async {
     tester.platformDispatcher.localesTestValue = device;
     addTearDown(tester.platformDispatcher.clearLocalesTestValue);
-    final container = ProviderContainer();
+    final container = ProviderContainer(
+      overrides: appOverrides(tokenStore: loggedInTokenStore()),
+    );
     addTearDown(container.dispose);
     if (override != null) {
       container.read(localeOverrideProvider.notifier).set(override);

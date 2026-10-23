@@ -55,18 +55,59 @@ final class ServerRepositoryProvider
 
 String _$serverRepositoryHash() => r'5f05020ef51a1c2e2c635f4a7411ec9e39d68256';
 
+@ProviderFor(authRepository)
+final authRepositoryProvider = AuthRepositoryProvider._();
+
+final class AuthRepositoryProvider
+    extends $FunctionalProvider<AuthRepository, AuthRepository, AuthRepository>
+    with $Provider<AuthRepository> {
+  AuthRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'authRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$authRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<AuthRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  AuthRepository create(Ref ref) {
+    return authRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AuthRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AuthRepository>(value),
+    );
+  }
+}
+
+String _$authRepositoryHash() => r'5c4e3d6c3ff2e5c8bc7302570834796590a4364c';
+
 /// The server and token of the current session.
 ///
-/// Login (#10) overrides this with the session; until then nobody is logged
-/// in and reading it throws.
+/// Reading it throws while nobody is logged in; the router keeps every screen
+/// that needs it behind login.
 
 @ProviderFor(tandoorConnection)
 final tandoorConnectionProvider = TandoorConnectionProvider._();
 
 /// The server and token of the current session.
 ///
-/// Login (#10) overrides this with the session; until then nobody is logged
-/// in and reading it throws.
+/// Reading it throws while nobody is logged in; the router keeps every screen
+/// that needs it behind login.
 
 final class TandoorConnectionProvider
     extends
@@ -78,8 +119,8 @@ final class TandoorConnectionProvider
     with $Provider<TandoorConnection> {
   /// The server and token of the current session.
   ///
-  /// Login (#10) overrides this with the session; until then nobody is logged
-  /// in and reading it throws.
+  /// Reading it throws while nobody is logged in; the router keeps every screen
+  /// that needs it behind login.
   TandoorConnectionProvider._()
     : super(
         from: null,
@@ -114,7 +155,7 @@ final class TandoorConnectionProvider
   }
 }
 
-String _$tandoorConnectionHash() => r'254576b45dbf6bdbf2d8370063629e3687fffd24';
+String _$tandoorConnectionHash() => r'bf823df6f29345be1feb262fa34f52dfa3c787f3';
 
 @ProviderFor(_tandoorRepositories)
 final _tandoorRepositoriesProvider = _TandoorRepositoriesProvider._();
@@ -162,7 +203,7 @@ final class _TandoorRepositoriesProvider
 }
 
 String _$_tandoorRepositoriesHash() =>
-    r'af8783761975034ef1d1739f18b9c6b31e4bfee1';
+    r'54d08b1a9991d15df7d4f523e70ea459fc4cc764';
 
 @ProviderFor(recipeRepository)
 final recipeRepositoryProvider = RecipeRepositoryProvider._();

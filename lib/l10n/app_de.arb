@@ -4,6 +4,148 @@
   "@appTitle": {
     "description": "Product name, shown as the browser tab title and on the start screen."
   },
+  "loginTagline": "Verbinde dich mit deinem Tandoor-Server.",
+  "@loginTagline": {
+    "description": "Subtitle under the app name on the login screen."
+  },
+  "loginServerLabel": "Server-Adresse",
+  "@loginServerLabel": {
+    "description": "Label of the server URL field on the login screen."
+  },
+  "loginServerRequired": "Gib die Adresse deines Tandoor-Servers ein.",
+  "@loginServerRequired": {
+    "description": "Validation message when the server URL field is empty."
+  },
+  "loginServerInvalid": "Das ist keine gültige Adresse.",
+  "@loginServerInvalid": {
+    "description": "Shown under the server URL field when the text can't be a URL."
+  },
+  "loginServerChecking": "Server wird geprüft …",
+  "@loginServerChecking": {
+    "description": "Shown under the server URL field while the version check runs."
+  },
+  "loginServerFound": "Tandoor {version} gefunden",
+  "@loginServerFound": {
+    "description": "Shown under the server URL field when a supported Tandoor answered.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "2.6.15"
+      }
+    }
+  },
+  "loginServerUnsupported": "Tandoor {version} wird nicht unterstützt. Yumdoor braucht Tandoor 2.x.",
+  "@loginServerUnsupported": {
+    "description": "Shown when the server runs a Tandoor version other than 2.x.",
+    "placeholders": {
+      "version": {
+        "type": "String",
+        "example": "1.5.24"
+      }
+    }
+  },
+  "loginServerNotTandoor": "Unter dieser Adresse läuft kein Tandoor 2.x.",
+  "@loginServerNotTandoor": {
+    "description": "Shown when something answered at the URL, but not Tandoor."
+  },
+  "loginServerUnreachable": "Der Server ist nicht erreichbar. Prüf die Adresse und deine Verbindung.",
+  "@loginServerUnreachable": {
+    "description": "Shown when the server URL can't be reached, or login fails for lack of a connection."
+  },
+  "loginServerError": "Der Server hat einen Fehler gemeldet. Versuch es später noch einmal.",
+  "@loginServerError": {
+    "description": "Shown when the server answers the version check or login with an unexpected error."
+  },
+  "loginServerOtherOrigin": "Im Browser erreicht Yumdoor nur den Tandoor-Server unter {origin}, weil Tandoor keine Anfragen von anderen Adressen zulässt. Für andere Server nutze die App für Android oder iOS.",
+  "@loginServerOtherOrigin": {
+    "description": "Shown in the web build when the entered server is on a different origin than the app.",
+    "placeholders": {
+      "origin": {
+        "type": "String",
+        "example": "https://rezepte.example.de"
+      }
+    }
+  },
+  "loginMethodLabel": "Anmeldeart",
+  "@loginMethodLabel": {
+    "description": "Accessible label of the password / API token switch."
+  },
+  "loginMethodPassword": "Passwort",
+  "@loginMethodPassword": {
+    "description": "Tab for logging in with username and password."
+  },
+  "loginMethodToken": "API-Token",
+  "@loginMethodToken": {
+    "description": "Tab for logging in with a pasted API token."
+  },
+  "loginUsernameLabel": "Benutzername",
+  "@loginUsernameLabel": {
+    "description": "Label of the username field."
+  },
+  "loginUsernameRequired": "Gib deinen Benutzernamen ein.",
+  "@loginUsernameRequired": {
+    "description": "Validation message when the username field is empty."
+  },
+  "loginPasswordLabel": "Passwort",
+  "@loginPasswordLabel": {
+    "description": "Label of the password field."
+  },
+  "loginPasswordRequired": "Gib dein Passwort ein.",
+  "@loginPasswordRequired": {
+    "description": "Validation message when the password field is empty."
+  },
+  "loginShowPassword": "Passwort anzeigen",
+  "@loginShowPassword": {
+    "description": "Accessible label of the button that reveals the password."
+  },
+  "loginHidePassword": "Passwort verbergen",
+  "@loginHidePassword": {
+    "description": "Accessible label of the button that hides the password again."
+  },
+  "loginPasswordNote": "Dein Passwort wird nur gegen ein Token getauscht und nicht gespeichert.",
+  "@loginPasswordNote": {
+    "description": "Reassurance under the password field."
+  },
+  "loginTokenLabel": "API-Token",
+  "@loginTokenLabel": {
+    "description": "Label of the API token field."
+  },
+  "loginTokenRequired": "Füge dein API-Token ein.",
+  "@loginTokenRequired": {
+    "description": "Validation message when the token field is empty."
+  },
+  "loginTokenNote": "Ein Token erstellst du in Tandoor unter Einstellungen › API-Tokens. Beim Abmelden löscht Yumdoor es nicht.",
+  "@loginTokenNote": {
+    "description": "Hint under the API token field."
+  },
+  "loginSubmit": "Anmelden",
+  "@loginSubmit": {
+    "description": "Main button of the login screen."
+  },
+  "loginErrorCredentials": "Benutzername oder Passwort stimmt nicht.",
+  "@loginErrorCredentials": {
+    "description": "Login error for a wrong username or password."
+  },
+  "loginErrorToken": "Der Server hat dieses Token nicht angenommen. Prüf, ob es vollständig ist und noch gilt.",
+  "@loginErrorToken": {
+    "description": "Login error when the server rejects a pasted API token."
+  },
+  "loginErrorThrottled": "Zu viele Anmeldeversuche heute: Tandoor erlaubt zehn pro Tag. Versuch es morgen wieder oder melde dich mit einem API-Token an.",
+  "@loginErrorThrottled": {
+    "description": "Login error when Tandoor's daily password login limit (HTTP 429) is reached."
+  },
+  "loginWhatIsTandoor": "Was ist Tandoor?",
+  "@loginWhatIsTandoor": {
+    "description": "Link at the bottom of the login screen that explains Tandoor."
+  },
+  "loginWhatIsTandoorText": "Tandoor ist eine freie Rezeptverwaltung, die du auf deinem eigenen Server betreibst. Yumdoor ist eine App für deinen Tandoor-Server und funktioniert nicht ohne ihn. Mehr dazu unter tandoor.dev.",
+  "@loginWhatIsTandoorText": {
+    "description": "Explanation in the dialog opened from 'What is Tandoor?'."
+  },
+  "logout": "Abmelden",
+  "@logout": {
+    "description": "Action that ends the session."
+  },
   "back": "Zurück",
   "@back": {
     "description": "Accessible label of the round back button in top bars."
