@@ -50,6 +50,99 @@ final class TokenStoreProvider
 
 String _$tokenStoreHash() => r'4f22ee87dd2d663815a7b5f069d8ff055eac1c8b';
 
+@ProviderFor(csrfTokenSource)
+final csrfTokenSourceProvider = CsrfTokenSourceProvider._();
+
+final class CsrfTokenSourceProvider
+    extends
+        $FunctionalProvider<CsrfTokenSource, CsrfTokenSource, CsrfTokenSource>
+    with $Provider<CsrfTokenSource> {
+  CsrfTokenSourceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'csrfTokenSourceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$csrfTokenSourceHash();
+
+  @$internal
+  @override
+  $ProviderElement<CsrfTokenSource> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  CsrfTokenSource create(Ref ref) {
+    return csrfTokenSource(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CsrfTokenSource value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CsrfTokenSource>(value),
+    );
+  }
+}
+
+String _$csrfTokenSourceHash() => r'6dc4dece0002a1d99b36926d7811b5933f56ef67';
+
+/// In the web build, the origin the app is served from. Tandoor sends no CORS
+/// headers, so it is the only origin whose Tandoor the app can reach
+/// (docs/TANDOOR_API.md#cors-and-deployment). `null` in native apps.
+
+@ProviderFor(webOrigin)
+final webOriginProvider = WebOriginProvider._();
+
+/// In the web build, the origin the app is served from. Tandoor sends no CORS
+/// headers, so it is the only origin whose Tandoor the app can reach
+/// (docs/TANDOOR_API.md#cors-and-deployment). `null` in native apps.
+
+final class WebOriginProvider extends $FunctionalProvider<Uri?, Uri?, Uri?>
+    with $Provider<Uri?> {
+  /// In the web build, the origin the app is served from. Tandoor sends no CORS
+  /// headers, so it is the only origin whose Tandoor the app can reach
+  /// (docs/TANDOOR_API.md#cors-and-deployment). `null` in native apps.
+  WebOriginProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'webOriginProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$webOriginHash();
+
+  @$internal
+  @override
+  $ProviderElement<Uri?> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  Uri? create(Ref ref) {
+    return webOrigin(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Uri? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Uri?>(value),
+    );
+  }
+}
+
+String _$webOriginHash() => r'3c77ccb83bd0eb3ec2edec68b3bb9d2d09d32b20';
+
 @ProviderFor(wakeLockService)
 final wakeLockServiceProvider = WakeLockServiceProvider._();
 

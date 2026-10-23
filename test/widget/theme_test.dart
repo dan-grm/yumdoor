@@ -6,6 +6,8 @@ import 'package:yumdoor/app/theme_mode.dart';
 import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/features/home/home_screen.dart';
 
+import '../fakes/app_overrides.dart';
+
 void main() {
   Future<YumdoorTokens> activeTokens(
     WidgetTester tester, {
@@ -14,7 +16,9 @@ void main() {
   }) async {
     tester.platformDispatcher.platformBrightnessTestValue = system;
     addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
-    final container = ProviderContainer();
+    final container = ProviderContainer(
+      overrides: appOverrides(tokenStore: loggedInTokenStore()),
+    );
     addTearDown(container.dispose);
     if (mode != null) {
       container.read(themeModeSettingProvider.notifier).set(mode);
