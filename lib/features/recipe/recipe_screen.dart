@@ -10,10 +10,10 @@ import '../../design/design.dart';
 import '../../domain/models/recipe.dart';
 import '../../domain/models/recipe_step.dart';
 import '../../domain/services/scaling_service.dart';
-import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import 'ingredient_lines.dart';
+import 'recipe_meta.dart';
 import 'recipe_providers.dart';
 
 /// Height of the image above the title (mockup 04-rezept).
@@ -245,42 +245,7 @@ class _TitleBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    final l10n = context.l10n;
-    final format = LocaleFormat.of(context);
-    final style = t.caption.copyWith(color: t.inkMuted);
-    final minutes = (recipe.workingTime + recipe.waitingTime).inMinutes;
-    final rating = switch (recipe.rating) {
-      final rating? => format.amount((rating * 10).round() / 10),
-      null => null,
-    };
-    // (shown, read aloud); the star is an icon because Nunito has no ★.
-    final meta = <(List<InlineSpan>, String)>[
-      if (minutes > 0)
-        (
-          [TextSpan(text: l10n.recipeMinutes(minutes))],
-          l10n.recipeMinutes(minutes),
-        ),
-      if (rating != null)
-        (
-          [
-            TextSpan(text: '$rating '),
-            WidgetSpan(
-              alignment: PlaceholderAlignment.middle,
-              child: Icon(
-                Icons.star_rounded,
-                size: style.fontSize,
-                color: t.inkMuted,
-              ),
-            ),
-          ],
-          l10n.recipeRating(rating),
-        ),
-      if (recipe.lastCooked case final date?)
-        (
-          [TextSpan(text: l10n.recipeLastCooked(format.date(date.toLocal())))],
-          l10n.recipeLastCooked(format.date(date.toLocal())),
-        ),
-    ];
+    final time = recipe.workingTime + recipe.waitingTime;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -289,19 +254,17 @@ class _TitleBlock extends StatelessWidget {
           header: true,
           child: Text(recipe.name, style: t.titleL.copyWith(color: t.ink)),
         ),
-        if (meta.isNotEmpty) ...[
+        if (time.inMinutes > 0 ||
+            recipe.rating != null ||
+            recipe.lastCooked != null) ...[
           SizedBox(height: t.space1),
-          Text.rich(
-            TextSpan(
-              children: [
-                for (final (index, (spans, _)) in meta.indexed) ...[
-                  if (index > 0) const TextSpan(text: ' · '),
-                  ...spans,
-                ],
-              ],
+          DefaultTextStyle.merge(
+            style: t.caption.copyWith(color: t.inkMuted),
+            child: RecipeMetaLine(
+              time: time,
+              rating: recipe.rating,
+              lastCooked: recipe.lastCooked,
             ),
-            style: style,
-            semanticsLabel: meta.map((part) => part.$2).join(', '),
           ),
         ],
         if (recipe.keywords.isNotEmpty) ...[

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/app/app.dart';
 import 'package:yumdoor/app/locale.dart';
-import 'package:yumdoor/features/home/home_screen.dart';
+import 'package:yumdoor/features/search/search_screen.dart';
 
 import '../fakes/app_overrides.dart';
 
@@ -29,7 +29,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    return Localizations.localeOf(tester.element(find.byType(HomeScreen)));
+    return Localizations.localeOf(tester.element(find.byType(SearchScreen)));
   }
 
   testWidgets('follows an English device', (tester) async {

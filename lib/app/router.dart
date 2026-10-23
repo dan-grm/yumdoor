@@ -7,8 +7,9 @@ import '../design/token_gallery.dart';
 import '../domain/models/session.dart';
 import '../features/auth/login_screen.dart';
 import '../features/cooking/cooking_screen.dart';
-import '../features/home/home_screen.dart';
 import '../features/recipe/recipe_screen.dart';
+import '../features/search/search_location.dart';
+import '../features/search/search_screen.dart';
 import 'session.dart';
 
 part 'router.g.dart';
@@ -26,7 +27,13 @@ GoRouter router(Ref ref) {
     refreshListenable: session,
     redirect: (context, state) => sessionRedirect(session.value, state.uri),
     routes: [
-      GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+      // The start screen (M2) will live here; until then search is home.
+      GoRoute(path: '/', redirect: (context, state) => searchPath),
+      GoRoute(
+        path: searchPath,
+        builder: (context, state) =>
+            SearchScreen(query: searchQueryFromUri(state.uri)),
+      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: loadingPath, builder: (context, state) => const Scaffold()),
       GoRoute(

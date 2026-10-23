@@ -277,4 +277,84 @@ class AppLocalizationsEn extends AppLocalizations {
   String recipeStartCooking(String servings) {
     return 'Start cooking · $servings';
   }
+
+  @override
+  String get searchTitle => 'Search';
+
+  @override
+  String get searchFieldLabel => 'Search recipes';
+
+  @override
+  String get searchFieldHint => 'Recipe name';
+
+  @override
+  String get searchClear => 'Clear search text';
+
+  @override
+  String get searchAddFood => 'Ingredient';
+
+  @override
+  String get searchAddKeyword => 'Keyword';
+
+  @override
+  String searchFoodFilter(String food) {
+    return 'with $food';
+  }
+
+  @override
+  String get searchFilterLoading => '…';
+
+  @override
+  String get searchFilterUnknown => 'Unknown filter';
+
+  @override
+  String searchRemoveFilter(String filter) {
+    return 'Remove $filter';
+  }
+
+  @override
+  String searchResultCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString recipes',
+      one: '1 recipe',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get searchEmpty => 'No recipes found';
+
+  @override
+  String get searchEmptyHint => 'Try fewer filters or different search text.';
+
+  @override
+  String get searchEmptyServer =>
+      'There are no recipes on your Tandoor server yet.';
+
+  @override
+  String get searchLoadMoreFailed => 'Couldn\'t load more recipes.';
+
+  @override
+  String get pickerFoodTitle => 'Add ingredient';
+
+  @override
+  String get pickerKeywordTitle => 'Add keyword';
+
+  @override
+  String get pickerFoodHint => 'Search ingredients';
+
+  @override
+  String get pickerKeywordHint => 'Search keywords';
+
+  @override
+  String get pickerFoodNote => 'Child ingredients count too.';
+
+  @override
+  String get pickerEmpty => 'Nothing found';
 }

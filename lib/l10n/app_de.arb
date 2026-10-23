@@ -377,5 +377,107 @@
         "example": "4 Portionen"
       }
     }
+  },
+  "searchTitle": "Suchen",
+  "@searchTitle": {
+    "description": "Heading of the search screen."
+  },
+  "searchFieldLabel": "Rezepte durchsuchen",
+  "@searchFieldLabel": {
+    "description": "Accessible label of the search text field."
+  },
+  "searchFieldHint": "Rezeptname",
+  "@searchFieldHint": {
+    "description": "Placeholder of the search text field. By default Tandoor's text search only matches recipe names."
+  },
+  "searchClear": "Suchtext löschen",
+  "@searchClear": {
+    "description": "Button in the search field that empties it."
+  },
+  "searchAddFood": "Zutat",
+  "@searchAddFood": {
+    "description": "Dashed chip that opens the ingredient picker; shown with a plus icon."
+  },
+  "searchAddKeyword": "Stichwort",
+  "@searchAddKeyword": {
+    "description": "Dashed chip that opens the keyword picker; shown with a plus icon."
+  },
+  "searchFoodFilter": "enthält {food}",
+  "@searchFoodFilter": {
+    "description": "Label of an ingredient filter chip, and the pill on a result that echoes it. The food in its plural form if it has one.",
+    "placeholders": {
+      "food": {
+        "type": "String",
+        "example": "Karotten"
+      }
+    }
+  },
+  "searchFilterLoading": "…",
+  "@searchFilterLoading": {
+    "description": "Label of a filter chip while its name loads, after opening a search link."
+  },
+  "searchFilterUnknown": "Unbekannter Filter",
+  "@searchFilterUnknown": {
+    "description": "Label of a filter chip whose food or keyword no longer exists."
+  },
+  "searchRemoveFilter": "{filter} entfernen",
+  "@searchRemoveFilter": {
+    "description": "Accessible label of a selected filter chip; tapping it removes the filter.",
+    "placeholders": {
+      "filter": {
+        "type": "String",
+        "example": "enthält Karotten"
+      }
+    }
+  },
+  "searchResultCount": "{count, plural, =1{1 Rezept} other{{count} Rezepte}}",
+  "@searchResultCount": {
+    "description": "Number of search results above the list.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "searchEmpty": "Keine Rezepte gefunden",
+  "@searchEmpty": {
+    "description": "Empty state of the search results."
+  },
+  "searchEmptyHint": "Probier weniger Filter oder einen anderen Suchtext.",
+  "@searchEmptyHint": {
+    "description": "Below the empty state when the search has text or filters."
+  },
+  "searchEmptyServer": "Auf deinem Tandoor-Server gibt es noch keine Rezepte.",
+  "@searchEmptyServer": {
+    "description": "Empty state when an unfiltered search finds nothing."
+  },
+  "searchLoadMoreFailed": "Weitere Rezepte konnten nicht geladen werden.",
+  "@searchLoadMoreFailed": {
+    "description": "At the end of the results when the next page failed; a retry button follows."
+  },
+  "pickerFoodTitle": "Zutat hinzufügen",
+  "@pickerFoodTitle": {
+    "description": "Title of the ingredient picker sheet, and the accessible label of the chip that opens it."
+  },
+  "pickerKeywordTitle": "Stichwort hinzufügen",
+  "@pickerKeywordTitle": {
+    "description": "Title of the keyword picker sheet, and the accessible label of the chip that opens it."
+  },
+  "pickerFoodHint": "Zutat suchen",
+  "@pickerFoodHint": {
+    "description": "Placeholder of the text field in the ingredient picker."
+  },
+  "pickerKeywordHint": "Stichwort suchen",
+  "@pickerKeywordHint": {
+    "description": "Placeholder of the text field in the keyword picker."
+  },
+  "pickerFoodNote": "Untergeordnete Zutaten zählen mit.",
+  "@pickerFoodNote": {
+    "description": "Note in the ingredient picker: picking a food also finds recipes with its child foods in the food tree."
+  },
+  "pickerEmpty": "Nichts gefunden",
+  "@pickerEmpty": {
+    "description": "Empty state of the ingredient and keyword pickers."
   }
 }

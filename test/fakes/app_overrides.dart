@@ -5,6 +5,8 @@ import 'package:yumdoor/platform/token_store/token_store.dart';
 
 import 'fake_auth_repository.dart';
 import 'fake_connectivity_service.dart';
+import 'fake_food_keyword_repositories.dart';
+import 'fake_recipe_repository.dart';
 import 'fake_server_repository.dart';
 import 'in_memory_token_store.dart';
 
@@ -25,11 +27,21 @@ List<Override> appOverrides({
   FakeAuthRepository? auth,
   FakeServerRepository? server,
   FakeConnectivityService? connectivity,
+  FakeRecipeRepository? recipes,
+  FakeFoodRepository? foods,
+  FakeKeywordRepository? keywords,
   Uri? webOrigin,
 }) => [
   tokenStoreProvider.overrideWithValue(tokenStore ?? InMemoryTokenStore()),
   authRepositoryProvider.overrideWithValue(auth ?? FakeAuthRepository()),
   serverRepositoryProvider.overrideWithValue(server ?? FakeServerRepository()),
+  recipeRepositoryProvider.overrideWithValue(
+    recipes ?? FakeRecipeRepository(const []),
+  ),
+  foodRepositoryProvider.overrideWithValue(foods ?? FakeFoodRepository()),
+  keywordRepositoryProvider.overrideWithValue(
+    keywords ?? FakeKeywordRepository(),
+  ),
   connectivityServiceProvider.overrideWithValue(
     connectivity ?? FakeConnectivityService(),
   ),
