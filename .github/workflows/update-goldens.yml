@@ -31,7 +31,8 @@ jobs:
           cache: true
           pub-cache: true
       - run: flutter pub get --enforce-lockfile
-      - run: flutter test --tags golden --update-goldens
+      # Integration tests read the seed credentials when loaded; skip them.
+      - run: flutter test --tags golden --exclude-tags integration --update-goldens
       # A tar keeps the paths relative to the repository root.
       - run: find test -path '*/goldens/*.png' | tar -cf goldens.tar -T -
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
