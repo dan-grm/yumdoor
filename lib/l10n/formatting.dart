@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 
+import '../domain/services/scaling_service.dart';
+
 /// Number and date formatting in the active locale ("1,5" in German,
 /// "1.5" in English). Never format user-visible numbers with `toString()`.
 class LocaleFormat {
@@ -18,6 +20,17 @@ class LocaleFormat {
   String amount(num value) => (NumberFormat.decimalPattern(
     _locale,
   )..maximumFractionDigits = 2).format(value);
+
+  /// A scaled ingredient amount: `1½`, `¼`, `0,3`, `1.250`. The domain has
+  /// already rounded it (see [Quantity.of]).
+  String quantity(Quantity value) => switch (value) {
+    FractionQuantity(whole: 0, :final fraction) => fraction.symbol,
+    FractionQuantity(:final whole, :final fraction) =>
+      '${integer(whole)}${fraction.symbol}',
+    DecimalQuantity(:final value) => (NumberFormat.decimalPattern(
+      _locale,
+    )..maximumFractionDigits = 6).format(value),
+  };
 
   /// A whole number with grouped thousands (`1.234`).
   String integer(int value) =>

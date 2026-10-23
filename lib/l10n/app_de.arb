@@ -145,5 +145,237 @@
   "logout": "Abmelden",
   "@logout": {
     "description": "Action that ends the session."
+  },
+  "back": "Zurück",
+  "@back": {
+    "description": "Accessible label of the round back button in top bars."
+  },
+  "retry": "Nochmal versuchen",
+  "@retry": {
+    "description": "Button under an error message that repeats the failed request."
+  },
+  "errorOffline": "Der Server ist gerade nicht erreichbar. Prüf deine Verbindung.",
+  "@errorOffline": {
+    "description": "Error message when the Tandoor server cannot be reached."
+  },
+  "errorUnauthorized": "Deine Anmeldung gilt nicht mehr. Melde dich neu an.",
+  "@errorUnauthorized": {
+    "description": "Error message when the token is invalid or lacks permission."
+  },
+  "errorThrottled": "Zu viele Anfragen. Versuch es später noch einmal.",
+  "@errorThrottled": {
+    "description": "Error message when the server rate-limits requests (HTTP 429)."
+  },
+  "errorServer": "Der Server hat einen Fehler gemeldet.",
+  "@errorServer": {
+    "description": "Error message for unexpected server errors."
+  },
+  "recipeNotFound": "Dieses Rezept gibt es nicht, oder du darfst es nicht sehen.",
+  "@recipeNotFound": {
+    "description": "Error message when a recipe does not exist or is not visible to the user."
+  },
+  "servings": "{count, plural, =1{1 Portion} other{{count} Portionen}}",
+  "@servings": {
+    "description": "Number of servings, used when the recipe does not name its own serving unit.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "servingsCustom": "{count} {unit}",
+  "@servingsCustom": {
+    "description": "Number of servings with the recipe's own serving unit, e.g. '12 Stück'.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "unit": {
+        "type": "String",
+        "example": "Stück"
+      }
+    }
+  },
+  "servingsDecrease": "Weniger Portionen",
+  "@servingsDecrease": {
+    "description": "Accessible label of the minus button in the servings picker."
+  },
+  "servingsIncrease": "Mehr Portionen",
+  "@servingsIncrease": {
+    "description": "Accessible label of the plus button in the servings picker."
+  },
+  "recipeMinutes": "{minutes} Min",
+  "@recipeMinutes": {
+    "description": "Total time of a recipe in the meta line under its title.",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "recipeRating": "{rating} von 5 Sternen",
+  "@recipeRating": {
+    "description": "Screen reader text for the user's own average rating; shown as the number and a star icon.",
+    "placeholders": {
+      "rating": {
+        "type": "String",
+        "example": "4,5"
+      }
+    }
+  },
+  "recipeLastCooked": "zuletzt am {date}",
+  "@recipeLastCooked": {
+    "description": "When the user last cooked the recipe, in the meta line.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "20. Okt. 2026"
+      }
+    }
+  },
+  "recipePlan": "Planen",
+  "@recipePlan": {
+    "description": "Button on the recipe screen: add the recipe to the meal plan."
+  },
+  "recipeShop": "Einkaufen",
+  "@recipeShop": {
+    "description": "Button on the recipe screen: put the ingredients on the shopping list."
+  },
+  "recipeEdit": "Bearbeiten",
+  "@recipeEdit": {
+    "description": "Button on the recipe screen: edit the recipe."
+  },
+  "recipeActionsComingSoon": "Planen, Einkaufen und Bearbeiten kommen bald.",
+  "@recipeActionsComingSoon": {
+    "description": "Explains why the plan, shop and edit buttons are disabled."
+  },
+  "recipeIngredients": "Zutaten",
+  "@recipeIngredients": {
+    "description": "Heading of the ingredient list."
+  },
+  "recipeScaledFrom": "Rezept ist für {servings}, Mengen umgerechnet",
+  "@recipeScaledFrom": {
+    "description": "Shown under the servings picker when the chosen servings differ from the recipe's.",
+    "placeholders": {
+      "servings": {
+        "type": "String",
+        "example": "2 Portionen"
+      }
+    }
+  },
+  "recipeNoIngredients": "Dieses Rezept hat keine Zutaten.",
+  "@recipeNoIngredients": {
+    "description": "Empty state of the ingredient list."
+  },
+  "recipeStepTitle": "Schritt {number}",
+  "@recipeStepTitle": {
+    "description": "Title of a step without its own name, e.g. above its ingredients.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "cookingClose": "Kochmodus beenden",
+  "@cookingClose": {
+    "description": "Accessible label of the close button in cooking mode."
+  },
+  "cookingStepOf": "Schritt {current} von {total}",
+  "@cookingStepOf": {
+    "description": "Top bar of cooking mode: the current step.",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "cookingStepProgress": "{current} / {total}",
+  "@cookingStepProgress": {
+    "description": "Compact step progress next to the bar that replaces the step dots from 9 steps on.",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "cookingLastStep": "Schritt {number} · Letzter",
+  "@cookingLastStep": {
+    "description": "Small label above the text of the last step.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "cookingForServings": "für {servings}",
+  "@cookingForServings": {
+    "description": "Read-only servings next to the step's ingredients, e.g. 'für 4 Portionen'.",
+    "placeholders": {
+      "servings": {
+        "type": "String",
+        "example": "4 Portionen"
+      }
+    }
+  },
+  "cookingPrevious": "Zurück zu Schritt {number}",
+  "@cookingPrevious": {
+    "description": "Accessible label of the round back button in cooking mode.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "cookingNext": "Weiter zu Schritt {number}",
+  "@cookingNext": {
+    "description": "Main navigation button in cooking mode.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "cookingDone": "Fertig",
+  "@cookingDone": {
+    "description": "Button on the last step; returns to the recipe."
+  },
+  "cookingNoSteps": "Dieses Rezept hat keine Schritte.",
+  "@cookingNoSteps": {
+    "description": "Cooking mode for a recipe without steps."
+  },
+  "cookingScreenOn": "Bildschirm bleibt an",
+  "@cookingScreenOn": {
+    "description": "Label of the wake lock toggle while the screen is kept on."
+  },
+  "cookingScreenOff": "Bildschirm anlassen",
+  "@cookingScreenOff": {
+    "description": "Label of the wake lock toggle while the screen may turn off."
+  },
+  "cookingScreenUnavailable": "Bildschirm kann nicht anbleiben",
+  "@cookingScreenUnavailable": {
+    "description": "Label of the disabled wake lock toggle when the device can't keep the screen on."
+  },
+  "cookingWakeLockHint": "Dein Gerät kann den Bildschirm hier nicht anlassen. Stell die automatische Sperre zum Kochen länger ein.",
+  "@cookingWakeLockHint": {
+    "description": "Shown once when the wake lock is unsupported or refused."
+  },
+  "recipeStartCooking": "Kochen starten · {servings}",
+  "@recipeStartCooking": {
+    "description": "Main button on the recipe screen; opens cooking mode with the chosen servings.",
+    "placeholders": {
+      "servings": {
+        "type": "String",
+        "example": "4 Portionen"
+      }
+    }
   }
 }

@@ -120,4 +120,164 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get logout => 'Abmelden';
+
+  @override
+  String get back => 'Zurück';
+
+  @override
+  String get retry => 'Nochmal versuchen';
+
+  @override
+  String get errorOffline =>
+      'Der Server ist gerade nicht erreichbar. Prüf deine Verbindung.';
+
+  @override
+  String get errorUnauthorized =>
+      'Deine Anmeldung gilt nicht mehr. Melde dich neu an.';
+
+  @override
+  String get errorThrottled =>
+      'Zu viele Anfragen. Versuch es später noch einmal.';
+
+  @override
+  String get errorServer => 'Der Server hat einen Fehler gemeldet.';
+
+  @override
+  String get recipeNotFound =>
+      'Dieses Rezept gibt es nicht, oder du darfst es nicht sehen.';
+
+  @override
+  String servings(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Portionen',
+      one: '1 Portion',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String servingsCustom(int count, String unit) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return '$countString $unit';
+  }
+
+  @override
+  String get servingsDecrease => 'Weniger Portionen';
+
+  @override
+  String get servingsIncrease => 'Mehr Portionen';
+
+  @override
+  String recipeMinutes(int minutes) {
+    final intl.NumberFormat minutesNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String minutesString = minutesNumberFormat.format(minutes);
+
+    return '$minutesString Min';
+  }
+
+  @override
+  String recipeRating(String rating) {
+    return '$rating von 5 Sternen';
+  }
+
+  @override
+  String recipeLastCooked(String date) {
+    return 'zuletzt am $date';
+  }
+
+  @override
+  String get recipePlan => 'Planen';
+
+  @override
+  String get recipeShop => 'Einkaufen';
+
+  @override
+  String get recipeEdit => 'Bearbeiten';
+
+  @override
+  String get recipeActionsComingSoon =>
+      'Planen, Einkaufen und Bearbeiten kommen bald.';
+
+  @override
+  String get recipeIngredients => 'Zutaten';
+
+  @override
+  String recipeScaledFrom(String servings) {
+    return 'Rezept ist für $servings, Mengen umgerechnet';
+  }
+
+  @override
+  String get recipeNoIngredients => 'Dieses Rezept hat keine Zutaten.';
+
+  @override
+  String recipeStepTitle(int number) {
+    return 'Schritt $number';
+  }
+
+  @override
+  String get cookingClose => 'Kochmodus beenden';
+
+  @override
+  String cookingStepOf(int current, int total) {
+    return 'Schritt $current von $total';
+  }
+
+  @override
+  String cookingStepProgress(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
+  String cookingLastStep(int number) {
+    return 'Schritt $number · Letzter';
+  }
+
+  @override
+  String cookingForServings(String servings) {
+    return 'für $servings';
+  }
+
+  @override
+  String cookingPrevious(int number) {
+    return 'Zurück zu Schritt $number';
+  }
+
+  @override
+  String cookingNext(int number) {
+    return 'Weiter zu Schritt $number';
+  }
+
+  @override
+  String get cookingDone => 'Fertig';
+
+  @override
+  String get cookingNoSteps => 'Dieses Rezept hat keine Schritte.';
+
+  @override
+  String get cookingScreenOn => 'Bildschirm bleibt an';
+
+  @override
+  String get cookingScreenOff => 'Bildschirm anlassen';
+
+  @override
+  String get cookingScreenUnavailable => 'Bildschirm kann nicht anbleiben';
+
+  @override
+  String get cookingWakeLockHint =>
+      'Dein Gerät kann den Bildschirm hier nicht anlassen. Stell die automatische Sperre zum Kochen länger ein.';
+
+  @override
+  String recipeStartCooking(String servings) {
+    return 'Kochen starten · $servings';
+  }
 }
