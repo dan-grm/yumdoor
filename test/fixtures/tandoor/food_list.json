@@ -1,0 +1,40 @@
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "timestamp": "2026-10-23T14:54:17.422438+00:00",
+  "results": [
+    {
+      "id": 178,
+      "name": "Karotte",
+      "plural_name": "Karotten",
+      "description": "",
+      "shopping": "True",
+      "recipe": null,
+      "url": "",
+      "properties": [],
+      "properties_food_amount": 100.0,
+      "properties_food_unit": null,
+      "fdc_id": null,
+      "food_onhand": false,
+      "supermarket_category": {
+        "id": 17,
+        "name": "Obst & Gemüse",
+        "description": null,
+        "open_data_slug": null
+      },
+      "parent": 176,
+      "numchild": 0,
+      "inherit_fields": [],
+      "full_name": "Gemüse > Wurzelgemüse > Karotte",
+      "ignore_shopping": false,
+      "substitute": [],
+      "substitute_siblings": false,
+      "substitute_children": false,
+      "substitute_onhand": false,
+      "child_inherit_fields": [],
+      "open_data_slug": null,
+      "shopping_lists": []
+    }
+  ]
+}

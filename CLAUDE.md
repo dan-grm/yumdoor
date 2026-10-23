@@ -104,7 +104,7 @@ Do it deliberately, in its own PR (`build(tandoor): bump to X.Y.Z`):
 2. `docker compose -f docker/tandoor/compose.yml up -d` and `dart run tool/fetch_schema.dart` → writes
    `packages/tandoor_api/schema/openapi-<version>.json`; delete the old one.
 3. `dart run tool/generate_api.dart`, then fix compile errors. They should only appear in `lib/data/`.
-4. Re-run the seed and the integration tests.
+4. Re-run the seed, `dart run tool/record_fixtures.dart` (mapper test fixtures) and the integration tests.
 5. Re-verify `docs/TANDOOR_API.md` against the new Tandoor source (especially auth, search params, meal plan
    and shopping behavior) and note changes in the PR.
 6. Update the version in `README.md`.
@@ -121,6 +121,7 @@ Details and source references are in `docs/TANDOOR_API.md`.
 - Step text may contain Jinja-like templates (`{{ ingredients[0] }}`, `{{ scale(100) }}`).
 - Shopping entries for a meal plan are built client-side, then created with `bulk_create_entries`.
 - Check shopping entries off with the bulk endpoint; a PATCH without `checked` can clear the on-hand flag.
+- A missing or invalid token gets **403**, not 401. Both map to `UnauthorizedFailure`.
 
 ## Contributions
 

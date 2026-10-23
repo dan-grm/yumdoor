@@ -1,27 +1,23 @@
 @Tags(['integration'])
 library;
 
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tandoor_api/tandoor_api.dart';
 
-import '../../tool/seed.dart' show credentialsPath, isLocalTarget;
+import 'seeded_tandoor.dart';
 
 /// The generated client against the local Tandoor from
 /// docker/tandoor/compose.yml, seeded with `dart run tool/seed.dart`.
 void main() {
-  final credentials = jsonDecode(
-    File(credentialsPath).readAsStringSync(),
-  ) as Map<String, dynamic>;
-  final baseUrl = Uri.parse(credentials['base_url'] as String);
-  if (!isLocalTarget(baseUrl)) {
-    throw StateError('Integration tests only run against a local Tandoor.');
-  }
+  final tandoor = SeededTandoor.load();
 
   TandoorApi client({String? token}) {
-    final api = TandoorApi(basePathOverride: baseUrl.toString());
+    final api = TandoorApi(basePathOverride: tandoor.baseUrl.toString());
+    // The generated default of 3 s is too short while other integration
+    // tests load the dev server.
+    api.dio.options.receiveTimeout = const Duration(seconds: 30);
     if (token != null) api.setApiKey('ApiKeyAuth', 'Bearer $token');
     return api;
   }
@@ -38,9 +34,7 @@ void main() {
   });
 
   test('deserializes seeded recipes', () async {
-    final users = credentials['users'] as Map<String, dynamic>;
-    final anna = users['anna'] as Map<String, dynamic>;
-    final api = client(token: anna['token'] as String).getApiApi();
+    final api = client(token: tandoor.token('anna')).getApiApi();
 
     final list = await api.apiRecipeList(pageSize: 100);
     expect(list.data!.count, greaterThan(0));

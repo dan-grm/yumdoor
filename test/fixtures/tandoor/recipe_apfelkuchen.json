@@ -1,0 +1,650 @@
+{
+  "id": 58,
+  "name": "Apfelkuchen vom Blech",
+  "description": "",
+  "image": null,
+  "keywords": [
+    {
+      "id": 47,
+      "name": "Herbst",
+      "label": "Herbst",
+      "description": "",
+      "parent": null,
+      "numchild": 0,
+      "created_at": "2026-10-20T22:45:23.056261+02:00",
+      "updated_at": "2026-10-20T22:45:23.056270+02:00",
+      "full_name": "Herbst"
+    },
+    {
+      "id": 55,
+      "name": "Backen",
+      "label": "Backen",
+      "description": "",
+      "parent": null,
+      "numchild": 0,
+      "created_at": "2026-10-20T22:45:25.539185+02:00",
+      "updated_at": "2026-10-20T22:45:25.539194+02:00",
+      "full_name": "Backen"
+    },
+    {
+      "id": 56,
+      "name": "Dessert",
+      "label": "Dessert",
+      "description": "",
+      "parent": null,
+      "numchild": 0,
+      "created_at": "2026-10-20T22:45:25.543148+02:00",
+      "updated_at": "2026-10-20T22:45:25.543157+02:00",
+      "full_name": "Dessert"
+    }
+  ],
+  "steps": [
+    {
+      "id": 162,
+      "name": "",
+      "instruction": "Für den Teig alles verkneten und auf einem gefetteten Blech ({{ scale(30) }} × 40 cm) verteilen.",
+      "ingredients": [
+        {
+          "id": 448,
+          "food": null,
+          "unit": null,
+          "amount": 0.0,
+          "conversions": [],
+          "note": "Für den Teig",
+          "order": 0,
+          "is_header": true,
+          "no_amount": true,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 58,
+              "name": "Apfelkuchen vom Blech"
+            }
+          ],
+          "checked": false
+        },
+        {
+          "id": 449,
+          "food": {
+            "id": 206,
+            "name": "Mehl",
+            "plural_name": null,
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": true,
+            "supermarket_category": {
+              "id": 21,
+              "name": "Trockenwaren",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": null,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Mehl",
+            "ignore_shopping": false,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": {
+            "id": 39,
+            "name": "g",
+            "plural_name": "g",
+            "description": null,
+            "base_unit": null,
+            "open_data_slug": null
+          },
+          "amount": 300.0,
+          "conversions": [
+            {
+              "food": "Mehl",
+              "unit": "g",
+              "amount": 300.0
+            }
+          ],
+          "note": "",
+          "order": 1,
+          "is_header": false,
+          "no_amount": false,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 58,
+              "name": "Apfelkuchen vom Blech"
+            }
+          ],
+          "checked": false
+        },
+        {
+          "id": 450,
+          "food": {
+            "id": 207,
+            "name": "Zucker",
+            "plural_name": null,
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": true,
+            "supermarket_category": {
+              "id": 21,
+              "name": "Trockenwaren",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": null,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Zucker",
+            "ignore_shopping": false,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": {
+            "id": 39,
+            "name": "g",
+            "plural_name": "g",
+            "description": null,
+            "base_unit": null,
+            "open_data_slug": null
+          },
+          "amount": 150.0,
+          "conversions": [
+            {
+              "food": "Zucker",
+              "unit": "g",
+              "amount": 150.0
+            }
+          ],
+          "note": "",
+          "order": 2,
+          "is_header": false,
+          "no_amount": false,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 58,
+              "name": "Apfelkuchen vom Blech"
+            }
+          ],
+          "checked": false
+        },
+        {
+          "id": 451,
+          "food": {
+            "id": 194,
+            "name": "Butter",
+            "plural_name": null,
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": false,
+            "supermarket_category": {
+              "id": 19,
+              "name": "Kühlregal",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": null,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Butter",
+            "ignore_shopping": false,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": {
+            "id": 39,
+            "name": "g",
+            "plural_name": "g",
+            "description": null,
+            "base_unit": null,
+            "open_data_slug": null
+          },
+          "amount": 150.0,
+          "conversions": [
+            {
+              "food": "Butter",
+              "unit": "g",
+              "amount": 150.0
+            }
+          ],
+          "note": "weich",
+          "order": 3,
+          "is_header": false,
+          "no_amount": false,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 58,
+              "name": "Apfelkuchen vom Blech"
+            }
+          ],
+          "checked": false
+        },
+        {
+          "id": 452,
+          "food": {
+            "id": 197,
+            "name": "Ei",
+            "plural_name": "Eier",
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": false,
+            "supermarket_category": {
+              "id": 19,
+              "name": "Kühlregal",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": null,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Ei",
+            "ignore_shopping": false,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": {
+            "id": 40,
+            "name": "Stück",
+            "plural_name": "Stück",
+            "description": null,
+            "base_unit": null,
+            "open_data_slug": null
+          },
+          "amount": 3.0,
+          "conversions": [
+            {
+              "food": "Ei",
+              "unit": "Stück",
+              "amount": 3.0
+            }
+          ],
+          "note": "",
+          "order": 4,
+          "is_header": false,
+          "no_amount": false,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 58,
+              "name": "Apfelkuchen vom Blech"
+            }
+          ],
+          "checked": false
+        },
+        {
+          "id": 453,
+          "food": {
+            "id": 208,
+            "name": "Backpulver",
+            "plural_name": null,
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": false,
+            "supermarket_category": {
+              "id": 21,
+              "name": "Trockenwaren",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": null,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Backpulver",
+            "ignore_shopping": false,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": {
+            "id": 44,
+            "name": "TL",
+            "plural_name": "TL",
+            "description": null,
+            "base_unit": null,
+            "open_data_slug": null
+          },
+          "amount": 2.0,
+          "conversions": [
+            {
+              "food": "Backpulver",
+              "unit": "TL",
+              "amount": 2.0
+            }
+          ],
+          "note": "",
+          "order": 5,
+          "is_header": false,
+          "no_amount": false,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 58,
+              "name": "Apfelkuchen vom Blech"
+            }
+          ],
+          "checked": false
+        }
+      ],
+      "instructions_markdown": "<p>Für den Teig alles verkneten und auf einem gefetteten Blech (<scalable-number v-bind:number=\"30.0\" v-bind:factor=\"ingredient_factor\"></scalable-number> × 40 cm) verteilen.</p>",
+      "time": 0,
+      "order": 0,
+      "show_as_header": true,
+      "file": null,
+      "step_recipe": null,
+      "step_recipe_data": null,
+      "show_ingredients_table": true
+    },
+    {
+      "id": 163,
+      "name": "",
+      "instruction": "Äpfel schälen, in Spalten schneiden und auf den Teig legen. Mit Zimt und Zucker bestreuen.",
+      "ingredients": [
+        {
+          "id": 454,
+          "food": null,
+          "unit": null,
+          "amount": 0.0,
+          "conversions": [],
+          "note": "Für den Belag",
+          "order": 0,
+          "is_header": true,
+          "no_amount": true,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 58,
+              "name": "Apfelkuchen vom Blech"
+            }
+          ],
+          "checked": false
+        },
+        {
+          "id": 455,
+          "food": {
+            "id": 189,
+            "name": "Apfel",
+            "plural_name": "Äpfel",
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": false,
+            "supermarket_category": {
+              "id": 17,
+              "name": "Obst & Gemüse",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": null,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Apfel",
+            "ignore_shopping": false,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": {
+            "id": 46,
+            "name": "kg",
+            "plural_name": "kg",
+            "description": null,
+            "base_unit": null,
+            "open_data_slug": null
+          },
+          "amount": 1.0,
+          "conversions": [
+            {
+              "food": "Apfel",
+              "unit": "kg",
+              "amount": 1.0
+            }
+          ],
+          "note": "",
+          "order": 1,
+          "is_header": false,
+          "no_amount": false,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 58,
+              "name": "Apfelkuchen vom Blech"
+            }
+          ],
+          "checked": false
+        },
+        {
+          "id": 456,
+          "food": {
+            "id": 227,
+            "name": "Zimt",
+            "plural_name": null,
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": false,
+            "supermarket_category": {
+              "id": 23,
+              "name": "Gewürze & Öle",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": null,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Zimt",
+            "ignore_shopping": false,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": {
+            "id": 44,
+            "name": "TL",
+            "plural_name": "TL",
+            "description": null,
+            "base_unit": null,
+            "open_data_slug": null
+          },
+          "amount": 1.0,
+          "conversions": [
+            {
+              "food": "Zimt",
+              "unit": "TL",
+              "amount": 1.0
+            }
+          ],
+          "note": "",
+          "order": 2,
+          "is_header": false,
+          "no_amount": false,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 58,
+              "name": "Apfelkuchen vom Blech"
+            }
+          ],
+          "checked": false
+        },
+        {
+          "id": 457,
+          "food": {
+            "id": 207,
+            "name": "Zucker",
+            "plural_name": null,
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": true,
+            "supermarket_category": {
+              "id": 21,
+              "name": "Trockenwaren",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": null,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Zucker",
+            "ignore_shopping": false,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": {
+            "id": 41,
+            "name": "EL",
+            "plural_name": "EL",
+            "description": null,
+            "base_unit": null,
+            "open_data_slug": null
+          },
+          "amount": 2.0,
+          "conversions": [
+            {
+              "food": "Zucker",
+              "unit": "EL",
+              "amount": 2.0
+            }
+          ],
+          "note": "",
+          "order": 3,
+          "is_header": false,
+          "no_amount": false,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 58,
+              "name": "Apfelkuchen vom Blech"
+            }
+          ],
+          "checked": false
+        }
+      ],
+      "instructions_markdown": "<p>Äpfel schälen, in Spalten schneiden und auf den Teig legen. Mit Zimt und Zucker bestreuen.</p>",
+      "time": 0,
+      "order": 1,
+      "show_as_header": true,
+      "file": null,
+      "step_recipe": null,
+      "step_recipe_data": null,
+      "show_ingredients_table": true
+    },
+    {
+      "id": 164,
+      "name": "",
+      "instruction": "Bei 180 °C etwa 40 Minuten backen.",
+      "ingredients": [],
+      "instructions_markdown": "<p>Bei 180 °C etwa 40 Minuten backen.</p>",
+      "time": 40,
+      "order": 2,
+      "show_as_header": true,
+      "file": null,
+      "step_recipe": null,
+      "step_recipe_data": null,
+      "show_ingredients_table": true
+    }
+  ],
+  "working_time": 30,
+  "waiting_time": 40,
+  "created_by": {
+    "id": 8,
+    "username": "anna",
+    "first_name": "Anna",
+    "last_name": "",
+    "display_name": "Anna ",
+    "is_staff": false,
+    "is_superuser": false,
+    "is_active": true
+  },
+  "created_at": "2026-10-20T22:45:25.531547+02:00",
+  "updated_at": "2026-10-20T22:45:25.533889+02:00",
+  "source_url": null,
+  "internal": true,
+  "show_ingredient_overview": true,
+  "nutrition": null,
+  "properties": [],
+  "food_properties": {},
+  "servings": 12,
+  "file_path": "",
+  "servings_text": "",
+  "diameter": 0,
+  "diameter_text": "",
+  "rating": null,
+  "last_cooked": null,
+  "private": false,
+  "shared": []
+}

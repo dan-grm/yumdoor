@@ -1,0 +1,587 @@
+{
+  "id": 51,
+  "name": "Karottensuppe mit Ingwer",
+  "description": "Cremig, wärmend und in einer halben Stunde fertig.",
+  "image": null,
+  "keywords": [
+    {
+      "id": 45,
+      "name": "Suppe",
+      "label": "Suppe",
+      "description": "",
+      "parent": null,
+      "numchild": 0,
+      "created_at": "2026-10-20T22:45:23.048494+02:00",
+      "updated_at": "2026-10-20T22:45:23.048504+02:00",
+      "full_name": "Suppe"
+    },
+    {
+      "id": 46,
+      "name": "Vegetarisch",
+      "label": "Vegetarisch",
+      "description": "",
+      "parent": null,
+      "numchild": 0,
+      "created_at": "2026-10-20T22:45:23.052596+02:00",
+      "updated_at": "2026-10-20T22:45:23.052605+02:00",
+      "full_name": "Vegetarisch"
+    },
+    {
+      "id": 47,
+      "name": "Herbst",
+      "label": "Herbst",
+      "description": "",
+      "parent": null,
+      "numchild": 0,
+      "created_at": "2026-10-20T22:45:23.056261+02:00",
+      "updated_at": "2026-10-20T22:45:23.056270+02:00",
+      "full_name": "Herbst"
+    }
+  ],
+  "steps": [
+    {
+      "id": 139,
+      "name": "",
+      "instruction": "{{ ingredients[0] }} schälen und in Scheiben schneiden. Zwiebel und Ingwer fein würfeln.",
+      "ingredients": [
+        {
+          "id": 387,
+          "food": {
+            "id": 178,
+            "name": "Karotte",
+            "plural_name": "Karotten",
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": false,
+            "supermarket_category": {
+              "id": 17,
+              "name": "Obst & Gemüse",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": 176,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Gemüse > Wurzelgemüse > Karotte",
+            "ignore_shopping": false,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": {
+            "id": 39,
+            "name": "g",
+            "plural_name": "g",
+            "description": null,
+            "base_unit": null,
+            "open_data_slug": null
+          },
+          "amount": 600.0,
+          "conversions": [
+            {
+              "food": "Karotte",
+              "unit": "g",
+              "amount": 600.0
+            }
+          ],
+          "note": "",
+          "order": 0,
+          "is_header": false,
+          "no_amount": false,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 51,
+              "name": "Karottensuppe mit Ingwer"
+            }
+          ],
+          "checked": false
+        },
+        {
+          "id": 388,
+          "food": {
+            "id": 180,
+            "name": "Zwiebel",
+            "plural_name": "Zwiebeln",
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": true,
+            "supermarket_category": {
+              "id": 17,
+              "name": "Obst & Gemüse",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": 175,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Gemüse > Zwiebel",
+            "ignore_shopping": false,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": {
+            "id": 40,
+            "name": "Stück",
+            "plural_name": "Stück",
+            "description": null,
+            "base_unit": null,
+            "open_data_slug": null
+          },
+          "amount": 1.0,
+          "conversions": [
+            {
+              "food": "Zwiebel",
+              "unit": "Stück",
+              "amount": 1.0
+            }
+          ],
+          "note": "",
+          "order": 1,
+          "is_header": false,
+          "no_amount": false,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 51,
+              "name": "Karottensuppe mit Ingwer"
+            }
+          ],
+          "checked": false
+        },
+        {
+          "id": 389,
+          "food": {
+            "id": 182,
+            "name": "Ingwer",
+            "plural_name": null,
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": false,
+            "supermarket_category": {
+              "id": 17,
+              "name": "Obst & Gemüse",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": null,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Ingwer",
+            "ignore_shopping": false,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": {
+            "id": 39,
+            "name": "g",
+            "plural_name": "g",
+            "description": null,
+            "base_unit": null,
+            "open_data_slug": null
+          },
+          "amount": 20.0,
+          "conversions": [
+            {
+              "food": "Ingwer",
+              "unit": "g",
+              "amount": 20.0
+            }
+          ],
+          "note": "",
+          "order": 2,
+          "is_header": false,
+          "no_amount": false,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 51,
+              "name": "Karottensuppe mit Ingwer"
+            }
+          ],
+          "checked": false
+        }
+      ],
+      "instructions_markdown": "<p><scalable-number v-bind:number=\"600.0\" v-bind:factor=\"ingredient_factor\"></scalable-number> g <plural-name singular=\"Karotte\" plural=\"Karotten\" v-bind:amount=\"600.0\" v-bind:factor=\"ingredient_factor\" :no-amount=\"false\"></plural-name> schälen und in Scheiben schneiden. Zwiebel und Ingwer fein würfeln.</p>",
+      "time": 0,
+      "order": 0,
+      "show_as_header": true,
+      "file": null,
+      "step_recipe": null,
+      "step_recipe_data": null,
+      "show_ingredients_table": true
+    },
+    {
+      "id": 140,
+      "name": "",
+      "instruction": "Butter in einem Topf erhitzen, das Gemüse darin 5 Minuten andünsten. Mit Brühe ablöschen und 20 Minuten köcheln lassen, bis die Karotten weich sind.",
+      "ingredients": [
+        {
+          "id": 390,
+          "food": {
+            "id": 194,
+            "name": "Butter",
+            "plural_name": null,
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": false,
+            "supermarket_category": {
+              "id": 19,
+              "name": "Kühlregal",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": null,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Butter",
+            "ignore_shopping": false,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": {
+            "id": 41,
+            "name": "EL",
+            "plural_name": "EL",
+            "description": null,
+            "base_unit": null,
+            "open_data_slug": null
+          },
+          "amount": 2.0,
+          "conversions": [
+            {
+              "food": "Butter",
+              "unit": "EL",
+              "amount": 2.0
+            }
+          ],
+          "note": "",
+          "order": 0,
+          "is_header": false,
+          "no_amount": false,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 51,
+              "name": "Karottensuppe mit Ingwer"
+            }
+          ],
+          "checked": false
+        },
+        {
+          "id": 391,
+          "food": {
+            "id": 215,
+            "name": "Gemüsebrühe",
+            "plural_name": null,
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": false,
+            "supermarket_category": {
+              "id": 21,
+              "name": "Trockenwaren",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": null,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Gemüsebrühe",
+            "ignore_shopping": false,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": {
+            "id": 42,
+            "name": "ml",
+            "plural_name": "ml",
+            "description": null,
+            "base_unit": null,
+            "open_data_slug": null
+          },
+          "amount": 800.0,
+          "conversions": [
+            {
+              "food": "Gemüsebrühe",
+              "unit": "ml",
+              "amount": 800.0
+            }
+          ],
+          "note": "",
+          "order": 1,
+          "is_header": false,
+          "no_amount": false,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 51,
+              "name": "Karottensuppe mit Ingwer"
+            }
+          ],
+          "checked": false
+        }
+      ],
+      "instructions_markdown": "<p>Butter in einem Topf erhitzen, das Gemüse darin 5 Minuten andünsten. Mit Brühe ablöschen und 20 Minuten köcheln lassen, bis die Karotten weich sind.</p>",
+      "time": 20,
+      "order": 1,
+      "show_as_header": true,
+      "file": null,
+      "step_recipe": null,
+      "step_recipe_data": null,
+      "show_ingredients_table": true
+    },
+    {
+      "id": 141,
+      "name": "",
+      "instruction": "Kokosmilch zugeben, fein pürieren und mit Salz und Pfeffer abschmecken.",
+      "ingredients": [
+        {
+          "id": 392,
+          "food": {
+            "id": 216,
+            "name": "Kokosmilch",
+            "plural_name": null,
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": false,
+            "supermarket_category": {
+              "id": 22,
+              "name": "Konserven",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": null,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Kokosmilch",
+            "ignore_shopping": false,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": {
+            "id": 42,
+            "name": "ml",
+            "plural_name": "ml",
+            "description": null,
+            "base_unit": null,
+            "open_data_slug": null
+          },
+          "amount": 200.0,
+          "conversions": [
+            {
+              "food": "Kokosmilch",
+              "unit": "ml",
+              "amount": 200.0
+            }
+          ],
+          "note": "",
+          "order": 0,
+          "is_header": false,
+          "no_amount": false,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 51,
+              "name": "Karottensuppe mit Ingwer"
+            }
+          ],
+          "checked": false
+        },
+        {
+          "id": 393,
+          "food": {
+            "id": 228,
+            "name": "Salz",
+            "plural_name": null,
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": false,
+            "supermarket_category": {
+              "id": 23,
+              "name": "Gewürze & Öle",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": null,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Salz",
+            "ignore_shopping": true,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": null,
+          "amount": 0.0,
+          "conversions": [],
+          "note": "",
+          "order": 1,
+          "is_header": false,
+          "no_amount": true,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 51,
+              "name": "Karottensuppe mit Ingwer"
+            }
+          ],
+          "checked": false
+        },
+        {
+          "id": 394,
+          "food": {
+            "id": 229,
+            "name": "Pfeffer",
+            "plural_name": null,
+            "description": "",
+            "recipe": null,
+            "url": "",
+            "properties": [],
+            "properties_food_amount": 100.0,
+            "properties_food_unit": null,
+            "fdc_id": null,
+            "food_onhand": false,
+            "supermarket_category": {
+              "id": 23,
+              "name": "Gewürze & Öle",
+              "description": null,
+              "open_data_slug": null
+            },
+            "parent": null,
+            "numchild": 0,
+            "inherit_fields": [],
+            "full_name": "Pfeffer",
+            "ignore_shopping": true,
+            "substitute": [],
+            "substitute_siblings": false,
+            "substitute_children": false,
+            "substitute_onhand": false,
+            "child_inherit_fields": [],
+            "open_data_slug": null,
+            "shopping_lists": []
+          },
+          "unit": null,
+          "amount": 0.0,
+          "conversions": [],
+          "note": "",
+          "order": 2,
+          "is_header": false,
+          "no_amount": true,
+          "original_text": null,
+          "used_in_recipes": [
+            {
+              "id": 51,
+              "name": "Karottensuppe mit Ingwer"
+            }
+          ],
+          "checked": false
+        }
+      ],
+      "instructions_markdown": "<p>Kokosmilch zugeben, fein pürieren und mit Salz und Pfeffer abschmecken.</p>",
+      "time": 0,
+      "order": 2,
+      "show_as_header": true,
+      "file": null,
+      "step_recipe": null,
+      "step_recipe_data": null,
+      "show_ingredients_table": true
+    }
+  ],
+  "working_time": 15,
+  "waiting_time": 20,
+  "created_by": {
+    "id": 8,
+    "username": "anna",
+    "first_name": "Anna",
+    "last_name": "",
+    "display_name": "Anna ",
+    "is_staff": false,
+    "is_superuser": false,
+    "is_active": true
+  },
+  "created_at": "2026-10-20T22:45:23.039358+02:00",
+  "updated_at": "2026-10-20T22:45:23.041859+02:00",
+  "source_url": null,
+  "internal": true,
+  "show_ingredient_overview": true,
+  "nutrition": null,
+  "properties": [],
+  "food_properties": {},
+  "servings": 4,
+  "file_path": "",
+  "servings_text": "",
+  "diameter": 0,
+  "diameter_text": "",
+  "rating": 4.0,
+  "last_cooked": null,
+  "private": false,
+  "shared": []
+}

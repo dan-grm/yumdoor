@@ -1,0 +1,39 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+import 'keyword.dart';
+import 'recipe_step.dart';
+import 'user_ref.dart';
+
+part 'recipe.freezed.dart';
+
+/// A recipe with its steps, as shown on the recipe screen and in cooking mode.
+@freezed
+abstract class Recipe with _$Recipe {
+  const factory Recipe({
+    required int id,
+    required String name,
+    @Default('') String description,
+    Uri? image,
+    @Default([]) List<Keyword> keywords,
+
+    /// The servings the ingredient amounts are for.
+    @Default(1) int servings,
+
+    /// What a serving is ("Stück", "Gläser"), empty if not set.
+    @Default('') String servingsText,
+    @Default(Duration.zero) Duration workingTime,
+    @Default(Duration.zero) Duration waitingTime,
+    @Default([]) List<RecipeStep> steps,
+
+    /// Where the recipe was imported from, if anywhere.
+    Uri? sourceUrl,
+
+    /// The current user's average rating from their own cook log, 0 to 5.
+    double? rating,
+
+    /// When the current user last cooked it.
+    DateTime? lastCooked,
+    UserRef? createdBy,
+    DateTime? updatedAt,
+  }) = _Recipe;
+}
