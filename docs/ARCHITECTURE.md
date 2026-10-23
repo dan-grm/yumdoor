@@ -125,11 +125,16 @@ over-declares it.
 ## Authentication and session
 
 1. The login screen asks for the server URL (default: the PWA's own origin, derived from the base href) and
-   calls `GET /api/server-settings/current/` to check that it is Tandoor 2.x and show its version.
+   calls `GET /api/server-settings/current/` to check that it is Tandoor 2.x and show its version. On the web, a
+   server on another origin is explained instead of requested (the browser would block it silently).
 2. The user enters username and password, or pastes an API token.
    - Password: `POST /api-token-auth/` returns a token. Yumdoor immediately uses it to create a **device token**
      (`POST /api/access-token/`, scope `read write`) and keeps only the device token. Credentials are never stored.
-   - Pasted token: used as is.
+   - Pasted token: checked with `GET /api/user-preference/`, then used as is.
+   - `AuthRepository` (`lib/data/repositories/tandoor_auth_repository.dart`) talks to the server;
+     `SessionController` (`lib/app/session.dart`) keeps the session in `TokenStore`, and the router sends everyone
+     without a session to `/login`. Starting the app reads the stored session without a request, so it starts
+     offline too.
 3. The token goes into `TokenStore`:
    - native: `flutter_secure_storage` (Keychain / Keystore).
    - web: `localStorage` via the same package (AES-GCM encrypted, but the key is stored next to it, so this is
@@ -139,8 +144,11 @@ over-declares it.
      and documented in the settings screen's About section.
 4. Logout deletes the device token on the server (`DELETE /api/access-token/{id}/`) when online, then clears the
    `TokenStore` and the Drift database. If the token was pasted, Yumdoor does not delete it on the server.
-5. A 401 or 403 anywhere (`UnauthorizedFailure`; Tandoor answers an invalid token with 403) ends the session and
-   returns to login with the server URL prefilled.
+5. A 401 or 403 anywhere (`UnauthorizedFailure`; Tandoor answers an invalid token with 403) makes Yumdoor check
+   the token once; if the server rejects it too, the session ends and login opens with the server URL prefilled.
+   Tandoor also answers a missing permission with 403, so one rejected request alone doesn't log out.
+6. On the web, unsafe requests carry Django's CSRF token from the `csrftoken` cookie, because a Tandoor session in
+   the same browser otherwise makes them fail (docs/TANDOOR_API.md#authentication).
 
 ## Server URL and deployment
 
