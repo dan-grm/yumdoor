@@ -116,6 +116,58 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get cookingClose => 'Kochmodus beenden';
+
+  @override
+  String cookingStepOf(int current, int total) {
+    return 'Schritt $current von $total';
+  }
+
+  @override
+  String cookingStepProgress(int current, int total) {
+    return '$current / $total';
+  }
+
+  @override
+  String cookingLastStep(int number) {
+    return 'Schritt $number · Letzter';
+  }
+
+  @override
+  String cookingForServings(String servings) {
+    return 'für $servings';
+  }
+
+  @override
+  String cookingPrevious(int number) {
+    return 'Zurück zu Schritt $number';
+  }
+
+  @override
+  String cookingNext(int number) {
+    return 'Weiter zu Schritt $number';
+  }
+
+  @override
+  String get cookingDone => 'Fertig';
+
+  @override
+  String get cookingNoSteps => 'Dieses Rezept hat keine Schritte.';
+
+  @override
+  String get cookingScreenOn => 'Bildschirm bleibt an';
+
+  @override
+  String get cookingScreenOff => 'Bildschirm anlassen';
+
+  @override
+  String get cookingScreenUnavailable => 'Bildschirm kann nicht anbleiben';
+
+  @override
+  String get cookingWakeLockHint =>
+      'Dein Gerät kann den Bildschirm hier nicht anlassen. Stell die automatische Sperre zum Kochen länger ein.';
+
+  @override
   String recipeStartCooking(String servings) {
     return 'Kochen starten · $servings';
   }

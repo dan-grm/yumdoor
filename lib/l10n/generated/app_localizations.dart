@@ -236,6 +236,84 @@ abstract class AppLocalizations {
   /// **'Schritt {number}'**
   String recipeStepTitle(int number);
 
+  /// Accessible label of the close button in cooking mode.
+  ///
+  /// In de, this message translates to:
+  /// **'Kochmodus beenden'**
+  String get cookingClose;
+
+  /// Top bar of cooking mode: the current step.
+  ///
+  /// In de, this message translates to:
+  /// **'Schritt {current} von {total}'**
+  String cookingStepOf(int current, int total);
+
+  /// Compact step progress next to the bar that replaces the step dots from 9 steps on.
+  ///
+  /// In de, this message translates to:
+  /// **'{current} / {total}'**
+  String cookingStepProgress(int current, int total);
+
+  /// Small label above the text of the last step.
+  ///
+  /// In de, this message translates to:
+  /// **'Schritt {number} · Letzter'**
+  String cookingLastStep(int number);
+
+  /// Read-only servings next to the step's ingredients, e.g. 'für 4 Portionen'.
+  ///
+  /// In de, this message translates to:
+  /// **'für {servings}'**
+  String cookingForServings(String servings);
+
+  /// Accessible label of the round back button in cooking mode.
+  ///
+  /// In de, this message translates to:
+  /// **'Zurück zu Schritt {number}'**
+  String cookingPrevious(int number);
+
+  /// Main navigation button in cooking mode.
+  ///
+  /// In de, this message translates to:
+  /// **'Weiter zu Schritt {number}'**
+  String cookingNext(int number);
+
+  /// Button on the last step; returns to the recipe.
+  ///
+  /// In de, this message translates to:
+  /// **'Fertig'**
+  String get cookingDone;
+
+  /// Cooking mode for a recipe without steps.
+  ///
+  /// In de, this message translates to:
+  /// **'Dieses Rezept hat keine Schritte.'**
+  String get cookingNoSteps;
+
+  /// Label of the wake lock toggle while the screen is kept on.
+  ///
+  /// In de, this message translates to:
+  /// **'Bildschirm bleibt an'**
+  String get cookingScreenOn;
+
+  /// Label of the wake lock toggle while the screen may turn off.
+  ///
+  /// In de, this message translates to:
+  /// **'Bildschirm anlassen'**
+  String get cookingScreenOff;
+
+  /// Label of the disabled wake lock toggle when the device can't keep the screen on.
+  ///
+  /// In de, this message translates to:
+  /// **'Bildschirm kann nicht anbleiben'**
+  String get cookingScreenUnavailable;
+
+  /// Shown once when the wake lock is unsupported or refused.
+  ///
+  /// In de, this message translates to:
+  /// **'Dein Gerät kann den Bildschirm hier nicht anlassen. Stell die automatische Sperre zum Kochen länger ein.'**
+  String get cookingWakeLockHint;
+
   /// Main button on the recipe screen; opens cooking mode with the chosen servings.
   ///
   /// In de, this message translates to:

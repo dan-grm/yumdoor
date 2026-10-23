@@ -137,6 +137,95 @@
       }
     }
   },
+  "cookingClose": "Kochmodus beenden",
+  "@cookingClose": {
+    "description": "Accessible label of the close button in cooking mode."
+  },
+  "cookingStepOf": "Schritt {current} von {total}",
+  "@cookingStepOf": {
+    "description": "Top bar of cooking mode: the current step.",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "cookingStepProgress": "{current} / {total}",
+  "@cookingStepProgress": {
+    "description": "Compact step progress next to the bar that replaces the step dots from 9 steps on.",
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "cookingLastStep": "Schritt {number} · Letzter",
+  "@cookingLastStep": {
+    "description": "Small label above the text of the last step.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "cookingForServings": "für {servings}",
+  "@cookingForServings": {
+    "description": "Read-only servings next to the step's ingredients, e.g. 'für 4 Portionen'.",
+    "placeholders": {
+      "servings": {
+        "type": "String",
+        "example": "4 Portionen"
+      }
+    }
+  },
+  "cookingPrevious": "Zurück zu Schritt {number}",
+  "@cookingPrevious": {
+    "description": "Accessible label of the round back button in cooking mode.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "cookingNext": "Weiter zu Schritt {number}",
+  "@cookingNext": {
+    "description": "Main navigation button in cooking mode.",
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "cookingDone": "Fertig",
+  "@cookingDone": {
+    "description": "Button on the last step; returns to the recipe."
+  },
+  "cookingNoSteps": "Dieses Rezept hat keine Schritte.",
+  "@cookingNoSteps": {
+    "description": "Cooking mode for a recipe without steps."
+  },
+  "cookingScreenOn": "Bildschirm bleibt an",
+  "@cookingScreenOn": {
+    "description": "Label of the wake lock toggle while the screen is kept on."
+  },
+  "cookingScreenOff": "Bildschirm anlassen",
+  "@cookingScreenOff": {
+    "description": "Label of the wake lock toggle while the screen may turn off."
+  },
+  "cookingScreenUnavailable": "Bildschirm kann nicht anbleiben",
+  "@cookingScreenUnavailable": {
+    "description": "Label of the disabled wake lock toggle when the device can't keep the screen on."
+  },
+  "cookingWakeLockHint": "Dein Gerät kann den Bildschirm hier nicht anlassen. Stell die automatische Sperre zum Kochen länger ein.",
+  "@cookingWakeLockHint": {
+    "description": "Shown once when the wake lock is unsupported or refused."
+  },
   "recipeStartCooking": "Kochen starten · {servings}",
   "@recipeStartCooking": {
     "description": "Main button on the recipe screen; opens cooking mode with the chosen servings.",
