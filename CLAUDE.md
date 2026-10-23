@@ -86,7 +86,10 @@ docker compose -f docker/tandoor/compose.yml down -v        # reset: delete data
 - `main` is protected: no direct pushes, CI must be green, one approving review from the other developer.
 - Keep PRs small enough to review in a few minutes. Split mechanical changes (codegen, renames) from logic.
 - Before opening a PR: format, analyze, import check, unit/widget tests. Run integration tests when touching
-  `lib/data/` or the seed.
+  `lib/data/` or the seed. CI (`.github/workflows/ci.yml`) runs the same checks, plus the web build, and fails if
+  regenerated code (build_runner, gen-l10n, tokens, `tool/generate_api.dart`) differs from what is committed.
+- Flutter is pinned exactly in `pubspec.yaml` (`environment.flutter`); CI installs that version. Bump it in its own
+  PR (`build: bump Flutter to X.Y.Z`) and commit the `pubspec.lock` and formatting changes it brings.
 - PR description: what and why, how it was tested, screenshots for UI changes (DE, 390 px wide).
 - New domain logic comes with unit tests. New screens come with at least one widget test.
 

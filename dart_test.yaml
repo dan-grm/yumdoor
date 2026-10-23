@@ -1,3 +1,6 @@
 tags:
   # Needs the local Tandoor (docker/tandoor/compose.yml) and `dart run tool/seed.dart`.
   integration:
+  # Golden image tests. Rendered and compared on Linux only (test/widget/golden.dart);
+  # update them with the "Update goldens" workflow (.github/workflows/update-goldens.yml).
+  golden:

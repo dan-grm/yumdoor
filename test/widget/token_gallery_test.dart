@@ -4,39 +4,42 @@ import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/design/token_gallery.dart';
 
 import 'fonts.dart';
+import 'golden.dart';
 
 void main() {
   setUpAll(loadBundledFonts);
 
-  for (final (name, theme) in [('light', lightTheme), ('dark', darkTheme)]) {
-    testWidgets('token gallery in $name', (tester) async {
-      tester.view.devicePixelRatio = 1;
-      tester.view.physicalSize = const Size(390, 4000);
-      addTearDown(tester.view.reset);
+  group('goldens', skip: goldenSkip, () {
+    for (final (name, theme) in [('light', lightTheme), ('dark', darkTheme)]) {
+      testWidgets('token gallery in $name', tags: goldenTags, (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(390, 4000);
+        addTearDown(tester.view.reset);
 
-      await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: theme,
-          home: const Align(
-            alignment: Alignment.topCenter,
-            child: TokenGallery(),
+        await tester.pumpWidget(
+          MaterialApp(
+            debugShowCheckedModeBanner: false,
+            theme: theme,
+            home: const Align(
+              alignment: Alignment.topCenter,
+              child: TokenGallery(),
+            ),
           ),
-        ),
-      );
-      // Crop the view to the gallery.
-      tester.view.physicalSize = Size(
-        390,
-        tester.getSize(find.byType(TokenGallery)).height,
-      );
-      await tester.pump();
+        );
+        // Crop the view to the gallery.
+        tester.view.physicalSize = Size(
+          390,
+          tester.getSize(find.byType(TokenGallery)).height,
+        );
+        await tester.pump();
 
-      await expectLater(
-        find.byType(TokenGallery),
-        matchesGoldenFile('goldens/token_gallery_$name.png'),
-      );
-    });
-  }
+        await expectLater(
+          find.byType(TokenGallery),
+          matchesGoldenFile('goldens/token_gallery_$name.png'),
+        );
+      });
+    }
+  });
 
   testWidgets('the switch toggles the gallery between both themes', (
     tester,
