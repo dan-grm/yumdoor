@@ -1,4 +1,27 @@
 {
   "@@locale": "en",
-  "appTitle": "Yumdoor"
+  "appTitle": "Yumdoor",
+  "back": "Back",
+  "retry": "Try again",
+  "errorOffline": "The server can't be reached right now. Check your connection.",
+  "errorUnauthorized": "Your login is no longer valid. Please log in again.",
+  "errorThrottled": "Too many requests. Please try again later.",
+  "errorServer": "The server reported an error.",
+  "recipeNotFound": "This recipe doesn't exist, or you're not allowed to see it.",
+  "servings": "{count, plural, =1{1 serving} other{{count} servings}}",
+  "servingsCustom": "{count} {unit}",
+  "servingsDecrease": "Fewer servings",
+  "servingsIncrease": "More servings",
+  "recipeMinutes": "{minutes} min",
+  "recipeRating": "{rating} out of 5 stars",
+  "recipeLastCooked": "last cooked {date}",
+  "recipePlan": "Plan",
+  "recipeShop": "Shop",
+  "recipeEdit": "Edit",
+  "recipeActionsComingSoon": "Planning, shopping and editing are coming soon.",
+  "recipeIngredients": "Ingredients",
+  "recipeScaledFrom": "Recipe is for {servings}, amounts converted",
+  "recipeNoIngredients": "This recipe has no ingredients.",
+  "recipeStepTitle": "Step {number}",
+  "recipeStartCooking": "Start cooking · {servings}"
 }
