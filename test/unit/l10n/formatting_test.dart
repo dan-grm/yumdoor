@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:yumdoor/domain/services/scaling_service.dart';
 import 'package:yumdoor/l10n/formatting.dart';
 
 void main() {
@@ -21,6 +22,17 @@ void main() {
     expect(de.amount(1 / 3), '0,33');
     expect(de.amount(1250), '1.250');
     expect(en.amount(1250), '1,250');
+  });
+
+  test('quantities use fraction glyphs and the locale decimal separator', () {
+    expect(de.quantity(Quantity.of(1.5)), '1½');
+    expect(de.quantity(Quantity.of(0.25)), '¼');
+    expect(en.quantity(Quantity.of(2.75)), '2¾');
+    expect(de.quantity(Quantity.of(2.4)), '2,4');
+    expect(en.quantity(Quantity.of(2.4)), '2.4');
+    expect(de.quantity(Quantity.of(0.004)), '0,004');
+    expect(de.quantity(Quantity.of(1250)), '1.250');
+    expect(en.quantity(Quantity.of(2500000)), '2,500,000');
   });
 
   test('integers group thousands', () {
