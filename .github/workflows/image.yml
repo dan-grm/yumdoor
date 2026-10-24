@@ -1,0 +1,126 @@
+# Builds the web image (docker/web/Dockerfile) and pushes it to
+# ghcr.io/dan-grm/yumdoor on pushes to main and v* tags. PRs that touch the
+# image build and smoke-test it without pushing.
+#
+# Tags: `main`, `sha-<short sha>`, and for v1.2.3 `1.2.3`, `1.2`, `1` and
+# `latest`. The build stage always runs on amd64 (the Flutter SDK is x64 only,
+# the output is platform independent) and the nginx stage only copies files,
+# so the arm64 image needs no emulation.
+#
+# Actions are pinned by commit SHA (the tag is in the comment).
+
+name: Image
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    paths:
+      - docker/web/**
+      - web/**
+      - tool/finish_web_build.dart
+      - .dockerignore
+      - pubspec.yaml
+      - pubspec.lock
+      - .github/workflows/image.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+  # Uncompressed amd64 image; nginx is about 29 MB of it.
+  MAX_IMAGE_MB: 64
+
+jobs:
+  image:
+    name: Build, test and push
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build for the smoke test
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: docker/web/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: yumdoor:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test
+        run: |
+          size=$(( $(docker image inspect yumdoor:test --format '{{.Size}}') / 1000000 ))
+          echo "Image size: ${size} MB (uncompressed)"
+          if [ "$size" -gt "$MAX_IMAGE_MB" ]; then
+            echo "::error::The image is ${size} MB, more than ${MAX_IMAGE_MB} MB."
+            exit 1
+          fi
+
+          docker run -d --name yumdoor --read-only --tmpfs /tmp -p 8080:8080 -e BASE_PATH=/app/ yumdoor:test
+          trap 'docker logs yumdoor' EXIT
+          for _ in $(seq 30); do
+            curl -fs -o /dev/null http://localhost:8080/app/version.json && break
+            sleep 1
+          done
+
+          check() { # url, expected status, expected header or body line (grep -E)
+            out=$(curl -s -i "$1")
+            echo "$out" | head -1 | grep -q " $2" || { echo "::error::$1: expected $2"; echo "$out" | head -20; exit 1; }
+            echo "$out" | tr -d '\r' | grep -qiE "$3" || { echo "::error::$1: no match for '$3'"; echo "$out" | head -20; exit 1; }
+          }
+          check http://localhost:8080/app/ 200 '<base href="/app/">'
+          check http://localhost:8080/app/ 200 '^cache-control: no-cache$'
+          check http://localhost:8080/app/ 200 "^content-security-policy: .*'wasm-unsafe-eval'"
+          check http://localhost:8080/app/recipe/42 200 '<base href="/app/">'
+          check http://localhost:8080/app 301 '^location: /app/$'
+          check http://localhost:8080/app/main.dart.js 200 '^cache-control: no-cache$'
+          check http://localhost:8080/app/canvaskit/canvaskit.wasm 200 '^content-type: application/wasm$'
+          check http://localhost:8080/app/icons/Icon-192.png 200 '^cache-control: public, max-age=2592000$'
+          check http://localhost:8080/app/service_worker.js 200 '^const BUILD = "'
+          check http://localhost:8080/app/missing.js 404 '^x-content-type-options: nosniff$'
+          check http://localhost:8080/api/recipe/ 404 '^HTTP'
+
+      - name: Log in to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        if: github.event_name == 'push'
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=sha
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+      - name: Build and push
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: docker/web/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
