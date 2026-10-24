@@ -102,7 +102,9 @@ Paginated: `page`, `page_size` (default 25, max 100). List items use `RecipeOver
 
 **Text search only matches recipe names by default.** A new user's `SearchPreference` is `plain` with `icontains`,
 `trigram` and `unaccent` on `name` only and no fulltext fields (checked on a fresh 2.6.15). `query=Karotte` does not
-find a recipe that only has carrots as an ingredient; "contains carrots" needs the `foods` filter.
+find a recipe that only has carrots as an ingredient; "contains carrots" needs the `foods` filter. Text, food and
+keyword parameters are combined with AND, so one request cannot mean "name **or** ingredient **or** keyword"; the
+universal search (roadmap, M2) merges separate requests instead.
 
 **Mismatch with our assumption:** `rating`, `lastcooked` and `timescooked` are computed **only from the requesting
 user's own cook logs** (`managers.py:51-75`), not the household's or the space's. "Highly rated" in search means
@@ -143,7 +145,7 @@ in the request are ignored.
   newest-first feed reads `count` and then fetches pages from the end. `page_size` max 200.
 - The legacy `Comment` model has no API in v2. Comments live in `CookLog.comment`, as assumed.
 - **Mismatch with the mockups:** CookLog has **no image field**. Screen 08 ("Fertig gekocht") shows a photo; that
-  is not possible in 2.6.15 without a workaround. Options are in the roadmap.
+  is not possible in 2.6.15 without a workaround, so Yumdoor drops the photo (see the roadmap, M2).
 
 ## Households, meal plans and sharing
 

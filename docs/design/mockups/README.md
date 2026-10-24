@@ -15,7 +15,7 @@ links between the HTML screens work. Copy is German on purpose; long German stri
 | `screens/05-kochmodus` | Cooking mode (light): step dots, running timer, detected duration, per-step ingredients, read-only servings. |
 | `screens/06-kochmodus-dunkel` | Cooking mode (dark theme reference). |
 | `screens/07-kochmodus-letzter-schritt` | Cooking mode, last step: finished timer, 'Fertig gekocht'. |
-| `screens/08-fertig-gekocht` | Done: rating, comment, photo; saved as CookLog entry, appears in the feed. |
+| `screens/08-fertig-gekocht` | Done: rating, comment; saved as CookLog entry, appears in the feed. The photo shown is dropped (CookLog has no image field). |
 | `screens/09-rezept-bearbeiten` | Recipe editor, steps tab: reorder, inline edit, per-step ingredients, explicit duration. |
 | `screens/10-wochenplan` | Week planner: vertical days, drag and drop, shared plan, 'Einkauf für die Woche'. |
 | `screens/11-einplanen` | Plan sheet: day, meal type, servings, add missing ingredients to the list. |

@@ -31,7 +31,13 @@ An end-to-end slice through every layer, deployable as a PWA.
 - Timer detection in step text (DE/EN) with tap-to-start, plus `Step.time` and manual timers
 - Multiple concurrent timers, end-time based, alerts with graceful fallbacks; `TimerAlertService`
 - Tick-off ingredients, step dots, landscape/tablet layout (steps and ingredients side by side)
-- "Fertig gekocht": create a CookLog entry with rating and comment (see open decision on photos)
+- "Fertig gekocht": create a CookLog entry with rating and comment. No photo: CookLog has no image field, and
+  the photo in mockup 08 is dropped rather than worked around (decided 2026-10-24)
+- Universal search: the default search bar matches recipe names, ingredients and keywords at once. Tandoor's
+  `query` matches only names under the default `SearchPreference`, and Yumdoor doesn't change the user's
+  preference, so the client looks up matching foods and keywords (`/api/food/?query=`, `/api/keyword/?query=`),
+  runs the name, `foods_or` and `keywords_or` searches, and merges them page by page (name matches first, no
+  duplicates). Results say why they matched; filter chips still narrow every part of the search
 - Full search filters as first-class chips: rating, last cooked, times cooked, "cookable now" (on hand),
   books, created by, sort order; saved filters (Tandoor `CustomFilter`)
 - Safe markdown renderer for descriptions and steps
@@ -83,9 +89,6 @@ Native store builds, push notifications, LLM provider, recipe import from URLs o
 
 ## Open decisions
 
-- **Photo on "Fertig gekocht" (mockup 08).** Tandoor 2.6.15 CookLog has no image field. Options: drop the photo;
-  upload it as a `UserFile` and reference it in the comment; or propose an upstream Tandoor change.
-  Decide before M2's cook-log issue.
 - **Household activity for recommendations.** Normal users cannot list household members. M5 uses everyone in the
   space unless the user is admin; revisit if Tandoor exposes household members.
 - **Licensing for outside contributions.** No outside PRs until a CLA is chosen (possible App Store dual license).
