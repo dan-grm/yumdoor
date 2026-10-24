@@ -12,6 +12,7 @@ part of 'recipe_step.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$RecipeStep {
 
@@ -25,6 +26,8 @@ mixin _$RecipeStep {
 @pragma('vm:prefer-inline')
 $RecipeStepCopyWith<RecipeStep> get copyWith => _$RecipeStepCopyWithImpl<RecipeStep>(this as RecipeStep, _$identity);
 
+  /// Serializes this RecipeStep to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -33,7 +36,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is RecipeStep&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.instruction, _this.instruction) || other.instruction == _this.instruction)&&const DeepCollectionEquality().equals(other.ingredients, _this.ingredients)&&(identical(other.time, _this.time) || other.time == _this.time)&&(identical(other.order, _this.order) || other.order == _this.order)&&(identical(other.showAsHeader, _this.showAsHeader) || other.showAsHeader == _this.showAsHeader));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as RecipeStep;
@@ -218,11 +221,11 @@ return $default(_that.id,_that.name,_that.instruction,_that.ingredients,_that.ti
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _RecipeStep implements RecipeStep {
   const _RecipeStep({required this.id, this.name = '', this.instruction = '',  List<Ingredient> ingredients = const [], this.time = Duration.zero, this.order = 0, this.showAsHeader = false}): _ingredients = ingredients;
-  
+  factory _RecipeStep.fromJson(Map<String, dynamic> json) => _$RecipeStepFromJson(json);
 
 @override final  int id;
 @override@JsonKey() final  String name;
@@ -247,14 +250,17 @@ class _RecipeStep implements RecipeStep {
 @pragma('vm:prefer-inline')
 _$RecipeStepCopyWith<_RecipeStep> get copyWith => __$RecipeStepCopyWithImpl<_RecipeStep>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$RecipeStepToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _RecipeStep&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.instruction, instruction) || other.instruction == instruction)&&const DeepCollectionEquality().equals(other.ingredients, _ingredients)&&(identical(other.time, time) || other.time == time)&&(identical(other.order, order) || other.order == order)&&(identical(other.showAsHeader, showAsHeader) || other.showAsHeader == showAsHeader));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
     return Object.hash(runtimeType,id,name,instruction,const DeepCollectionEquality().hash(_ingredients),time,order,showAsHeader);

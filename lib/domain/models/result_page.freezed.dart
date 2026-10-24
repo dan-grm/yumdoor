@@ -17,7 +17,10 @@ mixin _$ResultPage<T> {
 
  List<T> get items;/// The number of results over all pages.
  int get totalCount;/// Whether there is a next page. Requesting a page past the end fails.
- bool get hasMore;
+ bool get hasMore;/// The server couldn't be reached, so these come from the offline cache:
+/// only recipes opened before, matched less precisely than the server
+/// would.
+ bool get fromCache;
 /// Create a copy of ResultPage
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -29,20 +32,20 @@ $ResultPageCopyWith<T, ResultPage<T>> get copyWith => _$ResultPageCopyWithImpl<T
 @override
 bool operator ==(Object other) {
   final _this = this as ResultPage<T>;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ResultPage<T>&&const DeepCollectionEquality().equals(other.items, _this.items)&&(identical(other.totalCount, _this.totalCount) || other.totalCount == _this.totalCount)&&(identical(other.hasMore, _this.hasMore) || other.hasMore == _this.hasMore));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ResultPage<T>&&const DeepCollectionEquality().equals(other.items, _this.items)&&(identical(other.totalCount, _this.totalCount) || other.totalCount == _this.totalCount)&&(identical(other.hasMore, _this.hasMore) || other.hasMore == _this.hasMore)&&(identical(other.fromCache, _this.fromCache) || other.fromCache == _this.fromCache));
 }
 
 
 @override
 int get hashCode {
   final _this = this as ResultPage<T>;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.items),_this.totalCount,_this.hasMore);
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.items),_this.totalCount,_this.hasMore,_this.fromCache);
 }
 
 @override
 String toString() {
   final _this = this as ResultPage<T>;
-  return 'ResultPage<$T>(items: ${_this.items}, totalCount: ${_this.totalCount}, hasMore: ${_this.hasMore})';
+  return 'ResultPage<$T>(items: ${_this.items}, totalCount: ${_this.totalCount}, hasMore: ${_this.hasMore}, fromCache: ${_this.fromCache})';
 }
 
 
@@ -53,7 +56,7 @@ abstract mixin class $ResultPageCopyWith<T,$Res>  {
   factory $ResultPageCopyWith(ResultPage<T> value, $Res Function(ResultPage<T>) _then) = _$ResultPageCopyWithImpl;
 @useResult
 $Res call({
- List<T> items, int totalCount, bool hasMore
+ List<T> items, int totalCount, bool hasMore, bool fromCache
 });
 
 
@@ -70,11 +73,12 @@ class _$ResultPageCopyWithImpl<T,$Res>
 
 /// Create a copy of ResultPage
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? items = null,Object? totalCount = null,Object? hasMore = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? items = null,Object? totalCount = null,Object? hasMore = null,Object? fromCache = null,}) {
   return _then(ResultPage(
 items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
 as List<T>,totalCount: null == totalCount ? _self.totalCount : totalCount // ignore: cast_nullable_to_non_nullable
 as int,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
+as bool,fromCache: null == fromCache ? _self.fromCache : fromCache // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -160,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<T> items,  int totalCount,  bool hasMore)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<T> items,  int totalCount,  bool hasMore,  bool fromCache)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ResultPage() when $default != null:
-return $default(_that.items,_that.totalCount,_that.hasMore);case _:
+return $default(_that.items,_that.totalCount,_that.hasMore,_that.fromCache);case _:
   return orElse();
 
 }
@@ -181,10 +185,10 @@ return $default(_that.items,_that.totalCount,_that.hasMore);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<T> items,  int totalCount,  bool hasMore)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<T> items,  int totalCount,  bool hasMore,  bool fromCache)  $default,) {final _that = this;
 switch (_that) {
 case _ResultPage():
-return $default(_that.items,_that.totalCount,_that.hasMore);case _:
+return $default(_that.items,_that.totalCount,_that.hasMore,_that.fromCache);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +205,10 @@ return $default(_that.items,_that.totalCount,_that.hasMore);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<T> items,  int totalCount,  bool hasMore)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<T> items,  int totalCount,  bool hasMore,  bool fromCache)?  $default,) {final _that = this;
 switch (_that) {
 case _ResultPage() when $default != null:
-return $default(_that.items,_that.totalCount,_that.hasMore);case _:
+return $default(_that.items,_that.totalCount,_that.hasMore,_that.fromCache);case _:
   return null;
 
 }
@@ -216,7 +220,7 @@ return $default(_that.items,_that.totalCount,_that.hasMore);case _:
 
 
 class _ResultPage<T> implements ResultPage<T> {
-  const _ResultPage({required  List<T> items, required this.totalCount, required this.hasMore}): _items = items;
+  const _ResultPage({required  List<T> items, required this.totalCount, required this.hasMore, this.fromCache = false}): _items = items;
   
 
  final  List<T> _items;
@@ -230,6 +234,10 @@ class _ResultPage<T> implements ResultPage<T> {
 @override final  int totalCount;
 /// Whether there is a next page. Requesting a page past the end fails.
 @override final  bool hasMore;
+/// The server couldn't be reached, so these come from the offline cache:
+/// only recipes opened before, matched less precisely than the server
+/// would.
+@override@JsonKey() final  bool fromCache;
 
 /// Create a copy of ResultPage
 /// with the given fields replaced by the non-null parameter values.
@@ -241,18 +249,18 @@ _$ResultPageCopyWith<T, _ResultPage<T>> get copyWith => __$ResultPageCopyWithImp
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ResultPage<T>&&const DeepCollectionEquality().equals(other.items, _items)&&(identical(other.totalCount, totalCount) || other.totalCount == totalCount)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ResultPage<T>&&const DeepCollectionEquality().equals(other.items, _items)&&(identical(other.totalCount, totalCount) || other.totalCount == totalCount)&&(identical(other.hasMore, hasMore) || other.hasMore == hasMore)&&(identical(other.fromCache, fromCache) || other.fromCache == fromCache));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_items),totalCount,hasMore);
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_items),totalCount,hasMore,fromCache);
 }
 
 @override
 String toString() {
-    return 'ResultPage<$T>(items: $items, totalCount: $totalCount, hasMore: $hasMore)';
+    return 'ResultPage<$T>(items: $items, totalCount: $totalCount, hasMore: $hasMore, fromCache: $fromCache)';
 }
 
 
@@ -263,7 +271,7 @@ abstract mixin class _$ResultPageCopyWith<T,$Res> implements $ResultPageCopyWith
   factory _$ResultPageCopyWith(_ResultPage<T> value, $Res Function(_ResultPage<T>) _then) = __$ResultPageCopyWithImpl;
 @override @useResult
 $Res call({
- List<T> items, int totalCount, bool hasMore
+ List<T> items, int totalCount, bool hasMore, bool fromCache
 });
 
 
@@ -280,11 +288,12 @@ class __$ResultPageCopyWithImpl<T,$Res>
 
 /// Create a copy of ResultPage
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? items = null,Object? totalCount = null,Object? hasMore = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? items = null,Object? totalCount = null,Object? hasMore = null,Object? fromCache = null,}) {
   return _then(_ResultPage<T>(
 items: null == items ? _self._items : items // ignore: cast_nullable_to_non_nullable
 as List<T>,totalCount: null == totalCount ? _self.totalCount : totalCount // ignore: cast_nullable_to_non_nullable
 as int,hasMore: null == hasMore ? _self.hasMore : hasMore // ignore: cast_nullable_to_non_nullable
+as bool,fromCache: null == fromCache ? _self.fromCache : fromCache // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

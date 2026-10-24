@@ -3,6 +3,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'ingredient.dart';
 
 part 'recipe_step.freezed.dart';
+part 'recipe_step.g.dart';
 
 /// A step of a recipe with its own ingredients, as shown in cooking mode.
 @freezed
@@ -21,4 +22,7 @@ abstract class RecipeStep with _$RecipeStep {
     @Default(0) int order,
     @Default(false) bool showAsHeader,
   }) = _RecipeStep;
+
+  factory RecipeStep.fromJson(Map<String, dynamic> json) =>
+      _$RecipeStepFromJson(json);
 }

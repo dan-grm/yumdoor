@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'food.freezed.dart';
+part 'food.g.dart';
 
 /// A food such as "Karotte". Foods form a tree ("Gemüse > Wurzelgemüse >
 /// Karotte"); filtering by a food includes its children.
@@ -20,4 +21,6 @@ abstract class Food with _$Food {
     /// Never goes on the shopping list (salt, water).
     @Default(false) bool ignoreShopping,
   }) = _Food;
+
+  factory Food.fromJson(Map<String, dynamic> json) => _$FoodFromJson(json);
 }

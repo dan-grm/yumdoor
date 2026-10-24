@@ -4,6 +4,7 @@ import 'food.dart';
 import 'unit.dart';
 
 part 'ingredient.freezed.dart';
+part 'ingredient.g.dart';
 
 /// One line of a step's ingredient list, for the recipe's base servings.
 @freezed
@@ -28,4 +29,7 @@ abstract class Ingredient with _$Ingredient {
     String? originalText,
     @Default(0) int order,
   }) = _Ingredient;
+
+  factory Ingredient.fromJson(Map<String, dynamic> json) =>
+      _$IngredientFromJson(json);
 }

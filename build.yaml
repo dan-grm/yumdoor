@@ -1,0 +1,9 @@
+targets:
+  $default:
+    builders:
+      json_serializable:
+        options:
+          # Domain models nest (Recipe → RecipeStep → Ingredient); write them
+          # as plain maps so the offline cache's JSON doesn't depend on
+          # jsonEncode calling toJson.
+          explicit_to_json: true

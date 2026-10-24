@@ -12,6 +12,7 @@ part of 'unit.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$Unit {
 
@@ -22,6 +23,8 @@ mixin _$Unit {
 @pragma('vm:prefer-inline')
 $UnitCopyWith<Unit> get copyWith => _$UnitCopyWithImpl<Unit>(this as Unit, _$identity);
 
+  /// Serializes this Unit to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -30,7 +33,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is Unit&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.pluralName, _this.pluralName) || other.pluralName == _this.pluralName));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Unit;
@@ -211,11 +214,11 @@ return $default(_that.id,_that.name,_that.pluralName);case _:
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _Unit implements Unit {
   const _Unit({required this.id, required this.name, this.pluralName});
-  
+  factory _Unit.fromJson(Map<String, dynamic> json) => _$UnitFromJson(json);
 
 @override final  int id;
 @override final  String name;
@@ -227,14 +230,17 @@ class _Unit implements Unit {
 @pragma('vm:prefer-inline')
 _$UnitCopyWith<_Unit> get copyWith => __$UnitCopyWithImpl<_Unit>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$UnitToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _Unit&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.pluralName, pluralName) || other.pluralName == pluralName));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
     return Object.hash(runtimeType,id,name,pluralName);
