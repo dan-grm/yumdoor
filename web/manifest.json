@@ -1,7 +1,9 @@
 {
+    "id": ".",
     "name": "Yumdoor",
     "short_name": "Yumdoor",
     "start_url": ".",
+    "scope": ".",
     "display": "standalone",
     "background_color": "#faf6ee",
     "theme_color": "#4f6b3a",

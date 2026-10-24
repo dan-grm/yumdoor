@@ -50,6 +50,8 @@ dev_dependencies:
   # tool/gen_tokens.dart
   dart_style: 3.1.14
   pub_semver: 2.2.1
+  # tool/finish_web_build.dart
+  crypto: 3.0.7
 
 flutter:
   generate: true
