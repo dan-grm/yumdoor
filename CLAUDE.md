@@ -54,7 +54,8 @@ dart run tool/check_imports.dart
 flutter test --exclude-tags integration           # unit + widget
 flutter test --tags integration                   # needs local Tandoor + seed
 flutter build web --release --no-web-resources-cdn --base-href /__BASE_PATH__/
-docker build -f docker/web/Dockerfile -t yumdoor .   # serve with BASE_PATH=/app/
+dart run tool/finish_web_build.dart               # prune renderers, stamp web/service_worker.js
+docker build -f docker/web/Dockerfile -t yumdoor .   # both steps above; serve with BASE_PATH=/app/
 ```
 
 Integration tests and the seed script refuse to run against anything but `localhost` or the CI service.
@@ -91,7 +92,8 @@ docker compose -f docker/tandoor/compose.yml down -v        # reset: delete data
   `.github/workflows/integration.yml` starts Tandoor in Docker, seeds it, runs the integration tests and fails if
   `tool/fetch_schema.dart` changes the committed schema; on failure it prints the Tandoor logs.
 - Flutter is pinned exactly in `pubspec.yaml` (`environment.flutter`); CI installs that version. Bump it in its own
-  PR (`build: bump Flutter to X.Y.Z`) and commit the `pubspec.lock` and formatting changes it brings.
+  PR (`build: bump Flutter to X.Y.Z`) and commit the `pubspec.lock` and formatting changes it brings. Also update
+  `FLUTTER_VERSION` and `FLUTTER_SHA256` in `docker/web/Dockerfile` (a test fails if the version differs).
 - PR description: what and why, how it was tested, screenshots for UI changes (DE, 390 px wide).
 - New domain logic comes with unit tests. New screens come with at least one widget test.
 

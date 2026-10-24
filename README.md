@@ -32,9 +32,47 @@ No ads, no tracking, no analytics.
 
 ## Deployment (PWA)
 
-A Docker image will be published to `ghcr.io/dan-grm/yumdoor`. It serves the web app with nginx under a
-configurable base path; put it behind the same reverse proxy as Tandoor and route `/app/` to it.
-Exact instructions follow with the first release.
+The image `ghcr.io/dan-grm/yumdoor` (amd64 and arm64) serves the web app with nginx under a configurable base
+path. Tags: `main` (latest build of the main branch), `sha-<commit>`, and from the first release `1.2.3`, `1.2`,
+`1` and `latest`. Put it behind the same reverse proxy as Tandoor, so both share one origin: Tandoor at `/`,
+Yumdoor at `/app/`.
+
+```yaml
+# Next to Tandoor in its compose.yml
+  yumdoor:
+    image: ghcr.io/dan-grm/yumdoor:main
+    restart: unless-stopped
+    environment:
+      BASE_PATH: /app/   # default; must start and end with "/"
+    read_only: true      # optional: the container only writes to /tmp
+    tmpfs: [/tmp]
+```
+
+```nginx
+# Reverse proxy (nginx). The container listens on 8080.
+server {
+    server_name recipes.example.com;
+    # listen 443 ssl; ssl_certificate …
+
+    # No path after the port: the request path (/app/…) is passed on unchanged.
+    location /app/ {
+        proxy_pass http://yumdoor:8080;
+        proxy_set_header Host $host;
+    }
+
+    # Tandoor, as before.
+    location / {
+        proxy_pass http://web_recipes:80;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+Then open `https://recipes.example.com/app/` and log in with your Tandoor account. The app can be installed from
+the browser and starts offline with the recipes you've opened. With Caddy, the same is
+`handle /app/* { reverse_proxy yumdoor:8080 }` before Tandoor's `reverse_proxy`.
 
 ## Development
 

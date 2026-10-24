@@ -157,15 +157,24 @@ convenient: Tandoor sends CORS headers only for the bookmarklet endpoint, so a b
 origin's Tandoor API. The login screen therefore offers a different server URL only on native builds; on web it
 shows the origin and explains the constraint.
 
-- Base path is a runtime setting of the Docker image (`BASE_PATH=/app/`). The build uses a placeholder base href
-  that the container entrypoint rewrites in `index.html`, `manifest.json` and the service worker scope.
-- nginx serves the SPA with a fallback to `index.html` for unknown paths under the base path.
-- Flutter web does not content-hash its main files (`main.dart.js`, `flutter_bootstrap.js`), so caching is:
-  `index.html`, `flutter_bootstrap.js`, `main.dart.js`, `version.json`, `manifest.json` and the service worker are
-  served with `Cache-Control: no-cache` (revalidate with ETag). Icons and fonts get a long `max-age`.
-- Service worker: Flutter has deprecated its generated service worker, so we ship our own small one in `web/`. It
-  precaches the app shell for offline start and versions its cache by the build's `version.json`. API requests
-  are never cached by the service worker; offline data lives in Drift.
+- Base path is a runtime setting of the Docker image (`BASE_PATH=/app/`, `docker/web/`). The build uses the
+  placeholder base href `/__BASE_PATH__/`; the container entrypoint writes `index.html` with the real one (to `/tmp`,
+  so the image runs read-only). `manifest.json` and the service worker use URLs relative to the base href, so they
+  need no rewrite: the worker's scope is the base path.
+- nginx serves the SPA with a fallback to `index.html` for unknown paths under the base path; missing files (with
+  an extension) are a 404. Everything outside the base path is a 404 too: it belongs to Tandoor's side of the proxy.
+- Flutter web does not content-hash its file names (`main.dart.js`, `flutter_bootstrap.js`, `canvaskit/`), so
+  everything is served with `Cache-Control: no-cache` (revalidate with ETag), except icons and fonts, which get a
+  30-day `max-age`. Security headers: a CSP with `'wasm-unsafe-eval'` but no `'unsafe-eval'` and `'self'` only,
+  `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`.
+- `tool/finish_web_build.dart` runs after `flutter build web`: it removes renderer files our dart2js + CanvasKit
+  build never loads (skwasm, wimp, webparagraph, `.symbols`), which halves the image, and stamps the service worker.
+- Service worker: Flutter has deprecated its generated service worker, so `web/flutter_bootstrap.js` registers our
+  own `web/service_worker.js`. It precaches the app shell (every file except the CanvasKit variants; the page
+  reports the variant it loaded after the first frame) and serves it network first, so a new deploy is used as soon
+  as the server is reachable. Its cache is named after the build (`version.json` plus a hash of all files); a new
+  build installs a new worker, which deletes the old cache. It handles only files of the build and navigations under
+  its scope; API requests and media are never touched, and offline data lives in Drift.
 - Local development has the same constraint. `flutter run -d chrome` serves on its own port (8081), so dev
   requests to Tandoor's paths (`/api/`, `/api-token-auth/`, `/openapi/`, `/media/`) are proxied to the local
   Tandoor by Flutter's `web_dev_config.yaml` proxy rules (Flutter 3.35+).
