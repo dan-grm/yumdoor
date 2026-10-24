@@ -326,6 +326,18 @@ abstract class AppLocalizations {
   /// **'Der Server hat einen Fehler gemeldet.'**
   String get errorServer;
 
+  /// Banner at the top of every screen while the server can't be reached.
+  ///
+  /// In de, this message translates to:
+  /// **'Du bist offline. Rezepte, die du schon geöffnet hast, kannst du weiter ansehen.'**
+  String get offlineBanner;
+
+  /// Tooltip and caption explaining why actions that change data are disabled while offline.
+  ///
+  /// In de, this message translates to:
+  /// **'Offline kannst du nichts ändern. Sobald du wieder verbunden bist, geht es weiter.'**
+  String get offlineWriteDisabled;
+
   /// Error message when a recipe does not exist or is not visible to the user.
   ///
   /// In de, this message translates to:
@@ -589,6 +601,18 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Auf deinem Tandoor-Server gibt es noch keine Rezepte.'**
   String get searchEmptyServer;
+
+  /// Note above search results that come from the offline cache.
+  ///
+  /// In de, this message translates to:
+  /// **'Offline: Gesucht wird nur in Rezepten, die du schon geöffnet hast, und nur im Namen.'**
+  String get searchOfflineResults;
+
+  /// Empty state when an offline search finds no cached recipe.
+  ///
+  /// In de, this message translates to:
+  /// **'Keins der gespeicherten Rezepte passt.'**
+  String get searchOfflineEmpty;
 
   /// At the end of the results when the next page failed; a retry button follows.
   ///

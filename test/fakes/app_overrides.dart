@@ -6,6 +6,7 @@ import 'package:yumdoor/platform/token_store/token_store.dart';
 import 'fake_auth_repository.dart';
 import 'fake_connectivity_service.dart';
 import 'fake_food_keyword_repositories.dart';
+import 'fake_offline_cache.dart';
 import 'fake_recipe_repository.dart';
 import 'fake_server_repository.dart';
 import 'in_memory_token_store.dart';
@@ -30,6 +31,7 @@ List<Override> appOverrides({
   FakeRecipeRepository? recipes,
   FakeFoodRepository? foods,
   FakeKeywordRepository? keywords,
+  FakeOfflineCache? offlineCache,
   Uri? webOrigin,
 }) => [
   tokenStoreProvider.overrideWithValue(tokenStore ?? InMemoryTokenStore()),
@@ -42,6 +44,7 @@ List<Override> appOverrides({
   keywordRepositoryProvider.overrideWithValue(
     keywords ?? FakeKeywordRepository(),
   ),
+  offlineCacheProvider.overrideWithValue(offlineCache ?? FakeOfflineCache()),
   connectivityServiceProvider.overrideWithValue(
     connectivity ?? FakeConnectivityService(),
   ),

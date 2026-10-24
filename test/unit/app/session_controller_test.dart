@@ -10,12 +10,14 @@ import 'package:yumdoor/platform/token_store/token_store.dart';
 import '../../fakes/app_overrides.dart';
 import '../../fakes/fake_auth_repository.dart';
 import '../../fakes/fake_connectivity_service.dart';
+import '../../fakes/fake_offline_cache.dart';
 import '../../fakes/in_memory_token_store.dart';
 
 void main() {
   late InMemoryTokenStore store;
   late FakeAuthRepository auth;
   late FakeConnectivityService connectivity;
+  late FakeOfflineCache offlineCache;
   late ProviderContainer container;
 
   void start(InMemoryTokenStore tokenStore) {
@@ -25,6 +27,7 @@ void main() {
         tokenStore: store,
         auth: auth,
         connectivity: connectivity,
+        offlineCache: offlineCache,
       ),
     );
     addTearDown(container.dispose);
@@ -39,6 +42,7 @@ void main() {
   setUp(() {
     auth = FakeAuthRepository();
     connectivity = FakeConnectivityService();
+    offlineCache = FakeOfflineCache();
   });
 
   test('restores the stored session without asking the server', () async {
@@ -127,6 +131,7 @@ void main() {
       expect(await session(), isNull);
       expect(store.token, isNull);
       expect(store.serverUrl, testServerUrl);
+      expect(offlineCache.clearCount, 1);
     });
 
     test('still logs out when offline, without revoking', () async {
@@ -138,6 +143,7 @@ void main() {
 
       expect(auth.revoked, isEmpty);
       expect(await session(), isNull);
+      expect(offlineCache.clearCount, 1);
     });
 
     test('still logs out when revoking fails', () async {
@@ -163,6 +169,7 @@ void main() {
       expect(await session(), isNull);
       expect(store.token, isNull);
       expect(store.serverUrl, testServerUrl);
+      expect(offlineCache.clearCount, 1);
     });
 
     test('keeps the session when the token still works', () async {

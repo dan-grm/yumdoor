@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../design/theme.dart';
+import '../features/common/offline_banner.dart';
 import '../l10n/l10n.dart';
 import 'locale.dart';
 import 'router.dart';
@@ -25,6 +26,7 @@ class YumdoorApp extends ConsumerWidget {
       localeListResolutionCallback: (deviceLocales, _) =>
           resolveLocale(deviceLocales),
       routerConfig: ref.watch(routerProvider),
+      builder: (context, child) => OfflineBanner(child: child!),
     );
   }
 }

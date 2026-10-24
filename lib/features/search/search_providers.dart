@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../app/offline.dart';
 import '../../app/repository_providers.dart';
 import '../../core/cancellation.dart';
 import '../../core/failures.dart';
@@ -25,6 +26,7 @@ class RecipeResults {
     required this.items,
     required this.totalCount,
     required this.hasMore,
+    this.fromCache = false,
     this.loadingMore = false,
     this.loadMoreError,
   });
@@ -34,6 +36,10 @@ class RecipeResults {
   /// The number of results over all pages.
   final int totalCount;
   final bool hasMore;
+
+  /// The server couldn't be reached; these are matching recipes from the
+  /// offline cache.
+  final bool fromCache;
 
   /// Whether the next page is being loaded.
   final bool loadingMore;
@@ -60,10 +66,17 @@ class SearchResults extends _$SearchResults {
         .watch(recipeRepositoryProvider)
         .search(query, pageSize: searchPageSize, cancel: cancel);
     _pages = 1;
+    if (page.fromCache) {
+      // Ask the server again as soon as it may answer.
+      ref.listen(isOfflineProvider, (_, offline) {
+        if (!offline) ref.invalidateSelf();
+      });
+    }
     return RecipeResults(
       items: page.items,
       totalCount: page.totalCount,
       hasMore: page.hasMore,
+      fromCache: page.fromCache,
     );
   }
 

@@ -236,6 +236,7 @@ class _Results extends ConsumerWidget {
     return switch (ref.watch(provider)) {
       AsyncData(:final value) when value.items.isEmpty => _Empty(
         filtered: !query.isEmpty,
+        fromCache: value.fromCache,
       ),
       AsyncData(:final value) => _ResultList(
         query: query,
@@ -289,9 +290,21 @@ class _ResultList extends ConsumerWidget {
             padding: EdgeInsets.only(bottom: t.space2),
             child: Semantics(
               liveRegion: true,
-              child: Text(
-                l10n.searchResultCount(results.totalCount),
-                style: t.label.copyWith(color: t.ink),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (results.fromCache) ...[
+                    Text(
+                      l10n.searchOfflineResults,
+                      style: t.caption.copyWith(color: t.inkMuted),
+                    ),
+                    SizedBox(height: t.space1),
+                  ],
+                  Text(
+                    l10n.searchResultCount(results.totalCount),
+                    style: t.label.copyWith(color: t.ink),
+                  ),
+                ],
               ),
             ),
           );
@@ -374,10 +387,13 @@ class _LoadMoreState extends State<_LoadMore> {
 }
 
 class _Empty extends StatelessWidget {
-  const _Empty({required this.filtered});
+  const _Empty({required this.filtered, required this.fromCache});
 
   /// Whether text or filters narrowed the search.
   final bool filtered;
+
+  /// Whether only the offline cache was searched.
+  final bool fromCache;
 
   @override
   Widget build(BuildContext context) {
@@ -396,11 +412,22 @@ class _Empty extends StatelessWidget {
             ),
             SizedBox(height: t.space3),
             Text(
-              filtered ? l10n.searchEmpty : l10n.searchEmptyServer,
+              fromCache
+                  ? l10n.searchOfflineEmpty
+                  : filtered
+                  ? l10n.searchEmpty
+                  : l10n.searchEmptyServer,
               textAlign: TextAlign.center,
               style: t.titleS.copyWith(color: t.ink),
             ),
-            if (filtered) ...[
+            if (fromCache) ...[
+              SizedBox(height: t.space2),
+              Text(
+                l10n.searchOfflineResults,
+                textAlign: TextAlign.center,
+                style: t.body.copyWith(color: t.inkMuted),
+              ),
+            ] else if (filtered) ...[
               SizedBox(height: t.space2),
               Text(
                 l10n.searchEmptyHint,

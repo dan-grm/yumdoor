@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/data/api/api_failures.dart';
@@ -63,6 +66,41 @@ void main() {
     test('is not called for other errors', () async {
       expect(await rejectionsFor(404), 0);
       expect(await rejectionsFor(500), 0);
+    });
+  });
+
+  group('onReachable', () {
+    Future<List<bool>> reportsFor(
+      FutureOr<ResponseBody> Function(RequestOptions) respond,
+    ) async {
+      final reports = <bool>[];
+      final dio = createTandoorDio(
+        serverUrl,
+        token: 't',
+        onReachable: reports.add,
+      )..httpClientAdapter = FakeHttpAdapter(respond);
+      try {
+        await guardRequest(() => dio.get<Object?>('/api/recipe/'));
+      } on Failure {
+        // Expected for the failing requests here.
+      }
+      return reports;
+    }
+
+    DioException connectionError(RequestOptions request) => DioException(
+      requestOptions: request,
+      type: DioExceptionType.connectionError,
+    );
+
+    test('reports any answer as reachable, errors included', () async {
+      expect(await reportsFor((_) => jsonResponse({})), [true]);
+      expect(await reportsFor((_) => jsonResponse({}, status: 500)), [true]);
+    });
+
+    test('reports a failed connection as unreachable', () async {
+      expect(await reportsFor((request) => throw connectionError(request)), [
+        false,
+      ]);
     });
   });
 }
