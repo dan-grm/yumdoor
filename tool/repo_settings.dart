@@ -26,6 +26,10 @@ const requiredChecks = [
   'Integration tests against Tandoor',
 ];
 
+/// Approvals a PR needs. GitHub never counts the author's own approval, so
+/// anything above 0 means only the other developer can unblock a PR.
+const requiredApprovals = 0;
+
 /// The GitHub Actions app, so other apps can't report a required check.
 const githubActionsAppId = 15368;
 
@@ -62,7 +66,7 @@ Map<String, Object?> branchProtection() => {
   'enforce_admins': true,
   'required_pull_request_reviews': {
     'dismiss_stale_reviews': true,
-    'required_approving_review_count': 1,
+    'required_approving_review_count': requiredApprovals,
   },
   'restrictions': null,
   'required_linear_history': true,
@@ -184,8 +188,9 @@ List<String> _protectionProblems(Object? protection) {
   if (reviews == null) {
     problems.add('pull requests are not required');
   } else {
-    if (((reviews['required_approving_review_count'] as int?) ?? 0) < 1) {
-      problems.add('no approving review required');
+    final approvals = reviews['required_approving_review_count'] ?? 0;
+    if (approvals != requiredApprovals) {
+      problems.add('$approvals approvals required, want $requiredApprovals');
     }
     if (reviews['dismiss_stale_reviews'] != true) {
       problems.add('stale approvals are kept');

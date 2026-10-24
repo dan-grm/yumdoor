@@ -33,7 +33,7 @@ Map<String, Object?> wanted() => {
     'enforce_admins': {'enabled': true},
     'required_pull_request_reviews': {
       'dismiss_stale_reviews': true,
-      'required_approving_review_count': 1,
+      'required_approving_review_count': requiredApprovals,
     },
     'required_linear_history': {'enabled': true},
     'allow_force_pushes': {'enabled': false},
