@@ -21,3 +21,6 @@ packages/tandoor_api/schema/** linguist-generated=true
 **/*.g.dart        linguist-generated=true
 **/*.freezed.dart  linguist-generated=true
 lib/l10n/generated/** linguist-generated=true
+
+# Vendored from the drift release that matches pubspec.lock (docs/ARCHITECTURE.md#offline-cache).
+web/drift_worker.js linguist-vendored=true -diff
