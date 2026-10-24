@@ -12,6 +12,7 @@ part of 'recipe.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$Recipe {
 
@@ -27,6 +28,8 @@ mixin _$Recipe {
 @pragma('vm:prefer-inline')
 $RecipeCopyWith<Recipe> get copyWith => _$RecipeCopyWithImpl<Recipe>(this as Recipe, _$identity);
 
+  /// Serializes this Recipe to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -35,7 +38,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is Recipe&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.image, _this.image) || other.image == _this.image)&&const DeepCollectionEquality().equals(other.keywords, _this.keywords)&&(identical(other.servings, _this.servings) || other.servings == _this.servings)&&(identical(other.servingsText, _this.servingsText) || other.servingsText == _this.servingsText)&&(identical(other.workingTime, _this.workingTime) || other.workingTime == _this.workingTime)&&(identical(other.waitingTime, _this.waitingTime) || other.waitingTime == _this.waitingTime)&&const DeepCollectionEquality().equals(other.steps, _this.steps)&&(identical(other.sourceUrl, _this.sourceUrl) || other.sourceUrl == _this.sourceUrl)&&(identical(other.rating, _this.rating) || other.rating == _this.rating)&&(identical(other.lastCooked, _this.lastCooked) || other.lastCooked == _this.lastCooked)&&(identical(other.createdBy, _this.createdBy) || other.createdBy == _this.createdBy)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Recipe;
@@ -240,11 +243,11 @@ return $default(_that.id,_that.name,_that.description,_that.image,_that.keywords
 }
 
 /// @nodoc
+@JsonSerializable()
 
-
-class _Recipe implements Recipe {
-  const _Recipe({required this.id, required this.name, this.description = '', this.image,  List<Keyword> keywords = const [], this.servings = 1, this.servingsText = '', this.workingTime = Duration.zero, this.waitingTime = Duration.zero,  List<RecipeStep> steps = const [], this.sourceUrl, this.rating, this.lastCooked, this.createdBy, this.updatedAt}): _keywords = keywords,_steps = steps;
-  
+class _Recipe extends Recipe {
+  const _Recipe({required this.id, required this.name, this.description = '', this.image,  List<Keyword> keywords = const [], this.servings = 1, this.servingsText = '', this.workingTime = Duration.zero, this.waitingTime = Duration.zero,  List<RecipeStep> steps = const [], this.sourceUrl, this.rating, this.lastCooked, this.createdBy, this.updatedAt}): _keywords = keywords,_steps = steps,super._();
+  factory _Recipe.fromJson(Map<String, dynamic> json) => _$RecipeFromJson(json);
 
 @override final  int id;
 @override final  String name;
@@ -285,14 +288,17 @@ class _Recipe implements Recipe {
 @pragma('vm:prefer-inline')
 _$RecipeCopyWith<_Recipe> get copyWith => __$RecipeCopyWithImpl<_Recipe>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$RecipeToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _Recipe&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.image, image) || other.image == image)&&const DeepCollectionEquality().equals(other.keywords, _keywords)&&(identical(other.servings, servings) || other.servings == servings)&&(identical(other.servingsText, servingsText) || other.servingsText == servingsText)&&(identical(other.workingTime, workingTime) || other.workingTime == workingTime)&&(identical(other.waitingTime, waitingTime) || other.waitingTime == waitingTime)&&const DeepCollectionEquality().equals(other.steps, _steps)&&(identical(other.sourceUrl, sourceUrl) || other.sourceUrl == sourceUrl)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.lastCooked, lastCooked) || other.lastCooked == lastCooked)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
     return Object.hash(runtimeType,id,name,description,image,const DeepCollectionEquality().hash(_keywords),servings,servingsText,workingTime,waitingTime,const DeepCollectionEquality().hash(_steps),sourceUrl,rating,lastCooked,createdBy,updatedAt);

@@ -12,6 +12,7 @@ part of 'ingredient.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$Ingredient {
 
@@ -27,6 +28,8 @@ mixin _$Ingredient {
 @pragma('vm:prefer-inline')
 $IngredientCopyWith<Ingredient> get copyWith => _$IngredientCopyWithImpl<Ingredient>(this as Ingredient, _$identity);
 
+  /// Serializes this Ingredient to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -35,7 +38,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is Ingredient&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.food, _this.food) || other.food == _this.food)&&(identical(other.unit, _this.unit) || other.unit == _this.unit)&&(identical(other.amount, _this.amount) || other.amount == _this.amount)&&(identical(other.noAmount, _this.noAmount) || other.noAmount == _this.noAmount)&&(identical(other.isHeader, _this.isHeader) || other.isHeader == _this.isHeader)&&(identical(other.note, _this.note) || other.note == _this.note)&&(identical(other.originalText, _this.originalText) || other.originalText == _this.originalText)&&(identical(other.order, _this.order) || other.order == _this.order));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Ingredient;
@@ -246,11 +249,11 @@ return $default(_that.id,_that.food,_that.unit,_that.amount,_that.noAmount,_that
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _Ingredient implements Ingredient {
   const _Ingredient({required this.id, this.food, this.unit, this.amount = 0, this.noAmount = false, this.isHeader = false, this.note = '', this.originalText, this.order = 0});
-  
+  factory _Ingredient.fromJson(Map<String, dynamic> json) => _$IngredientFromJson(json);
 
 @override final  int id;
 @override final  Food? food;
@@ -273,14 +276,17 @@ class _Ingredient implements Ingredient {
 @pragma('vm:prefer-inline')
 _$IngredientCopyWith<_Ingredient> get copyWith => __$IngredientCopyWithImpl<_Ingredient>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$IngredientToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _Ingredient&&(identical(other.id, id) || other.id == id)&&(identical(other.food, food) || other.food == food)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.noAmount, noAmount) || other.noAmount == noAmount)&&(identical(other.isHeader, isHeader) || other.isHeader == isHeader)&&(identical(other.note, note) || other.note == note)&&(identical(other.originalText, originalText) || other.originalText == originalText)&&(identical(other.order, order) || other.order == order));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
     return Object.hash(runtimeType,id,food,unit,amount,noAmount,isHeader,note,originalText,order);

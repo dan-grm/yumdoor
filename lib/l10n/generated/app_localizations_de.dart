@@ -143,6 +143,14 @@ class AppLocalizationsDe extends AppLocalizations {
   String get errorServer => 'Der Server hat einen Fehler gemeldet.';
 
   @override
+  String get offlineBanner =>
+      'Du bist offline. Rezepte, die du schon geöffnet hast, kannst du weiter ansehen.';
+
+  @override
+  String get offlineWriteDisabled =>
+      'Offline kannst du nichts ändern. Sobald du wieder verbunden bist, geht es weiter.';
+
+  @override
   String get recipeNotFound =>
       'Dieses Rezept gibt es nicht, oder du darfst es nicht sehen.';
 
@@ -340,6 +348,13 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get searchEmptyServer =>
       'Auf deinem Tandoor-Server gibt es noch keine Rezepte.';
+
+  @override
+  String get searchOfflineResults =>
+      'Offline: Gesucht wird nur in Rezepten, die du schon geöffnet hast, und nur im Namen.';
+
+  @override
+  String get searchOfflineEmpty => 'Keins der gespeicherten Rezepte passt.';
 
   @override
   String get searchLoadMoreFailed =>

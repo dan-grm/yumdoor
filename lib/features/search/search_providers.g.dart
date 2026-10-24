@@ -62,7 +62,7 @@ final class SearchResultsProvider
   }
 }
 
-String _$searchResultsHash() => r'fd1f607df633491a2520a44fc74344d093c25ac8';
+String _$searchResultsHash() => r'8d32db28f1f69d77d03e90add84e6a199ff0d4c9';
 
 /// Results for [query], one page at a time.
 ///

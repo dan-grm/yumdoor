@@ -28,6 +28,9 @@ class FakeRecipeRepository implements RecipeRepository {
 
   final Map<int, Recipe> recipes;
   Failure? failure;
+
+  /// Marks search results as coming from the offline cache.
+  bool fromCache = false;
   int fetchCount = 0;
   final searches = <SearchCall>[];
 
@@ -66,6 +69,7 @@ class FakeRecipeRepository implements RecipeRepository {
       items: [for (final r in matches.sublist(start, end)) _summary(r)],
       totalCount: matches.length,
       hasMore: end < matches.length,
+      fromCache: fromCache,
     );
   }
 

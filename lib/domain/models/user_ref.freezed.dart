@@ -12,6 +12,7 @@ part of 'user_ref.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$UserRef {
 
@@ -23,6 +24,8 @@ mixin _$UserRef {
 @pragma('vm:prefer-inline')
 $UserRefCopyWith<UserRef> get copyWith => _$UserRefCopyWithImpl<UserRef>(this as UserRef, _$identity);
 
+  /// Serializes this UserRef to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -31,7 +34,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is UserRef&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as UserRef;
@@ -211,11 +214,11 @@ return $default(_that.id,_that.name);case _:
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _UserRef implements UserRef {
   const _UserRef({required this.id, required this.name});
-  
+  factory _UserRef.fromJson(Map<String, dynamic> json) => _$UserRefFromJson(json);
 
 @override final  int id;
 /// The display name, falling back to the username. Can be empty.
@@ -227,14 +230,17 @@ class _UserRef implements UserRef {
 @pragma('vm:prefer-inline')
 _$UserRefCopyWith<_UserRef> get copyWith => __$UserRefCopyWithImpl<_UserRef>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$UserRefToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserRef&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
     return Object.hash(runtimeType,id,name);

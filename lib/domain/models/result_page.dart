@@ -13,5 +13,10 @@ abstract class ResultPage<T> with _$ResultPage<T> {
 
     /// Whether there is a next page. Requesting a page past the end fails.
     required bool hasMore,
+
+    /// The server couldn't be reached, so these come from the offline cache:
+    /// only recipes opened before, matched less precisely than the server
+    /// would.
+    @Default(false) bool fromCache,
   }) = _ResultPage<T>;
 }

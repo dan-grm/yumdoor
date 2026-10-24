@@ -12,6 +12,7 @@ part of 'keyword.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$Keyword {
 
@@ -24,6 +25,8 @@ mixin _$Keyword {
 @pragma('vm:prefer-inline')
 $KeywordCopyWith<Keyword> get copyWith => _$KeywordCopyWithImpl<Keyword>(this as Keyword, _$identity);
 
+  /// Serializes this Keyword to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -32,7 +35,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is Keyword&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.parentId, _this.parentId) || other.parentId == _this.parentId));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Keyword;
@@ -213,11 +216,11 @@ return $default(_that.id,_that.name,_that.parentId);case _:
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _Keyword implements Keyword {
   const _Keyword({required this.id, required this.name, this.parentId});
-  
+  factory _Keyword.fromJson(Map<String, dynamic> json) => _$KeywordFromJson(json);
 
 @override final  int id;
 @override final  String name;
@@ -231,14 +234,17 @@ class _Keyword implements Keyword {
 @pragma('vm:prefer-inline')
 _$KeywordCopyWith<_Keyword> get copyWith => __$KeywordCopyWithImpl<_Keyword>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$KeywordToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _Keyword&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.parentId, parentId) || other.parentId == parentId));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
     return Object.hash(runtimeType,id,name,parentId);

@@ -12,6 +12,7 @@ part of 'food.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$Food {
 
@@ -25,6 +26,8 @@ mixin _$Food {
 @pragma('vm:prefer-inline')
 $FoodCopyWith<Food> get copyWith => _$FoodCopyWithImpl<Food>(this as Food, _$identity);
 
+  /// Serializes this Food to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -33,7 +36,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is Food&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.pluralName, _this.pluralName) || other.pluralName == _this.pluralName)&&(identical(other.parentId, _this.parentId) || other.parentId == _this.parentId)&&(identical(other.onHand, _this.onHand) || other.onHand == _this.onHand)&&(identical(other.ignoreShopping, _this.ignoreShopping) || other.ignoreShopping == _this.ignoreShopping));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Food;
@@ -217,11 +220,11 @@ return $default(_that.id,_that.name,_that.pluralName,_that.parentId,_that.onHand
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _Food implements Food {
   const _Food({required this.id, required this.name, this.pluralName, this.parentId, this.onHand = false, this.ignoreShopping = false});
-  
+  factory _Food.fromJson(Map<String, dynamic> json) => _$FoodFromJson(json);
 
 @override final  int id;
 @override final  String name;
@@ -239,14 +242,17 @@ class _Food implements Food {
 @pragma('vm:prefer-inline')
 _$FoodCopyWith<_Food> get copyWith => __$FoodCopyWithImpl<_Food>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$FoodToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _Food&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.pluralName, pluralName) || other.pluralName == pluralName)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.onHand, onHand) || other.onHand == onHand)&&(identical(other.ignoreShopping, ignoreShopping) || other.ignoreShopping == ignoreShopping));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
     return Object.hash(runtimeType,id,name,pluralName,parentId,onHand,ignoreShopping);

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yumdoor/design/design.dart';
+import 'package:yumdoor/features/common/offline_banner.dart';
 import 'package:yumdoor/l10n/l10n.dart';
 
 /// Phone width of the mockups.
@@ -34,6 +35,8 @@ Future<GoRouter> pumpRoutes(
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         routerConfig: router,
+        // As in YumdoorApp.
+        builder: (context, child) => OfflineBanner(child: child!),
       ),
     ),
   );

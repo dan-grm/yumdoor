@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import 'auth_interceptor.dart';
 import 'csrf_interceptor.dart';
+import 'reachability_interceptor.dart';
 
 /// A server and the token to use with it.
 class TandoorConnection {
@@ -30,12 +31,14 @@ class TandoorConnection {
 /// The generated client's paths start with `/api/`; Dio appends them to
 /// [serverUrl], so a Tandoor under a subpath works. [csrfToken] reads the
 /// browser's CSRF cookie (see [CsrfInterceptor]); [onUnauthorized] is called
-/// whenever the server rejects [token].
+/// whenever the server rejects [token]; [onReachable] learns after a request
+/// whether the server answered (see [ReachabilityInterceptor]).
 Dio createTandoorDio(
   Uri serverUrl, {
   String? token,
   String? Function()? csrfToken,
   void Function()? onUnauthorized,
+  void Function(bool reachable)? onReachable,
 }) {
   final dio = Dio(
     BaseOptions(
@@ -50,6 +53,9 @@ Dio createTandoorDio(
     dio.interceptors.add(
       AuthInterceptor(token, onUnauthorized: onUnauthorized),
     );
+  }
+  if (onReachable != null) {
+    dio.interceptors.add(ReachabilityInterceptor(onReachable));
   }
   return dio;
 }

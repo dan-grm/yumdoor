@@ -2,9 +2,11 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'keyword.dart';
 import 'recipe_step.dart';
+import 'recipe_summary.dart';
 import 'user_ref.dart';
 
 part 'recipe.freezed.dart';
+part 'recipe.g.dart';
 
 /// A recipe with its steps, as shown on the recipe screen and in cooking mode.
 @freezed
@@ -36,4 +38,27 @@ abstract class Recipe with _$Recipe {
     UserRef? createdBy,
     DateTime? updatedAt,
   }) = _Recipe;
+
+  const Recipe._();
+
+  /// For storing in the offline cache. The format follows the fields, so a
+  /// change to this model or the ones it contains needs a new cache version.
+  factory Recipe.fromJson(Map<String, dynamic> json) => _$RecipeFromJson(json);
+
+  /// The recipe as it appears in a list.
+  RecipeSummary get summary => RecipeSummary(
+    id: id,
+    name: name,
+    description: description,
+    image: image,
+    keywords: keywords,
+    servings: servings,
+    servingsText: servingsText,
+    workingTime: workingTime,
+    waitingTime: waitingTime,
+    rating: rating,
+    lastCooked: lastCooked,
+    createdBy: createdBy,
+    updatedAt: updatedAt,
+  );
 }

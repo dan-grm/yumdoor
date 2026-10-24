@@ -172,15 +172,28 @@ shows the origin and explains the constraint.
 
 ## Offline cache
 
-- Read-only offline: recipes the user has opened and recipes in the visible meal plan are stored in Drift.
-- Stored as domain models serialized to JSON in a `cached_recipe` table (id, updatedAt, json, lastOpenedAt), plus
-  images as bytes in `cached_image`. Simple, and a domain model change only needs a cache version bump that drops
-  old rows. No need to mirror Tandoor's relational schema.
-- Repositories are network-first with cache fallback for recipe detail and the meal plan; search is online only
-  (offline search works over cached recipes by name, and says so).
-- `ConnectivityService` plus failed requests drive an `isOffline` provider. When offline, a banner is shown and
-  write actions are disabled (not hidden), with a tooltip explaining why. No writes are queued.
-- Logout and switching servers clear the database. Cache size is capped (LRU by `lastOpenedAt`).
+- Read-only offline: recipes the user has opened (and, from M2, recipes in the visible meal plan) are stored in Drift
+  (`lib/data/cache/`).
+- Stored as domain models serialized to JSON (`Recipe.fromJson`/`toJson`) in a `cached_recipe` table (id, name,
+  imageUrl, updatedAt, json, lastOpenedAt), plus images as bytes in `cached_image`. Simple, and a domain model change
+  only needs a bump of `CacheDatabase.schemaVersion`; any version change (up or down) drops all rows. No need to
+  mirror Tandoor's relational schema. A row that no longer decodes is dropped instead of failing.
+- `CachingRecipeRepository` wraps the Tandoor repository: network first, cache fallback on `OfflineFailure` for
+  recipe detail; every fetched recipe is written through, and its image is downloaded in the background (without
+  the token, at most 5 MB). A `NotFoundFailure` removes the recipe from the cache. Search is online only; offline,
+  page 1 falls back to the cached recipes (name, plus exact food/keyword/rating filters without child foods) and
+  `ResultPage.fromCache` makes the UI say so.
+- `ConnectivityService` plus requests drive the `isOffline` provider (`lib/app/offline.dart`): a request that can't
+  connect sets it, any answer from the server (errors included) or the network coming back clears it. When offline,
+  a banner is shown on every screen (`MaterialApp.builder`) and write actions are disabled (not hidden) through
+  `OfflineDisabled`, with a tooltip explaining why. No writes are queued.
+- Logout (and so switching servers or users) clears the database. Cache size is capped at 100 recipes (LRU by
+  `lastOpenedAt`); images no cached recipe uses are dropped with them.
+- Starting the PWA offline also needs the app shell from the service worker (#17); the data side doesn't depend on it.
+- Web: `web/drift_worker.js` and `web/sqlite3.wasm` are vendored and must match `pubspec.lock`. After bumping
+  `drift` or `sqlite3`, replace them from the releases:
+  `gh release download drift-<drift> -R simolus3/drift -p drift_worker.js` and
+  `gh release download sqlite3-<sqlite3> -R simolus3/sqlite3.dart -p sqlite3.wasm`.
 
 ## Platform abstraction
 

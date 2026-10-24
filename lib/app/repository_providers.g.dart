@@ -203,7 +203,7 @@ final class _TandoorRepositoriesProvider
 }
 
 String _$_tandoorRepositoriesHash() =>
-    r'54d08b1a9991d15df7d4f523e70ea459fc4cc764';
+    r'930bb9519f2ff4ab4a9d86581f1e4c9b198a6239';
 
 @ProviderFor(recipeRepository)
 final recipeRepositoryProvider = RecipeRepositoryProvider._();
@@ -338,3 +338,134 @@ final class KeywordRepositoryProvider
 }
 
 String _$keywordRepositoryHash() => r'a633677536f5557907df87100c1a693fdb7ab388';
+
+@ProviderFor(_cacheDatabase)
+final _cacheDatabaseProvider = _CacheDatabaseProvider._();
+
+final class _CacheDatabaseProvider
+    extends $FunctionalProvider<CacheDatabase, CacheDatabase, CacheDatabase>
+    with $Provider<CacheDatabase> {
+  _CacheDatabaseProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'_cacheDatabaseProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$_cacheDatabaseHash();
+
+  @$internal
+  @override
+  $ProviderElement<CacheDatabase> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  CacheDatabase create(Ref ref) {
+    return _cacheDatabase(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CacheDatabase value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CacheDatabase>(value),
+    );
+  }
+}
+
+String _$_cacheDatabaseHash() => r'0a874c653bcaafffd940ba37ee714e6f3947ef35';
+
+@ProviderFor(_recipeCache)
+final _recipeCacheProvider = _RecipeCacheProvider._();
+
+final class _RecipeCacheProvider
+    extends $FunctionalProvider<RecipeCache, RecipeCache, RecipeCache>
+    with $Provider<RecipeCache> {
+  _RecipeCacheProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'_recipeCacheProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$_recipeCacheHash();
+
+  @$internal
+  @override
+  $ProviderElement<RecipeCache> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  RecipeCache create(Ref ref) {
+    return _recipeCache(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(RecipeCache value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<RecipeCache>(value),
+    );
+  }
+}
+
+String _$_recipeCacheHash() => r'a79b57d7783972af6c2d84c512ec66e4091a3280';
+
+/// Recipes and images stored for offline use. Kept across sessions until
+/// logout clears it.
+
+@ProviderFor(offlineCache)
+final offlineCacheProvider = OfflineCacheProvider._();
+
+/// Recipes and images stored for offline use. Kept across sessions until
+/// logout clears it.
+
+final class OfflineCacheProvider
+    extends $FunctionalProvider<OfflineCache, OfflineCache, OfflineCache>
+    with $Provider<OfflineCache> {
+  /// Recipes and images stored for offline use. Kept across sessions until
+  /// logout clears it.
+  OfflineCacheProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'offlineCacheProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$offlineCacheHash();
+
+  @$internal
+  @override
+  $ProviderElement<OfflineCache> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  OfflineCache create(Ref ref) {
+    return offlineCache(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(OfflineCache value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<OfflineCache>(value),
+    );
+  }
+}
+
+String _$offlineCacheHash() => r'd9e087a2b51ebfdefd355288b08e352b27943fa0';

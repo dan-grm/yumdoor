@@ -1,14 +1,20 @@
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../data/api/tandoor_dio.dart';
+import '../data/cache/cache_database.dart';
+import '../data/cache/recipe_cache.dart';
 import '../data/repositories/tandoor_auth_repository.dart';
 import '../data/repositories/tandoor_repositories.dart';
 import '../data/repositories/tandoor_server_repository.dart';
 import '../domain/repositories/auth_repository.dart';
 import '../domain/repositories/food_repository.dart';
 import '../domain/repositories/keyword_repository.dart';
+import '../domain/repositories/offline_cache.dart';
 import '../domain/repositories/recipe_repository.dart';
 import '../domain/repositories/server_repository.dart';
+import 'offline.dart';
 import 'platform_providers.dart';
 import 'session.dart';
 
@@ -46,6 +52,12 @@ TandoorRepositories _tandoorRepositories(Ref ref) {
         ref.read(sessionControllerProvider.notifier).checkToken();
       }
     },
+    onReachable: (reachable) {
+      if (ref.mounted) {
+        ref.read(isOfflineProvider.notifier).reportServerReachable(reachable);
+      }
+    },
+    cache: ref.watch(_recipeCacheProvider),
   );
   ref.onDispose(repositories.close);
   return repositories;
@@ -62,3 +74,19 @@ FoodRepository foodRepository(Ref ref) =>
 @Riverpod(keepAlive: true)
 KeywordRepository keywordRepository(Ref ref) =>
     ref.watch(_tandoorRepositoriesProvider).keywords;
+
+@Riverpod(keepAlive: true)
+CacheDatabase _cacheDatabase(Ref ref) {
+  final database = CacheDatabase.open();
+  ref.onDispose(() => unawaited(database.close()));
+  return database;
+}
+
+@Riverpod(keepAlive: true)
+RecipeCache _recipeCache(Ref ref) =>
+    RecipeCache(ref.watch(_cacheDatabaseProvider));
+
+/// Recipes and images stored for offline use. Kept across sessions until
+/// logout clears it.
+@Riverpod(keepAlive: true)
+OfflineCache offlineCache(Ref ref) => ref.watch(_recipeCacheProvider);

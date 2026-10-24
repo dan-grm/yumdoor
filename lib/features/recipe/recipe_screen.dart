@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/offline.dart';
 import '../../design/components/buttons.dart';
 import '../../design/components/servings_picker.dart';
 import '../../design/design.dart';
@@ -12,6 +13,7 @@ import '../../domain/models/recipe_step.dart';
 import '../../domain/services/scaling_service.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
+import '../common/offline_disabled.dart';
 import 'ingredient_lines.dart';
 import 'recipe_meta.dart';
 import 'recipe_providers.dart';
@@ -173,14 +175,15 @@ class _RecipeViewState extends State<_RecipeView> {
   }
 }
 
-/// The image (or a placeholder) with the back button over it.
-class _Header extends StatelessWidget {
+/// The image (or a placeholder) with the back button over it. A copy from
+/// the offline cache is preferred over the network.
+class _Header extends ConsumerWidget {
   const _Header({required this.recipe});
 
   final Recipe recipe;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
     final image = recipe.image;
     final placeholder = Center(
@@ -201,12 +204,23 @@ class _Header extends StatelessWidget {
             child:
                 image != null &&
                     (image.isScheme('https') || image.isScheme('http'))
-                ? Image.network(
-                    image.toString(),
-                    fit: BoxFit.cover,
-                    excludeFromSemantics: true,
-                    errorBuilder: (_, _, _) => placeholder,
-                  )
+                ? switch (ref.watch(cachedImageProvider(image))) {
+                    AsyncData(value: final bytes?) => Image.memory(
+                      bytes,
+                      fit: BoxFit.cover,
+                      excludeFromSemantics: true,
+                      errorBuilder: (_, _, _) => placeholder,
+                    ),
+                    // Reading the cache takes a moment; the background
+                    // shows meanwhile.
+                    AsyncLoading() => const SizedBox.shrink(),
+                    _ => Image.network(
+                      image.toString(),
+                      fit: BoxFit.cover,
+                      excludeFromSemantics: true,
+                      errorBuilder: (_, _, _) => placeholder,
+                    ),
+                  }
                 : placeholder,
           ),
           const SafeArea(child: _BackButton()),
@@ -303,14 +317,16 @@ class _TitleBlock extends StatelessWidget {
   }
 }
 
-/// Plan, shop and edit: visible but disabled until their milestones.
-class _WriteActions extends StatelessWidget {
+/// Plan, shop and edit: visible but disabled until their milestones, and
+/// while offline.
+class _WriteActions extends ConsumerWidget {
   const _WriteActions();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
     final l10n = context.l10n;
+    final offline = ref.watch(isOfflineProvider);
     final actions = [
       (Icons.calendar_today_outlined, l10n.recipePlan),
       (Icons.shopping_cart_outlined, l10n.recipeShop),
@@ -325,12 +341,15 @@ class _WriteActions extends StatelessWidget {
             for (final (index, (icon, label)) in actions.indexed) ...[
               if (index > 0) SizedBox(width: t.space2),
               Expanded(
-                child: PillButton(
-                  label: label,
-                  icon: icon,
-                  kind: PillButtonKind.secondary,
-                  compact: true,
-                  onPressed: null,
+                child: OfflineDisabled(
+                  // Not built yet, so disabled online too.
+                  builder: (context, _) => PillButton(
+                    label: label,
+                    icon: icon,
+                    kind: PillButtonKind.secondary,
+                    compact: true,
+                    onPressed: null,
+                  ),
                 ),
               ),
             ],
@@ -338,7 +357,7 @@ class _WriteActions extends StatelessWidget {
         ),
         SizedBox(height: t.space2),
         Text(
-          l10n.recipeActionsComingSoon,
+          offline ? l10n.offlineWriteDisabled : l10n.recipeActionsComingSoon,
           style: t.caption.copyWith(color: t.inkMuted),
         ),
       ],
