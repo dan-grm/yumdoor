@@ -84,7 +84,11 @@ docker compose -f docker/tandoor/compose.yml down -v        # reset: delete data
 - One issue → one branch → one PR. Branch names: `<type>/<issue>-<slug>`, e.g. `feat/12-login-screen`.
 - Conventional Commits: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`, `ci:`, `build:`; scope optional
   (`feat(search): …`). Reference the issue in the PR body (`Closes #12`).
-- `main` is protected: no direct pushes, CI must be green, one approving review from the other developer.
+- `main` is protected: no direct pushes, CI must be green. Reviews from the other developer are welcome but not
+  required; the author merges their own PR.
+  PRs are squash-merged with the PR title as the commit message, so the title must be a Conventional Commit.
+  The settings live in `tool/repo_settings.dart` (`dart run tool/repo_settings.dart` checks, `--apply` fixes, needs
+  admin). Renaming or adding a CI job means updating its required checks; a test fails if they don't match.
 - Keep PRs small enough to review in a few minutes. Split mechanical changes (codegen, renames) from logic.
 - Before opening a PR: format, analyze, import check, unit/widget tests. Run integration tests when touching
   `lib/data/` or the seed. CI (`.github/workflows/ci.yml`) runs the same checks, plus the web build, and fails if
