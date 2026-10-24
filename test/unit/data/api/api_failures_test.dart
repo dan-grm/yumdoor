@@ -46,6 +46,15 @@ void main() {
       );
     });
 
+    test('maps a cancelled request to CancelledFailure', () {
+      expect(
+        failureFromDioException(
+          DioException.requestCancelled(requestOptions: request, reason: null),
+        ),
+        isA<CancelledFailure>(),
+      );
+    });
+
     test('maps 404 to NotFoundFailure', () {
       expect(failureFromDioException(badResponse(404)), isA<NotFoundFailure>());
     });

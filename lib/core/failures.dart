@@ -54,6 +54,14 @@ final class NotFoundFailure extends Failure {
   String toString() => 'NotFoundFailure';
 }
 
+/// The caller cancelled the request with a `CancelSignal`.
+final class CancelledFailure extends Failure {
+  const CancelledFailure();
+
+  @override
+  String toString() => 'CancelledFailure';
+}
+
 /// The URL does not point to a Tandoor 2.x server.
 final class IncompatibleServerFailure extends Failure {
   const IncompatibleServerFailure();

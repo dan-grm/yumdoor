@@ -1,6 +1,15 @@
 import 'package:dio/dio.dart';
 
+import '../../core/cancellation.dart';
 import '../../core/failures.dart';
+
+/// A Dio [CancelToken] that fires with [signal], or `null` without one.
+CancelToken? cancelTokenFor(CancelSignal? signal) {
+  if (signal == null) return null;
+  final token = CancelToken();
+  signal.whenCancelled.then((_) => token.cancel());
+  return token;
+}
 
 /// Runs [request] and throws a [Failure] for whatever goes wrong, including
 /// the `FormatException`s the mappers throw for responses they can't use.
@@ -23,12 +32,12 @@ Failure failureFromDioException(DioException e) {
     DioExceptionType.receiveTimeout ||
     DioExceptionType.connectionError => const OfflineFailure(),
     DioExceptionType.badResponse => _failureForStatus(response!),
+    DioExceptionType.cancel => const CancelledFailure(),
     // A response the generated client could not deserialize ends up here,
     // with the response attached.
     DioExceptionType.unknown ||
     DioExceptionType.transformTimeout ||
-    DioExceptionType.badCertificate ||
-    DioExceptionType.cancel => ServerFailure(
+    DioExceptionType.badCertificate => ServerFailure(
       statusCode: response?.statusCode,
       cause: e.error ?? e.type,
     ),

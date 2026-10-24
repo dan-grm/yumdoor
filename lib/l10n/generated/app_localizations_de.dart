@@ -280,4 +280,86 @@ class AppLocalizationsDe extends AppLocalizations {
   String recipeStartCooking(String servings) {
     return 'Kochen starten · $servings';
   }
+
+  @override
+  String get searchTitle => 'Suchen';
+
+  @override
+  String get searchFieldLabel => 'Rezepte durchsuchen';
+
+  @override
+  String get searchFieldHint => 'Rezeptname';
+
+  @override
+  String get searchClear => 'Suchtext löschen';
+
+  @override
+  String get searchAddFood => 'Zutat';
+
+  @override
+  String get searchAddKeyword => 'Stichwort';
+
+  @override
+  String searchFoodFilter(String food) {
+    return 'enthält $food';
+  }
+
+  @override
+  String get searchFilterLoading => '…';
+
+  @override
+  String get searchFilterUnknown => 'Unbekannter Filter';
+
+  @override
+  String searchRemoveFilter(String filter) {
+    return '$filter entfernen';
+  }
+
+  @override
+  String searchResultCount(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Rezepte',
+      one: '1 Rezept',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get searchEmpty => 'Keine Rezepte gefunden';
+
+  @override
+  String get searchEmptyHint =>
+      'Probier weniger Filter oder einen anderen Suchtext.';
+
+  @override
+  String get searchEmptyServer =>
+      'Auf deinem Tandoor-Server gibt es noch keine Rezepte.';
+
+  @override
+  String get searchLoadMoreFailed =>
+      'Weitere Rezepte konnten nicht geladen werden.';
+
+  @override
+  String get pickerFoodTitle => 'Zutat hinzufügen';
+
+  @override
+  String get pickerKeywordTitle => 'Stichwort hinzufügen';
+
+  @override
+  String get pickerFoodHint => 'Zutat suchen';
+
+  @override
+  String get pickerKeywordHint => 'Stichwort suchen';
+
+  @override
+  String get pickerFoodNote => 'Untergeordnete Zutaten zählen mit.';
+
+  @override
+  String get pickerEmpty => 'Nichts gefunden';
 }

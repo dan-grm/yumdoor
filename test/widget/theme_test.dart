@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/app/app.dart';
 import 'package:yumdoor/app/theme_mode.dart';
 import 'package:yumdoor/design/design.dart';
-import 'package:yumdoor/features/home/home_screen.dart';
+import 'package:yumdoor/features/search/search_screen.dart';
 
 import '../fakes/app_overrides.dart';
 
@@ -30,7 +30,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    return tester.element(find.byType(HomeScreen)).tokens;
+    return tester.element(find.byType(SearchScreen)).tokens;
   }
 
   testWidgets('follows a light system', (tester) async {

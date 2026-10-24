@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -8,7 +9,7 @@ import 'package:dio/dio.dart';
 class FakeHttpAdapter implements HttpClientAdapter {
   FakeHttpAdapter(this.respond);
 
-  final ResponseBody Function(RequestOptions request) respond;
+  final FutureOr<ResponseBody> Function(RequestOptions request) respond;
   final requests = <RequestOptions>[];
 
   @override

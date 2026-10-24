@@ -86,6 +86,26 @@ void main() {
     expect(await names(query), expected);
   });
 
+  test('the carrot filter finds the carrot recipes', () async {
+    final query = RecipeQuery(foodIds: {await foodId('Karotte')});
+
+    final expected = seedRecipesWithAnyFood(seedFoodWithChildren('Karotte'));
+    expect(expected, isNotEmpty);
+    expect(await names(query), expected);
+  });
+
+  test('filters by the current user\'s rating', () async {
+    final page = await recipes.search(
+      const RecipeQuery(minRating: 4),
+      pageSize: 100,
+    );
+
+    expect(page.items, isNotEmpty);
+    for (final recipe in page.items) {
+      expect(recipe.rating, greaterThanOrEqualTo(4), reason: recipe.name);
+    }
+  });
+
   test('requires every selected food', () async {
     final query = RecipeQuery(
       foodIds: {await foodId('Karotte'), await foodId('Zwiebel')},

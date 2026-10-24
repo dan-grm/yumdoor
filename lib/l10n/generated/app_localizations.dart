@@ -505,6 +505,132 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Kochen starten · {servings}'**
   String recipeStartCooking(String servings);
+
+  /// Heading of the search screen.
+  ///
+  /// In de, this message translates to:
+  /// **'Suchen'**
+  String get searchTitle;
+
+  /// Accessible label of the search text field.
+  ///
+  /// In de, this message translates to:
+  /// **'Rezepte durchsuchen'**
+  String get searchFieldLabel;
+
+  /// Placeholder of the search text field. By default Tandoor's text search only matches recipe names.
+  ///
+  /// In de, this message translates to:
+  /// **'Rezeptname'**
+  String get searchFieldHint;
+
+  /// Button in the search field that empties it.
+  ///
+  /// In de, this message translates to:
+  /// **'Suchtext löschen'**
+  String get searchClear;
+
+  /// Dashed chip that opens the ingredient picker; shown with a plus icon.
+  ///
+  /// In de, this message translates to:
+  /// **'Zutat'**
+  String get searchAddFood;
+
+  /// Dashed chip that opens the keyword picker; shown with a plus icon.
+  ///
+  /// In de, this message translates to:
+  /// **'Stichwort'**
+  String get searchAddKeyword;
+
+  /// Label of an ingredient filter chip, and the pill on a result that echoes it. The food in its plural form if it has one.
+  ///
+  /// In de, this message translates to:
+  /// **'enthält {food}'**
+  String searchFoodFilter(String food);
+
+  /// Label of a filter chip while its name loads, after opening a search link.
+  ///
+  /// In de, this message translates to:
+  /// **'…'**
+  String get searchFilterLoading;
+
+  /// Label of a filter chip whose food or keyword no longer exists.
+  ///
+  /// In de, this message translates to:
+  /// **'Unbekannter Filter'**
+  String get searchFilterUnknown;
+
+  /// Accessible label of a selected filter chip; tapping it removes the filter.
+  ///
+  /// In de, this message translates to:
+  /// **'{filter} entfernen'**
+  String searchRemoveFilter(String filter);
+
+  /// Number of search results above the list.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Rezept} other{{count} Rezepte}}'**
+  String searchResultCount(int count);
+
+  /// Empty state of the search results.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Rezepte gefunden'**
+  String get searchEmpty;
+
+  /// Below the empty state when the search has text or filters.
+  ///
+  /// In de, this message translates to:
+  /// **'Probier weniger Filter oder einen anderen Suchtext.'**
+  String get searchEmptyHint;
+
+  /// Empty state when an unfiltered search finds nothing.
+  ///
+  /// In de, this message translates to:
+  /// **'Auf deinem Tandoor-Server gibt es noch keine Rezepte.'**
+  String get searchEmptyServer;
+
+  /// At the end of the results when the next page failed; a retry button follows.
+  ///
+  /// In de, this message translates to:
+  /// **'Weitere Rezepte konnten nicht geladen werden.'**
+  String get searchLoadMoreFailed;
+
+  /// Title of the ingredient picker sheet, and the accessible label of the chip that opens it.
+  ///
+  /// In de, this message translates to:
+  /// **'Zutat hinzufügen'**
+  String get pickerFoodTitle;
+
+  /// Title of the keyword picker sheet, and the accessible label of the chip that opens it.
+  ///
+  /// In de, this message translates to:
+  /// **'Stichwort hinzufügen'**
+  String get pickerKeywordTitle;
+
+  /// Placeholder of the text field in the ingredient picker.
+  ///
+  /// In de, this message translates to:
+  /// **'Zutat suchen'**
+  String get pickerFoodHint;
+
+  /// Placeholder of the text field in the keyword picker.
+  ///
+  /// In de, this message translates to:
+  /// **'Stichwort suchen'**
+  String get pickerKeywordHint;
+
+  /// Note in the ingredient picker: picking a food also finds recipes with its child foods in the food tree.
+  ///
+  /// In de, this message translates to:
+  /// **'Untergeordnete Zutaten zählen mit.'**
+  String get pickerFoodNote;
+
+  /// Empty state of the ingredient and keyword pickers.
+  ///
+  /// In de, this message translates to:
+  /// **'Nichts gefunden'**
+  String get pickerEmpty;
 }
 
 class _AppLocalizationsDelegate

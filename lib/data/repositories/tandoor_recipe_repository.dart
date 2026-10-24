@@ -1,6 +1,7 @@
 import 'package:built_collection/built_collection.dart';
 import 'package:tandoor_api/tandoor_api.dart' as api;
 
+import '../../core/cancellation.dart';
 import '../../domain/models/recipe.dart';
 import '../../domain/models/recipe_query.dart';
 import '../../domain/models/recipe_summary.dart';
@@ -20,6 +21,7 @@ class TandoorRecipeRepository implements RecipeRepository {
     RecipeQuery query, {
     int page = 1,
     int pageSize = 25,
+    CancelSignal? cancel,
   }) => guardRequest(() async {
     final text = query.text.trim();
     final response = await _api.apiRecipeList(
@@ -30,8 +32,14 @@ class TandoorRecipeRepository implements RecipeRepository {
       keywordsAnd: query.keywordIds.isEmpty
           ? null
           : BuiltList.of(query.keywordIds),
+      ratingGte: query.minRating,
+      cookedonLte: switch (query.lastCookedBefore) {
+        final day? => api.Date(day.year, day.month, day.day),
+        null => null,
+      },
       page: page,
       pageSize: pageSize,
+      cancelToken: cancelTokenFor(cancel),
     );
     final body = requireBody(response.data);
     return ResultPage(

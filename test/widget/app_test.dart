@@ -2,12 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/app/app.dart';
 import 'package:yumdoor/features/auth/login_screen.dart';
-import 'package:yumdoor/features/home/home_screen.dart';
+import 'package:yumdoor/features/search/search_screen.dart';
 
 import '../fakes/app_overrides.dart';
 
 void main() {
-  testWidgets('starts on the home route with a stored session', (tester) async {
+  testWidgets('starts on search with a stored session', (tester) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: appOverrides(tokenStore: loggedInTokenStore()),
@@ -16,7 +16,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byType(HomeScreen), findsOneWidget);
+    expect(find.byType(SearchScreen), findsOneWidget);
   });
 
   testWidgets('starts on login without a session', (tester) async {

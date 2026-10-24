@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/app/app.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/features/auth/login_screen.dart';
-import 'package:yumdoor/features/home/home_screen.dart';
+import 'package:yumdoor/features/search/search_screen.dart';
 
 import '../fakes/app_overrides.dart';
 import '../fakes/fake_auth_repository.dart';
@@ -218,7 +218,7 @@ void main() {
 
       await logInWithPassword(tester);
 
-      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(find.byType(SearchScreen), findsOneWidget);
       expect(store.token?.token, FakeAuthRepository.deviceToken);
 
       await tester.tap(find.byTooltip('Abmelden'));
@@ -269,7 +269,7 @@ void main() {
       await tester.enterText(field('token'), '  Bearer tda_pasted ');
       await submit(tester);
 
-      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(find.byType(SearchScreen), findsOneWidget);
       expect(store.token?.token, 'tda_pasted');
       expect(store.token?.id, isNull);
     });
