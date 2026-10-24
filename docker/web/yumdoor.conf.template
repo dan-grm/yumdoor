@@ -1,0 +1,59 @@
+# Rendered to /tmp/yumdoor/nginx/yumdoor.conf at container start and included
+# by default.conf. Only
+# ${BASE_PATH} and ${BASE_PATH_NO_SLASH} are substituted (NGINX_ENVSUBST_FILTER);
+# nginx's own variables are left alone. BASE_PATH is checked to contain only
+# letters, digits, _, - and / by 05-yumdoor-base-path.envsh.
+
+# Flutter web doesn't put content hashes in file names (main.dart.js,
+# flutter_bootstrap.js, canvaskit/…), so files are revalidated with their ETag
+# on every load. Fonts and icons don't change between deploys.
+map $yumdoor_file $yumdoor_cache_control {
+    ~^(icons/|favicon\.png$|assets/fonts/|assets/assets/fonts/)  "public, max-age=2592000";
+    default                                                     "no-cache";
+}
+
+server {
+    listen 8080;
+    server_tokens off;
+    # Relative Location headers, so redirects work behind any proxy.
+    absolute_redirect off;
+    root /usr/share/nginx/html;
+
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 5;
+    gzip_types application/javascript application/json application/manifest+json application/wasm text/plain;
+
+    rewrite ^${BASE_PATH_NO_SLASH}$ ${BASE_PATH} permanent;
+
+    # index.html, written with the real base path by the entrypoint.
+    location ~ ^${BASE_PATH}(index\.html)?$ {
+        root /tmp/yumdoor;
+        try_files /index.html =404;
+        add_header Cache-Control "no-cache" always;
+        include /etc/nginx/yumdoor/security-headers.conf;
+    }
+
+    location ~ ^${BASE_PATH}(?<yumdoor_file>.+)$ {
+        try_files /$yumdoor_file @app;
+        add_header Cache-Control $yumdoor_cache_control always;
+        include /etc/nginx/yumdoor/security-headers.conf;
+    }
+
+    # SPA fallback: routes of the app (e.g. recipe/42) get index.html, while a
+    # missing file is a 404 rather than HTML under a .js name.
+    location @app {
+        if ($uri ~ "\.[A-Za-z0-9]+$") {
+            return 404;
+        }
+        root /tmp/yumdoor;
+        try_files /index.html =404;
+        add_header Cache-Control "no-cache" always;
+        include /etc/nginx/yumdoor/security-headers.conf;
+    }
+
+    # Everything outside the base path belongs to Tandoor, not to us.
+    location / {
+        return 404;
+    }
+}

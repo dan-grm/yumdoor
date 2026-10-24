@@ -1,0 +1,16 @@
+# Build context of docker/web/Dockerfile: only what `flutter build web` and the
+# image need. Everything else (build/, .dart_tool/, .seed/ with test tokens, …)
+# stays out.
+*
+!pubspec.yaml
+!pubspec.lock
+!analysis_options.yaml
+!build.yaml
+!l10n.yaml
+!assets/
+!lib/
+!web/
+!packages/tandoor_api/pubspec.yaml
+!packages/tandoor_api/lib/
+!tool/finish_web_build.dart
+!docker/web/

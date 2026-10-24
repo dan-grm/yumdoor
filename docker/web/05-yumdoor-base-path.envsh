@@ -1,0 +1,28 @@
+#!/bin/sh
+# Sourced by the nginx image's entrypoint before the templates are rendered.
+# Checks BASE_PATH, exports BASE_PATH_NO_SLASH for the template and writes
+# index.html with BASE_PATH as <base href> to /tmp (the web root is read-only).
+
+case "$BASE_PATH" in
+/ | /*/) ;;
+*)
+    echo "yumdoor: BASE_PATH must start and end with /, got '$BASE_PATH'" >&2
+    exit 1
+    ;;
+esac
+# It ends up in a regex location and a sed replacement: keep it plain.
+if ! printf '%s' "$BASE_PATH" | grep -Eq '^/([A-Za-z0-9_-]+/)*$'; then
+    echo "yumdoor: BASE_PATH may only contain letters, digits, _ and -, got '$BASE_PATH'" >&2
+    exit 1
+fi
+
+export BASE_PATH_NO_SLASH="${BASE_PATH%/}"
+
+# Output directory of the nginx template (NGINX_ENVSUBST_OUTPUT_DIR).
+mkdir -p /tmp/yumdoor/nginx
+sed "s|/__BASE_PATH__/|$BASE_PATH|g" /usr/share/yumdoor/index.html >/tmp/yumdoor/index.html
+if ! grep -q "<base href=\"$BASE_PATH\">" /tmp/yumdoor/index.html; then
+    echo "yumdoor: no <base href=\"/__BASE_PATH__/\"> placeholder in index.html" >&2
+    exit 1
+fi
+echo "yumdoor: serving under $BASE_PATH"
