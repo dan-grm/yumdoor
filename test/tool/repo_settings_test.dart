@@ -21,7 +21,7 @@ class FakeGitHub implements GitHub {
 const repo = 'owner/app';
 
 Map<String, Object?> wanted() => {
-  'repos/$repo': {...mergeSettings, 'allow_auto_merge': false},
+  'repos/$repo': {...mergeSettings, 'has_wiki': false},
   'repos/$repo/branches/main/protection': {
     'required_status_checks': {
       'strict': false,
