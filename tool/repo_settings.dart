@@ -1,6 +1,7 @@
 // Checks or applies the GitHub repository settings the workflow in CLAUDE.md
 // relies on: branch protection for `main`, squash merges with the PR title as
-// commit message, private vulnerability reporting and the issue labels.
+// commit message, auto-merge, private vulnerability reporting and the issue
+// labels.
 //
 //   dart run tool/repo_settings.dart [--apply] [--repo owner/name]
 //
@@ -53,6 +54,8 @@ const mergeSettings = {
   'squash_merge_commit_title': 'PR_TITLE',
   'squash_merge_commit_message': 'BLANK',
   'delete_branch_on_merge': true,
+  // PRs merge themselves once the required checks pass (`gh pr merge --auto`).
+  'allow_auto_merge': true,
 };
 
 Map<String, Object?> branchProtection() => {
