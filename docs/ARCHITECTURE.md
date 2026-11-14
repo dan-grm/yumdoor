@@ -55,7 +55,7 @@ lib/
   core/                     Result/failure types, logging, config (base href, build info)
   design/                   YumdoorTokens ThemeExtension (light/dark), built from docs/design/tokens.json
   domain/
-    models/                 Recipe, Step, Ingredient, Food, Keyword, MealPlan, CookLogEntry, ShoppingEntry, …
+    models/                 Recipe, Step, Ingredient, Food, Keyword, MealPlan, CookLog, ShoppingEntry, …
     repositories/           abstract interfaces
     services/               scaling, step_template, timer_detection, shopping_aggregation, recommendations/
   data/
