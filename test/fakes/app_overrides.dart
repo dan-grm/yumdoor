@@ -36,6 +36,7 @@ List<Override> appOverrides({
   FakeFoodRepository? foods,
   FakeKeywordRepository? keywords,
   FakeOfflineCache? offlineCache,
+  TimerAlertService? timerAlerts,
   FakeLinkOpener? linkOpener,
   InMemoryLocalStore? localStore,
   Uri? webOrigin,
@@ -55,7 +56,7 @@ List<Override> appOverrides({
     connectivity ?? FakeConnectivityService(),
   ),
   timerAlertServiceProvider.overrideWithValue(
-    TimerAlertService.withChannels(FakeAlertChannels()),
+    timerAlerts ?? ChannelTimerAlertService(FakeAlertChannels()),
   ),
   linkOpenerProvider.overrideWithValue(linkOpener ?? FakeLinkOpener()),
   localStoreProvider.overrideWithValue(localStore ?? InMemoryLocalStore()),

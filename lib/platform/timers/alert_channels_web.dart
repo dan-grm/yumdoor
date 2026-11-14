@@ -30,18 +30,21 @@ class PlatformAlertChannels implements AlertChannels {
     };
   }
 
-  /// iOS suspends home-screen apps and background tabs, so a timer can't
-  /// fire there until the app is opened again. iPadOS reports itself as a
-  /// Mac, but with touch.
+  /// iOS suspends home-screen apps and background tabs, and Android's
+  /// Chrome freezes them after a few minutes, so a timer can't fire there
+  /// until the app is opened again. iPadOS reports itself as a Mac, but with
+  /// touch.
   @override
   bool get runsInBackground {
     final navigator = web.window.navigator;
     final agent = navigator.userAgent;
-    final iOS =
+    final mobile =
         agent.contains('iPhone') ||
         agent.contains('iPad') ||
+        agent.contains('Android') ||
+        agent.contains('Mobile') ||
         (agent.contains('Macintosh') && navigator.maxTouchPoints > 1);
-    return !iOS;
+    return !mobile;
   }
 
   @override
@@ -51,16 +54,28 @@ class PlatformAlertChannels implements AlertChannels {
 
   @override
   Future<void> unlockSound() async {
-    if (!canPlaySound) return;
+    if (canPlaySound) await _running();
+  }
+
+  /// The audio context, resumed. Throws if it doesn't run: without a user
+  /// gesture the browser keeps it suspended (and `resume()` may never
+  /// settle), and iOS marks it `interrupted` after the app was in the
+  /// background.
+  Future<web.AudioContext> _running() async {
     final context = _context();
-    if (context.state == 'suspended') await context.resume().toDart;
+    if (context.state != 'running') {
+      await context.resume().toDart.timeout(const Duration(seconds: 1));
+    }
+    if (context.state != 'running') {
+      throw StateError('audio is ${context.state}');
+    }
+    return context;
   }
 
   /// Three soft two-tone dings, about 1.5 s in all.
   @override
   Future<void> playChime() async {
-    final context = _context();
-    if (context.state == 'suspended') await context.resume().toDart;
+    final context = await _running();
     final start = context.currentTime + 0.05;
     for (var ding = 0; ding < 3; ding++) {
       final at = start + ding * 0.5;
@@ -94,23 +109,32 @@ class PlatformAlertChannels implements AlertChannels {
     await web.Notification.requestPermission().toDart;
   }
 
-  /// Through the service worker where there is one: Android's Chrome only
-  /// allows notifications from a service worker, `new Notification()` throws
-  /// there. Clicking it focuses the app (web/service_worker.js).
+  /// Through the service worker's registration where there is one, also
+  /// when it doesn't control this page (yet, or after a hard reload):
+  /// Android's Chrome only allows notifications from a service worker,
+  /// `new Notification()` throws there. Clicking one focuses the app
+  /// (web/service_worker.js, or the handler below).
   @override
-  Future<void> showNotification(String title, String body) async {
+  Future<void> showNotification(String title, String body, String tag) async {
     final options = web.NotificationOptions(
       body: body,
-      tag: 'yumdoor-timer',
+      tag: 'yumdoor-timer-$tag',
       renotify: true,
       requireInteraction: true,
     );
-    final container = web.window.navigator.serviceWorker;
-    if (_navigator.has('serviceWorker') && container.controller != null) {
-      final registration = await container.ready.toDart;
-      await registration.showNotification(title, options).toDart;
-      return;
+    if (_navigator.has('serviceWorker')) {
+      final registration = await web.window.navigator.serviceWorker
+          .getRegistration()
+          .toDart;
+      if (registration != null) {
+        await registration.showNotification(title, options).toDart;
+        return;
+      }
     }
-    web.Notification(title, options);
+    final notification = web.Notification(title, options);
+    notification.onclick = (web.Event _) {
+      web.window.focus();
+      notification.close();
+    }.toJS;
   }
 }

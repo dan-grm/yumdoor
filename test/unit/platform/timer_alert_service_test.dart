@@ -9,11 +9,17 @@ void main() {
 
   void start(FakeAlertChannels fake) {
     channels = fake;
-    service = TimerAlertService.withChannels(fake);
+    service = ChannelTimerAlertService(
+      fake,
+      channelTimeout: const Duration(milliseconds: 50),
+    );
   }
 
-  Future<TimerAlertOutcome> alert() =>
-      service.alert(title: 'Ofen ist fertig', body: 'Ofenkarotten mit Feta');
+  Future<TimerAlertOutcome> alert() => service.alert(
+    title: 'Ofen ist fertig',
+    body: 'Ofenkarotten mit Feta',
+    tag: '1',
+  );
 
   group('prepare', () {
     test('unlocks sound and asks for notifications once', () async {
@@ -26,6 +32,15 @@ void main() {
       expect(channels.permissionRequests, 1);
       expect(capabilities.notifications, NotificationAccess.granted);
       expect(capabilities.backgroundAlerts, isTrue);
+    });
+
+    test('a second call while the first is pending gets its result', () async {
+      start(FakeAlertChannels());
+
+      final results = await Future.wait([service.prepare(), service.prepare()]);
+
+      expect(channels.permissionRequests, 1);
+      expect(results.last.notifications, NotificationAccess.granted);
     });
 
     test('doesn\'t ask again after an earlier answer', () async {
@@ -87,7 +102,7 @@ void main() {
 
       expect(outcome.notification, isTrue);
       expect(channels.notifications, [
-        ('Ofen ist fertig', 'Ofenkarotten mit Feta'),
+        ('Ofen ist fertig', 'Ofenkarotten mit Feta', '1'),
       ]);
     });
 
@@ -143,6 +158,22 @@ void main() {
       expect(outcome.notification, isTrue);
     });
 
+    test('a hanging channel times out without blocking the others', () async {
+      start(
+        FakeAlertChannels(
+          notificationAccess: NotificationAccess.granted,
+          isVisible: false,
+        ),
+      );
+      channels.soundHangs = true;
+
+      final outcome = await alert();
+
+      expect(outcome.sound, isFalse);
+      expect(outcome.vibration, isTrue);
+      expect(outcome.notification, isTrue);
+    });
+
     test('nothing at all is reported as silent', () async {
       start(
         FakeAlertChannels(
@@ -161,7 +192,7 @@ void main() {
     final service = TimerAlertService();
 
     final capabilities = await service.prepare();
-    final outcome = await service.alert(title: 't', body: 'b');
+    final outcome = await service.alert(title: 't', body: 'b', tag: '1');
 
     expect(
       capabilities,

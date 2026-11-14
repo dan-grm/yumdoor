@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:yumdoor/platform/timers/timer_alert_service.dart';
 
 /// [AlertChannels] for tests: each channel can be missing ([canPlaySound],
@@ -34,15 +36,21 @@ class FakeAlertChannels implements AlertChannels {
   int chimes = 0;
   int vibrations = 0;
   int permissionRequests = 0;
-  final notifications = <(String, String)>[];
+  final notifications = <(String, String, String)>[];
+
+  /// A sound channel that never answers, like a browser promise left
+  /// pending.
+  bool soundHangs = false;
 
   @override
   Future<void> unlockSound() async => unlocks++;
 
   @override
-  Future<void> playChime() async {
+  Future<void> playChime() {
+    if (soundHangs) return Completer<void>().future;
     if (soundFails) throw StateError('audio blocked');
     chimes++;
+    return Future.value();
   }
 
   @override
@@ -58,8 +66,8 @@ class FakeAlertChannels implements AlertChannels {
   }
 
   @override
-  Future<void> showNotification(String title, String body) async {
+  Future<void> showNotification(String title, String body, String tag) async {
     if (notificationFails) throw StateError('notification failed');
-    notifications.add((title, body));
+    notifications.add((title, body, tag));
   }
 }

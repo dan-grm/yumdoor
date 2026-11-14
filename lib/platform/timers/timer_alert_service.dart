@@ -9,17 +9,48 @@ import 'alert_channels_stub.dart'
 /// reports what it can do, so the UI can say once when background alerts
 /// aren't possible. Timers themselves (end times, ticking) live elsewhere;
 /// this only signals.
-class TimerAlertService {
-  TimerAlertService.withChannels(this._channels);
-
+abstract interface class TimerAlertService {
   /// The service for the current platform.
   factory TimerAlertService() =>
-      TimerAlertService.withChannels(PlatformAlertChannels());
-
-  final AlertChannels _channels;
-  bool _prepared = false;
+      ChannelTimerAlertService(PlatformAlertChannels());
 
   /// What the platform offers right now.
+  TimerAlertCapabilities get capabilities;
+
+  /// Call when the first timer starts, from the user's tap: asks for
+  /// notification permission once, if it was never answered, and unlocks
+  /// audio (browsers only allow both after a gesture). Later calls return
+  /// the first call's result.
+  Future<TimerAlertCapabilities> prepare();
+
+  /// Signals a finished timer on every channel that works, at the same time,
+  /// and returns which ones did. The notification is only shown while the app
+  /// is hidden; in the foreground the screen itself shows the finished timer.
+  /// [tag] identifies the timer, so two finished timers get two
+  /// notifications.
+  Future<TimerAlertOutcome> alert({
+    required String title,
+    required String body,
+    required String tag,
+  });
+}
+
+/// [TimerAlertService] over the [AlertChannels] of a platform. The fallback
+/// logic is plain Dart, so it is unit-tested with fake channels.
+class ChannelTimerAlertService implements TimerAlertService {
+  ChannelTimerAlertService(
+    this._channels, {
+    this.channelTimeout = const Duration(seconds: 5),
+  });
+
+  final AlertChannels _channels;
+  Future<TimerAlertCapabilities>? _prepared;
+
+  /// How long one channel may take. Browsers can leave audio or permission
+  /// promises pending (no user gesture), which must not block the rest.
+  final Duration channelTimeout;
+
+  @override
   TimerAlertCapabilities get capabilities => TimerAlertCapabilities(
     sound: _channels.canPlaySound,
     vibration: _channels.canVibrate,
@@ -29,33 +60,37 @@ class TimerAlertService {
         _channels.runsInBackground,
   );
 
-  /// Call when the first timer starts, from the user's tap: unlocks audio
-  /// (browsers only allow it after a gesture) and asks for notification
-  /// permission once, if it was never answered. Later calls do nothing.
-  Future<TimerAlertCapabilities> prepare() async {
-    if (!_prepared) {
-      _prepared = true;
-      await _attempt(_channels.unlockSound);
-      if (_channels.notificationAccess == NotificationAccess.notAsked) {
-        await _attempt(_channels.requestNotificationPermission);
-      }
-    }
+  @override
+  Future<TimerAlertCapabilities> prepare() => _prepared ??= _prepare();
+
+  Future<TimerAlertCapabilities> _prepare() async {
+    // Both start right away, while the tap still counts as a user gesture:
+    // Safari ignores a permission request made after an await.
+    await Future.wait([
+      if (_channels.notificationAccess == NotificationAccess.notAsked)
+        _attempt(_channels.requestNotificationPermission),
+      _attempt(_channels.unlockSound),
+    ]);
     return capabilities;
   }
 
-  /// Signals a finished timer on every channel that works, and returns which
-  /// ones did. The notification is only shown while the app is hidden; in
-  /// the foreground the screen itself shows the finished timer.
+  @override
   Future<TimerAlertOutcome> alert({
     required String title,
     required String body,
+    required String tag,
   }) async {
-    final sound = _channels.canPlaySound && await _attempt(_channels.playChime);
-    final vibration = _channels.canVibrate && await _attempt(_channels.vibrate);
-    final notification =
+    // At the same time, so a slow channel can't hold up the others.
+    final notify =
         !_channels.isVisible &&
-        _channels.notificationAccess == NotificationAccess.granted &&
-        await _attempt(() => _channels.showNotification(title, body));
+        _channels.notificationAccess == NotificationAccess.granted;
+    final [sound, vibration, notification] = await Future.wait([
+      _channels.canPlaySound ? _attempt(_channels.playChime) : _no(),
+      _channels.canVibrate ? _attempt(_channels.vibrate) : _no(),
+      notify
+          ? _attempt(() => _channels.showNotification(title, body, tag))
+          : _no(),
+    ]);
     return TimerAlertOutcome(
       sound: sound,
       vibration: vibration,
@@ -63,10 +98,13 @@ class TimerAlertService {
     );
   }
 
-  /// Runs [action]; a channel that throws counts as not delivered.
-  static Future<bool> _attempt(Future<void> Function() action) async {
+  static Future<bool> _no() async => false;
+
+  /// Runs [action]; a channel that throws, or hangs for longer than
+  /// [channelTimeout], counts as not delivered.
+  Future<bool> _attempt(Future<void> Function() action) async {
     try {
-      await action();
+      await action().timeout(channelTimeout);
       return true;
     } catch (_) {
       return false;
@@ -99,7 +137,8 @@ class TimerAlertCapabilities {
   final NotificationAccess notifications;
 
   /// Whether a timer can still alert while the app is in the background or
-  /// the screen is off. Not on iOS home-screen apps, which are suspended.
+  /// the screen is off. Not on mobile browsers and home-screen apps, which
+  /// suspend or freeze hidden pages; only on desktop.
   final bool backgroundAlerts;
 
   @override
@@ -142,13 +181,14 @@ class TimerAlertOutcome {
 }
 
 /// The low-level channels of one platform. Implementations may throw from
-/// any action; [TimerAlertService] treats that as "not delivered".
+/// any action; [ChannelTimerAlertService] treats that as "not delivered".
 abstract interface class AlertChannels {
   bool get canPlaySound;
   bool get canVibrate;
   NotificationAccess get notificationAccess;
 
   /// Whether the app keeps running (and can alert) while in the background.
+  /// Mobile browsers suspend or freeze hidden pages, so only desktop does.
   bool get runsInBackground;
 
   /// Whether the app is in the foreground.
@@ -158,5 +198,5 @@ abstract interface class AlertChannels {
   Future<void> playChime();
   Future<void> vibrate();
   Future<void> requestNotificationPermission();
-  Future<void> showNotification(String title, String body);
+  Future<void> showNotification(String title, String body, String tag);
 }
