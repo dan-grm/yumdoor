@@ -208,7 +208,7 @@ void main() {
       );
     });
 
-    test('a failing food search ends the page early and is retried', () async {
+    test('a failing food search is skipped and tried again', () async {
       recipes
         ..failure = const ServerFailure()
         ..failWhen = (query) => query.anyFoodIds.isNotEmpty;
@@ -218,16 +218,49 @@ void main() {
       );
 
       final first = await results.next();
-      expect(first.items.map((m) => m.recipe.id), [2, 6]);
+      expect(first.items.map((m) => m.recipe.id), [2, 6, 1, 4]);
       expect(first.hasMore, isTrue);
 
       await expectLater(results.next(), throwsA(isA<ServerFailure>()));
 
       recipes.failure = null;
       final second = await results.next();
-      expect(second.items.map((m) => m.recipe.id), [3, 4, 1]);
+      expect(second.items.map((m) => m.recipe.id), [3]);
       expect(second.hasMore, isFalse);
       expect(second.totalCount, 5);
+    });
+
+    test('without name matches a failing food search still shows keyword '
+        'matches', () async {
+      recipes = FakeRecipeRepository([
+        recipe(1, 'Apfelkuchen', keywords: [karottenzeit]),
+        recipe(3, 'Gemüsepfanne', foods: [karotte]),
+      ]);
+      recipes
+        ..failure = const ServerFailure()
+        ..failWhen = (query) => query.anyFoodIds.isNotEmpty;
+
+      final first = await search()
+          .start(const RecipeQuery(text: 'Karotte'))
+          .next();
+
+      expect(first.items.map((m) => m.recipe.id), [1]);
+      expect(first.hasMore, isTrue);
+    });
+
+    test('a later page that is gone ends its source', () async {
+      final results = search().start(
+        const RecipeQuery(text: 'Karotte'),
+        pageSize: 2,
+      );
+      await results.next();
+      // Recipe 4 was deleted, so page 2 of the food search is a 404.
+      recipes.recipes.remove(4);
+
+      final second = await results.next();
+
+      expect(second.items.map((m) => m.recipe.id), [3, 1]);
+      expect(recipes.searches.last.page, 2);
     });
 
     test('a failing food lookup is retried', () async {
@@ -238,12 +271,12 @@ void main() {
       );
 
       final first = await results.next();
-      expect(first.items.map((m) => m.recipe.id), [2, 6]);
+      expect(first.items.map((m) => m.recipe.id), [2, 6, 1, 4]);
       expect(first.hasMore, isTrue);
 
       foods.failure = null;
       final second = await results.next();
-      expect(second.items.map((m) => m.recipe.id), [3, 4, 1]);
+      expect(second.items.map((m) => m.recipe.id), [3]);
     });
 
     test(

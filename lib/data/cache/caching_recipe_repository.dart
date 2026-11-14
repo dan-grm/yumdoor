@@ -62,9 +62,10 @@ class CachingRecipeRepository implements RecipeRepository {
       if (page != 1) rethrow;
       final recipes = await _cache.all();
       if (cancel?.isCancelled ?? false) throw const CancelledFailure();
+      final text = TextMatcher(query.text);
       final items = [
         for (final recipe in recipes)
-          if (_matches(recipe, query)) recipe.summary,
+          if (_matches(recipe, query, text)) recipe.summary,
       ];
       return ResultPage(
         items: items,
@@ -91,19 +92,17 @@ class CachingRecipeRepository implements RecipeRepository {
 /// data allows: the text against the name, the ingredients' foods and the
 /// keywords (like the universal search), and foods and keywords without
 /// their children.
-bool _matches(Recipe recipe, RecipeQuery query) {
-  final foods = recipe.summary.foods;
+bool _matches(Recipe recipe, RecipeQuery query, TextMatcher text) {
+  final foods = [
+    for (final step in recipe.steps)
+      for (final ingredient in step.ingredients) ?ingredient.food,
+  ];
   final foodIds = {for (final food in foods) food.id};
   final keywordIds = {for (final keyword in recipe.keywords) keyword.id};
-  final text = query.text.trim();
-  if (text.isNotEmpty &&
-      !containsFolded(recipe.name, text) &&
-      !foods.any(
-        (f) =>
-            containsFolded(f.name, text) ||
-            containsFolded(f.pluralName ?? '', text),
-      ) &&
-      !recipe.keywords.any((k) => containsFolded(k.name, text))) {
+  if (!text.isEmpty &&
+      !text.contains(recipe.name) &&
+      !foods.any(text.food) &&
+      !recipe.keywords.any(text.keyword)) {
     return false;
   }
   if (!keywordIds.containsAll(query.keywordIds)) return false;

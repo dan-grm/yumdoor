@@ -164,6 +164,34 @@ void main() {
     expect(find.textContaining('enthält'), findsNothing);
   });
 
+  testWidgets('lists food alternatives and echoes a filter once', (
+    tester,
+  ) async {
+    recipes = FakeRecipeRepository([
+      const Recipe(
+        id: 40,
+        name: 'Gratin',
+        steps: [
+          RecipeStep(
+            id: 1,
+            ingredients: [
+              Ingredient(id: 1, food: Food(id: 1, name: 'Karotte')),
+              Ingredient(id: 2, food: Food(id: 20, name: 'Kartoffel')),
+            ],
+          ),
+        ],
+      ),
+    ]);
+
+    // Server results don't say which of the matching foods a recipe has.
+    await pumpSearch(tester, location: '/search?q=kar');
+    expect(find.text('enthält Karotten oder Kartoffeln'), findsOneWidget);
+
+    // The food filter is one of the matching foods: named once.
+    await pumpSearch(tester, location: '/search?q=Karotte&food=1');
+    expect(find.text('enthält Karotten'), findsNWidgets(2)); // chip and pill
+  });
+
   testWidgets('a name match needs no reason', (tester) async {
     await pumpSearch(tester, location: '/search?q=Ofen');
 

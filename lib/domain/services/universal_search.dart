@@ -65,7 +65,8 @@ class _Source {
 /// The results of one [UniversalSearch], loaded with [next].
 class RecipeSearch {
   RecipeSearch._(this._search, this.query, this.pageSize, this._cancel)
-    : _text = query.text.trim() {
+    : _text = query.text.trim(),
+      _matcher = TextMatcher(query.text) {
     _sources = _text.isEmpty
         ? [_Source(_Kind.name)]
         : [for (final kind in _Kind.values) _Source(kind)];
@@ -76,6 +77,7 @@ class RecipeSearch {
   final int pageSize;
   final CancelSignal? _cancel;
   final String _text;
+  final TextMatcher _matcher;
   late final List<_Source> _sources;
 
   /// Recipes already returned, so none is returned twice.
@@ -93,16 +95,19 @@ class RecipeSearch {
   /// The next page of results: up to [pageSize] recipes that weren't
   /// returned before. Wait for one call to finish before the next.
   ///
-  /// The first call fails when the name search fails. A later source that
-  /// fails ends the page early with the results so far; the call after that
-  /// tries it again, and fails if it fails again. The failure is a [Failure].
+  /// Throws a [Failure] when the name search fails on the first call, or
+  /// when nothing could be loaded. A food or keyword search that fails is
+  /// skipped for this page and tried again on the next call, so its results
+  /// may come after those of the sources behind it.
   Future<ResultPage<RecipeMatch>> next() async {
     _checkCancelled();
-    if (!_started) await _start();
+    // Sources that already failed during this call aren't asked again.
+    final failed = <_Source, Failure>{};
+    if (!_started) failed.addAll(await _start());
 
     final items = <RecipeMatch>[];
     for (final source in _sources) {
-      while (items.length < pageSize) {
+      while (items.length < pageSize && !failed.containsKey(source)) {
         if (source.buffer.isNotEmpty) {
           final recipe = source.buffer.removeFirst();
           if (_seen.add(recipe.id)) items.add(_match(source.kind, recipe));
@@ -111,14 +116,14 @@ class RecipeSearch {
         if (source.exhausted) break;
         try {
           await _advance(source);
-        } on Failure {
+        } on Failure catch (failure) {
           _checkCancelled();
-          if (items.isEmpty) rethrow;
-          return _page(items, hasMore: true);
+          failed[source] = failure;
         }
       }
       if (items.length >= pageSize) break;
     }
+    if (items.isEmpty && failed.isNotEmpty) throw failed.values.first;
     return _page(
       items,
       hasMore: _sources.any((s) => s.buffer.isNotEmpty || !s.exhausted),
@@ -139,8 +144,9 @@ class RecipeSearch {
     );
   }
 
-  /// Loads the first page of every source at once, so the total is known.
-  Future<void> _start() async {
+  /// Loads the first page of every source at once, so the total is known,
+  /// and returns the food and keyword sources that failed.
+  Future<Map<_Source, Failure>> _start() async {
     final failures = await Future.wait([
       for (final source in _sources)
         // After a failed first call, only what failed is loaded again.
@@ -149,8 +155,7 @@ class RecipeSearch {
             : Future.value(null),
     ]);
     _checkCancelled();
-    // Without the name search there is nothing worth showing; a failed food
-    // or keyword search is tried again when its turn comes.
+    // Without the name search there is nothing worth showing.
     if (failures.first case final failure?) throw failure;
     _started = true;
 
@@ -166,12 +171,13 @@ class RecipeSearch {
       final recipes = name.buffer.toList();
       name.buffer
         ..clear()
-        ..addAll(recipes.where((r) => containsFolded(r.name, _text)))
-        ..addAll(recipes.where((r) => !containsFolded(r.name, _text)));
+        ..addAll(recipes.where((r) => _matcher.contains(r.name)))
+        ..addAll(recipes.where((r) => !_matcher.contains(r.name)));
       _total = name.count ?? 0;
-      return;
+      return {};
     }
     _total = await _countAll();
+    return {for (final (i, failure) in failures.indexed) _sources[i]: ?failure};
   }
 
   Future<Failure?> _tryAdvance(_Source source) async {
@@ -192,12 +198,20 @@ class RecipeSearch {
         ..exhausted = true;
       return;
     }
-    final page = await _search.recipes.search(
-      query,
-      page: source.nextPage,
-      pageSize: pageSize,
-      cancel: _cancel,
-    );
+    final ResultPage<RecipeSummary> page;
+    try {
+      page = await _search.recipes.search(
+        query,
+        page: source.nextPage,
+        pageSize: pageSize,
+        cancel: _cancel,
+      );
+    } on NotFoundFailure {
+      // A later page is gone: recipes were deleted since the first page.
+      if (source.nextPage == 1) rethrow;
+      source.exhausted = true;
+      return;
+    }
     if (page.fromCache) {
       // Only a whole search can come from the cache; offline results mixed
       // into server results would be misleading.
@@ -244,7 +258,7 @@ class RecipeSearch {
       // similar ("Kartoffel" for "Karotte"); keep those that contain the text.
       return _foods = [
         for (final food in await lookup)
-          if (_foodMatches(food)) food,
+          if (_matcher.food(food)) food,
       ];
     } on Failure {
       _foodLookup = null;
@@ -262,17 +276,13 @@ class RecipeSearch {
     try {
       return _keywords = [
         for (final keyword in await lookup)
-          if (containsFolded(keyword.name, _text)) keyword,
+          if (_matcher.keyword(keyword)) keyword,
       ];
     } on Failure {
       _keywordLookup = null;
       rethrow;
     }
   }
-
-  bool _foodMatches(Food food) =>
-      containsFolded(food.name, _text) ||
-      containsFolded(food.pluralName ?? '', _text);
 
   /// The number of distinct recipes over all sources: exact when every
   /// source fit on its first page or the overlaps could be counted, else an
@@ -360,18 +370,18 @@ class RecipeSearch {
       case _Kind.name:
         // The user's search preference, or the offline cache, may also
         // match ingredients and keywords.
-        if (containsFolded(recipe.name, _text)) {
+        if (_matcher.contains(recipe.name)) {
           return RecipeMatch(recipe: recipe);
         }
         return RecipeMatch(
           recipe: recipe,
           foods: [
             for (final food in recipe.foods)
-              if (_foodMatches(food)) food,
+              if (_matcher.food(food)) food,
           ],
           keywords: [
             for (final keyword in recipe.keywords)
-              if (containsFolded(keyword.name, _text)) keyword,
+              if (_matcher.keyword(keyword)) keyword,
           ],
         );
     }

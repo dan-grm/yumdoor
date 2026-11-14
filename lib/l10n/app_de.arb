@@ -430,6 +430,52 @@
       }
     }
   },
+  "searchMatchOr": "{first} oder {last}",
+  "@searchMatchOr": {
+    "description": "The last two names of a list of alternatives on a result's pill: the recipe contains at least one of these foods.",
+    "placeholders": {
+      "first": {
+        "type": "String",
+        "example": "Karotten"
+      },
+      "last": {
+        "type": "String",
+        "example": "Möhren"
+      }
+    }
+  },
+  "searchMatchList": "{first}, {next}",
+  "@searchMatchList": {
+    "description": "Joins names in a list on a result's pill.",
+    "placeholders": {
+      "first": {
+        "type": "String",
+        "example": "Karotten"
+      },
+      "next": {
+        "type": "String",
+        "example": "Zwiebeln"
+      }
+    }
+  },
+  "searchMatchMore": "weitere",
+  "@searchMatchMore": {
+    "description": "Ends a shortened list of names on a result's pill: \"Karotten, Möhren, Rüben oder weitere\"."
+  },
+  "searchMatchJoin": "{first} · {second}",
+  "@searchMatchJoin": {
+    "description": "Joins the reasons a result matched on its pill.",
+    "placeholders": {
+      "first": {
+        "type": "String",
+        "example": "enthält Karotten"
+      },
+      "second": {
+        "type": "String",
+        "example": "Stichwort: Vegetarisch"
+      }
+    }
+  },
   "searchFilterLoading": "…",
   "@searchFilterLoading": {
     "description": "Label of a filter chip while its name loads, after opening a search link."

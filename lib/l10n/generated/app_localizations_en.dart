@@ -315,6 +315,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String searchMatchOr(String first, String last) {
+    return '$first or $last';
+  }
+
+  @override
+  String searchMatchList(String first, String next) {
+    return '$first, $next';
+  }
+
+  @override
+  String get searchMatchMore => 'others';
+
+  @override
+  String searchMatchJoin(String first, String second) {
+    return '$first · $second';
+  }
+
+  @override
   String get searchFilterLoading => '…';
 
   @override

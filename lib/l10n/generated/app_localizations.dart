@@ -566,6 +566,30 @@ abstract class AppLocalizations {
   /// **'Stichwort: {keyword}'**
   String searchMatchKeyword(String keyword);
 
+  /// The last two names of a list of alternatives on a result's pill: the recipe contains at least one of these foods.
+  ///
+  /// In de, this message translates to:
+  /// **'{first} oder {last}'**
+  String searchMatchOr(String first, String last);
+
+  /// Joins names in a list on a result's pill.
+  ///
+  /// In de, this message translates to:
+  /// **'{first}, {next}'**
+  String searchMatchList(String first, String next);
+
+  /// Ends a shortened list of names on a result's pill: "Karotten, Möhren, Rüben oder weitere".
+  ///
+  /// In de, this message translates to:
+  /// **'weitere'**
+  String get searchMatchMore;
+
+  /// Joins the reasons a result matched on its pill.
+  ///
+  /// In de, this message translates to:
+  /// **'{first} · {second}'**
+  String searchMatchJoin(String first, String second);
+
   /// Label of a filter chip while its name loads, after opening a search link.
   ///
   /// In de, this message translates to:
