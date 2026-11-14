@@ -618,6 +618,110 @@ void main() {
 
       expect(localStore.values.keys, isNot(contains('cooking-timers.7')));
     });
+
+    group('from durations in the step text', () {
+      /// Step 2 with [instruction], no explicit time and no name.
+      void step2(String instruction, {Duration time = Duration.zero}) {
+        repository.recipes[7] = ofenkarotten.copyWith(
+          steps: [
+            ofenkarotten.steps[0],
+            ofenkarotten.steps[1].copyWith(
+              instruction: instruction,
+              time: time,
+            ),
+            ofenkarotten.steps[2],
+          ],
+        );
+      }
+
+      Finder highlight(String phrase) => find.byWidgetPredicate(
+        (widget) => widget is TimerHighlight && widget.text == phrase,
+      );
+
+      testWidgets('a tap on a highlight starts a timer named after the step', (
+        tester,
+      ) async {
+        step2('Erst 5 Minuten anbraten, dann 20–25 Minuten köcheln.');
+        await pumpCooking(tester);
+        await next(tester, 'Weiter zu Schritt 2');
+        expect(highlight('5 Minuten'), findsOneWidget);
+        expect(highlight('20–25 Minuten'), findsOneWidget);
+        expect(
+          find.bySemanticsLabel('20–25 Minuten, Timer starten'),
+          findsOneWidget,
+        );
+
+        await tapAndWait(tester, highlight('20–25 Minuten'));
+        expect(chip('Schritt 2, noch 25:00'), findsOneWidget);
+
+        await wait(tester, 2);
+        expect(chip('Schritt 2, noch 24:58'), findsOneWidget);
+        await tapAndWait(tester, highlight('5 Minuten'));
+        expect(chip('Schritt 2, noch 05:00'), findsOneWidget);
+        expect(find.byType(TimerChip), findsNWidgets(2));
+      });
+
+      testWidgets('Timer starten uses the first duration without a time', (
+        tester,
+      ) async {
+        await pumpCooking(tester);
+        await next(tester, 'Weiter zu Schritt 2');
+        // The fixture: "… mischen und 25 Minuten rösten."
+        expect(highlight('25 Minuten'), findsOneWidget);
+
+        await tapAndWait(tester, find.text('Timer starten · 25:00'));
+        expect(chip('Schritt 2, noch 25:00'), findsOneWidget);
+        expect(find.text('Timer starten · 25:00'), findsNothing);
+      });
+
+      testWidgets('the step\'s own time wins for Timer starten', (
+        tester,
+      ) async {
+        step2('10 Minuten ruhen lassen.', time: const Duration(minutes: 15));
+        await pumpCooking(tester);
+        await next(tester, 'Weiter zu Schritt 2');
+
+        expect(find.text('Timer starten · 15:00'), findsOneWidget);
+        expect(highlight('10 Minuten'), findsOneWidget);
+      });
+
+      testWidgets('text without a duration has no highlight or button', (
+        tester,
+      ) async {
+        step2('Im Ofen bei 200 °C backen, wie in Schritt 1.');
+        await pumpCooking(tester);
+        await next(tester, 'Weiter zu Schritt 2');
+
+        expect(find.byType(TimerHighlight), findsNothing);
+        expect(find.textContaining('Timer starten'), findsNothing);
+      });
+
+      testWidgets('highlights sit next to templates', (tester) async {
+        step2('{{ ingredients[0] }} 1 Stunde 20 Minuten im Ofen garen.');
+        await pumpCooking(tester);
+        await next(tester, 'Weiter zu Schritt 2');
+
+        expect(find.textContaining('600 g Karotten'), findsOneWidget);
+        expect(highlight('1 Stunde 20 Minuten'), findsOneWidget);
+        expect(find.text('Timer starten · 1:20:00'), findsOneWidget);
+      });
+
+      testWidgets('highlights scale with the text, once', (tester) async {
+        step2('25 Minuten rösten.');
+        await pumpCooking(tester);
+        await next(tester, 'Weiter zu Schritt 2');
+        final normal = tester.getRect(highlight('25 Minuten')).height;
+
+        tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await tester.pumpAndSettle();
+
+        expect(
+          tester.getRect(highlight('25 Minuten')).height,
+          moreOrLessEquals(normal * 1.3, epsilon: 1),
+        );
+      });
+    });
   });
 
   testWidgets('a recipe without steps says so', (tester) async {

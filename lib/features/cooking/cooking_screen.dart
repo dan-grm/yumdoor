@@ -442,14 +442,16 @@ class _StepPage extends StatelessWidget {
     );
   }
 
-  /// "Timer starten" for the step's own time; the timer is named after the
-  /// step.
+  /// A step's timers are named after it: "Rösten", or "Schritt 2".
+  String _timerLabel(BuildContext context) => step.name.trim().isEmpty
+      ? context.l10n.recipeStepTitle(number)
+      : step.name.trim();
+
+  /// "Timer starten" for the step's own time or the duration in its text.
   Widget _timerButton(BuildContext context) => StepTimerButton(
     recipeId: recipeId,
     step: step,
-    label: step.name.trim().isEmpty
-        ? context.l10n.recipeStepTitle(number)
-        : step.name.trim(),
+    label: _timerLabel(context),
   );
 
   Widget _stepCard(BuildContext context) {
@@ -481,12 +483,28 @@ class _StepPage extends StatelessWidget {
             ],
             if (instruction.isNotEmpty) ...[
               SizedBox(height: t.space2),
-              MarkdownText(
-                instruction,
-                style: t.step.copyWith(color: t.ink),
-                spanBuilder: stepTemplateSpans(
-                  context,
-                  StepTemplate(ingredients: step.ingredients, scaling: scaling),
+              // Durations in the text are highlighted; a tap starts a timer.
+              Consumer(
+                builder: (context, ref, _) => MarkdownText(
+                  instruction,
+                  style: t.step.copyWith(color: t.ink),
+                  spanBuilder: stepTemplateSpans(
+                    context,
+                    StepTemplate(
+                      ingredients: step.ingredients,
+                      scaling: scaling,
+                    ),
+                    onDuration: (duration) => unawaited(
+                      startTimer(
+                        context,
+                        ref,
+                        recipeId: recipeId,
+                        label: _timerLabel(context),
+                        duration: duration,
+                        stepId: step.id,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],

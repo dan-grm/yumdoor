@@ -10,6 +10,7 @@ import '../../design/components/timer_chip.dart';
 import '../../design/design.dart';
 import '../../domain/models/cooking_timer.dart';
 import '../../domain/models/recipe_step.dart';
+import '../../domain/services/timer_detection.dart';
 import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import 'cooking_providers.dart';
@@ -145,8 +146,17 @@ Future<void> startTimer(
   messenger.showSnackBar(SnackBar(content: Text(hint)));
 }
 
-/// "Timer starten · 25:00" for a step with an explicit time, with space
-/// above it, unless a timer for the step is already set.
+/// How long the "Timer starten" button below [step] runs: the step's own
+/// time, or else the first duration in its text; zero if neither.
+Duration stepTimerDuration(RecipeStep step) {
+  if (step.time > Duration.zero) return step.time;
+  final found = TimerDetection.find(step.instruction);
+  return found.isEmpty ? Duration.zero : found.first.duration;
+}
+
+/// "Timer starten · 25:00" for a step with an explicit time or a duration in
+/// its text ([stepTimerDuration]), with space above it, unless a timer for
+/// the step is already set.
 class StepTimerButton extends ConsumerWidget {
   const StepTimerButton({
     super.key,
@@ -164,7 +174,8 @@ class StepTimerButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final timers = ref.watch(cookingTimersControllerProvider(recipeId));
-    if (step.time <= Duration.zero ||
+    final duration = stepTimerDuration(step);
+    if (duration <= Duration.zero ||
         timers.any((timer) => timer.stepId == step.id)) {
       return const SizedBox.shrink();
     }
@@ -172,7 +183,7 @@ class StepTimerButton extends ConsumerWidget {
       padding: EdgeInsets.only(top: context.tokens.space5),
       child: PillButton(
         label: context.l10n.timerStart(
-          LocaleFormat.of(context).countdown(step.time),
+          LocaleFormat.of(context).countdown(duration),
         ),
         icon: Icons.play_arrow_rounded,
         onPressed: () => unawaited(
@@ -181,7 +192,7 @@ class StepTimerButton extends ConsumerWidget {
             ref,
             recipeId: recipeId,
             label: label,
-            duration: step.time,
+            duration: duration,
             stepId: step.id,
           ),
         ),

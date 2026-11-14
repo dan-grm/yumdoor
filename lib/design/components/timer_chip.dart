@@ -87,3 +87,60 @@ class TimerChip extends StatelessWidget {
     );
   }
 }
+
+/// A duration detected in step text ("25 Minuten"), inline
+/// (docs/design/components/TimerChip.md): `butter` behind it, `radius-s`,
+/// 6px side padding, weight 800. Tapping it starts a timer.
+///
+/// Put it in a [WidgetSpan] aligned to the baseline; the span scales it with
+/// the text, so the text inside doesn't scale again.
+class TimerHighlight extends StatelessWidget {
+  const TimerHighlight({
+    super.key,
+    required this.text,
+    required this.style,
+    required this.semanticsLabel,
+    required this.onTap,
+  });
+
+  /// The phrase as written: "25 Minuten".
+  final String text;
+
+  /// The running text's style around it.
+  final TextStyle style;
+
+  /// "25 Minuten, Timer starten".
+  final String semanticsLabel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final radius = BorderRadius.circular(t.radiusS);
+    return Semantics(
+      button: true,
+      label: semanticsLabel,
+      excludeSemantics: true,
+      child: Material(
+        color: t.butter,
+        borderRadius: radius,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          child: Padding(
+            // 6px, as in the spec.
+            padding: EdgeInsets.symmetric(horizontal: t.space1 * 1.5),
+            child: Text(
+              text,
+              textScaler: TextScaler.noScaling,
+              style: style.copyWith(
+                color: t.onButter,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
