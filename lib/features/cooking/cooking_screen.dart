@@ -454,13 +454,14 @@ class _StepPage extends StatelessWidget {
   /// "Timer starten" for the step's own time, or else the first duration
   /// highlighted in its text.
   Widget _timerButton(BuildContext context) {
-    final detected = stepDurations(step.instruction.trim(), _template);
+    final duration = step.time > Duration.zero
+        ? step.time
+        : stepDurations(step.instruction.trim(), _template).firstOrNull ??
+              Duration.zero;
     return StepTimerButton(
       recipeId: recipeId,
       stepId: step.id,
-      duration: step.time > Duration.zero
-          ? step.time
-          : detected.firstOrNull ?? Duration.zero,
+      duration: duration,
       label: _timerLabel(context),
     );
   }

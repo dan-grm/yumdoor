@@ -51,6 +51,16 @@ abstract final class TimerDetection {
       final component = _genericComponent(match);
       if (component != null) found.add(component);
     }
+    // "1h30", "1h30min".
+    for (final match in _matches(_compact, text)) {
+      final duration = Duration(
+        hours: int.parse(match.group(1)!),
+        minutes: int.parse(match.group(2)!),
+      );
+      if (duration > Duration.zero) {
+        found.add(_Component(match.start, match.end, duration, _minutes));
+      }
+    }
     for (final (pattern, duration, rank) in _phrases) {
       for (final match in _matches(pattern, text)) {
         found.add(_Component(match.start, match.end, duration, rank));
@@ -185,10 +195,9 @@ abstract final class TimerDetection {
   /// Horizontal whitespace, including no-break spaces; never a line break.
   static const _s = r'[^\S\r\n]';
 
-  /// Not inside a word or number: "Minutensteaks", "A4", the 5 in "1.5".
   /// The matches of [pattern] in [text] that don't start inside a word or
-  /// number: not in "Minutensteaks" or "A4", nor at the 5 of "1.5" or the 30
-  /// of "1:30". Checked here rather than with a lookbehind, which Safari only
+  /// number: not in "Minutensteaks" or "A4", nor at the 5 of "1.5", the 30
+  /// of "1:30" or the 2 of "Typ1-2". Checked here rather than with a lookbehind, which Safari only
   /// supports from 16.4.
   static Iterable<RegExpMatch> _matches(RegExp pattern, String text) sync* {
     var start = 0;
@@ -208,9 +217,10 @@ abstract final class TimerDetection {
     if (start == 0) return true;
     final before = text[start - 1];
     if (_wordChar.hasMatch(before)) return false;
-    return !(start >= 2 &&
-        '.,/:'.contains(before) &&
-        _digit.hasMatch(text[start - 2]));
+    if (start < 2) return true;
+    final twoBefore = text[start - 2];
+    if ('.,/:'.contains(before) && _digit.hasMatch(twoBefore)) return false;
+    return !('-–—'.contains(before) && _wordChar.hasMatch(twoBefore));
   }
 
   static final _wordChar = RegExp(r'[\p{L}\p{N}]', unicode: true);
@@ -277,6 +287,14 @@ abstract final class TimerDetection {
     '(?<more>$_s+(?:or|oder)$_s+(?:two|three|zwei|drei)'
     '(?!$_s+(?:$_unitPattern)$_after))?'
     '$_after',
+    caseSensitive: false,
+    unicode: true,
+  );
+
+  static final _compact = RegExp(
+    // Without spaces, so "2 Std 15 g Zucker" isn't 2:15.
+    r'(\d{1,2})(?:h|std)([0-5]\d)'
+    '(?:$_s?(?:$_minuteUnits))?$_after',
     caseSensitive: false,
     unicode: true,
   );

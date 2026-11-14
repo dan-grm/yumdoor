@@ -88,6 +88,9 @@ void main() {
       ('1 Stunde und 20 Minuten', '1 Stunde und 20 Minuten', min * 80),
       ('1 Std. 20 Min.', '1 Std. 20 Min', min * 80),
       ('1h 20min', '1h 20min', min * 80),
+      ('Im Ofen 1h30 backen', '1h30', min * 90),
+      ('1h30min', '1h30min', min * 90),
+      ('2 Std 15 g Zucker', '2 Std', h * 2),
       ('1 hour and 20 minutes', '1 hour and 20 minutes', min * 80),
       ('2 Minuten 30 Sekunden', '2 Minuten 30 Sekunden', s * 150),
       (
@@ -139,6 +142,7 @@ void main() {
       'Do it a second time.',
       'H1 2 Hz',
       'A10 Minuten',
+      'Typ1-2 Stunden',
       'pizza minute',
       // Clock notation isn't understood; better nothing than 30 hours.
       'Garzeit 1:30 h',
