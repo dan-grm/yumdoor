@@ -370,64 +370,60 @@ class _StepPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    return Builder(
-      builder: (context) {
-        if (!isWideLayout(context)) {
-          return SingleChildScrollView(
+    if (!isWideLayout(context)) {
+      return SingleChildScrollView(
+        padding: EdgeInsets.only(top: t.space2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _stepCard(context),
+            if (step.ingredients.isNotEmpty) ...[
+              SizedBox(height: t.space5),
+              _ingredientsHeader(context),
+              SizedBox(height: t.space2),
+              _ingredients([step]),
+            ],
+          ],
+        ),
+      );
+    }
+    // Wide: the step left, its ingredients (or all of them) right.
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 3,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(top: t.space2),
+            child: _stepCard(context),
+          ),
+        ),
+        SizedBox(width: t.space8),
+        Expanded(
+          flex: 2,
+          child: SingleChildScrollView(
             padding: EdgeInsets.only(top: t.space2),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _stepCard(context),
-                if (step.ingredients.isNotEmpty) ...[
-                  SizedBox(height: t.space5),
-                  _ingredientsHeader(context),
-                  SizedBox(height: t.space2),
+                _ingredientsHeader(context),
+                SizedBox(height: t.space1),
+                _ingredientsToggle(context),
+                SizedBox(height: t.space2),
+                if (allIngredients)
+                  _ingredients(steps, titled: true)
+                else if (step.ingredients.isEmpty)
+                  Text(
+                    context.l10n.cookingNoStepIngredients,
+                    style: t.body.copyWith(color: t.inkMuted),
+                  )
+                else
                   _ingredients([step]),
-                ],
               ],
             ),
-          );
-        }
-        // Wide: the step left, its ingredients (or all of them) right.
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              flex: 3,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(top: t.space2),
-                child: _stepCard(context),
-              ),
-            ),
-            SizedBox(width: t.space8),
-            Expanded(
-              flex: 2,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(top: t.space2),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _ingredientsHeader(context),
-                    SizedBox(height: t.space1),
-                    _ingredientsToggle(context),
-                    SizedBox(height: t.space2),
-                    if (allIngredients)
-                      _ingredients(steps)
-                    else if (step.ingredients.isEmpty)
-                      Text(
-                        context.l10n.cookingNoStepIngredients,
-                        style: t.body.copyWith(color: t.inkMuted),
-                      )
-                    else
-                      _ingredients([step]),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
   }
 
@@ -519,7 +515,10 @@ class _StepPage extends StatelessWidget {
   }
 
   /// The ingredients of [steps], tickable per step.
-  Widget _ingredients(List<RecipeStep> steps) => Consumer(
+  Widget _ingredients(
+    List<RecipeStep> steps, {
+    bool titled = false,
+  }) => Consumer(
     builder: (context, ref, _) {
       final progress = ref.watch(cookingProgressControllerProvider(recipeId));
       IngredientOccurrence occurrence(RecipeStep step, Ingredient ingredient) =>
@@ -527,6 +526,7 @@ class _StepPage extends StatelessWidget {
       return IngredientGroups(
         steps: steps,
         scaling: scaling,
+        alwaysTitled: titled,
         isDone: (step, ingredient) =>
             progress.isDone(occurrence(step, ingredient)),
         onToggle: (step, ingredient) => ref

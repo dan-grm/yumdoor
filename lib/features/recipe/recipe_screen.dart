@@ -159,10 +159,9 @@ class _RecipeViewState extends State<_RecipeView> {
                         return Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(flex: 2, child: details),
+                            Expanded(child: details),
                             SizedBox(width: t.space8),
                             Expanded(
-                              flex: 3,
                               child: _Steps(
                                 steps: recipe.steps,
                                 scaling: scaling,

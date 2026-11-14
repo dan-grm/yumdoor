@@ -96,11 +96,16 @@ class IngredientGroups extends StatelessWidget {
     required this.steps,
     required this.scaling,
     this.dividers = false,
+    this.alwaysTitled = false,
     this.isDone,
     this.onToggle,
   });
 
   final List<RecipeStep> steps;
+
+  /// Titles even when only one step has ingredients, so they can't be taken
+  /// for another step's (cooking mode's "Alle").
+  final bool alwaysTitled;
   final ScalingService scaling;
   final bool dividers;
   final bool Function(RecipeStep step, Ingredient ingredient)? isDone;
@@ -127,7 +132,7 @@ class IngredientGroups extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final (index, step) in groups) ...[
-          if (groups.length > 1)
+          if (alwaysTitled || groups.length > 1)
             Padding(
               padding: EdgeInsets.only(top: t.space4, bottom: t.space1),
               child: Semantics(

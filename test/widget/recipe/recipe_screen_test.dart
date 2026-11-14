@@ -68,7 +68,7 @@ void main() {
     expect(find.textContaining('Rezept ist für'), findsNothing);
     // Grouped by step, titled with the step's name or number.
     expect(find.text('SCHRITT 2'), findsOneWidget);
-    expect(find.text('ANRICHTEN'), findsOneWidget);
+    expect(find.text('SCHRITT 3 · ANRICHTEN'), findsOneWidget);
   });
 
   testWidgets('the servings picker rescales the ingredients', (tester) async {

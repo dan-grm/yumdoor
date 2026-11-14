@@ -465,7 +465,7 @@ void main() {
       await tester.tap(find.text('Alle'));
       await tester.pumpAndSettle();
       expect(find.text('Feta'), findsOneWidget);
-      expect(find.text('ANRICHTEN'), findsOneWidget);
+      expect(find.text('SCHRITT 3 · ANRICHTEN'), findsOneWidget);
       await tester.tap(find.text('Feta'));
       await tester.pump();
 
@@ -493,6 +493,44 @@ void main() {
           .getSemanticsData();
       expect(data.flagsCollection.isInMutuallyExclusiveGroup, isTrue);
       expect(data.flagsCollection.isSelected, Tristate.isTrue);
+      // Announced as a radio button only with a checked state.
+      expect(data.flagsCollection.isChecked, CheckedState.isTrue);
+    });
+
+    testWidgets('wide "Alle" titles a single group with its step', (
+      tester,
+    ) async {
+      repository.recipes[7] = ofenkarotten.copyWith(
+        steps: [
+          ofenkarotten.steps[0],
+          ofenkarotten.steps[1],
+          ofenkarotten.steps[2].copyWith(ingredients: []),
+        ],
+      );
+      await pumpCooking(tester, size: tabletSize);
+      await next(tester, 'Weiter zu Schritt 2');
+      await next(tester, 'Weiter zu Schritt 3');
+      await tester.tap(find.text('Alle'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('SCHRITT 2'), findsWidgets);
+      expect(find.text('Karotten'), findsOneWidget);
+    });
+
+    testWidgets('notches count: narrow inside the safe area', (tester) async {
+      tester.view.padding = const FakeViewPadding(left: 60, right: 60);
+      addTearDown(tester.view.resetPadding);
+      await pumpCooking(tester, size: const Size(800, 390));
+      await next(tester, 'Weiter zu Schritt 2');
+
+      expect(find.text('Alle'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a tablet in portrait is wide', (tester) async {
+      await pumpCooking(tester, size: const Size(768, 1024));
+
+      expect(find.text('Alle'), findsOneWidget);
     });
 
     testWidgets('wide: a step without ingredients says so', (tester) async {

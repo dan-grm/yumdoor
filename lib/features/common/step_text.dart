@@ -42,8 +42,10 @@ MarkdownSpanBuilder stepTemplateSpans(
   };
 }
 
-/// The step's own name, or "Schritt 3" for [index] 2.
-String stepTitle(BuildContext context, RecipeStep step, int index) =>
-    step.name.trim().isEmpty
-    ? context.l10n.recipeStepTitle(index + 1)
-    : step.name.trim();
+/// "Schritt 3" for [index] 2, with the step's name if it has one:
+/// "Schritt 3 · Anrichten". The number matches cooking mode.
+String stepTitle(BuildContext context, RecipeStep step, int index) {
+  final number = context.l10n.recipeStepTitle(index + 1);
+  final name = step.name.trim();
+  return name.isEmpty ? number : '$number · $name';
+}

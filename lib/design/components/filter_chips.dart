@@ -196,6 +196,8 @@ class _ChipTapArea extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
+      // Screen readers announce a radio button only with a checked state.
+      checked: exclusive ? (selected ?? false) : null,
       inMutuallyExclusiveGroup: exclusive ? true : null,
       label: label,
       excludeSemantics: true,

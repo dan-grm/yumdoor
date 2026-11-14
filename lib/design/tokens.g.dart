@@ -150,7 +150,7 @@ class YumdoorTokens extends ThemeExtension<YumdoorTokens> {
     sizeButton: 56,
     sizeChip: 36,
     sizeDot: 28,
-    sizeWide: 600,
+    sizeWide: 720,
     shadowLift: [
       BoxShadow(
         offset: Offset(0, 8),
@@ -256,7 +256,7 @@ class YumdoorTokens extends ThemeExtension<YumdoorTokens> {
     sizeButton: 56,
     sizeChip: 36,
     sizeDot: 28,
-    sizeWide: 600,
+    sizeWide: 720,
     shadowLift: [
       BoxShadow(
         offset: Offset(0, 8),
@@ -386,7 +386,7 @@ class YumdoorTokens extends ThemeExtension<YumdoorTokens> {
   /// Step dots in cooking mode.
   final double sizeDot;
 
-  /// Breakpoint: from this width (tablets, phones in landscape) cooking mode and the recipe screen show two columns.
+  /// Breakpoint: from this width inside the safe area (tablets, phones in landscape) cooking mode and the recipe screen show two columns. Each column keeps at least a narrow phone's width.
   final double sizeWide;
 
   /// Only for something being dragged (a recipe moving across the week planner) and bottom sheets. Everything at rest uses borders.
