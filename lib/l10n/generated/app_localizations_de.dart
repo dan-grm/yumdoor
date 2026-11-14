@@ -296,7 +296,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get searchFieldLabel => 'Rezepte durchsuchen';
 
   @override
-  String get searchFieldHint => 'Rezeptname';
+  String get searchFieldHint => 'Rezept, Zutat oder Stichwort';
 
   @override
   String get searchClear => 'Suchtext löschen';
@@ -310,6 +310,11 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String searchFoodFilter(String food) {
     return 'enthält $food';
+  }
+
+  @override
+  String searchMatchKeyword(String keyword) {
+    return 'Stichwort: $keyword';
   }
 
   @override
@@ -351,7 +356,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get searchOfflineResults =>
-      'Offline: Gesucht wird nur in Rezepten, die du schon geöffnet hast, und nur im Namen.';
+      'Offline: Gesucht wird nur in Rezepten, die du schon geöffnet hast.';
 
   @override
   String get searchOfflineEmpty => 'Keins der gespeicherten Rezepte passt.';

@@ -8,9 +8,56 @@ part of 'search_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Searches names, ingredients and keywords at once.
+
+@ProviderFor(universalSearch)
+final universalSearchProvider = UniversalSearchProvider._();
+
+/// Searches names, ingredients and keywords at once.
+
+final class UniversalSearchProvider
+    extends
+        $FunctionalProvider<UniversalSearch, UniversalSearch, UniversalSearch>
+    with $Provider<UniversalSearch> {
+  /// Searches names, ingredients and keywords at once.
+  UniversalSearchProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'universalSearchProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$universalSearchHash();
+
+  @$internal
+  @override
+  $ProviderElement<UniversalSearch> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  UniversalSearch create(Ref ref) {
+    return universalSearch(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UniversalSearch value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UniversalSearch>(value),
+    );
+  }
+}
+
+String _$universalSearchHash() => r'a2d438cc021fe299c9d6b22cccd377e2b507a66f';
+
 /// Results for [query], one page at a time.
 ///
-/// A new query is a new provider; the old one is disposed and its request
+/// A new query is a new provider; the old one is disposed and its requests
 /// cancelled, so a slow answer to an old query can't replace a newer one.
 
 @ProviderFor(SearchResults)
@@ -18,13 +65,13 @@ final searchResultsProvider = SearchResultsFamily._();
 
 /// Results for [query], one page at a time.
 ///
-/// A new query is a new provider; the old one is disposed and its request
+/// A new query is a new provider; the old one is disposed and its requests
 /// cancelled, so a slow answer to an old query can't replace a newer one.
 final class SearchResultsProvider
     extends $AsyncNotifierProvider<SearchResults, RecipeResults> {
   /// Results for [query], one page at a time.
   ///
-  /// A new query is a new provider; the old one is disposed and its request
+  /// A new query is a new provider; the old one is disposed and its requests
   /// cancelled, so a slow answer to an old query can't replace a newer one.
   SearchResultsProvider._({
     required SearchResultsFamily super.from,
@@ -62,11 +109,11 @@ final class SearchResultsProvider
   }
 }
 
-String _$searchResultsHash() => r'8d32db28f1f69d77d03e90add84e6a199ff0d4c9';
+String _$searchResultsHash() => r'91f58ed5d4babcaf12d13a837eb2e50b4b6f69e4';
 
 /// Results for [query], one page at a time.
 ///
-/// A new query is a new provider; the old one is disposed and its request
+/// A new query is a new provider; the old one is disposed and its requests
 /// cancelled, so a slow answer to an old query can't replace a newer one.
 
 final class SearchResultsFamily extends $Family
@@ -89,7 +136,7 @@ final class SearchResultsFamily extends $Family
 
   /// Results for [query], one page at a time.
   ///
-  /// A new query is a new provider; the old one is disposed and its request
+  /// A new query is a new provider; the old one is disposed and its requests
   /// cancelled, so a slow answer to an old query can't replace a newer one.
 
   SearchResultsProvider call(RecipeQuery query) =>
@@ -101,7 +148,7 @@ final class SearchResultsFamily extends $Family
 
 /// Results for [query], one page at a time.
 ///
-/// A new query is a new provider; the old one is disposed and its request
+/// A new query is a new provider; the old one is disposed and its requests
 /// cancelled, so a slow answer to an old query can't replace a newer one.
 
 abstract class _$SearchResults extends $AsyncNotifier<RecipeResults> {

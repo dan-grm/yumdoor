@@ -530,10 +530,10 @@ abstract class AppLocalizations {
   /// **'Rezepte durchsuchen'**
   String get searchFieldLabel;
 
-  /// Placeholder of the search text field. By default Tandoor's text search only matches recipe names.
+  /// Placeholder of the search text field. The text matches recipe names, ingredients and keywords.
   ///
   /// In de, this message translates to:
-  /// **'Rezeptname'**
+  /// **'Rezept, Zutat oder Stichwort'**
   String get searchFieldHint;
 
   /// Button in the search field that empties it.
@@ -559,6 +559,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'enthält {food}'**
   String searchFoodFilter(String food);
+
+  /// Pill on a search result that matched the search text by one of its keywords. Several keywords are separated by commas.
+  ///
+  /// In de, this message translates to:
+  /// **'Stichwort: {keyword}'**
+  String searchMatchKeyword(String keyword);
 
   /// Label of a filter chip while its name loads, after opening a search link.
   ///
@@ -605,7 +611,7 @@ abstract class AppLocalizations {
   /// Note above search results that come from the offline cache.
   ///
   /// In de, this message translates to:
-  /// **'Offline: Gesucht wird nur in Rezepten, die du schon geöffnet hast, und nur im Namen.'**
+  /// **'Offline: Gesucht wird nur in Rezepten, die du schon geöffnet hast.'**
   String get searchOfflineResults;
 
   /// Empty state when an offline search finds no cached recipe.

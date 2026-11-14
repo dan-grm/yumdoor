@@ -5,9 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/core/failures.dart';
+import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/domain/models/food.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
+import 'package:yumdoor/domain/models/ingredient.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
+import 'package:yumdoor/domain/models/recipe_step.dart';
 import 'package:yumdoor/features/search/search_location.dart';
 import 'package:yumdoor/features/search/search_providers.dart';
 import 'package:yumdoor/features/search/search_screen.dart';
@@ -15,6 +18,8 @@ import 'package:yumdoor/features/search/search_screen.dart';
 import '../../fakes/fake_food_keyword_repositories.dart';
 import '../../fakes/fake_recipe_repository.dart';
 import '../../fixtures/recipes.dart';
+import '../fonts.dart';
+import '../golden.dart';
 import '../harness.dart';
 
 void main() {
@@ -29,18 +34,25 @@ void main() {
     Keyword(id: 2, name: 'Ofen'),
   ]);
 
+  setUpAll(loadBundledFonts);
+
   setUp(() => recipes = FakeRecipeRepository([ofenkarotten, longNames]));
 
   Future<GoRouter> pumpSearch(
     WidgetTester tester, {
     String location = searchPath,
+    ThemeData? theme,
+    FakeKeywordRepository? keywordRepository,
   }) => pumpRoutes(
     tester,
     location: location,
+    theme: theme,
     overrides: [
       recipeRepositoryProvider.overrideWithValue(recipes),
       foodRepositoryProvider.overrideWithValue(foods),
-      keywordRepositoryProvider.overrideWithValue(keywords),
+      keywordRepositoryProvider.overrideWithValue(
+        keywordRepository ?? keywords,
+      ),
     ],
     routes: [
       GoRoute(
@@ -59,6 +71,14 @@ void main() {
       router.routerDelegate.currentConfiguration.uri.toString();
 
   Finder searchField() => find.byType(TextField);
+
+  /// The searches by name (or without text), leaving out the food and
+  /// keyword searches of the universal search.
+  List<SearchCall> nameSearches() => [
+    for (final search in recipes.searches)
+      if (search.query.anyFoodIds.isEmpty && search.query.anyKeywordIds.isEmpty)
+        search,
+  ];
 
   /// Taps a chip, scrolling the chip row to it first.
   Future<void> tapTooltip(WidgetTester tester, String tooltip) async {
@@ -118,12 +138,38 @@ void main() {
     await tester.pump(searchDebounce);
     await tester.pumpAndSettle();
 
-    expect(recipes.searches.map((s) => s.query.text), ['', 'Ofen']);
+    expect(nameSearches().map((s) => s.query.text), ['', 'Ofen']);
     expect(location(router), '/search?q=Ofen');
     expect(find.text('1 Rezept'), findsOneWidget);
     expect(find.textContaining('Rote-Bete-Carpaccio'), findsNothing);
     // The field keeps what was typed, trailing space included.
     expect(tester.widget<TextField>(searchField()).controller!.text, 'Ofen ');
+  });
+
+  testWidgets('finds recipes by ingredient and keyword and says why', (
+    tester,
+  ) async {
+    await pumpSearch(tester, location: '/search?q=Oliven%C3%B6l');
+
+    expect(find.text('1 Rezept'), findsOneWidget);
+    expect(find.text('Ofenkarotten mit Feta'), findsOneWidget);
+    expect(find.text('enthält Olivenöl'), findsOneWidget);
+
+    await tester.enterText(searchField(), 'vegetarisch');
+    await tester.pump(searchDebounce);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ofenkarotten mit Feta'), findsOneWidget);
+    expect(find.text('Stichwort: Vegetarisch'), findsOneWidget);
+    expect(find.textContaining('enthält'), findsNothing);
+  });
+
+  testWidgets('a name match needs no reason', (tester) async {
+    await pumpSearch(tester, location: '/search?q=Ofen');
+
+    expect(find.text('Ofenkarotten mit Feta'), findsOneWidget);
+    // It also has the keyword "Ofen", but the name says enough.
+    expect(find.text('Stichwort: Ofen'), findsNothing);
   });
 
   testWidgets('a newer search cancels the one in flight', (tester) async {
@@ -137,9 +183,10 @@ void main() {
     await tester.pump(searchDebounce);
     await tester.pump();
 
-    expect(recipes.searches.map((s) => s.query.text), ['', 'Ofen', 'Rote']);
-    expect(recipes.searches[1].cancel!.isCancelled, isTrue);
-    expect(recipes.searches[2].cancel!.isCancelled, isFalse);
+    final searches = nameSearches();
+    expect(searches.map((s) => s.query.text), ['', 'Ofen', 'Rote']);
+    expect(searches[1].cancel!.isCancelled, isTrue);
+    expect(searches[2].cancel!.isCancelled, isFalse);
 
     recipes.gate!.complete();
     await tester.pumpAndSettle();
@@ -226,7 +273,7 @@ void main() {
     expect(find.text('Vegetarisch'), findsOneWidget);
     // Food 99 doesn't exist (any more).
     expect(find.text('Unbekannter Filter'), findsOneWidget);
-    expect(recipes.searches.single.query.foodIds, {99});
+    expect(nameSearches().single.query.foodIds, {99});
   });
 
   testWidgets('loads more results while scrolling', (tester) async {
@@ -316,5 +363,44 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('recipe /recipe/7'), findsOneWidget);
+  });
+
+  group('goldens', skip: goldenSkip, () {
+    for (final (name, theme) in [('light', lightTheme), ('dark', darkTheme)]) {
+      testWidgets('match reasons in $name', tags: goldenTags, (tester) async {
+        const karotte = Food(id: 1, name: 'Karotte', pluralName: 'Karotten');
+        Recipe withCarrots(int id, String name) => Recipe(
+          id: id,
+          name: name,
+          workingTime: const Duration(minutes: 45),
+          steps: const [
+            RecipeStep(id: 1, ingredients: [Ingredient(id: 1, food: karotte)]),
+          ],
+        );
+        recipes = FakeRecipeRepository([
+          ofenkarotten,
+          withCarrots(30, 'Linsen-Bolognese'),
+          withCarrots(31, 'Gemüsepfanne mit Reis'),
+          const Recipe(
+            id: 32,
+            name: 'Apfel-Möhren-Rohkost',
+            keywords: [Keyword(id: 5, name: 'Karottenzeit')],
+          ),
+        ]);
+        await pumpSearch(
+          tester,
+          location: '/search?q=Karotte',
+          theme: theme,
+          keywordRepository: FakeKeywordRepository(const [
+            Keyword(id: 5, name: 'Karottenzeit'),
+          ]),
+        );
+
+        await expectLater(
+          find.byType(SearchScreen),
+          matchesGoldenFile('../goldens/search_reasons_$name.png'),
+        );
+      });
+    }
   });
 }

@@ -179,7 +179,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
 /// "enthält Karotten": the plural if the food has one.
 String _foodLabel(BuildContext context, Food food) =>
-    context.l10n.searchFoodFilter(food.pluralName ?? food.name);
+    context.l10n.searchFoodFilter(_plural(food));
+
+String _plural(Food food) => food.pluralName ?? food.name;
+
+/// At most three names, so a pill stays short: "Karotten, Kartoffeln, …".
+String _names(List<String> names) =>
+    [...names.take(3), if (names.length > 3) '…'].join(', ');
 
 class _FoodChip extends ConsumerWidget {
   const _FoodChip({required this.id, required this.onRemove});
@@ -273,11 +279,9 @@ class _ResultList extends ConsumerWidget {
     final foods = [
       for (final id in query.foodIds) ?ref.watch(foodProvider(id)).value,
     ];
-    final match = foods.isEmpty
+    final filterMatch = foods.isEmpty
         ? null
-        : l10n.searchFoodFilter(
-            foods.map((food) => food.pluralName ?? food.name).join(', '),
-          );
+        : l10n.searchFoodFilter(_names([for (final f in foods) _plural(f)]));
     final footer = results.hasMore ? 1 : 0;
 
     return ListView.builder(
@@ -317,7 +321,19 @@ class _ResultList extends ConsumerWidget {
             onLoadMore: onLoadMore,
           );
         }
-        final recipe = items[index - 1];
+        final match = items[index - 1];
+        final recipe = match.recipe;
+        final reason = [
+          if (match.foods.isNotEmpty)
+            l10n.searchFoodFilter(
+              _names([for (final f in match.foods) _plural(f)]),
+            ),
+          if (match.keywords.isNotEmpty)
+            l10n.searchMatchKeyword(
+              _names([for (final k in match.keywords) k.name]),
+            ),
+          ?filterMatch,
+        ];
         return Padding(
           padding: EdgeInsets.only(bottom: t.space2),
           child: RecipeCard(
@@ -328,7 +344,7 @@ class _ResultList extends ConsumerWidget {
               rating: recipe.rating,
               lastCooked: recipe.lastCooked,
             ),
-            match: match,
+            match: reason.isEmpty ? null : reason.join(' · '),
             onTap: () => context.push('/recipe/${recipe.id}'),
           ),
         );

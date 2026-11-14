@@ -394,9 +394,9 @@
   "@searchFieldLabel": {
     "description": "Accessible label of the search text field."
   },
-  "searchFieldHint": "Rezeptname",
+  "searchFieldHint": "Rezept, Zutat oder Stichwort",
   "@searchFieldHint": {
-    "description": "Placeholder of the search text field. By default Tandoor's text search only matches recipe names."
+    "description": "Placeholder of the search text field. The text matches recipe names, ingredients and keywords."
   },
   "searchClear": "Suchtext löschen",
   "@searchClear": {
@@ -417,6 +417,16 @@
       "food": {
         "type": "String",
         "example": "Karotten"
+      }
+    }
+  },
+  "searchMatchKeyword": "Stichwort: {keyword}",
+  "@searchMatchKeyword": {
+    "description": "Pill on a search result that matched the search text by one of its keywords. Several keywords are separated by commas.",
+    "placeholders": {
+      "keyword": {
+        "type": "String",
+        "example": "Vegetarisch"
       }
     }
   },
@@ -460,7 +470,7 @@
   "@searchEmptyServer": {
     "description": "Empty state when an unfiltered search finds nothing."
   },
-  "searchOfflineResults": "Offline: Gesucht wird nur in Rezepten, die du schon geöffnet hast, und nur im Namen.",
+  "searchOfflineResults": "Offline: Gesucht wird nur in Rezepten, die du schon geöffnet hast.",
   "@searchOfflineResults": {
     "description": "Note above search results that come from the offline cache."
   },
