@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'food.dart';
 import 'keyword.dart';
 import 'user_ref.dart';
 
@@ -15,6 +16,10 @@ abstract class RecipeSummary with _$RecipeSummary {
     @Default('') String description,
     Uri? image,
     @Default([]) List<Keyword> keywords,
+
+    /// The foods of its ingredients. Only known for recipes from the offline
+    /// cache; server search results don't include ingredients.
+    @Default([]) List<Food> foods,
     @Default(1) int servings,
 
     /// What a serving is ("Stück", "Gläser"), empty if not set.

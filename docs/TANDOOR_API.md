@@ -102,9 +102,17 @@ Paginated: `page`, `page_size` (default 25, max 100). List items use `RecipeOver
 
 **Text search only matches recipe names by default.** A new user's `SearchPreference` is `plain` with `icontains`,
 `trigram` and `unaccent` on `name` only and no fulltext fields (checked on a fresh 2.6.15). `query=Karotte` does not
-find a recipe that only has carrots as an ingredient; "contains carrots" needs the `foods` filter. Text, food and
-keyword parameters are combined with AND, so one request cannot mean "name **or** ingredient **or** keyword"; the
-universal search (roadmap, M2) merges separate requests instead.
+find a recipe that only has carrots as an ingredient; "contains carrots" needs the `foods` filter.
+
+**Every parameter is combined with AND** (checked on 2.6.15): `query=Suppe&foods_or=<Karotte>` returns only recipes
+that match both, and `foods_and` with `foods_or` (or `keywords_and` with `keywords_or`) means "all of these and at
+least one of those". One request cannot mean "name **or** ingredient **or** keyword", so the universal search
+(`lib/domain/services/universal_search.dart`) runs three: `query=<text>`, `foods_or=<foods matching the text>` and
+`keywords_or=<keywords matching the text>`, each with the user's other filters, and merges them page by page (name
+matches first, each recipe once). The total is counted with inclusion–exclusion (`page_size=1` requests for the
+overlaps) when the results don't fit on the first pages. `foods_or` and `keywords_or` include child foods and
+keywords (`include_children`), and a `RecipeOverview` has no ingredients, so a food match can't tell which of the
+foods the recipe contains.
 
 **Mismatch with our assumption:** `rating`, `lastcooked` and `timescooked` are computed **only from the requesting
 user's own cook logs** (`managers.py:51-75`), not the household's or the space's. "Highly rated" in search means
@@ -112,6 +120,11 @@ user's own cook logs** (`managers.py:51-75`), not the household's or the space's
 directly.
 
 Food and keyword pickers use `GET /api/food/?query=` and `GET /api/keyword/?query=` (trees; `root`, `tree` params).
+`query` matches `name` with `icontains` (plus `unaccent` if the search preference has it on that model), names
+starting with the text first; the plural name is not searched (`Karotten` doesn't find `Karotte`). **With a fuzzy
+search preference** (`lookup`, or `trigram` on the model) it doesn't filter at all and only orders by trigram
+similarity (`FuzzyFilterMixin`, `cookbook/views/api.py:291`), so `query=Karotte` can return `Kartoffel`. The
+universal search keeps only foods and keywords whose name contains the text.
 `parent` is read-only; the tree is changed with `PUT /api/food/{id}/move/{parent_id}/` (`0` = root).
 `POST /api/food/`, `/api/keyword/`, `/api/unit/` and the nested writes in a recipe are get-or-create **by name**
 (case-insensitive for foods and units): if the name exists, the existing object is returned and the other fields

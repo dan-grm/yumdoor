@@ -172,6 +172,36 @@ void main() {
         expect([for (final r in page.items) r.id], [8]);
       });
 
+      test('matches the text against ingredients and keywords', () async {
+        Future<List<int>> ids(String text) async => [
+          for (final r in (await repository.search(
+            RecipeQuery(text: text),
+          )).items)
+            r.id,
+        ];
+
+        expect(await ids('olivenol'), [7]);
+        expect(await ids('Vegetarisch'), [7]);
+        expect(await ids('Suppe'), [8]);
+        expect(await ids('Zimt'), isEmpty);
+      });
+
+      test('carries the foods of cached recipes', () async {
+        final page = await repository.search(const RecipeQuery(text: 'Ofen'));
+
+        expect(page.items.single.foods.map((f) => f.name), contains('Karotte'));
+      });
+
+      test('matches any of the foods or keywords', () async {
+        Future<List<int>> ids(RecipeQuery query) async => [
+          for (final r in (await repository.search(query)).items) r.id,
+        ];
+
+        expect(await ids(const RecipeQuery(anyFoodIds: {1, 99})), [7]);
+        expect(await ids(const RecipeQuery(anyKeywordIds: {3, 99})), [8]);
+        expect(await ids(const RecipeQuery(anyKeywordIds: {99})), isEmpty);
+      });
+
       test('applies food, keyword and rating filters', () async {
         Future<List<int>> ids(RecipeQuery query) async => [
           for (final r in (await repository.search(query)).items) r.id,

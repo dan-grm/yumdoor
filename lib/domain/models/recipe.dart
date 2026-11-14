@@ -52,6 +52,13 @@ abstract class Recipe with _$Recipe {
     description: description,
     image: image,
     keywords: keywords,
+    foods: {
+      for (final food in [
+        for (final step in steps)
+          for (final ingredient in step.ingredients) ?ingredient.food,
+      ])
+        food.id: food,
+    }.values.toList(),
     servings: servings,
     servingsText: servingsText,
     workingTime: workingTime,

@@ -16,6 +16,14 @@ abstract class RecipeQuery with _$RecipeQuery {
     /// The recipe has each of these keywords.
     @Default({}) Set<int> keywordIds,
 
+    /// The recipe contains at least one of these foods, or one of their child
+    /// foods. Empty means no restriction.
+    @Default({}) Set<int> anyFoodIds,
+
+    /// The recipe has at least one of these keywords, or one of their child
+    /// keywords. Empty means no restriction.
+    @Default({}) Set<int> anyKeywordIds,
+
     /// The current user rated it at least this, 1 to 5. Tandoor only counts
     /// the user's own cook logs.
     int? minRating,
@@ -32,6 +40,8 @@ abstract class RecipeQuery with _$RecipeQuery {
       text.trim().isEmpty &&
       foodIds.isEmpty &&
       keywordIds.isEmpty &&
+      anyFoodIds.isEmpty &&
+      anyKeywordIds.isEmpty &&
       minRating == null &&
       lastCookedBefore == null;
 }

@@ -6,11 +6,13 @@ import 'package:yumdoor/domain/repositories/food_repository.dart';
 import 'package:yumdoor/domain/repositories/keyword_repository.dart';
 
 /// [FoodRepository] for tests: autocomplete matches names case-insensitively.
+/// Set [failure] to make it throw.
 class FakeFoodRepository implements FoodRepository {
   FakeFoodRepository([this.foods = const []]);
 
   final List<Food> foods;
   final queries = <String>[];
+  Failure? failure;
 
   @override
   Future<List<Food>> autocomplete(
@@ -19,6 +21,7 @@ class FakeFoodRepository implements FoodRepository {
     CancelSignal? cancel,
   }) async {
     queries.add(query);
+    if (failure case final failure?) throw failure;
     return _complete(foods, (f) => f.name, query, limit);
   }
 
@@ -33,13 +36,17 @@ class FakeKeywordRepository implements KeywordRepository {
   FakeKeywordRepository([this.keywords = const []]);
 
   final List<Keyword> keywords;
+  Failure? failure;
 
   @override
   Future<List<Keyword>> autocomplete(
     String query, {
     int limit = 10,
     CancelSignal? cancel,
-  }) async => _complete(keywords, (k) => k.name, query, limit);
+  }) async {
+    if (failure case final failure?) throw failure;
+    return _complete(keywords, (k) => k.name, query, limit);
+  }
 
   @override
   Future<Keyword> fetchKeyword(int id) async =>

@@ -8,6 +8,7 @@ import '../../domain/models/recipe_query.dart';
 import '../../domain/models/recipe_summary.dart';
 import '../../domain/models/result_page.dart';
 import '../../domain/repositories/recipe_repository.dart';
+import '../../domain/services/text_match.dart';
 import 'recipe_cache.dart';
 
 /// Asks the server first and falls back to the [RecipeCache] when it can't be
@@ -87,21 +88,32 @@ class CachingRecipeRepository implements RecipeRepository {
 }
 
 /// Whether [recipe] matches [query], as close to the server as the stored
-/// data allows: the text against the name only, and foods without their
-/// child foods.
+/// data allows: the text against the name, the ingredients' foods and the
+/// keywords (like the universal search), and foods and keywords without
+/// their children.
 bool _matches(Recipe recipe, RecipeQuery query) {
-  final text = query.text.trim().toLowerCase();
-  if (!recipe.name.toLowerCase().contains(text)) return false;
-  if (query.keywordIds.isNotEmpty) {
-    final keywords = {for (final keyword in recipe.keywords) keyword.id};
-    if (!keywords.containsAll(query.keywordIds)) return false;
+  final foods = recipe.summary.foods;
+  final foodIds = {for (final food in foods) food.id};
+  final keywordIds = {for (final keyword in recipe.keywords) keyword.id};
+  final text = query.text.trim();
+  if (text.isNotEmpty &&
+      !containsFolded(recipe.name, text) &&
+      !foods.any(
+        (f) =>
+            containsFolded(f.name, text) ||
+            containsFolded(f.pluralName ?? '', text),
+      ) &&
+      !recipe.keywords.any((k) => containsFolded(k.name, text))) {
+    return false;
   }
-  if (query.foodIds.isNotEmpty) {
-    final foods = {
-      for (final step in recipe.steps)
-        for (final ingredient in step.ingredients) ?ingredient.food?.id,
-    };
-    if (!foods.containsAll(query.foodIds)) return false;
+  if (!keywordIds.containsAll(query.keywordIds)) return false;
+  if (!foodIds.containsAll(query.foodIds)) return false;
+  if (query.anyFoodIds.isNotEmpty && !query.anyFoodIds.any(foodIds.contains)) {
+    return false;
+  }
+  if (query.anyKeywordIds.isNotEmpty &&
+      !query.anyKeywordIds.any(keywordIds.contains)) {
+    return false;
   }
   if (query.minRating case final minRating?) {
     if ((recipe.rating ?? 0) < minRating) return false;
