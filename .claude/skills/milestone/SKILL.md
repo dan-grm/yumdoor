@@ -1,6 +1,6 @@
 ---
 name: milestone
-description: Plan a roadmap milestone into GitHub issues, or ship a milestone's open issues by orchestrating one ship subagent per issue, in parallel where they don't depend on each other. Use when asked to plan, start, continue or finish a milestone.
+description: Plan a roadmap milestone into GitHub issues, or ship a milestone's open issues by orchestrating one ship subagent per issue, in parallel where they don't depend on each other and with a model matched to each issue. Use when asked to plan, start, continue or finish a milestone.
 argument-hint: "plan <M2> | run [<M2>]"
 ---
 
@@ -47,8 +47,8 @@ from the issue list and the subagents' one-line results.
    are closed and no subagent is working on it.
 2. Pick the ready issues to start now (see *Parallel or not*), lowest numbers first.
 3. Start one subagent per picked issue with the Agent tool: `subagent_type: "general-purpose"`,
-   `isolation: "worktree"` (each gets its own checkout; parallel agents must never share one), in the background.
-   Prompt:
+   `isolation: "worktree"` (each gets its own checkout; parallel agents must never share one), `model` as chosen in
+   *Which model*, in the background. Prompt:
 
    > Ship issue #<n> of dan-grm/yumdoor with the `ship` skill, as a subagent of the milestone orchestrator: don't
    > ask the user anything. Work in your own worktree on `<type>/<n>-<slug>`. Other issues may merge meanwhile, so
@@ -73,6 +73,28 @@ Run issues at the same time only when all of this holds; otherwise start them on
 
 When unsure, run them in sequence: a wasted rebase costs more than waiting.
 
+### Which model
+
+Pick the cheapest model that can ship the issue without extra rounds. Read the issue's scope and acceptance
+criteria, and the files it names; don't open code for this.
+
+- **`haiku`**: mechanical changes with no new logic. Docs, copy or ARB-only changes, config, renames, a version
+  bump that the build verifies.
+- **`sonnet`** (the default): well-scoped work that follows a pattern the code already has. Another filter chip
+  next to the existing ones, a screen like an existing screen, a mapper for one more field, small domain logic
+  with a clear spec and unit tests.
+- **`opus`**: the issue is a foundation others build on (domain models, services, design components), or the
+  hard part isn't in the code yet. Platform code and JS interop, offline cache and the data layer, concurrency
+  and time (timers, background behavior), security (rendering server content, auth, tokens), anything whose
+  behavior must first be verified against Tandoor.
+
+When unsure between two, take the stronger one: a failed or blocked run costs more than the difference. Escalate
+on a retry: if a subagent returns `blocked:` for a reason a stronger model could solve (it couldn't make the checks
+pass, or got the design wrong), start the issue again one model up, telling it what the earlier run found. Questions
+for the user are not a reason to escalate.
+
+Put the model into the status line: `#53 merged (sonnet): cookable-now filter. 2 left.`
+
 ### Stop and ask the user
 
 - A subagent returns `blocked:` with a decision that isn't in the docs, or an issue turns out bigger than one PR
@@ -80,6 +102,6 @@ When unsure, run them in sequence: a wasted rebase costs more than waiting.
 - The `ship` skill gave up on a failing check.
 - The remaining issues all depend on something still open.
 
-After each merged issue, give a one-line status (`#52 merged: timers start from step text. 6 left.`). At the end,
+After each merged issue, give a one-line status (`#52 merged (opus): timers start from step text. 6 left.`). At the end,
 close the milestone (`gh api -X PATCH repos/{owner}/{repo}/milestones/<n> -f state=closed`) and list what the
 user should try in the app.
