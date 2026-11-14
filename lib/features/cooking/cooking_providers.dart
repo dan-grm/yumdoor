@@ -31,12 +31,17 @@ class CookingProgressController extends _$CookingProgressController {
     return _store.read(recipeId, now) ?? CookingProgress.empty(now);
   }
 
+  bool _forgotten = false;
+
   void toggle(IngredientOccurrence occurrence) {
     state = state.toggle(occurrence, _now());
-    _store.write(recipeId, state);
+    if (!_forgotten) _store.write(recipeId, state);
   }
 
   /// Forgets the saved progress, after "Fertig". The ticks stay on screen
-  /// while it closes.
-  void forget() => _store.delete(recipeId);
+  /// while it closes, and a tap meanwhile isn't saved anymore.
+  void forget() {
+    _forgotten = true;
+    _store.delete(recipeId);
+  }
 }

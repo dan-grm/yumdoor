@@ -104,8 +104,8 @@ class SessionController extends _$SessionController {
     if (state.value != session) return;
     // The server URL stays, so login can prefill it. The offline cache goes:
     // the next login may be someone else, or another server.
-    await ref.read(offlineCacheProvider).clear();
     ref.read(cookingProgressStoreProvider).clear();
+    await ref.read(offlineCacheProvider).clear();
     await ref.read(tokenStoreProvider).clearToken();
     state = const AsyncData(null);
   }

@@ -1,7 +1,7 @@
 # platform
 
-Platform services behind interfaces (`wake_lock/`, `timers/`, `token_store/`, `connectivity/`, `csrf/`), with web and
-native implementations chosen by conditional imports. The only place `dart:html`, `package:web` or `dart:io` may
+Platform services behind interfaces (`wake_lock/`, `timers/`, `token_store/`, `connectivity/`, `csrf/`,
+`link_opener/`, `local_store/`), with web and native implementations chosen by conditional imports. The only place `dart:html`, `package:web` or `dart:io` may
 appear. May import `core` only.
 
 - Each service's interface file picks the implementation:
@@ -11,3 +11,5 @@ appear. May import `core` only.
 - `test/platform/contracts.dart` describes what every implementation must do. It runs against the fakes on the VM
   and against the web implementations with `flutter test --platform chrome test/web/`.
 - `TokenStore` on the web is **not secure** (localStorage); see `secure_storage_token_store.dart`.
+- `LocalStore` shares `localStorage` with the token store: its keys are prefixed `yumdoor.state.`, the token store's
+  `yumdoor.`. Only small, non-sensitive state goes there.

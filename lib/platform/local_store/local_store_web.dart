@@ -2,13 +2,14 @@ import 'package:web/web.dart' as web;
 
 import 'local_store.dart';
 
-/// `window.localStorage`, with keys prefixed by `yumdoor.` so they don't mix
-/// with Tandoor's own frontend on the same origin.
+/// `window.localStorage`, with keys prefixed by `yumdoor.state.` so they don't
+/// mix with Tandoor's own frontend on the same origin, nor with the token
+/// store, which keeps `yumdoor.token` and friends there.
 ///
 /// Every access is guarded: browsers throw when storage is disabled, and on a
 /// full quota.
 class PlatformLocalStore implements LocalStore {
-  static const _prefix = 'yumdoor.';
+  static const _prefix = 'yumdoor.state.';
 
   @override
   String? read(String key) {
