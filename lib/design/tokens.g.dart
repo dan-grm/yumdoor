@@ -50,6 +50,7 @@ class YumdoorTokens extends ThemeExtension<YumdoorTokens> {
     required this.sizeButton,
     required this.sizeChip,
     required this.sizeDot,
+    required this.sizeWide,
     required this.shadowLift,
   });
 
@@ -149,6 +150,7 @@ class YumdoorTokens extends ThemeExtension<YumdoorTokens> {
     sizeButton: 56,
     sizeChip: 36,
     sizeDot: 28,
+    sizeWide: 720,
     shadowLift: [
       BoxShadow(
         offset: Offset(0, 8),
@@ -254,6 +256,7 @@ class YumdoorTokens extends ThemeExtension<YumdoorTokens> {
     sizeButton: 56,
     sizeChip: 36,
     sizeDot: 28,
+    sizeWide: 720,
     shadowLift: [
       BoxShadow(
         offset: Offset(0, 8),
@@ -383,6 +386,9 @@ class YumdoorTokens extends ThemeExtension<YumdoorTokens> {
   /// Step dots in cooking mode.
   final double sizeDot;
 
+  /// Breakpoint: from this width inside the safe area (tablets, phones in landscape) cooking mode and the recipe screen show two columns. Each column keeps at least a narrow phone's width.
+  final double sizeWide;
+
   /// Only for something being dragged (a recipe moving across the week planner) and bottom sheets. Everything at rest uses borders.
   final List<BoxShadow> shadowLift;
 
@@ -444,6 +450,7 @@ class YumdoorTokens extends ThemeExtension<YumdoorTokens> {
     'sizeButton': sizeButton,
     'sizeChip': sizeChip,
     'sizeDot': sizeDot,
+    'sizeWide': sizeWide,
   };
 
   /// The shadows by field name, e.g. for the token gallery.
@@ -491,6 +498,7 @@ class YumdoorTokens extends ThemeExtension<YumdoorTokens> {
     double? sizeButton,
     double? sizeChip,
     double? sizeDot,
+    double? sizeWide,
     List<BoxShadow>? shadowLift,
   }) {
     return YumdoorTokens(
@@ -534,6 +542,7 @@ class YumdoorTokens extends ThemeExtension<YumdoorTokens> {
       sizeButton: sizeButton ?? this.sizeButton,
       sizeChip: sizeChip ?? this.sizeChip,
       sizeDot: sizeDot ?? this.sizeDot,
+      sizeWide: sizeWide ?? this.sizeWide,
       shadowLift: shadowLift ?? this.shadowLift,
     );
   }
@@ -582,6 +591,7 @@ class YumdoorTokens extends ThemeExtension<YumdoorTokens> {
       sizeButton: lerpDouble(sizeButton, other.sizeButton, t)!,
       sizeChip: lerpDouble(sizeChip, other.sizeChip, t)!,
       sizeDot: lerpDouble(sizeDot, other.sizeDot, t)!,
+      sizeWide: lerpDouble(sizeWide, other.sizeWide, t)!,
       shadowLift: BoxShadow.lerpList(shadowLift, other.shadowLift, t)!,
     );
   }

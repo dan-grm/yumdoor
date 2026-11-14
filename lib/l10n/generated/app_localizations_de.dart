@@ -393,4 +393,17 @@ class AppLocalizationsDe extends AppLocalizations {
   String ingredientTickOff(String name) {
     return '$name abhaken';
   }
+
+  @override
+  String get cookingIngredientsOfStep => 'Dieser Schritt';
+
+  @override
+  String get cookingIngredientsAll => 'Alle';
+
+  @override
+  String get cookingNoStepIngredients =>
+      'Für diesen Schritt brauchst du keine Zutaten.';
+
+  @override
+  String get recipeMethod => 'Zubereitung';
 }

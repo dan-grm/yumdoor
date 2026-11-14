@@ -11,10 +11,13 @@ import '../../design/design.dart';
 import '../../domain/models/recipe.dart';
 import '../../domain/models/recipe_step.dart';
 import '../../domain/services/scaling_service.dart';
+import '../../domain/services/step_template.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
+import '../common/layout.dart';
 import '../common/markdown_text.dart';
 import '../common/offline_disabled.dart';
+import '../common/step_text.dart';
 import 'ingredient_lines.dart';
 import 'recipe_meta.dart';
 import 'recipe_providers.dart';
@@ -87,55 +90,87 @@ class _RecipeViewState extends State<_RecipeView> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _Header(recipe: recipe),
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    t.space5,
-                    t.space4,
-                    t.space5,
-                    t.space6,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _TitleBlock(recipe: recipe),
-                      SizedBox(height: t.space4),
-                      const _WriteActions(),
-                      SizedBox(height: t.space5),
-                      Divider(height: 1, thickness: 1, color: t.line),
-                      SizedBox(height: t.space4),
-                      Wrap(
-                        alignment: WrapAlignment.spaceBetween,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: t.space3,
-                        runSpacing: t.space2,
-                        children: [
-                          Semantics(
-                            header: true,
-                            child: Text(
-                              l10n.recipeIngredients,
-                              style: t.titleM.copyWith(color: t.ink),
+                // Content clear of notches in landscape; the image stays
+                // edge to edge.
+                SafeArea(
+                  top: false,
+                  bottom: false,
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      t.space5,
+                      t.space4,
+                      t.space5,
+                      t.space6,
+                    ),
+                    child: Builder(
+                      builder: (context) {
+                        final details = Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            _TitleBlock(recipe: recipe),
+                            SizedBox(height: t.space4),
+                            const _WriteActions(),
+                            SizedBox(height: t.space5),
+                            Divider(height: 1, thickness: 1, color: t.line),
+                            SizedBox(height: t.space4),
+                            Wrap(
+                              alignment: WrapAlignment.spaceBetween,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: t.space3,
+                              runSpacing: t.space2,
+                              children: [
+                                Semantics(
+                                  header: true,
+                                  child: Text(
+                                    l10n.recipeIngredients,
+                                    style: t.titleM.copyWith(color: t.ink),
+                                  ),
+                                ),
+                                ServingsPicker(
+                                  servings: _servings,
+                                  label: servings(_servings),
+                                  onChanged: (value) =>
+                                      setState(() => _servings = value),
+                                ),
+                              ],
                             ),
-                          ),
-                          ServingsPicker(
-                            servings: _servings,
-                            label: servings(_servings),
-                            onChanged: (value) =>
-                                setState(() => _servings = value),
-                          ),
-                        ],
-                      ),
-                      if (scaling.factor != 1) ...[
-                        SizedBox(height: t.space1),
-                        Text(
-                          l10n.recipeScaledFrom(
-                            servings(math.max(recipe.servings, 1)),
-                          ),
-                          style: t.caption.copyWith(color: t.inkMuted),
-                        ),
-                      ],
-                      SizedBox(height: t.space2),
-                      _Ingredients(steps: recipe.steps, scaling: scaling),
-                    ],
+                            if (scaling.factor != 1) ...[
+                              SizedBox(height: t.space1),
+                              Text(
+                                l10n.recipeScaledFrom(
+                                  servings(math.max(recipe.servings, 1)),
+                                ),
+                                style: t.caption.copyWith(color: t.inkMuted),
+                              ),
+                            ],
+                            SizedBox(height: t.space2),
+                            IngredientGroups(
+                              steps: recipe.steps,
+                              scaling: scaling,
+                              dividers: true,
+                            ),
+                          ],
+                        );
+                        if (!isWideLayout(context) ||
+                            !recipe.steps.any(_Steps.hasText)) {
+                          return details;
+                        }
+                        // Wide: the steps next to the ingredients.
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(child: details),
+                            SizedBox(width: t.space8),
+                            Expanded(
+                              child: _Steps(
+                                steps: recipe.steps,
+                                scaling: scaling,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -368,50 +403,57 @@ class _WriteActions extends ConsumerWidget {
   }
 }
 
-/// The ingredients grouped by step. Step titles only appear when more than
-/// one step has ingredients.
-class _Ingredients extends StatelessWidget {
-  const _Ingredients({required this.steps, required this.scaling});
+/// The steps with their text, as a column next to the ingredients in the wide
+/// layout. Templates are scaled to the chosen servings.
+class _Steps extends StatelessWidget {
+  const _Steps({required this.steps, required this.scaling});
 
   final List<RecipeStep> steps;
   final ScalingService scaling;
+
+  /// Steps with neither name nor text (only ingredients) are left out.
+  static bool hasText(RecipeStep step) =>
+      step.name.trim().isNotEmpty || step.instruction.trim().isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
-    final groups = [
-      for (final (index, step) in steps.indexed)
-        if (step.ingredients.isNotEmpty) (index, step),
-    ];
-    if (groups.isEmpty) {
-      return Text(
-        l10n.recipeNoIngredients,
-        style: t.body.copyWith(color: t.inkMuted),
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final (index, step) in groups) ...[
-          if (groups.length > 1)
-            Padding(
-              padding: EdgeInsets.only(top: t.space4, bottom: t.space1),
+        Semantics(
+          header: true,
+          child: Text(
+            l10n.recipeMethod,
+            style: t.titleM.copyWith(color: t.ink),
+          ),
+        ),
+        for (final (index, step) in steps.indexed)
+          if (hasText(step)) ...[
+            SizedBox(height: t.space4),
+            // Numbered like cooking mode, with the step's name below.
+            Semantics(
+              header: true,
               child: Text(
-                (step.name.trim().isEmpty
-                        ? l10n.recipeStepTitle(index + 1)
-                        : step.name.trim())
-                    .toUpperCase(),
+                l10n.recipeStepTitle(index + 1).toUpperCase(),
                 style: t.overline.copyWith(color: t.sage),
               ),
             ),
-          IngredientLines(
-            ingredients: step.ingredients,
-            scaling: scaling,
-            dividers: true,
-          ),
-        ],
+            if (step.name.trim().isNotEmpty)
+              Text(step.name.trim(), style: t.bodyL.copyWith(color: t.ink)),
+            if (step.instruction.trim().isNotEmpty) ...[
+              SizedBox(height: t.space1),
+              MarkdownText(
+                step.instruction.trim(),
+                style: t.body.copyWith(color: t.ink),
+                spanBuilder: stepTemplateSpans(
+                  context,
+                  StepTemplate(ingredients: step.ingredients, scaling: scaling),
+                ),
+              ),
+            ],
+          ],
       ],
     );
   }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/services/scaling_service.dart';
+import '../../domain/models/recipe_step.dart';
 import '../../domain/services/step_template.dart';
 import '../../l10n/formatting.dart';
-import '../common/markdown_text.dart';
+import '../../l10n/l10n.dart';
+import 'markdown_text.dart';
 
 /// A [MarkdownSpanBuilder] that replaces step templates with their scaled
 /// values, emphasized so they stand out like the amounts in the ingredient
@@ -38,4 +40,12 @@ MarkdownSpanBuilder stepTemplateSpans(
         },
     ];
   };
+}
+
+/// "Schritt 3" for [index] 2, with the step's name if it has one:
+/// "Schritt 3 · Anrichten". The number matches cooking mode.
+String stepTitle(BuildContext context, RecipeStep step, int index) {
+  final number = context.l10n.recipeStepTitle(index + 1);
+  final name = step.name.trim();
+  return name.isEmpty ? number : '$number · $name';
 }

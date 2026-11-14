@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import '../../design/components/ingredient_row.dart';
 import '../../design/design.dart';
 import '../../domain/models/ingredient.dart';
+import '../../domain/models/recipe_step.dart';
 import '../../domain/services/scaling_service.dart';
 import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
+import '../common/step_text.dart';
 
 /// [count] servings in words, with the recipe's own serving unit if it has one:
 /// "4 Portionen", "12 Stück".
@@ -75,6 +77,79 @@ class IngredientLines extends StatelessWidget {
                 line.unit,
               ].where((part) => part.isNotEmpty).join(' '),
             ),
+        ],
+      ],
+    );
+  }
+}
+
+/// The ingredients of [steps], grouped by step. Step titles only appear when
+/// more than one step has ingredients.
+///
+/// [steps] is either all of the recipe's steps, which are numbered by their
+/// position, or a single step, which gets no title.
+///
+/// With [onToggle], rows can be ticked off per step (cooking mode).
+class IngredientGroups extends StatelessWidget {
+  const IngredientGroups({
+    super.key,
+    required this.steps,
+    required this.scaling,
+    this.dividers = false,
+    this.alwaysTitled = false,
+    this.isDone,
+    this.onToggle,
+  });
+
+  final List<RecipeStep> steps;
+
+  /// Titles even when only one step has ingredients, so they can't be taken
+  /// for another step's (cooking mode's "Alle").
+  final bool alwaysTitled;
+  final ScalingService scaling;
+  final bool dividers;
+  final bool Function(RecipeStep step, Ingredient ingredient)? isDone;
+  final void Function(RecipeStep step, Ingredient ingredient)? onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final l10n = context.l10n;
+    final groups = [
+      for (final (index, step) in steps.indexed)
+        if (step.ingredients.isNotEmpty) (index, step),
+    ];
+    if (groups.isEmpty) {
+      return Text(
+        l10n.recipeNoIngredients,
+        style: t.body.copyWith(color: t.inkMuted),
+      );
+    }
+
+    final isDone = this.isDone;
+    final onToggle = this.onToggle;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (index, step) in groups) ...[
+          if (alwaysTitled || groups.length > 1)
+            Padding(
+              padding: EdgeInsets.only(top: t.space4, bottom: t.space1),
+              child: Semantics(
+                header: true,
+                child: Text(
+                  stepTitle(context, step, index).toUpperCase(),
+                  style: t.overline.copyWith(color: t.sage),
+                ),
+              ),
+            ),
+          IngredientLines(
+            ingredients: step.ingredients,
+            scaling: scaling,
+            dividers: dividers,
+            isDone: isDone == null ? null : (i) => isDone(step, i),
+            onToggle: onToggle == null ? null : (i) => onToggle(step, i),
+          ),
         ],
       ],
     );

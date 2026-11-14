@@ -23,10 +23,12 @@ void main() {
     WidgetTester tester,
     int id, {
     ThemeData? theme,
+    Size size = phoneSize,
   }) => pumpRoutes(
     tester,
     location: '/recipe/$id',
     theme: theme,
+    size: size,
     overrides: [recipeRepositoryProvider.overrideWithValue(repository)],
     routes: [
       GoRoute(
@@ -66,7 +68,7 @@ void main() {
     expect(find.textContaining('Rezept ist für'), findsNothing);
     // Grouped by step, titled with the step's name or number.
     expect(find.text('SCHRITT 2'), findsOneWidget);
-    expect(find.text('ANRICHTEN'), findsOneWidget);
+    expect(find.text('SCHRITT 3 · ANRICHTEN'), findsOneWidget);
   });
 
   testWidgets('the servings picker rescales the ingredients', (tester) async {
@@ -191,6 +193,95 @@ void main() {
     expect(find.textContaining('**'), findsNothing);
   });
 
+  group('layout', () {
+    for (final size in [phoneSize, landscapeSize, tabletSize]) {
+      testWidgets('fits at ${size.width.round()}×${size.height.round()}', (
+        tester,
+      ) async {
+        await pumpRecipe(tester, ofenkarotten.id, size: size);
+
+        expect(tester.takeException(), isNull);
+        expect(find.text('Karotten'), findsOneWidget);
+        if (size.width >= YumdoorTokens.light.sizeWide) {
+          // The steps next to the ingredients, templates and all.
+          expect(find.text('Zubereitung'), findsOneWidget);
+          expect(
+            tester.getTopLeft(find.text('Zubereitung')).dx,
+            greaterThan(tester.getTopLeft(find.text('Karotten')).dx),
+          );
+          expect(
+            find.textContaining('Karotten schräg', findRichText: true),
+            findsOneWidget,
+          );
+        } else {
+          expect(find.text('Zubereitung'), findsNothing);
+        }
+      });
+    }
+
+    testWidgets('wide: step templates follow the servings picker', (
+      tester,
+    ) async {
+      repository.recipes[ofenkarotten.id] = ofenkarotten.copyWith(
+        steps: [
+          ofenkarotten.steps[1].copyWith(
+            instruction: '{{ ingredients[0] }} schneiden.',
+          ),
+        ],
+      );
+      await pumpRecipe(tester, ofenkarotten.id, size: tabletSize);
+      expect(
+        find.text('300 g Karotten schneiden.', findRichText: true),
+        findsOneWidget,
+      );
+
+      await tapTooltip(tester, 'Mehr Portionen');
+      expect(
+        find.text('450 g Karotten schneiden.', findRichText: true),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('wide: steps are numbered; steps without text are left out', (
+      tester,
+    ) async {
+      repository.recipes[ofenkarotten.id] = ofenkarotten.copyWith(
+        steps: [
+          ofenkarotten.steps[0].copyWith(instruction: ''),
+          ...ofenkarotten.steps.skip(1),
+        ],
+      );
+      await pumpRecipe(tester, ofenkarotten.id, size: tabletSize);
+
+      expect(find.text('SCHRITT 1'), findsNothing);
+      expect(find.text('SCHRITT 2'), findsWidgets);
+      // A named step keeps its number, with the name below.
+      expect(find.text('SCHRITT 3'), findsOneWidget);
+      expect(find.text('Anrichten'), findsOneWidget);
+    });
+
+    testWidgets('wide without any step text keeps one column', (tester) async {
+      repository.recipes[ofenkarotten.id] = ofenkarotten.copyWith(
+        steps: [
+          for (final step in ofenkarotten.steps)
+            step.copyWith(instruction: '', name: ''),
+        ],
+      );
+      await pumpRecipe(tester, ofenkarotten.id, size: tabletSize);
+
+      expect(find.text('Zubereitung'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('long German names fit on a phone in landscape', (
+      tester,
+    ) async {
+      await pumpRecipe(tester, longNames.id, size: landscapeSize);
+
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('goldens', skip: goldenSkip, () {
     for (final (name, theme) in [('light', lightTheme), ('dark', darkTheme)]) {
       testWidgets('Markdown description in $name', tags: goldenTags, (
@@ -208,6 +299,20 @@ void main() {
         await expectLater(
           find.byType(RecipeScreen),
           matchesGoldenFile('../goldens/recipe_description_$name.png'),
+        );
+      });
+
+      testWidgets('tablet in $name', tags: goldenTags, (tester) async {
+        await pumpRecipe(
+          tester,
+          ofenkarotten.id,
+          theme: theme,
+          size: tabletSize,
+        );
+
+        await expectLater(
+          find.byType(RecipeScreen),
+          matchesGoldenFile('../goldens/recipe_tablet_$name.png'),
         );
       });
     }
