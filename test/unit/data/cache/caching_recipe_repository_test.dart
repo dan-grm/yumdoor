@@ -22,6 +22,7 @@ final _suppe = ofenkarotten.copyWith(
   keywords: const [Keyword(id: 3, name: 'Suppe')],
   steps: const [],
   rating: 3,
+  lastCooked: DateTime(2026, 9, 1, 18),
 );
 
 void main() {
@@ -210,6 +211,24 @@ void main() {
         expect(await ids(const RecipeQuery(foodIds: {1})), [7]);
         expect(await ids(const RecipeQuery(keywordIds: {3})), [8]);
         expect(await ids(const RecipeQuery(minRating: 4)), [7]);
+      });
+
+      test('applies the cooking history filters like the server', () async {
+        Future<List<int>> ids(RecipeQuery query) async => [
+          for (final r in (await repository.search(query)).items) r.id,
+        ];
+
+        // Cooked on the day itself counts; never cooked recipes don't.
+        expect(await ids(RecipeQuery(lastCookedBefore: DateTime(2026, 9, 1))), [
+          8,
+        ]);
+        expect(
+          await ids(RecipeQuery(lastCookedBefore: DateTime(2026, 8, 31))),
+          isEmpty,
+        );
+        expect(await ids(const RecipeQuery(neverCooked: true)), [7]);
+        // Counts aren't cached: at least cooked once.
+        expect(await ids(const RecipeQuery(minTimesCooked: 5)), [8]);
       });
 
       test('has no later pages', () async {

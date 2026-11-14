@@ -18,6 +18,7 @@ import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import '../recipe/recipe_meta.dart';
 import 'filter_picker_sheet.dart';
+import 'history_filters.dart';
 import 'search_location.dart';
 import 'search_providers.dart';
 
@@ -168,6 +169,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     tooltip: l10n.pickerKeywordTitle,
                     onPressed: () => _addFilter(FilterKind.keyword),
                   ),
+                  ...historyFilterChips(context, query: query, onChange: _show),
                 ],
               ),
             ),
@@ -340,6 +342,13 @@ class _ResultList extends ConsumerWidget {
                       style: t.caption.copyWith(color: t.inkMuted),
                     ),
                     SizedBox(height: t.space1),
+                    if ((query.minTimesCooked ?? 0) > 1) ...[
+                      Text(
+                        l10n.searchOfflineTimesNote,
+                        style: t.caption.copyWith(color: t.inkMuted),
+                      ),
+                      SizedBox(height: t.space1),
+                    ],
                   ],
                   Text(
                     l10n.searchResultCount(results.totalCount),

@@ -30,6 +30,22 @@ void main() {
     expect(parse(location), query);
   });
 
+  test('round-trips the times cooked', () {
+    const often = RecipeQuery(minTimesCooked: 5);
+    const never = RecipeQuery(neverCooked: true);
+
+    expect(searchLocation(often), '/search?times_min=5');
+    expect(parse('/search?times_min=5'), often);
+    expect(searchLocation(never), '/search?never=1');
+    expect(parse('/search?never=1'), never);
+    // Never wins over a count.
+    expect(parse('/search?never=1&times_min=5'), never);
+    expect(parse('/search?times_min=0'), const RecipeQuery());
+    expect(parse('/search?never=0&times_min=x'), const RecipeQuery());
+    expect(often.isEmpty, isFalse);
+    expect(never.isEmpty, isFalse);
+  });
+
   test('trims the text', () {
     expect(
       searchLocation(const RecipeQuery(text: ' Kuchen ')),

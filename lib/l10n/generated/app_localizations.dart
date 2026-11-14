@@ -847,6 +847,114 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Timer melden sich nur, solange Yumdoor geöffnet ist.'**
   String get timerBackgroundHint;
+
+  /// Dashed chip that opens the rating filter.
+  ///
+  /// In de, this message translates to:
+  /// **'Bewertung'**
+  String get searchAddRating;
+
+  /// Dashed chip that opens the last-cooked filter.
+  ///
+  /// In de, this message translates to:
+  /// **'Zuletzt gekocht'**
+  String get searchAddLastCooked;
+
+  /// Dashed chip that opens the times-cooked filter.
+  ///
+  /// In de, this message translates to:
+  /// **'Gekocht'**
+  String get searchAddTimesCooked;
+
+  /// Title and accessible label of the rating filter.
+  ///
+  /// In de, this message translates to:
+  /// **'Nach Bewertung filtern'**
+  String get searchRatingTitle;
+
+  /// Title and accessible label of the last-cooked filter.
+  ///
+  /// In de, this message translates to:
+  /// **'Nach letztem Kochen filtern'**
+  String get searchLastCookedTitle;
+
+  /// Title and accessible label of the times-cooked filter.
+  ///
+  /// In de, this message translates to:
+  /// **'Nach Kochhäufigkeit filtern'**
+  String get searchTimesTitle;
+
+  /// Under the title of the rating, last-cooked and times-cooked filter sheets: Tandoor counts only the user's own cook logs.
+  ///
+  /// In de, this message translates to:
+  /// **'Zählt nur deine eigenen Kochprotokolle.'**
+  String get searchHistoryHint;
+
+  /// Choice in the rating filter sheet. The minimum rating.
+  ///
+  /// In de, this message translates to:
+  /// **'{stars, plural, =1{ab 1 Stern} other{ab {stars} Sternen}}'**
+  String searchRatingOption(int stars);
+
+  /// Label of the selected rating filter chip.
+  ///
+  /// In de, this message translates to:
+  /// **'Von dir bewertet: {stars, plural, =1{ab 1 Stern} other{ab {stars} Sternen}}'**
+  String searchRatingFilter(int stars);
+
+  /// Choice in the last-cooked filter: last cooked at least two weeks ago.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht seit 2 Wochen'**
+  String get searchLastCookedWeeks;
+
+  /// Choice in the last-cooked filter: last cooked at least a month ago.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht seit 1 Monat'**
+  String get searchLastCookedMonth;
+
+  /// Choice in the last-cooked filter: last cooked at least three months ago.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht seit 3 Monaten'**
+  String get searchLastCookedMonths;
+
+  /// Label of the selected last-cooked filter chip.
+  ///
+  /// In de, this message translates to:
+  /// **'Von dir zuletzt gekocht bis {date}'**
+  String searchLastCookedFilter(String date);
+
+  /// Choice in the times-cooked filter: the user never cooked the recipe.
+  ///
+  /// In de, this message translates to:
+  /// **'Nie gekocht'**
+  String get searchTimesNever;
+
+  /// Choice in the times-cooked filter.
+  ///
+  /// In de, this message translates to:
+  /// **'Oft gekocht (mind. 5-mal)'**
+  String get searchTimesOften;
+
+  /// Label of the selected never-cooked filter chip.
+  ///
+  /// In de, this message translates to:
+  /// **'Von dir nie gekocht'**
+  String get searchTimesNeverFilter;
+
+  /// Label of the selected times-cooked filter chip.
+  ///
+  /// In de, this message translates to:
+  /// **'Von dir mind. {count}-mal gekocht'**
+  String searchTimesMinFilter(int count);
+
+  /// Shown above offline results when the times-cooked filter asks for several times.
+  ///
+  /// In de, this message translates to:
+  /// **'Offline lässt sich nicht zählen, wie oft du ein Rezept gekocht hast. Gezeigt werden alle schon gekochten.'**
+  String get searchOfflineTimesNote;
 }
 
 class _AppLocalizationsDelegate

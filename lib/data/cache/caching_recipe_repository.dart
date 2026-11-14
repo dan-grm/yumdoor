@@ -120,6 +120,10 @@ bool _matches(Recipe recipe, RecipeQuery query, TextMatcher text) {
     final day = DateTime(before.year, before.month, before.day + 1);
     if (!cooked.isBefore(day)) return false;
   }
+  // The cache has no cook counts, only when it was last cooked: "never" is
+  // exact, "at least n times" can only tell cooked from not cooked.
+  if (query.neverCooked && recipe.lastCooked != null) return false;
+  if (query.minTimesCooked != null && recipe.lastCooked == null) return false;
   return true;
 }
 

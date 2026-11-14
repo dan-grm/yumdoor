@@ -492,4 +492,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get timerBackgroundHint => 'Timers only alert while Yumdoor is open.';
+
+  @override
+  String get searchAddRating => 'Rating';
+
+  @override
+  String get searchAddLastCooked => 'Last cooked';
+
+  @override
+  String get searchAddTimesCooked => 'Times cooked';
+
+  @override
+  String get searchRatingTitle => 'Filter by rating';
+
+  @override
+  String get searchLastCookedTitle => 'Filter by last cooked';
+
+  @override
+  String get searchTimesTitle => 'Filter by times cooked';
+
+  @override
+  String get searchHistoryHint => 'Counts only your own cook logs.';
+
+  @override
+  String searchRatingOption(int stars) {
+    String _temp0 = intl.Intl.pluralLogic(
+      stars,
+      locale: localeName,
+      other: '$stars stars or more',
+      one: '1 star or more',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchRatingFilter(int stars) {
+    String _temp0 = intl.Intl.pluralLogic(
+      stars,
+      locale: localeName,
+      other: '$stars stars or more',
+      one: '1 star or more',
+    );
+    return 'Rated by you: $_temp0';
+  }
+
+  @override
+  String get searchLastCookedWeeks => 'Not in 2 weeks';
+
+  @override
+  String get searchLastCookedMonth => 'Not in 1 month';
+
+  @override
+  String get searchLastCookedMonths => 'Not in 3 months';
+
+  @override
+  String searchLastCookedFilter(String date) {
+    return 'Last cooked by you on or before $date';
+  }
+
+  @override
+  String get searchTimesNever => 'Never cooked';
+
+  @override
+  String get searchTimesOften => 'Often cooked (5 times or more)';
+
+  @override
+  String get searchTimesNeverFilter => 'Never cooked by you';
+
+  @override
+  String searchTimesMinFilter(int count) {
+    return 'Cooked by you $count+ times';
+  }
+
+  @override
+  String get searchOfflineTimesNote =>
+      'Offline, how often you cooked a recipe isn\'t known. Showing every recipe you\'ve cooked.';
 }

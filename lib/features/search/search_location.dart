@@ -4,12 +4,15 @@ import '../../domain/models/recipe_query.dart';
 const searchPath = '/search';
 
 // Query parameters, so a search survives reload and can be shared:
-// `/search?q=suppe&food=12&food=40&keyword=3&rating=4&cooked_before=2026-09-01`.
+// `/search?q=suppe&food=12&food=40&keyword=3&rating=4&cooked_before=2026-09-01`,
+// `never=1` and `times_min=5` for the times cooked.
 const _text = 'q';
 const _food = 'food';
 const _keyword = 'keyword';
 const _minRating = 'rating';
 const _lastCookedBefore = 'cooked_before';
+const _neverCooked = 'never';
+const _minTimesCooked = 'times_min';
 
 /// The location of the search screen showing [query].
 String searchLocation(RecipeQuery query) {
@@ -23,6 +26,10 @@ String searchLocation(RecipeQuery query) {
     if (query.minRating case final rating?) _minRating: ['$rating'],
     if (query.lastCookedBefore case final day?)
       _lastCookedBefore: [_formatDay(day)],
+    if (query.neverCooked)
+      _neverCooked: ['1']
+    else if (query.minTimesCooked case final times?)
+      _minTimesCooked: ['$times'],
   };
   return Uri(
     path: searchPath,
@@ -47,6 +54,13 @@ RecipeQuery searchQueryFromUri(Uri uri) {
       _ => null,
     },
     lastCookedBefore: _parseDay(params[_lastCookedBefore]?.first),
+    neverCooked: params[_neverCooked]?.first == '1',
+    minTimesCooked: params[_neverCooked]?.first == '1'
+        ? null
+        : switch (int.tryParse(params[_minTimesCooked]?.first ?? '')) {
+            final times? when times >= 1 => times,
+            _ => null,
+          },
   );
 }
 

@@ -77,6 +77,25 @@ void main() {
       expect(query['cookedon_lte'], '2026-09-01');
     });
 
+    test('maps the times cooked filters', () async {
+      final adapter = FakeHttpAdapter(
+        (_) => jsonResponse(tandoorFixture('recipe_list.json')),
+      );
+      final repository = TandoorRecipeRepository(client(adapter));
+
+      await repository.search(const RecipeQuery(minTimesCooked: 5));
+      await repository.search(const RecipeQuery(neverCooked: true));
+
+      final [often, never] = [
+        for (final r in adapter.requests) r.uri.queryParameters,
+      ];
+      expect(often['timescooked_gte'], '5');
+      expect(often.containsKey('timescooked'), isFalse);
+      // `timescooked_lte=0` would match nothing on Tandoor.
+      expect(never['timescooked'], '0');
+      expect(never.containsKey('timescooked_lte'), isFalse);
+    });
+
     test('cancels the request with its CancelSignal', () async {
       final response = Completer<ResponseBody>();
       final adapter = FakeHttpAdapter((_) => response.future);
