@@ -676,6 +676,26 @@ void main() {
         expect(find.text('Anhalten'), findsOneWidget);
       });
 
+      testWidgets('after +1 min, the button still knows its timer', (
+        tester,
+      ) async {
+        await pumpCooking(tester);
+        await next(tester, 'Weiter zu Schritt 2');
+        await tapAndWait(tester, find.text('Timer starten · 25:00'));
+        await tapAndWait(tester, chip('Schritt 2'));
+        await tapAndWait(tester, find.text('+1 Min'));
+        // Closes the sheet.
+        await tester.tapAt(const Offset(10, 10));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        expect(find.text('Anhalten'), findsNothing);
+
+        expect(find.text('Timer starten · 25:00'), findsNothing);
+        await tapAndWait(tester, highlight('25 Minuten'));
+        expect(find.byType(TimerChip), findsOneWidget);
+        expect(find.text('Anhalten'), findsOneWidget);
+      });
+
       testWidgets('a highlight keeps the button for the step\'s own time', (
         tester,
       ) async {

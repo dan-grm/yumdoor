@@ -9,6 +9,7 @@ class CookingTimer {
     required this.id,
     required this.label,
     required this.duration,
+    required this.startedWith,
     this.stepId,
     this.endsAt,
     this.pausedRemaining,
@@ -26,6 +27,7 @@ class CookingTimer {
     id: id,
     label: label,
     duration: duration,
+    startedWith: duration,
     stepId: stepId,
     endsAt: now.add(duration),
   );
@@ -37,6 +39,9 @@ class CookingTimer {
 
   /// The length it was started with, plus added minutes.
   final Duration duration;
+
+  /// The length it was started with: which of a step's durations it is for.
+  final Duration startedWith;
 
   /// The step whose time started it; `null` for a manual timer.
   final int? stepId;
@@ -112,6 +117,7 @@ class CookingTimer {
     label: label,
     stepId: stepId,
     duration: duration ?? this.duration,
+    startedWith: startedWith,
     endsAt: endsAt == _keep ? this.endsAt : endsAt as DateTime?,
     pausedRemaining: pausedRemaining == _keep
         ? this.pausedRemaining
@@ -126,6 +132,7 @@ class CookingTimer {
     'label': label,
     'stepId': stepId,
     'durationMs': duration.inMilliseconds,
+    'startedWithMs': startedWith.inMilliseconds,
     'endsAt': endsAt?.toUtc().toIso8601String(),
     'pausedMs': pausedRemaining?.inMilliseconds,
     'lastAlertAt': lastAlertAt?.toUtc().toIso8601String(),
@@ -141,12 +148,17 @@ class CookingTimer {
       final stepId = json['stepId'];
       final endsAt = _date(json['endsAt']);
       final paused = json['pausedMs'];
+      // Saved before it was stored: the current length is the best guess.
+      final startedWith = json['startedWithMs'];
       if ((endsAt == null) == (paused is! int)) return null;
       return CookingTimer._(
         id: id,
         label: label,
         stepId: stepId is int ? stepId : null,
         duration: Duration(milliseconds: durationMs),
+        startedWith: Duration(
+          milliseconds: startedWith is int ? startedWith : durationMs,
+        ),
         endsAt: endsAt,
         pausedRemaining: paused is int ? Duration(milliseconds: paused) : null,
         lastAlertAt: _date(json['lastAlertAt']),

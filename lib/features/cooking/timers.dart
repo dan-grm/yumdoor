@@ -145,14 +145,15 @@ Future<void> startTimer(
   messenger.showSnackBar(SnackBar(content: Text(hint)));
 }
 
-/// The timer [stepId] has of [duration], if any: one started from the step's
-/// button or a duration in its text, still running or not yet turned off.
+/// The timer [stepId] has for [duration], if any: one started with that
+/// length from the step's button or a duration in its text, still running or
+/// not yet turned off.
 CookingTimer? _stepTimer(
   List<CookingTimer> timers,
   int stepId,
   Duration duration,
 ) => timers
-    .where((timer) => timer.stepId == stepId && timer.duration == duration)
+    .where((timer) => timer.stepId == stepId && timer.startedWith == duration)
     .firstOrNull;
 
 /// A tap on a duration in step text: starts a timer of [duration] named

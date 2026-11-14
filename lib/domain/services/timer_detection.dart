@@ -116,8 +116,14 @@ abstract final class TimerDetection {
     if (value == null) return null;
     if (match.namedGroup('half') != null) value += 0.5;
     // "a minute or two": the upper bound, like a range.
+    // Only after one: "20 Minuten oder drei Eier" is 20 minutes.
+    var end = match.end;
     if (match.namedGroup('more') case final more?) {
-      value = _words[more.trim().split(_space).last.toLowerCase()]!;
+      if (to == null && value == 1) {
+        value = _words[more.trim().split(_space).last.toLowerCase()]!;
+      } else {
+        end -= more.length;
+      }
     }
     final duration = Duration(
       milliseconds: (value * unit.inMilliseconds).round(),
@@ -126,7 +132,7 @@ abstract final class TimerDetection {
     if (duration.inSeconds <= 0) return null;
     return _Component(
       match.start,
-      match.end,
+      end,
       Duration(seconds: duration.inSeconds),
       rank,
       abbreviated: !_fullUnits.contains(unitText.toLowerCase()),
@@ -176,7 +182,7 @@ abstract final class TimerDetection {
 
   /// Not inside a word or number: "Minutensteaks", "A4", the 5 in "1.5".
   static const _before = r'(?<![\p{L}\p{N}]|\p{N}[.,/:])';
-  static const _after = r'(?![\p{L}\p{N}])';
+  static const _after = r'(?![\p{L}\p{N}]|-\p{L})';
 
   static const _glyphs = {
     '½': 0.5,
@@ -211,7 +217,7 @@ abstract final class TimerDetection {
       '$_s+'
       r'\d{1,2}/\d{1,2}'
       r'|\d{1,2}/\d{1,2}'
-      r'|\d{1,4}(?:[.,]\d{1,3})?(?:'
+      r'|\d{1,4}(?:[.,]\d{1,2})?(?:'
       '$_s?'
       r'[½¼¾⅓⅔])?'
       r'|[½¼¾⅓⅔]'
@@ -219,18 +225,25 @@ abstract final class TimerDetection {
       ')'
       '(?:$_s+and$_s+a$_s+half)?';
 
+  static const _hourUnits = 'stunden|stunde|std|hours|hour|hrs|hr|h';
+  static const _minuteUnits = 'minuten|minute|min|minutes|mins';
+  static const _secondUnits = 'sekunden|sekunde|sek|seconds|second|secs|sec';
+  static const _unitPattern = '$_hourUnits|$_minuteUnits|$_secondUnits';
+
   static final _generic = RegExp(
     '$_before'
     '(?<from>$_numberPattern)'
-    '(?:(?:$_s*[-–—]$_s*|$_s+(?:bis|to|or|oder)$_s+)(?<to>$_numberPattern))?'
+    // No spaces around a dash: "Schritt 2 - 10 Minuten" isn't a range.
+    '(?:(?:[-–—]|$_s+(?:bis|to|or|oder)$_s+)(?<to>$_numberPattern))?'
     '$_s*'
     '(?:'
-    '(?<h>stunden|stunde|std|hours|hour|hrs|hr|h)'
-    '|(?<m>minuten|minute|min|minutes|mins)'
-    '|(?<s>sekunden|sekunde|sek|seconds|second|secs|sec)'
+    '(?<h>$_hourUnits)'
+    '|(?<m>$_minuteUnits)'
+    '|(?<s>$_secondUnits)'
     ')'
     '(?<half>$_s+and$_s+a$_s+half)?'
-    '(?<more>$_s+(?:or|oder)$_s+(?:two|three|zwei|drei))?'
+    '(?<more>$_s+(?:or|oder)$_s+(?:two|three|zwei|drei)'
+    '(?!$_s+(?:$_unitPattern)$_after))?'
     '$_after',
     caseSensitive: false,
     unicode: true,

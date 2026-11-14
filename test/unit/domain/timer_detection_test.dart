@@ -73,7 +73,10 @@ void main() {
       // Ranges: the upper bound.
       ('10–12 Minuten', '10–12 Minuten', min * 12),
       ('10-12 Min', '10-12 Min', min * 12),
-      ('10 - 12 Minuten', '10 - 12 Minuten', min * 12),
+      // Spaced dashes are no range ("Schritt 2 - 10 Minuten"); the timer is
+      // the same.
+      ('10 - 12 Minuten', '12 Minuten', min * 12),
+      ('Schritt 2 - 10 Minuten kochen', '10 Minuten', min * 10),
       ('2 bis 3 Stunden', '2 bis 3 Stunden', h * 3),
       ('zwei bis drei Minuten', 'zwei bis drei Minuten', min * 3),
       ('5 to 7 minutes', '5 to 7 minutes', min * 7),
@@ -96,6 +99,7 @@ void main() {
       ('a minute or two', 'a minute or two', min * 2),
       ('cook an hour or two', 'an hour or two', h * 2),
       ('eine Minute oder zwei', 'eine Minute oder zwei', min * 2),
+      ('20 Minuten oder drei Eier', '20 Minuten', min * 20),
     ];
     for (final (text, phrase, duration) in cases) {
       test('"$phrase" in "$text"', () {
@@ -121,6 +125,10 @@ void main() {
       // Compound words.
       '4 Minutensteaks braten',
       'Die 10-Minuten-Terrine',
+      'Die 10 Minuten-Terrine',
+      '2 H-Milch erwärmen',
+      // A thousands separator, not a decimal point.
+      '1.000 Stunden',
       'Stundenlang köcheln',
       'Minuten später',
       '5 Hähnchenschenkel',
@@ -175,6 +183,14 @@ void main() {
     expect(find('Bake for 1 hour. 15 minutes before the end, add cheese.'), [
       ('1 hour', h),
       ('15 minutes', min * 15),
+    ]);
+    expect(find('Simmer 45 minutes or two hours.'), [
+      ('45 minutes', min * 45),
+      ('two hours', h * 2),
+    ]);
+    expect(find('a minute or two hours'), [
+      ('a minute', min),
+      ('two hours', h * 2),
     ]);
     expect(find('1 Stunde.\n20 Minuten'), [
       ('1 Stunde', h),

@@ -68,6 +68,7 @@ void main() {
 
       expect(t.remaining(at(60)), const Duration(minutes: 25));
       expect(t.duration, const Duration(minutes: 26));
+      expect(t.startedWith, const Duration(minutes: 25));
     });
 
     test('+1 min on a paused timer adds to what is left', () {
@@ -110,7 +111,9 @@ void main() {
 
   group('reload', () {
     test('running and paused timers round-trip through JSON', () {
-      final running = timer().alerted(at(1));
+      final running = timer()
+          .extend(const Duration(minutes: 1), at(0))
+          .alerted(at(1));
       final paused = CookingTimer.start(
         id: 't2',
         label: 'Timer',
@@ -126,11 +129,23 @@ void main() {
       expect(read, hasLength(2));
       expect(read[0].id, 't1');
       expect(read[0].stepId, 2);
-      expect(read[0].remaining(at(300)), const Duration(minutes: 20));
+      expect(read[0].remaining(at(300)), const Duration(minutes: 21));
+      expect(read[0].startedWith, const Duration(minutes: 25));
       expect(read[0].lastAlertAt, at(1));
       expect(read[1].stepId, isNull);
       expect(read[1].isPaused, isTrue);
       expect(read[1].remaining(at(9999)), const Duration(minutes: 4));
+    });
+
+    test('timers saved before startedWith start with their length', () {
+      final read = CookingTimer.fromJson({
+        'id': 'a',
+        'label': 'x',
+        'durationMs': 60000,
+        'pausedMs': 1000,
+      })!;
+
+      expect(read.startedWith, const Duration(minutes: 1));
     });
 
     test('unreadable entries are null', () {
