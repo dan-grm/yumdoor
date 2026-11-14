@@ -294,6 +294,89 @@ void main() {
     expect(find.text('2 Rezepte'), findsOneWidget);
   });
 
+  testWidgets('adds and removes the rating filter', (tester) async {
+    final router = await pumpSearch(tester);
+
+    await tapTooltip(tester, 'Nach Bewertung filtern');
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Zählt nur deine eigenen Kochprotokolle.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('ab 4 Sternen'));
+    await tester.pumpAndSettle();
+
+    expect(location(router), '/search?rating=4');
+    expect(recipes.searches.last.query.minRating, 4);
+    expect(find.text('Von dir bewertet: ab 4 Sternen'), findsOneWidget);
+
+    await tapTooltip(tester, 'Von dir bewertet: ab 4 Sternen entfernen');
+    await tester.pumpAndSettle();
+    expect(location(router), '/search');
+    expect(find.text('Bewertung'), findsOneWidget);
+  });
+
+  testWidgets('adds and removes the last cooked filter', (tester) async {
+    final router = await pumpSearch(tester);
+
+    await tapTooltip(tester, 'Nach letztem Kochen filtern');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nicht seit 2 Wochen'));
+    await tester.pumpAndSettle();
+
+    final day = recipes.searches.last.query.lastCookedBefore!;
+    final today = DateTime.now();
+    expect(
+      DateTime(today.year, today.month, today.day).difference(day).inDays,
+      inInclusiveRange(13, 14),
+    );
+    expect(location(router), startsWith('/search?cooked_before='));
+    expect(find.textContaining('Von dir zuletzt gekocht bis'), findsOneWidget);
+
+    await tester.tap(find.textContaining('Von dir zuletzt gekocht bis'));
+    await tester.pumpAndSettle();
+    expect(location(router), '/search');
+    expect(recipes.searches.last.query.lastCookedBefore, isNull);
+  });
+
+  testWidgets('adds and removes the times cooked filters', (tester) async {
+    final router = await pumpSearch(tester);
+
+    await tapTooltip(tester, 'Nach Kochhäufigkeit filtern');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nie gekocht'));
+    await tester.pumpAndSettle();
+    expect(location(router), '/search?never=1');
+    expect(recipes.searches.last.query.neverCooked, isTrue);
+    expect(find.text('Von dir nie gekocht'), findsOneWidget);
+
+    await tapTooltip(tester, 'Von dir nie gekocht entfernen');
+    await tester.pumpAndSettle();
+    expect(location(router), '/search');
+
+    await tapTooltip(tester, 'Nach Kochhäufigkeit filtern');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Oft gekocht (mind. 5-mal)'));
+    await tester.pumpAndSettle();
+    expect(location(router), '/search?times_min=5');
+    expect(recipes.searches.last.query.minTimesCooked, 5);
+
+    await tapTooltip(tester, 'Von dir mind. 5-mal gekocht entfernen');
+    await tester.pumpAndSettle();
+    expect(location(router), '/search');
+  });
+
+  testWidgets('says offline results can not count how often', (tester) async {
+    recipes.fromCache = true;
+    await pumpSearch(tester, location: '/search?times_min=5');
+
+    expect(
+      find.textContaining('Offline lässt sich nicht zählen'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('restores text and filters from the URL', (tester) async {
     await pumpSearch(tester, location: '/search?q=Ofen&keyword=1&food=99');
 

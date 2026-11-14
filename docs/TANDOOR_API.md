@@ -114,6 +114,11 @@ overlaps) when the results don't fit on the first pages. `foods_or` and `keyword
 keywords (`include_children`), and a `RecipeOverview` has no ingredients, so a food match can't tell which of the
 foods the recipe contains.
 
+**Times cooked:** `timescooked_lte` adds `.exclude(favorite=0)` (`managers.py:179`), so it never returns recipes
+cooked 0 times; "never cooked" is `timescooked=0` (exact, which also wins over `_gte`/`_lte`). Overviews carry no cook
+count, so the offline cache can only separate cooked (`lastCooked` set) from never cooked; "at least n times" offline
+shows every recipe cooked at least once.
+
 **Mismatch with our assumption:** `rating`, `lastcooked` and `timescooked` are computed **only from the requesting
 user's own cook logs** (`managers.py:51-75`), not the household's or the space's. "Highly rated" in search means
 "rated highly by me". Recommendations that need other people's ratings or cooking history read `/api/cook-log/`

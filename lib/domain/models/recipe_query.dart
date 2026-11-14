@@ -31,6 +31,13 @@ abstract class RecipeQuery with _$RecipeQuery {
     /// The current user last cooked it on or before this day (the date part
     /// counts). Tandoor only counts the user's own cook logs.
     DateTime? lastCookedBefore,
+
+    /// The current user never cooked it (no cook log of their own). Wins over
+    /// [minTimesCooked].
+    @Default(false) bool neverCooked,
+
+    /// The current user cooked it at least this many times, 1 or more.
+    int? minTimesCooked,
   }) = _RecipeQuery;
 
   const RecipeQuery._();
@@ -43,5 +50,7 @@ abstract class RecipeQuery with _$RecipeQuery {
       anyFoodIds.isEmpty &&
       anyKeywordIds.isEmpty &&
       minRating == null &&
-      lastCookedBefore == null;
+      lastCookedBefore == null &&
+      !neverCooked &&
+      minTimesCooked == null;
 }

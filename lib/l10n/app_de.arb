@@ -715,5 +715,101 @@
   "timerBackgroundHint": "Timer melden sich nur, solange Yumdoor geöffnet ist.",
   "@timerBackgroundHint": {
     "description": "Shown once when a timer starts on a device that can't alert in the background (phones)."
+  },
+  "searchAddRating": "Bewertung",
+  "@searchAddRating": {
+    "description": "Dashed chip that opens the rating filter."
+  },
+  "searchAddLastCooked": "Zuletzt gekocht",
+  "@searchAddLastCooked": {
+    "description": "Dashed chip that opens the last-cooked filter."
+  },
+  "searchAddTimesCooked": "Gekocht",
+  "@searchAddTimesCooked": {
+    "description": "Dashed chip that opens the times-cooked filter."
+  },
+  "searchRatingTitle": "Nach Bewertung filtern",
+  "@searchRatingTitle": {
+    "description": "Title and accessible label of the rating filter."
+  },
+  "searchLastCookedTitle": "Nach letztem Kochen filtern",
+  "@searchLastCookedTitle": {
+    "description": "Title and accessible label of the last-cooked filter."
+  },
+  "searchTimesTitle": "Nach Kochhäufigkeit filtern",
+  "@searchTimesTitle": {
+    "description": "Title and accessible label of the times-cooked filter."
+  },
+  "searchHistoryHint": "Zählt nur deine eigenen Kochprotokolle.",
+  "@searchHistoryHint": {
+    "description": "Under the title of the rating, last-cooked and times-cooked filter sheets: Tandoor counts only the user's own cook logs."
+  },
+  "searchRatingOption": "{stars, plural, =1{ab 1 Stern} other{ab {stars} Sternen}}",
+  "@searchRatingOption": {
+    "description": "Choice in the rating filter sheet. The minimum rating.",
+    "placeholders": {
+      "stars": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "searchRatingFilter": "Von dir bewertet: {stars, plural, =1{ab 1 Stern} other{ab {stars} Sternen}}",
+  "@searchRatingFilter": {
+    "description": "Label of the selected rating filter chip.",
+    "placeholders": {
+      "stars": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "searchLastCookedWeeks": "Nicht seit 2 Wochen",
+  "@searchLastCookedWeeks": {
+    "description": "Choice in the last-cooked filter: last cooked at least two weeks ago."
+  },
+  "searchLastCookedMonth": "Nicht seit 1 Monat",
+  "@searchLastCookedMonth": {
+    "description": "Choice in the last-cooked filter: last cooked at least a month ago."
+  },
+  "searchLastCookedMonths": "Nicht seit 3 Monaten",
+  "@searchLastCookedMonths": {
+    "description": "Choice in the last-cooked filter: last cooked at least three months ago."
+  },
+  "searchLastCookedFilter": "Von dir zuletzt gekocht bis {date}",
+  "@searchLastCookedFilter": {
+    "description": "Label of the selected last-cooked filter chip.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "20. Okt. 2026"
+      }
+    }
+  },
+  "searchTimesNever": "Nie gekocht",
+  "@searchTimesNever": {
+    "description": "Choice in the times-cooked filter: the user never cooked the recipe."
+  },
+  "searchTimesOften": "Oft gekocht (mind. 5-mal)",
+  "@searchTimesOften": {
+    "description": "Choice in the times-cooked filter."
+  },
+  "searchTimesNeverFilter": "Von dir nie gekocht",
+  "@searchTimesNeverFilter": {
+    "description": "Label of the selected never-cooked filter chip."
+  },
+  "searchTimesMinFilter": "Von dir mind. {count}-mal gekocht",
+  "@searchTimesMinFilter": {
+    "description": "Label of the selected times-cooked filter chip.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "4"
+      }
+    }
+  },
+  "searchOfflineTimesNote": "Offline lässt sich nicht zählen, wie oft du ein Rezept gekocht hast. Gezeigt werden alle schon gekochten.",
+  "@searchOfflineTimesNote": {
+    "description": "Shown above offline results when the times-cooked filter asks for several times."
   }
 }

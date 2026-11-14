@@ -499,4 +499,79 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get timerBackgroundHint =>
       'Timer melden sich nur, solange Yumdoor geöffnet ist.';
+
+  @override
+  String get searchAddRating => 'Bewertung';
+
+  @override
+  String get searchAddLastCooked => 'Zuletzt gekocht';
+
+  @override
+  String get searchAddTimesCooked => 'Gekocht';
+
+  @override
+  String get searchRatingTitle => 'Nach Bewertung filtern';
+
+  @override
+  String get searchLastCookedTitle => 'Nach letztem Kochen filtern';
+
+  @override
+  String get searchTimesTitle => 'Nach Kochhäufigkeit filtern';
+
+  @override
+  String get searchHistoryHint => 'Zählt nur deine eigenen Kochprotokolle.';
+
+  @override
+  String searchRatingOption(int stars) {
+    String _temp0 = intl.Intl.pluralLogic(
+      stars,
+      locale: localeName,
+      other: 'ab $stars Sternen',
+      one: 'ab 1 Stern',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String searchRatingFilter(int stars) {
+    String _temp0 = intl.Intl.pluralLogic(
+      stars,
+      locale: localeName,
+      other: 'ab $stars Sternen',
+      one: 'ab 1 Stern',
+    );
+    return 'Von dir bewertet: $_temp0';
+  }
+
+  @override
+  String get searchLastCookedWeeks => 'Nicht seit 2 Wochen';
+
+  @override
+  String get searchLastCookedMonth => 'Nicht seit 1 Monat';
+
+  @override
+  String get searchLastCookedMonths => 'Nicht seit 3 Monaten';
+
+  @override
+  String searchLastCookedFilter(String date) {
+    return 'Von dir zuletzt gekocht bis $date';
+  }
+
+  @override
+  String get searchTimesNever => 'Nie gekocht';
+
+  @override
+  String get searchTimesOften => 'Oft gekocht (mind. 5-mal)';
+
+  @override
+  String get searchTimesNeverFilter => 'Von dir nie gekocht';
+
+  @override
+  String searchTimesMinFilter(int count) {
+    return 'Von dir mind. $count-mal gekocht';
+  }
+
+  @override
+  String get searchOfflineTimesNote =>
+      'Offline lässt sich nicht zählen, wie oft du ein Rezept gekocht hast. Gezeigt werden alle schon gekochten.';
 }

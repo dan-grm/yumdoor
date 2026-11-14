@@ -42,6 +42,10 @@ class TandoorRecipeRepository implements RecipeRepository {
         final day? => api.Date(day.year, day.month, day.day),
         null => null,
       },
+      // `timescooked_lte` would leave out recipes cooked 0 times, so "never"
+      // is the exact count (docs/TANDOOR_API.md).
+      timescooked: query.neverCooked ? 0 : null,
+      timescookedGte: query.neverCooked ? null : query.minTimesCooked,
       page: page,
       pageSize: pageSize,
       cancelToken: cancelTokenFor(cancel),
