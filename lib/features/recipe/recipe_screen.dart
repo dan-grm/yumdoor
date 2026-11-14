@@ -13,6 +13,7 @@ import '../../domain/models/recipe_step.dart';
 import '../../domain/services/scaling_service.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
+import '../common/markdown_text.dart';
 import '../common/offline_disabled.dart';
 import 'ingredient_lines.dart';
 import 'recipe_meta.dart';
@@ -309,8 +310,10 @@ class _TitleBlock extends StatelessWidget {
         ],
         if (recipe.description.trim().isNotEmpty) ...[
           SizedBox(height: t.space4),
-          // Plain text until the markdown renderer lands (M2).
-          Text(recipe.description.trim(), style: t.body.copyWith(color: t.ink)),
+          MarkdownText(
+            recipe.description.trim(),
+            style: t.body.copyWith(color: t.ink),
+          ),
         ],
       ],
     );

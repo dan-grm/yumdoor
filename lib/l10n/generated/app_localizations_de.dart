@@ -377,4 +377,15 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get pickerEmpty => 'Nichts gefunden';
+
+  @override
+  String get markdownLinkTitle => 'Link öffnen?';
+
+  @override
+  String markdownLinkText(String host) {
+    return 'Der Link führt zu $host und öffnet sich in einem neuen Tab.';
+  }
+
+  @override
+  String get markdownLinkOpen => 'Öffnen';
 }

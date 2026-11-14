@@ -372,4 +372,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pickerEmpty => 'Nothing found';
+
+  @override
+  String get markdownLinkTitle => 'Open link?';
+
+  @override
+  String markdownLinkText(String host) {
+    return 'This link goes to $host and opens in a new tab.';
+  }
+
+  @override
+  String get markdownLinkOpen => 'Open';
 }

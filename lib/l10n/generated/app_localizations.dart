@@ -655,6 +655,24 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Nichts gefunden'**
   String get pickerEmpty;
+
+  /// Title of the dialog shown before a link from a recipe opens.
+  ///
+  /// In de, this message translates to:
+  /// **'Link öffnen?'**
+  String get markdownLinkTitle;
+
+  /// Body of the link dialog: where a link from recipe text leads.
+  ///
+  /// In de, this message translates to:
+  /// **'Der Link führt zu {host} und öffnet sich in einem neuen Tab.'**
+  String markdownLinkText(String host);
+
+  /// Button in the link dialog that opens the link.
+  ///
+  /// In de, this message translates to:
+  /// **'Öffnen'**
+  String get markdownLinkOpen;
 }
 
 class _AppLocalizationsDelegate
