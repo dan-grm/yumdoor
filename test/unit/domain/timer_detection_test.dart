@@ -82,6 +82,7 @@ void main() {
       ('5 to 7 minutes', '5 to 7 minutes', min * 7),
       ('20 or 25 minutes', '20 or 25 minutes', min * 25),
       ('1–1½ Stunden', '1–1½ Stunden', h * 1.5),
+      ('12–10 Minuten', '12–10 Minuten', min * 12),
       // Combinations.
       ('1 Stunde 20 Minuten', '1 Stunde 20 Minuten', min * 80),
       ('1 Stunde und 20 Minuten', '1 Stunde und 20 Minuten', min * 80),
@@ -137,6 +138,8 @@ void main() {
       'Add a second egg.',
       'Do it a second time.',
       'H1 2 Hz',
+      'A10 Minuten',
+      'pizza minute',
       // Clock notation isn't understood; better nothing than 30 hours.
       'Garzeit 1:30 h',
       '0:45 Std.',

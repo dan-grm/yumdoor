@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 /// A duration found in step text: where it is, and how long a timer for it
 /// runs.
 final class DetectedDuration {
@@ -45,12 +47,12 @@ abstract final class TimerDetection {
   /// The durations in [text], in order, never overlapping.
   static List<DetectedDuration> find(String text) {
     final found = <_Component>[];
-    for (final match in _generic.allMatches(text)) {
+    for (final match in _matches(_generic, text)) {
       final component = _genericComponent(match);
       if (component != null) found.add(component);
     }
     for (final (pattern, duration, rank) in _phrases) {
-      for (final match in pattern.allMatches(text)) {
+      for (final match in _matches(pattern, text)) {
         found.add(_Component(match.start, match.end, duration, rank));
       }
     }
@@ -112,8 +114,11 @@ abstract final class TimerDetection {
       return null;
     }
 
-    var value = _number(to ?? from);
-    if (value == null) return null;
+    // A range's upper bound, whichever way round it is written.
+    final lower = _number(from);
+    final upper = to == null ? lower : _number(to);
+    if (lower == null || upper == null) return null;
+    var value = math.max(lower, upper);
     if (match.namedGroup('half') != null) value += 0.5;
     // "a minute or two": the upper bound, like a range.
     // Only after one: "20 Minuten oder drei Eier" is 20 minutes.
@@ -181,7 +186,35 @@ abstract final class TimerDetection {
   static const _s = r'[^\S\r\n]';
 
   /// Not inside a word or number: "Minutensteaks", "A4", the 5 in "1.5".
-  static const _before = r'(?<![\p{L}\p{N}]|\p{N}[.,/:])';
+  /// The matches of [pattern] in [text] that don't start inside a word or
+  /// number: not in "Minutensteaks" or "A4", nor at the 5 of "1.5" or the 30
+  /// of "1:30". Checked here rather than with a lookbehind, which Safari only
+  /// supports from 16.4.
+  static Iterable<RegExpMatch> _matches(RegExp pattern, String text) sync* {
+    var start = 0;
+    while (start < text.length) {
+      final match = pattern.allMatches(text, start).firstOrNull;
+      if (match == null) return;
+      if (_clearBefore(text, match.start)) {
+        yield match;
+        start = match.end;
+      } else {
+        start = match.start + 1;
+      }
+    }
+  }
+
+  static bool _clearBefore(String text, int start) {
+    if (start == 0) return true;
+    final before = text[start - 1];
+    if (_wordChar.hasMatch(before)) return false;
+    return !(start >= 2 &&
+        '.,/:'.contains(before) &&
+        _digit.hasMatch(text[start - 2]));
+  }
+
+  static final _wordChar = RegExp(r'[\p{L}\p{N}]', unicode: true);
+  static final _digit = RegExp(r'\p{N}', unicode: true);
   static const _after = r'(?![\p{L}\p{N}]|-\p{L})';
 
   static const _glyphs = {
@@ -231,7 +264,6 @@ abstract final class TimerDetection {
   static const _unitPattern = '$_hourUnits|$_minuteUnits|$_secondUnits';
 
   static final _generic = RegExp(
-    '$_before'
     '(?<from>$_numberPattern)'
     // No spaces around a dash: "Schritt 2 - 10 Minuten" isn't a range.
     '(?:(?:[-–—]|$_s+(?:bis|to|or|oder)$_s+)(?<to>$_numberPattern))?'
@@ -249,11 +281,8 @@ abstract final class TimerDetection {
     unicode: true,
   );
 
-  static RegExp _phrase(String pattern) => RegExp(
-    '$_before(?:$pattern)$_after',
-    caseSensitive: false,
-    unicode: true,
-  );
+  static RegExp _phrase(String pattern) =>
+      RegExp('(?:$pattern)$_after', caseSensitive: false, unicode: true);
 
   static const _article = '(?:(?:eine[rnms]?|die|der)$_s+)?';
 

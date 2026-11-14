@@ -9,7 +9,6 @@ import '../../design/components/buttons.dart';
 import '../../design/components/timer_chip.dart';
 import '../../design/design.dart';
 import '../../domain/models/cooking_timer.dart';
-import '../../domain/models/recipe_step.dart';
 import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import 'cooking_providers.dart';
@@ -145,41 +144,12 @@ Future<void> startTimer(
   messenger.showSnackBar(SnackBar(content: Text(hint)));
 }
 
-/// The timer [stepId] has for [duration], if any: one started with that
-/// length from the step's button or a duration in its text, still running or
+/// Whether [stepId] has a timer started with [duration], still running or
 /// not yet turned off.
-CookingTimer? _stepTimer(
-  List<CookingTimer> timers,
-  int stepId,
-  Duration duration,
-) => timers
-    .where((timer) => timer.stepId == stepId && timer.startedWith == duration)
-    .firstOrNull;
-
-/// A tap on a duration in step text: starts a timer of [duration] named
-/// [label], or, if the step already has one of that length, shows it. So a
-/// double tap doesn't start two.
-Future<void> startOrShowStepTimer(
-  BuildContext context,
-  WidgetRef ref, {
-  required int recipeId,
-  required int stepId,
-  required String label,
-  required Duration duration,
-}) {
-  final timers = ref.read(cookingTimersControllerProvider(recipeId));
-  if (_stepTimer(timers, stepId, duration) case final timer?) {
-    return showTimerSheet(context, recipeId: recipeId, timerId: timer.id);
-  }
-  return startTimer(
-    context,
-    ref,
-    recipeId: recipeId,
-    label: label,
-    duration: duration,
-    stepId: stepId,
-  );
-}
+bool _hasStepTimer(List<CookingTimer> timers, int stepId, Duration duration) =>
+    timers.any(
+      (timer) => timer.stepId == stepId && timer.startedWith == duration,
+    );
 
 /// "Timer starten · 25:00" below a step, with space above it, unless the
 /// step already has a timer of [duration] or [duration] is zero.
@@ -187,13 +157,13 @@ class StepTimerButton extends ConsumerWidget {
   const StepTimerButton({
     super.key,
     required this.recipeId,
-    required this.step,
+    required this.stepId,
     required this.duration,
     required this.label,
   });
 
   final int recipeId;
-  final RecipeStep step;
+  final int stepId;
 
   /// The step's own time, or else the first duration in its text.
   final Duration duration;
@@ -204,8 +174,7 @@ class StepTimerButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final timers = ref.watch(cookingTimersControllerProvider(recipeId));
-    if (duration <= Duration.zero ||
-        _stepTimer(timers, step.id, duration) != null) {
+    if (duration <= Duration.zero || _hasStepTimer(timers, stepId, duration)) {
       return const SizedBox.shrink();
     }
     return Padding(
@@ -222,7 +191,7 @@ class StepTimerButton extends ConsumerWidget {
             recipeId: recipeId,
             label: label,
             duration: duration,
-            stepId: step.id,
+            stepId: stepId,
           ),
         ),
       ),

@@ -457,7 +457,7 @@ class _StepPage extends StatelessWidget {
     final detected = stepDurations(step.instruction.trim(), _template);
     return StepTimerButton(
       recipeId: recipeId,
-      step: step,
+      stepId: step.id,
       duration: step.time > Duration.zero
           ? step.time
           : detected.firstOrNull ?? Duration.zero,
@@ -503,13 +503,13 @@ class _StepPage extends StatelessWidget {
                     context,
                     _template,
                     onDuration: (duration) => unawaited(
-                      startOrShowStepTimer(
+                      startTimer(
                         context,
                         ref,
                         recipeId: recipeId,
-                        stepId: step.id,
                         label: _timerLabel(context),
                         duration: duration,
+                        stepId: step.id,
                       ),
                     ),
                   ),

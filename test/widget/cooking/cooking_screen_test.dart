@@ -650,6 +650,12 @@ void main() {
           find.bySemanticsLabel('20–25 Minuten, Timer starten'),
           findsOneWidget,
         );
+        expect(
+          tester.getSemantics(
+            find.bySemanticsLabel('20–25 Minuten, Timer starten'),
+          ),
+          isSemantics(isButton: true, hasTapAction: true),
+        );
 
         await tapAndWait(tester, highlight('20–25 Minuten'));
         expect(chip('Schritt 2, noch 25:00'), findsOneWidget);
@@ -661,19 +667,31 @@ void main() {
         expect(find.byType(TimerChip), findsNWidgets(2));
       });
 
-      testWidgets('a second tap shows the timer instead of starting one', (
-        tester,
-      ) async {
+      testWidgets('a double tap starts one timer', (tester) async {
         step2('25 Minuten rösten.');
         await pumpCooking(tester);
         await next(tester, 'Weiter zu Schritt 2');
 
+        await tester.tap(highlight('25 Minuten'));
+        await tester.pump(const Duration(milliseconds: 100));
         await tapAndWait(tester, highlight('25 Minuten'));
-        await tapAndWait(tester, highlight('25 Minuten'));
-        await tester.pump(const Duration(milliseconds: 500));
 
         expect(find.byType(TimerChip), findsOneWidget);
-        expect(find.text('Anhalten'), findsOneWidget);
+      });
+
+      testWidgets('the same length twice in a step starts two timers', (
+        tester,
+      ) async {
+        step2('10 Minuten anbraten, dann weitere 10 Minuten köcheln.');
+        await pumpCooking(tester);
+        await next(tester, 'Weiter zu Schritt 2');
+
+        await tapAndWait(tester, highlight('10 Minuten').first);
+        await tapAndWait(tester, highlight('10 Minuten').last);
+
+        expect(find.byType(TimerChip), findsNWidgets(2));
+        // The button's timer is set.
+        expect(find.text('Timer starten · 10:00'), findsNothing);
       });
 
       testWidgets('after +1 min, the button still knows its timer', (
@@ -691,9 +709,6 @@ void main() {
         expect(find.text('Anhalten'), findsNothing);
 
         expect(find.text('Timer starten · 25:00'), findsNothing);
-        await tapAndWait(tester, highlight('25 Minuten'));
-        expect(find.byType(TimerChip), findsOneWidget);
-        expect(find.text('Anhalten'), findsOneWidget);
       });
 
       testWidgets('a highlight keeps the button for the step\'s own time', (
