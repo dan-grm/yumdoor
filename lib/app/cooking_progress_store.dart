@@ -71,6 +71,13 @@ class CookingProgressStore {
     return null;
   }
 
+  /// The recipes with saved, unexpired timers.
+  List<int> recipesWithTimers(DateTime now) => [
+    for (final key in _timerKeys)
+      if (int.tryParse(key.substring(_timersPrefix.length)) case final id?)
+        if (readTimers(id, now).isNotEmpty) id,
+  ];
+
   /// Saves [timers]; an empty list removes the entry.
   void writeTimers(int recipeId, List<CookingTimer> timers, DateTime now) {
     final key = '$_timersPrefix$recipeId';

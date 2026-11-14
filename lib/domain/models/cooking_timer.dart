@@ -89,11 +89,12 @@ class CookingTimer {
     );
   }
 
-  /// Whether a finished timer should alert again at [now]: right when it
-  /// finishes, then every [alertInterval] until it is dismissed.
-  bool needsAlert(DateTime now) =>
+  /// Whether a finished timer should alert at [now]: right when it finishes,
+  /// then, with [repeat], every [alertInterval] until it is dismissed.
+  bool needsAlert(DateTime now, {bool repeat = true}) =>
       isFinished(now) &&
-      (lastAlertAt == null || now.difference(lastAlertAt!) >= alertInterval);
+      (lastAlertAt == null ||
+          (repeat && now.difference(lastAlertAt!) >= alertInterval));
 
   /// How often a finished timer alerts again.
   static const alertInterval = Duration(seconds: 30);

@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:ui' show PlatformDispatcher;
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../app/cooking_progress_store.dart';
+import '../../app/locale.dart';
 import '../../app/platform_providers.dart';
 import '../../app/session.dart';
 import '../../domain/models/cooking_progress.dart';
 import '../../domain/models/cooking_timer.dart';
+import '../../l10n/l10n.dart';
 import '../../platform/timers/timer_alert_service.dart';
 
 part 'cooking_providers.g.dart';
@@ -78,16 +81,18 @@ class CookingTimersController extends _$CookingTimersController {
   CookingProgressStore get _store => ref.read(cookingProgressStoreProvider);
   DateTime _now() => ref.read(clockProvider)();
 
-  late final TimerAlertService _alerts;
+  TimerAlertService get _alerts => ref.read(timerAlertServiceProvider);
   Timer? _ticker;
   var _nextId = 0;
-  String Function(CookingTimer timer) _title = (timer) => timer.label;
-  String _body = '';
+  var _watchers = 0;
+  String? _recipeName;
 
   @override
   List<CookingTimer> build(int recipeId) {
-    _alerts = ref.read(timerAlertServiceProvider);
-    ref.onDispose(() => _ticker?.cancel());
+    ref.onDispose(() {
+      _ticker?.cancel();
+      _ticker = null;
+    });
     // Logout ends the timers too: the next login may be someone else.
     ref.listen(sessionControllerProvider, (previous, next) {
       if (previous?.value != null && next.value == null) forget();
@@ -97,15 +102,22 @@ class CookingTimersController extends _$CookingTimersController {
     return timers;
   }
 
-  /// How notifications are worded, in the user's language: set by cooking
-  /// mode, which has the localizations.
-  void useWording({
-    required String Function(CookingTimer timer) title,
-    required String body,
-  }) {
-    _title = title;
-    _body = body;
+  /// Cooking mode for this recipe is on screen (TimerBar): finished timers
+  /// alert again every 30 s until turned off. Elsewhere in the app they alert
+  /// once, since only cooking mode can turn them off.
+  void attach({required String recipeName}) {
+    _watchers++;
+    _recipeName = recipeName;
   }
+
+  void detach() => _watchers--;
+
+  /// The notification text in the app's language; outside a widget, so from
+  /// the chosen or device locale.
+  AppLocalizations get _l10n => lookupAppLocalizations(
+    ref.read(localeOverrideProvider) ??
+        resolveLocale(PlatformDispatcher.instance.locales),
+  );
 
   void _set(List<CookingTimer> timers) {
     state = timers;
@@ -140,7 +152,8 @@ class CookingTimersController extends _$CookingTimersController {
     _set([
       ...state,
       CookingTimer.start(
-        id: '${now.microsecondsSinceEpoch}-${_nextId++}',
+        // Unique across recipes too: it tags the timer's notification.
+        id: '$recipeId-${now.microsecondsSinceEpoch}-${_nextId++}',
         label: label,
         duration: duration,
         now: now,
@@ -173,24 +186,47 @@ class CookingTimersController extends _$CookingTimersController {
   /// Alerts, all at once, for every finished timer that is due.
   Future<void> tick() async {
     final now = _now();
+    final repeat = _watchers > 0;
     final due = [
       for (final timer in state)
-        if (timer.needsAlert(now)) timer,
+        if (timer.needsAlert(now, repeat: repeat)) timer,
     ];
     if (due.isEmpty) return;
+    final alerts = _alerts;
+    final l10n = _l10n;
     _set([
       for (final timer in state)
         due.contains(timer) ? timer.alerted(now) : timer,
     ]);
     await Future.wait([
       for (final timer in due)
-        _alerts.alert(title: _title(timer), body: _body, tag: timer.id),
+        alerts.alert(
+          title: l10n.timerChipFinished(timer.label),
+          body: _recipeName ?? l10n.appTitle,
+          tag: timer.id,
+        ),
     ]);
   }
 
-  /// "Fertig": the timers stop and are forgotten.
+  /// "Fertig": the timers stop and are forgotten, with their notifications.
   void forget() {
+    final alerts = _alerts;
+    final ids = [for (final timer in state) timer.id];
     _set(const []);
-    unawaited(_alerts.dismissAlerts());
+    for (final id in ids) {
+      unawaited(alerts.dismissAlerts(tag: id));
+    }
   }
+}
+
+/// Brings back the saved timers of every recipe at app start, so they keep
+/// alerting after a reload without opening cooking mode again.
+@Riverpod(keepAlive: true)
+int restoredTimers(Ref ref) {
+  final now = ref.read(clockProvider)();
+  final ids = ref.read(cookingProgressStoreProvider).recipesWithTimers(now);
+  for (final id in ids) {
+    ref.read(cookingTimersControllerProvider(id));
+  }
+  return ids.length;
 }

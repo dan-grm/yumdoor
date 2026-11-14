@@ -270,7 +270,9 @@ class _CookingViewState extends State<_CookingView> {
             ],
           ),
         ),
-        if (steps.isEmpty)
+        if (steps.isEmpty) ...[
+          SizedBox(height: t.space2),
+          TimerBar(recipeId: recipe.id, recipeName: recipe.name),
           Expanded(
             child: Center(
               child: Text(
@@ -278,29 +280,20 @@ class _CookingViewState extends State<_CookingView> {
                 style: t.body.copyWith(color: t.inkMuted),
               ),
             ),
-          )
-        else ...[
+          ),
+        ] else ...[
           SizedBox(height: t.space2),
           // The timers sit next to the dots, and below them when they
           // don't fit.
-          LayoutBuilder(
-            builder: (context, constraints) => Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: t.space3,
-              runSpacing: t.space1,
-              children: [
-                ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: constraints.maxWidth),
-                  child: StepDots(
-                    count: steps.length,
-                    current: _page,
-                    onSelected: _goTo,
-                  ),
-                ),
-                TimerBar(recipeId: recipe.id, recipeName: recipe.name),
-              ],
-            ),
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: t.space3,
+            runSpacing: t.space1,
+            children: [
+              StepDots(count: steps.length, current: _page, onSelected: _goTo),
+              TimerBar(recipeId: recipe.id, recipeName: recipe.name),
+            ],
           ),
           SizedBox(height: t.space2),
           Expanded(

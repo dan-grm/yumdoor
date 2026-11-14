@@ -99,6 +99,13 @@ void main() {
       expect(t.needsAlert(at(39)), isFalse);
       expect(t.needsAlert(at(40)), isTrue);
     });
+
+    test('without repeat, only once', () {
+      final t = timer(duration: const Duration(seconds: 10));
+
+      expect(t.needsAlert(at(10), repeat: false), isTrue);
+      expect(t.alerted(at(10)).needsAlert(at(100), repeat: false), isFalse);
+    });
   });
 
   group('reload', () {

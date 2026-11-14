@@ -327,7 +327,7 @@ final class CookingTimersControllerProvider
 }
 
 String _$cookingTimersControllerHash() =>
-    r'07db58f553f6ad9a95d01912a9d437c7c6fb9912';
+    r'c72c810bb5110d50cf90f9d52e26aa745240afb5';
 
 /// The timers running while cooking [recipeId], saved so they survive paging
 /// and a reload.
@@ -398,3 +398,51 @@ abstract class _$CookingTimersController extends $Notifier<List<CookingTimer>> {
     return element.handleCreate(ref, () => build(_$args));
   }
 }
+
+/// Brings back the saved timers of every recipe at app start, so they keep
+/// alerting after a reload without opening cooking mode again.
+
+@ProviderFor(restoredTimers)
+final restoredTimersProvider = RestoredTimersProvider._();
+
+/// Brings back the saved timers of every recipe at app start, so they keep
+/// alerting after a reload without opening cooking mode again.
+
+final class RestoredTimersProvider extends $FunctionalProvider<int, int, int>
+    with $Provider<int> {
+  /// Brings back the saved timers of every recipe at app start, so they keep
+  /// alerting after a reload without opening cooking mode again.
+  RestoredTimersProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'restoredTimersProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$restoredTimersHash();
+
+  @$internal
+  @override
+  $ProviderElement<int> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  int create(Ref ref) {
+    return restoredTimers(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$restoredTimersHash() => r'316a9c2d9af45878a5deab806bdd62d690bd78c6';

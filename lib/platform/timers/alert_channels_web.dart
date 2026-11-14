@@ -138,6 +138,11 @@ class PlatformAlertChannels implements AlertChannels {
         return;
       }
     }
+    // A re-alert replaces the timer's earlier notification.
+    for (final old in _shown.where((n) => n.tag == _tag(tag)).toList()) {
+      old.close();
+      _shown.remove(old);
+    }
     final notification = web.Notification(title, options);
     _shown.add(notification);
     notification.onclick = (web.Event _) {

@@ -567,7 +567,10 @@ void main() {
 
       now = now.add(const Duration(minutes: 25));
       await tester.pump(const Duration(seconds: 1));
+      expect(alerts.chimes, 1);
 
+      // Outside cooking mode it can't be turned off, so it alerts only once.
+      await wait(tester, 60);
       expect(alerts.chimes, 1);
     });
 

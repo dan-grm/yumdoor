@@ -1,5 +1,7 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yumdoor/app/locale.dart';
 import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/session.dart';
 import 'package:yumdoor/domain/models/cooking_timer.dart';
@@ -30,6 +32,7 @@ void main() {
       ],
     );
     addTearDown(container.dispose);
+    container.read(localeOverrideProvider.notifier).set(const Locale('de'));
   });
 
   CookingTimersController controller() =>
@@ -52,19 +55,77 @@ void main() {
       ..isVisible = false;
     await controller().start(label: 'A', duration: const Duration(minutes: 1));
     await controller().start(label: 'B', duration: const Duration(minutes: 1));
-    controller().useWording(title: (t) => '${t.label} fertig', body: 'Suppe');
+    controller().attach(recipeName: 'Suppe');
 
     now = now.add(const Duration(minutes: 1));
     await controller().tick();
 
     expect(alerts.notifications.map((n) => (n.$1, n.$2)), [
-      ('A fertig', 'Suppe'),
-      ('B fertig', 'Suppe'),
+      ('A ist fertig', 'Suppe'),
+      ('B ist fertig', 'Suppe'),
     ]);
     expect(alerts.notifications.map((n) => n.$3).toSet(), hasLength(2));
 
     controller().remove(timers().first.id);
-    expect(alerts.notifications.map((n) => n.$1), ['B fertig']);
+    expect(alerts.notifications.map((n) => n.$1), ['B ist fertig']);
+  });
+
+  test('saved timers come back at app start, without cooking mode', () async {
+    await controller().start(label: 'A', duration: const Duration(minutes: 1));
+    // A reload: a new app with the same storage.
+    final reloaded = ProviderContainer(
+      overrides: [
+        ...appOverrides(
+          tokenStore: loggedInTokenStore(),
+          localStore: store,
+          timerAlerts: ChannelTimerAlertService(alerts),
+        ),
+        clockProvider.overrideWithValue(() => now),
+      ],
+    );
+    addTearDown(reloaded.dispose);
+    reloaded.read(localeOverrideProvider.notifier).set(const Locale('de'));
+
+    expect(reloaded.read(restoredTimersProvider), 1);
+    expect(reloaded.exists(cookingTimersControllerProvider(7)), isTrue);
+    now = now.add(const Duration(minutes: 1));
+    await reloaded.read(cookingTimersControllerProvider(7).notifier).tick();
+    expect(alerts.chimes, 1);
+  });
+
+  test(
+    'without cooking mode on screen, a finished timer alerts once',
+    () async {
+      await controller().start(
+        label: 'A',
+        duration: const Duration(minutes: 1),
+      );
+      now = now.add(const Duration(minutes: 1));
+      await controller().tick();
+      now = now.add(const Duration(minutes: 1));
+      await controller().tick();
+      expect(alerts.chimes, 1);
+
+      controller().attach(recipeName: 'Suppe');
+      await controller().tick();
+      expect(alerts.chimes, 2);
+    },
+  );
+
+  test('forget closes only its own notifications', () async {
+    alerts
+      ..notificationAccess = NotificationAccess.granted
+      ..isVisible = false;
+    await controller().start(label: 'A', duration: const Duration(minutes: 1));
+    final other = container.read(cookingTimersControllerProvider(8).notifier);
+    await other.start(label: 'B', duration: const Duration(minutes: 1));
+    now = now.add(const Duration(minutes: 1));
+    await controller().tick();
+    await other.tick();
+
+    controller().forget();
+
+    expect(alerts.notifications.map((n) => n.$1), ['B ist fertig']);
   });
 
   test('forget stops and forgets every timer', () async {

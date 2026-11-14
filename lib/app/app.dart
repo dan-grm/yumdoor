@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../design/theme.dart';
 import '../features/common/offline_banner.dart';
+import '../features/cooking/cooking_providers.dart';
 import '../l10n/l10n.dart';
 import 'locale.dart';
 import 'router.dart';
@@ -15,6 +16,8 @@ class YumdoorApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Timers saved before a reload keep alerting.
+    ref.watch(restoredTimersProvider);
     return MaterialApp.router(
       onGenerateTitle: (context) => context.l10n.appTitle,
       theme: lightTheme,

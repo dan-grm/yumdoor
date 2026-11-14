@@ -53,6 +53,22 @@ class TimerBar extends ConsumerStatefulWidget {
 }
 
 class _TimerBarState extends ConsumerState<TimerBar> with _Ticking<TimerBar> {
+  late final CookingTimersController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = ref.read(
+      cookingTimersControllerProvider(widget.recipeId).notifier,
+    )..attach(recipeName: widget.recipeName);
+  }
+
+  @override
+  void dispose() {
+    _controller.detach();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
@@ -60,12 +76,6 @@ class _TimerBarState extends ConsumerState<TimerBar> with _Ticking<TimerBar> {
     final format = LocaleFormat.of(context);
     final provider = cookingTimersControllerProvider(widget.recipeId);
     final timers = ref.watch(provider);
-    ref
-        .read(provider.notifier)
-        .useWording(
-          title: (timer) => l10n.timerChipFinished(timer.label),
-          body: widget.recipeName,
-        );
     final now = ref.read(clockProvider)();
     keepTicking(
       timers.any((timer) => !timer.isPaused && !timer.isFinished(now)),
