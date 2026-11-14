@@ -50,6 +50,7 @@ class MarkdownText extends ConsumerStatefulWidget {
 class _MarkdownTextState extends ConsumerState<MarkdownText> {
   late List<md.Node> _nodes;
   final _recognizers = <TapGestureRecognizer>[];
+  bool _dialogOpen = false;
 
   @override
   void initState() {
@@ -78,7 +79,17 @@ class _MarkdownTextState extends ConsumerState<MarkdownText> {
 
   @override
   Widget build(BuildContext context) {
-    _disposeRecognizers();
+    // The mounted text still holds the previous recognizers until this build
+    // replaces it, so they are disposed after the frame.
+    if (_recognizers.isNotEmpty) {
+      final previous = List.of(_recognizers);
+      _recognizers.clear();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        for (final recognizer in previous) {
+          recognizer.dispose();
+        }
+      });
+    }
     return _blocks(_nodes, widget.style);
   }
 
@@ -223,6 +234,9 @@ class _MarkdownTextState extends ConsumerState<MarkdownText> {
   }
 
   Future<void> _openLink(Uri link) async {
+    // A quick double tap would otherwise stack two dialogs.
+    if (_dialogOpen) return;
+    _dialogOpen = true;
     final open = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -243,6 +257,7 @@ class _MarkdownTextState extends ConsumerState<MarkdownText> {
         );
       },
     );
+    _dialogOpen = false;
     if (open != true || !mounted) return;
     await ref.read(linkOpenerProvider).open(link);
   }
@@ -270,7 +285,6 @@ const _blockTags = {
   'blockquote',
   'pre',
   'hr',
-  'table',
 };
 
 /// Inline formatting of a run of text.

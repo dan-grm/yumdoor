@@ -6,9 +6,7 @@ class FakeLinkOpener implements LinkOpener {
 
   @override
   Future<bool> open(Uri url) async {
-    if (!isOpenableLink(url)) {
-      throw ArgumentError.value(url, 'url', 'not an http(s) link');
-    }
+    checkOpenableLink(url);
     opened.add(url);
     return true;
   }

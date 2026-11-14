@@ -20,6 +20,13 @@ abstract interface class LinkOpener {
 bool isOpenableLink(Uri url) =>
     (url.scheme == 'http' || url.scheme == 'https') && url.host.isNotEmpty;
 
+/// Throws the [ArgumentError] [LinkOpener.open] promises for [url].
+void checkOpenableLink(Uri url) {
+  if (!isOpenableLink(url)) {
+    throw ArgumentError.value(url, 'url', 'not an http(s) link');
+  }
+}
+
 /// [isOpenableLink] for a raw string, as it appears in Markdown.
 Uri? parseOpenableLink(String raw) {
   final url = Uri.tryParse(raw.trim());

@@ -1,3 +1,6 @@
+import 'dart:ui' show SemanticsAction;
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -91,10 +94,7 @@ void main() {
     expect(spanOf(tester, 'Füllung').style!.fontSize, t.titleS.fontSize);
     expect(spanOf(tester, 'Deko').style!.fontSize, t.body.fontSize);
     expect(spanOf(tester, 'Deko').style!.fontWeight, FontWeight.w800);
-    expect(
-      tester.getSemantics(plain('Teig')),
-      isSemantics(isHeader: true),
-    );
+    expect(tester.getSemantics(plain('Teig')), isSemantics(isHeader: true));
   });
 
   testWidgets('headings never get smaller than large running text', (
@@ -156,6 +156,36 @@ void main() {
       await tester.tap(find.text('Öffnen'));
       await tester.pumpAndSettle();
       expect(links.opened, [Uri.parse('https://www.example.com/rezept?id=1')]);
+    });
+
+    testWidgets('a double tap shows one dialog', (tester) async {
+      await pumpMarkdown(tester, '[Quelle](https://example.com)');
+
+      // Two taps before the dialog's first frame, when its barrier can't
+      // catch the second one yet.
+      final onTap =
+          (spanOf(tester, 'Quelle').recognizer! as TapGestureRecognizer).onTap!;
+      onTap();
+      onTap();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Link öffnen?'), findsOneWidget);
+    });
+
+    testWidgets('links are announced as links', (tester) async {
+      final semantics = tester.ensureSemantics();
+      await pumpMarkdown(tester, 'Siehe [Quelle](https://example.com).');
+
+      expect(
+        find.semantics.byPredicate(
+          (node) =>
+              node.label == 'Quelle' &&
+              node.flagsCollection.isLink &&
+              node.getSemanticsData().hasAction(SemanticsAction.tap),
+        ),
+        findsOne,
+      );
+      semantics.dispose();
     });
 
     testWidgets('cancelling the dialog opens nothing', (tester) async {
