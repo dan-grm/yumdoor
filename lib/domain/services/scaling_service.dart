@@ -33,21 +33,26 @@ class ScalingService {
 
     final amount = ingredient.noAmount || ingredient.amount <= 0
         ? null
-        : ingredient.amount * factor;
-    final plural = amount != null && amount > 1;
+        : Quantity.of(ingredient.amount * factor);
+    final plural = isPlural(amount);
     final unit = ingredient.unit;
     return ScaledIngredient(
       ingredient,
-      name: _pick(food.name, food.pluralName, plural: plural),
+      name: pickName(food.name, food.pluralName, plural: plural),
       note: ingredient.note,
-      amount: amount == null ? null : Quantity.of(amount),
+      amount: amount,
       unit: ingredient.noAmount || unit == null
           ? ''
-          : _pick(unit.name, unit.pluralName, plural: plural),
+          : pickName(unit.name, unit.pluralName, plural: plural),
     );
   }
 
-  static String _pick(
+  /// Whether units and foods are plural next to [amount]: above 1 as shown,
+  /// so "1 Ei" never reads "1 Eier" after rounding.
+  static bool isPlural(Quantity? amount) => amount != null && amount.value > 1;
+
+  /// [pluralName] if [plural] and the server has one, else [singular].
+  static String pickName(
     String singular,
     String? pluralName, {
     required bool plural,

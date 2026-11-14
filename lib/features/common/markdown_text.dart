@@ -144,9 +144,17 @@ class _MarkdownTextState extends ConsumerState<MarkdownText> {
       case 'hr':
         return Divider(height: t.space2, color: t.line);
       default:
-        // Code blocks and anything unknown: the text as written.
+        // Code blocks and anything unknown: the text as written, still
+        // through the span builder, so templates resolve there too.
         final text = element.textContent.trimRight();
-        return text.isEmpty ? null : Text(text, style: style);
+        if (text.isEmpty) return null;
+        return Text.rich(
+          TextSpan(
+            children:
+                widget.spanBuilder?.call(text, style) ?? [TextSpan(text: text)],
+          ),
+          style: style,
+        );
     }
   }
 

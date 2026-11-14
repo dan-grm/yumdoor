@@ -250,6 +250,32 @@ void main() {
     });
   });
 
+  testWidgets('step templates show amounts scaled to the servings', (
+    tester,
+  ) async {
+    final step = ofenkarotten.steps[1].copyWith(
+      instruction:
+          '{{ ingredients[0] }} schräg schneiden, mit '
+          '{{ ingredients[1].amount }} {{ ingredients[1].unit }} Öl mischen '
+          'und auf ein Blech ({{ scale(30) }} × 40 cm) geben. {{ unbekannt }}',
+    );
+    repository.recipes[7] = ofenkarotten.copyWith(
+      steps: [ofenkarotten.steps[0], step, ofenkarotten.steps[2]],
+    );
+    // The recipe is for 2 servings.
+    await pumpCooking(tester, query: '?servings=4');
+    await next(tester, 'Weiter zu Schritt 2');
+
+    expect(
+      find.text(
+        '600 g Karotten schräg schneiden, mit 2 EL Öl mischen und auf ein '
+        'Blech (60 × 40 cm) geben. {{ unbekannt }}',
+        findRichText: true,
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('a recipe without steps says so', (tester) async {
     repository.recipes[7] = ofenkarotten.copyWith(steps: []);
     await pumpCooking(tester);

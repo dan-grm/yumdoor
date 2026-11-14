@@ -290,6 +290,19 @@ void main() {
     expect(plain('TEIG ({{ INGREDIENTS[0] }}) KNETEN'), findsOneWidget);
   });
 
+  testWidgets('code blocks go through the span builder too', (tester) async {
+    await pumpMarkdown(
+      tester,
+      'Absatz\n\n    eingerückt',
+      spanBuilder: (text, style) => [
+        TextSpan(text: text.toUpperCase(), style: style),
+      ],
+    );
+
+    expect(plain('ABSATZ'), findsOneWidget);
+    expect(plain('EINGERÜCKT'), findsOneWidget);
+  });
+
   testWidgets('long German text fits at 390 px', (tester) async {
     await pumpMarkdown(
       tester,
