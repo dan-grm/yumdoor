@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/platform/timers/timer_alert_service.dart';
 
@@ -22,11 +24,10 @@ void main() {
   );
 
   group('prepare', () {
-    test('unlocks sound and asks for notifications once', () async {
+    test('unlocks sound and asks for notifications', () async {
       start(FakeAlertChannels());
 
       final capabilities = await service.prepare();
-      await service.prepare();
 
       expect(channels.unlocks, 1);
       expect(channels.permissionRequests, 1);
@@ -41,6 +42,27 @@ void main() {
 
       expect(channels.permissionRequests, 1);
       expect(results.last.notifications, NotificationAccess.granted);
+    });
+
+    test('waits for a slow answer to the prompt', () async {
+      final answer = Completer<void>();
+      start(FakeAlertChannels(permissionAnswer: answer.future));
+
+      final prepared = service.prepare();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      answer.complete();
+
+      expect((await prepared).notifications, NotificationAccess.granted);
+    });
+
+    test('unlocks sound on every timer start, asks only once', () async {
+      start(FakeAlertChannels());
+
+      await service.prepare();
+      await service.prepare();
+
+      expect(channels.unlocks, 2);
+      expect(channels.permissionRequests, 1);
     });
 
     test('doesn\'t ask again after an earlier answer', () async {
@@ -188,6 +210,21 @@ void main() {
     });
   });
 
+  test('dismissAlerts closes the notifications', () async {
+    start(
+      FakeAlertChannels(
+        notificationAccess: NotificationAccess.granted,
+        isVisible: false,
+      ),
+    );
+    await alert();
+
+    await service.dismissAlerts();
+
+    expect(channels.closes, 1);
+    expect(channels.notifications, isEmpty);
+  });
+
   test('the native placeholder offers nothing and never throws', () async {
     final service = TimerAlertService();
 
@@ -204,5 +241,6 @@ void main() {
       ),
     );
     expect(outcome.silent, isTrue);
+    await service.dismissAlerts();
   });
 }

@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/platform/connectivity/connectivity_service.dart';
 import 'package:yumdoor/platform/link_opener/link_opener.dart';
 import 'package:yumdoor/platform/local_store/local_store.dart';
+import 'package:yumdoor/platform/timers/timer_alert_service.dart';
 import 'package:yumdoor/platform/token_store/token_store.dart';
 import 'package:yumdoor/platform/wake_lock/wake_lock_service.dart';
 
@@ -163,5 +164,23 @@ void localStoreContract(LocalStore Function() create) {
     store.delete('a');
     expect(store.read('a'), isNull);
     expect(store.keys, isEmpty);
+  });
+}
+
+/// Without prompting the user: capabilities can always be read, and closing
+/// notifications works when none were shown.
+void alertChannelsContract(AlertChannels Function() create) {
+  test('reports its capabilities without throwing', () {
+    final channels = create();
+
+    expect(channels.canPlaySound, isA<bool>());
+    expect(channels.canVibrate, isA<bool>());
+    expect(NotificationAccess.values, contains(channels.notificationAccess));
+    expect(channels.runsInBackground, isA<bool>());
+    expect(channels.isVisible, isA<bool>());
+  });
+
+  test('closing notifications without any is fine', () async {
+    await create().closeNotifications();
   });
 }

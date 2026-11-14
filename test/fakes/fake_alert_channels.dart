@@ -12,7 +12,11 @@ class FakeAlertChannels implements AlertChannels {
     this.answer = NotificationAccess.granted,
     this.runsInBackground = true,
     this.isVisible = true,
+    this.permissionAnswer,
   });
+
+  /// Completes when the user answers the prompt; right away if `null`.
+  final Future<void>? permissionAnswer;
 
   @override
   bool canPlaySound;
@@ -62,7 +66,16 @@ class FakeAlertChannels implements AlertChannels {
   @override
   Future<void> requestNotificationPermission() async {
     permissionRequests++;
+    await permissionAnswer;
     notificationAccess = answer;
+  }
+
+  int closes = 0;
+
+  @override
+  Future<void> closeNotifications() async {
+    closes++;
+    notifications.clear();
   }
 
   @override

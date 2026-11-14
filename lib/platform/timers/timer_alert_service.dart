@@ -17,10 +17,11 @@ abstract interface class TimerAlertService {
   /// What the platform offers right now.
   TimerAlertCapabilities get capabilities;
 
-  /// Call when the first timer starts, from the user's tap: asks for
-  /// notification permission once, if it was never answered, and unlocks
-  /// audio (browsers only allow both after a gesture). Later calls return
-  /// the first call's result.
+  /// Call whenever a timer starts, from the user's tap, without awaiting it
+  /// before the timer runs: unlocks audio (again, if the platform suspended
+  /// it) and asks for notification permission once, if it was never
+  /// answered. Browsers allow both only during a gesture. Resolves when the
+  /// user has answered the prompt.
   Future<TimerAlertCapabilities> prepare();
 
   /// Signals a finished timer on every channel that works, at the same time,
@@ -33,6 +34,10 @@ abstract interface class TimerAlertService {
     required String body,
     required String tag,
   });
+
+  /// Closes the notifications of finished timers, once the cook is back in
+  /// the app; they stay until then.
+  Future<void> dismissAlerts();
 }
 
 /// [TimerAlertService] over the [AlertChannels] of a platform. The fallback
@@ -44,7 +49,7 @@ class ChannelTimerAlertService implements TimerAlertService {
   });
 
   final AlertChannels _channels;
-  Future<TimerAlertCapabilities>? _prepared;
+  Future<bool>? _permission;
 
   /// How long one channel may take. Browsers can leave audio or permission
   /// promises pending (no user gesture), which must not block the rest.
@@ -61,18 +66,22 @@ class ChannelTimerAlertService implements TimerAlertService {
   );
 
   @override
-  Future<TimerAlertCapabilities> prepare() => _prepared ??= _prepare();
-
-  Future<TimerAlertCapabilities> _prepare() async {
+  Future<TimerAlertCapabilities> prepare() async {
     // Both start right away, while the tap still counts as a user gesture:
-    // Safari ignores a permission request made after an await.
-    await Future.wait([
-      if (_channels.notificationAccess == NotificationAccess.notAsked)
-        _attempt(_channels.requestNotificationPermission),
-      _attempt(_channels.unlockSound),
-    ]);
+    // Safari ignores a permission request made after an await. The prompt
+    // has no timeout; the user may take their time.
+    if (_channels.notificationAccess == NotificationAccess.notAsked) {
+      _permission ??= _attempt(
+        _channels.requestNotificationPermission,
+        timed: false,
+      );
+    }
+    await Future.wait([?_permission, _attempt(_channels.unlockSound)]);
     return capabilities;
   }
+
+  @override
+  Future<void> dismissAlerts() => _attempt(_channels.closeNotifications);
 
   @override
   Future<TimerAlertOutcome> alert({
@@ -100,11 +109,15 @@ class ChannelTimerAlertService implements TimerAlertService {
 
   static Future<bool> _no() async => false;
 
-  /// Runs [action]; a channel that throws, or hangs for longer than
-  /// [channelTimeout], counts as not delivered.
-  Future<bool> _attempt(Future<void> Function() action) async {
+  /// Runs [action]; a channel that throws, or (if [timed]) hangs for longer
+  /// than [channelTimeout], counts as not delivered.
+  Future<bool> _attempt(
+    Future<void> Function() action, {
+    bool timed = true,
+  }) async {
     try {
-      await action().timeout(channelTimeout);
+      final done = action();
+      await (timed ? done.timeout(channelTimeout) : done);
       return true;
     } catch (_) {
       return false;
@@ -191,7 +204,8 @@ abstract interface class AlertChannels {
   /// Mobile browsers suspend or freeze hidden pages, so only desktop does.
   bool get runsInBackground;
 
-  /// Whether the app is in the foreground.
+  /// Whether the cook is looking at the app: visible and focused. A window
+  /// covered by another app may still count as visible, but not focused.
   bool get isVisible;
 
   Future<void> unlockSound();
@@ -199,4 +213,7 @@ abstract interface class AlertChannels {
   Future<void> vibrate();
   Future<void> requestNotificationPermission();
   Future<void> showNotification(String title, String body, String tag);
+
+  /// Closes the notifications [showNotification] put up.
+  Future<void> closeNotifications();
 }

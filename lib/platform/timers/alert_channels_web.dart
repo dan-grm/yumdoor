@@ -13,9 +13,9 @@ class PlatformAlertChannels implements AlertChannels {
   static JSObject get _window => web.window as JSObject;
   static JSObject get _navigator => web.window.navigator as JSObject;
 
+  /// Only the standard `AudioContext`; the old prefixed one isn't used.
   @override
-  bool get canPlaySound =>
-      _window.has('AudioContext') || _window.has('webkitAudioContext');
+  bool get canPlaySound => _window.has('AudioContext');
 
   @override
   bool get canVibrate => _navigator.has('vibrate');
@@ -33,7 +33,8 @@ class PlatformAlertChannels implements AlertChannels {
   /// iOS suspends home-screen apps and background tabs, and Android's
   /// Chrome freezes them after a few minutes, so a timer can't fire there
   /// until the app is opened again. iPadOS reports itself as a Mac, but with
-  /// touch.
+  /// touch. Browsers offer no capability check for this, so it goes by the
+  /// user agent; a tablet in "desktop mode" is taken for a desktop.
   @override
   bool get runsInBackground {
     final navigator = web.window.navigator;
@@ -48,9 +49,15 @@ class PlatformAlertChannels implements AlertChannels {
   }
 
   @override
-  bool get isVisible => web.document.visibilityState == 'visible';
+  bool get isVisible =>
+      web.document.visibilityState == 'visible' && web.document.hasFocus();
 
-  web.AudioContext _context() => _audio ??= web.AudioContext();
+  /// A closed context can't be resumed; a new one is made.
+  web.AudioContext _context() {
+    final audio = _audio;
+    if (audio != null && audio.state != 'closed') return audio;
+    return _audio = web.AudioContext();
+  }
 
   @override
   Future<void> unlockSound() async {
@@ -132,9 +139,30 @@ class PlatformAlertChannels implements AlertChannels {
       }
     }
     final notification = web.Notification(title, options);
+    _shown.add(notification);
     notification.onclick = (web.Event _) {
       web.window.focus();
       notification.close();
     }.toJS;
+  }
+
+  /// Notifications shown without a service worker.
+  final _shown = <web.Notification>[];
+
+  @override
+  Future<void> closeNotifications() async {
+    for (final notification in _shown) {
+      notification.close();
+    }
+    _shown.clear();
+    if (!_navigator.has('serviceWorker')) return;
+    final registration = await web.window.navigator.serviceWorker
+        .getRegistration()
+        .toDart;
+    if (registration == null) return;
+    final open = await registration.getNotifications().toDart;
+    for (final notification in open.toDart) {
+      if (notification.tag.startsWith('yumdoor-timer-')) notification.close();
+    }
   }
 }
