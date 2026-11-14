@@ -5,6 +5,7 @@ import '../platform/connectivity/connectivity_service.dart';
 import '../platform/csrf/csrf_token_source.dart';
 import '../platform/link_opener/link_opener.dart';
 import '../platform/local_store/local_store.dart';
+import '../platform/timers/timer_alert_service.dart';
 import '../platform/token_store/secure_storage_token_store.dart';
 import '../platform/token_store/token_store.dart';
 import '../platform/wake_lock/wake_lock_service.dart';
@@ -49,3 +50,6 @@ LocalStore localStore(Ref ref) => LocalStore();
 /// The current time; tests override it to move the clock.
 @Riverpod(keepAlive: true)
 DateTime Function() clock(Ref ref) => DateTime.now;
+
+@Riverpod(keepAlive: true)
+TimerAlertService timerAlertService(Ref ref) => TimerAlertService();

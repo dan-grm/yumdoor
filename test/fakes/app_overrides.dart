@@ -1,16 +1,18 @@
 import 'package:flutter_riverpod/misc.dart';
 import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/repository_providers.dart';
+import 'package:yumdoor/platform/timers/timer_alert_service.dart';
 import 'package:yumdoor/platform/token_store/token_store.dart';
 
+import 'fake_alert_channels.dart';
 import 'fake_auth_repository.dart';
 import 'fake_connectivity_service.dart';
 import 'fake_food_keyword_repositories.dart';
 import 'fake_link_opener.dart';
-import 'in_memory_local_store.dart';
 import 'fake_offline_cache.dart';
 import 'fake_recipe_repository.dart';
 import 'fake_server_repository.dart';
+import 'in_memory_local_store.dart';
 import 'in_memory_token_store.dart';
 
 final testServerUrl = Uri.parse('https://tandoor.example.com');
@@ -34,6 +36,7 @@ List<Override> appOverrides({
   FakeFoodRepository? foods,
   FakeKeywordRepository? keywords,
   FakeOfflineCache? offlineCache,
+  TimerAlertService? timerAlerts,
   FakeLinkOpener? linkOpener,
   InMemoryLocalStore? localStore,
   Uri? webOrigin,
@@ -51,6 +54,9 @@ List<Override> appOverrides({
   offlineCacheProvider.overrideWithValue(offlineCache ?? FakeOfflineCache()),
   connectivityServiceProvider.overrideWithValue(
     connectivity ?? FakeConnectivityService(),
+  ),
+  timerAlertServiceProvider.overrideWithValue(
+    timerAlerts ?? ChannelTimerAlertService(FakeAlertChannels()),
   ),
   linkOpenerProvider.overrideWithValue(linkOpener ?? FakeLinkOpener()),
   localStoreProvider.overrideWithValue(localStore ?? InMemoryLocalStore()),

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/platform/wake_lock/wake_lock_service.dart';
 
+import '../../fakes/fake_alert_channels.dart';
 import '../../fakes/fake_connectivity_service.dart';
 import '../../fakes/fake_link_opener.dart';
 import '../../fakes/in_memory_local_store.dart';
@@ -12,6 +13,11 @@ import '../../platform/contracts.dart';
 
 void main() {
   group('InMemoryTokenStore', () => tokenStoreContract(InMemoryTokenStore.new));
+
+  group(
+    'FakeAlertChannels',
+    () => alertChannelsContract(FakeAlertChannels.new),
+  );
 
   group('InMemoryLocalStore', () => localStoreContract(InMemoryLocalStore.new));
 

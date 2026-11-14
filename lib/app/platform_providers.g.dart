@@ -366,3 +366,50 @@ final class ClockProvider
 }
 
 String _$clockHash() => r'3f65ad34ac6fcd532de9004042bdf2ed2bd85b13';
+
+@ProviderFor(timerAlertService)
+final timerAlertServiceProvider = TimerAlertServiceProvider._();
+
+final class TimerAlertServiceProvider
+    extends
+        $FunctionalProvider<
+          TimerAlertService,
+          TimerAlertService,
+          TimerAlertService
+        >
+    with $Provider<TimerAlertService> {
+  TimerAlertServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'timerAlertServiceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$timerAlertServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<TimerAlertService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  TimerAlertService create(Ref ref) {
+    return timerAlertService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(TimerAlertService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<TimerAlertService>(value),
+    );
+  }
+}
+
+String _$timerAlertServiceHash() => r'7384ce5287b84000649723ee26714c7e6f19a253';

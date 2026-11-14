@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/platform/connectivity/connectivity_service.dart';
 import 'package:yumdoor/platform/link_opener/link_opener.dart';
 import 'package:yumdoor/platform/local_store/local_store.dart';
+import 'package:yumdoor/platform/timers/alert_channels_web.dart';
 import 'package:yumdoor/platform/token_store/secure_storage_token_store.dart';
 import 'package:yumdoor/platform/wake_lock/wake_lock_service.dart';
 
@@ -23,6 +24,10 @@ void main() {
 
   // Only refusals: opening a link would open a tab in the test browser.
   group('web LinkOpener', () => linkOpenerContract(LinkOpener.new));
+
+  group('web AlertChannels', () {
+    alertChannelsContract(PlatformAlertChannels.new);
+  });
 
   group('web LocalStore', () => localStoreContract(LocalStore.new));
 
