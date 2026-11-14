@@ -33,32 +33,60 @@ class StepTemplate {
   /// swallow the expression after it. May span lines, as in Jinja.
   static final _expression = RegExp(r'\{\{((?:(?!\{\{).)*?)\}\}', dotAll: true);
 
-  /// At most 9 digits, so the index always fits in an int.
+  /// Numbers have at most 9 digits, so they always parse to a finite value.
   static final _ingredient = RegExp(
     r'^ingredients\s*\[\s*(-?\d{1,9})\s*\](?:\s*\.\s*(amount|unit|food|note))?$',
   );
   static final _scale = RegExp(
-    r'''^scale\s*\(\s*(['"]?)(\d+(?:\.\d*)?|\.\d+)\1\s*\)$''',
+    r'''^scale\s*\(\s*(['"]?)(\d{1,9}(?:\.\d{0,9})?|\.\d{1,9})\1\s*\)$''',
   );
 
   /// [text] split into plain text and resolved template values.
+  ///
+  /// Values that resolve to nothing (a header, a missing unit) are left out
+  /// together with one of the spaces around them, so "mit
+  /// {{ ingredients[0].amount }} Salz" doesn't read "mit  Salz".
   List<StepTextPart> resolve(String text) {
     final parts = <StepTextPart>[];
+    var pending = '';
+    var trimLeading = false;
     var position = 0;
     for (final match in _expression.allMatches(text)) {
       final value = _value(match.group(1)!.trim());
       if (value == null) continue;
-      if (match.start > position) {
-        parts.add(StepTextPart.text(text.substring(position, match.start)));
-      }
-      parts.add(value);
+      var before = text.substring(position, match.start);
+      if (trimLeading && before.startsWith(' ')) before = before.substring(1);
+      trimLeading = false;
+      pending += before;
       position = match.end;
+
+      if (_isEmpty(value)) {
+        if (text.startsWith(' ', match.end)) {
+          if (pending.endsWith(' ')) {
+            pending = pending.substring(0, pending.length - 1);
+          } else if (pending.isEmpty && parts.isEmpty) {
+            trimLeading = true;
+          }
+        }
+        continue;
+      }
+      if (pending.isNotEmpty) parts.add(StepTextPart.text(pending));
+      pending = '';
+      parts.add(value);
     }
-    if (position < text.length) {
-      parts.add(StepTextPart.text(text.substring(position)));
-    }
+    var rest = text.substring(position);
+    if (trimLeading && rest.startsWith(' ')) rest = rest.substring(1);
+    pending += rest;
+    if (pending.isNotEmpty) parts.add(StepTextPart.text(pending));
     return parts;
   }
+
+  static bool _isEmpty(StepTextPart part) => switch (part) {
+    StepText(:final text) || StepValue(:final text) => text.isEmpty,
+    StepAmount(:final quantity) => quantity == null,
+    StepIngredient(:final amount, :final unit, :final food) =>
+      amount == null && unit.isEmpty && food.isEmpty,
+  };
 
   StepTextPart? _value(String expression) {
     if (_ingredient.firstMatch(expression) case final match?) {
@@ -79,11 +107,10 @@ class StepTemplate {
 
     // Like Tandoor: an amount of 0 is shown as 0, only `noAmount` hides it;
     // unit and food are shown whenever the ingredient has them.
-    final scaled = ingredient.noAmount
+    final amount = ingredient.noAmount
         ? null
-        : ingredient.amount * scaling.factor;
-    final amount = scaled == null ? null : Quantity.of(scaled);
-    final plural = scaled != null && scaled > 1;
+        : Quantity.of(ingredient.amount * scaling.factor);
+    final plural = ScalingService.isPlural(amount);
     final unit = switch (ingredient.unit) {
       final unit? => ScalingService.pickName(
         unit.name,

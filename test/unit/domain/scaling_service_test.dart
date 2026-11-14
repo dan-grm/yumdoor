@@ -197,4 +197,16 @@ void main() {
       expect(Quantity.of(double.infinity), const DecimalQuantity(0));
     });
   });
+
+  test('plural follows the rounded amount', () {
+    const ei = Ingredient(
+      id: 1,
+      food: Food(id: 1, name: 'Ei', pluralName: 'Eier'),
+      amount: 0.505,
+    );
+    final line = const ScalingService(recipeServings: 1, servings: 2).scale(ei);
+
+    expect(line.amount, const DecimalQuantity(1));
+    expect(line.name, 'Ei');
+  });
 }

@@ -91,7 +91,7 @@ void main() {
     });
 
     test('noAmount hides the amount but keeps the unit', () {
-      expect(resolve('{{ ingredients[3].amount }}'), [const StepAmount(null)]);
+      expect(resolve('{{ ingredients[3].amount }}'), isEmpty);
       expect(resolve('{{ ingredients[3].unit }}'), [const StepValue('Prise')]);
       expect(resolve('{{ ingredients[3] }}'), [
         const StepIngredient(unit: 'Prise', food: 'Salz'),
@@ -127,14 +127,13 @@ void main() {
           food: '',
         ),
         const StepText('|'),
-        const StepValue(''),
       ]);
     });
 
     test('a header is empty, as in Tandoor', () {
-      expect(resolve('{{ ingredients[1] }}'), [const StepValue('')]);
-      expect(resolve('{{ ingredients[1].food }}'), [const StepValue('')]);
-      expect(resolve('{{ ingredients[1].note }}'), [const StepValue('')]);
+      expect(resolve('{{ ingredients[1] }}'), isEmpty);
+      expect(resolve('{{ ingredients[1].food }}'), isEmpty);
+      expect(resolve('{{ ingredients[1].note }}'), isEmpty);
     });
   });
 
@@ -194,11 +193,49 @@ void main() {
     });
   });
 
+  group('empty values', () {
+    test('take one of the spaces around them along', () {
+      expect(resolve('Mit {{ ingredients[3].amount }} Prise Salz'), [
+        const StepText('Mit Prise Salz'),
+      ]);
+      expect(resolve('{{ ingredients[1] }} Mehl'), [const StepText('Mehl')]);
+      expect(resolve('Dann {{ ingredients[1] }}'), [const StepText('Dann ')]);
+      expect(resolve('{{ scale(2) }} {{ ingredients[1] }} cm'), [
+        const StepAmount(DecimalQuantity(2)),
+        const StepText(' cm'),
+      ]);
+    });
+
+    test('next to punctuation keep the text as is', () {
+      expect(resolve('Salz ({{ ingredients[1] }})'), [
+        const StepText('Salz ()'),
+      ]);
+    });
+  });
+
+  test('food and unit plural follow the rounded amount', () {
+    final parts = StepTemplate(
+      ingredients: const [
+        Ingredient(
+          id: 9,
+          food: Food(id: 9, name: 'Ei', pluralName: 'Eier'),
+          amount: 0.505,
+        ),
+      ],
+      scaling: const ScalingService(recipeServings: 1, servings: 2),
+    ).resolve('{{ ingredients[0] }}');
+
+    expect(parts, [
+      const StepIngredient(amount: DecimalQuantity(1), unit: '', food: 'Ei'),
+    ]);
+  });
+
   group('stays as written', () {
     for (final text in [
       '{{ ingredients[4] }}',
       '{{ ingredients[-5] }}',
       '{{ ingredients[99999999999999999999] }}',
+      '{{ scale(${'9' * 400}) }}',
       '{{ ingredients[0].price }}',
       '{{ ingredients }}',
       '{{ scale() }}',

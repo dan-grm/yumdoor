@@ -14,12 +14,6 @@ String servingsLabel(BuildContext context, int count, String servingsText) =>
     ? context.l10n.servings(count)
     : context.l10n.servingsCustom(count, servingsText.trim());
 
-/// The amount pill of [line]: "600 g", "½ TL", empty without an amount.
-String ingredientAmount(LocaleFormat format, ScaledIngredient line) => [
-  if (line.amount case final amount?) format.quantity(amount),
-  line.unit,
-].where((part) => part.isNotEmpty).join(' ');
-
 /// Ingredients scaled by [scaling], as [IngredientRow]s with header lines
 /// ("Für den Teig") between them.
 class IngredientLines extends StatelessWidget {
@@ -60,7 +54,10 @@ class IngredientLines extends StatelessWidget {
             IngredientRow(
               name: line.name,
               note: line.note,
-              amount: ingredientAmount(format, line),
+              amount: [
+                if (line.amount case final amount?) format.quantity(amount),
+                line.unit,
+              ].where((part) => part.isNotEmpty).join(' '),
             ),
         ],
       ],
