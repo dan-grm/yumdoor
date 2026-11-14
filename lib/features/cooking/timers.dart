@@ -9,7 +9,6 @@ import '../../design/components/buttons.dart';
 import '../../design/components/timer_chip.dart';
 import '../../design/design.dart';
 import '../../domain/models/cooking_timer.dart';
-import '../../domain/models/recipe_step.dart';
 import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import 'cooking_providers.dart';
@@ -145,18 +144,29 @@ Future<void> startTimer(
   messenger.showSnackBar(SnackBar(content: Text(hint)));
 }
 
-/// "Timer starten · 25:00" for a step with an explicit time, with space
-/// above it, unless a timer for the step is already set.
+/// Whether [stepId] has a timer started with [duration], still running or
+/// not yet turned off.
+bool _hasStepTimer(List<CookingTimer> timers, int stepId, Duration duration) =>
+    timers.any(
+      (timer) => timer.stepId == stepId && timer.startedWith == duration,
+    );
+
+/// "Timer starten · 25:00" below a step, with space above it, unless the
+/// step already has a timer of [duration] or [duration] is zero.
 class StepTimerButton extends ConsumerWidget {
   const StepTimerButton({
     super.key,
     required this.recipeId,
-    required this.step,
+    required this.stepId,
+    required this.duration,
     required this.label,
   });
 
   final int recipeId;
-  final RecipeStep step;
+  final int stepId;
+
+  /// The step's own time, or else the first duration in its text.
+  final Duration duration;
 
   /// The timer's name: the step's name, or "Schritt 2".
   final String label;
@@ -164,15 +174,14 @@ class StepTimerButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final timers = ref.watch(cookingTimersControllerProvider(recipeId));
-    if (step.time <= Duration.zero ||
-        timers.any((timer) => timer.stepId == step.id)) {
+    if (duration <= Duration.zero || _hasStepTimer(timers, stepId, duration)) {
       return const SizedBox.shrink();
     }
     return Padding(
       padding: EdgeInsets.only(top: context.tokens.space5),
       child: PillButton(
         label: context.l10n.timerStart(
-          LocaleFormat.of(context).countdown(step.time),
+          LocaleFormat.of(context).countdown(duration),
         ),
         icon: Icons.play_arrow_rounded,
         onPressed: () => unawaited(
@@ -181,8 +190,8 @@ class StepTimerButton extends ConsumerWidget {
             ref,
             recipeId: recipeId,
             label: label,
-            duration: step.time,
-            stepId: step.id,
+            duration: duration,
+            stepId: stepId,
           ),
         ),
       ),

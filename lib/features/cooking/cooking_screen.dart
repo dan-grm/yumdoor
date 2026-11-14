@@ -378,9 +378,13 @@ class _StepPage extends StatelessWidget {
   final bool allIngredients;
   final ValueChanged<bool> onAllIngredientsChanged;
 
+  StepTemplate get _template =>
+      StepTemplate(ingredients: step.ingredients, scaling: scaling);
+
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final timerButton = _timerButton(context);
     if (!isWideLayout(context)) {
       return SingleChildScrollView(
         padding: EdgeInsets.only(top: t.space2),
@@ -394,7 +398,7 @@ class _StepPage extends StatelessWidget {
               SizedBox(height: t.space2),
               _ingredients([step]),
             ],
-            _timerButton(context),
+            timerButton,
           ],
         ),
       );
@@ -409,7 +413,7 @@ class _StepPage extends StatelessWidget {
             padding: EdgeInsets.only(top: t.space2),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [_stepCard(context), _timerButton(context)],
+              children: [_stepCard(context), timerButton],
             ),
           ),
         ),
@@ -442,15 +446,25 @@ class _StepPage extends StatelessWidget {
     );
   }
 
-  /// "Timer starten" for the step's own time; the timer is named after the
-  /// step.
-  Widget _timerButton(BuildContext context) => StepTimerButton(
-    recipeId: recipeId,
-    step: step,
-    label: step.name.trim().isEmpty
-        ? context.l10n.recipeStepTitle(number)
-        : step.name.trim(),
-  );
+  /// A step's timers are named after it: "Rösten", or "Schritt 2".
+  String _timerLabel(BuildContext context) => step.name.trim().isEmpty
+      ? context.l10n.recipeStepTitle(number)
+      : step.name.trim();
+
+  /// "Timer starten" for the step's own time, or else the first duration
+  /// highlighted in its text.
+  Widget _timerButton(BuildContext context) {
+    final duration = step.time > Duration.zero
+        ? step.time
+        : stepDurations(step.instruction.trim(), _template).firstOrNull ??
+              Duration.zero;
+    return StepTimerButton(
+      recipeId: recipeId,
+      stepId: step.id,
+      duration: duration,
+      label: _timerLabel(context),
+    );
+  }
 
   Widget _stepCard(BuildContext context) {
     final t = context.tokens;
@@ -481,12 +495,25 @@ class _StepPage extends StatelessWidget {
             ],
             if (instruction.isNotEmpty) ...[
               SizedBox(height: t.space2),
-              MarkdownText(
-                instruction,
-                style: t.step.copyWith(color: t.ink),
-                spanBuilder: stepTemplateSpans(
-                  context,
-                  StepTemplate(ingredients: step.ingredients, scaling: scaling),
+              // Durations in the text are highlighted; a tap starts a timer.
+              Consumer(
+                builder: (context, ref, _) => MarkdownText(
+                  instruction,
+                  style: t.step.copyWith(color: t.ink),
+                  spanBuilder: stepTemplateSpans(
+                    context,
+                    _template,
+                    onDuration: (duration) => unawaited(
+                      startTimer(
+                        context,
+                        ref,
+                        recipeId: recipeId,
+                        label: _timerLabel(context),
+                        duration: duration,
+                        stepId: step.id,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ],

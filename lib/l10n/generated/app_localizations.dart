@@ -734,11 +734,17 @@ abstract class AppLocalizations {
   /// **'Zubereitung'**
   String get recipeMethod;
 
-  /// Button below a step with an explicit time: starts a timer of that length.
+  /// Button below a step with an explicit time, or a duration in its text: starts a timer of that length.
   ///
   /// In de, this message translates to:
   /// **'Timer starten · {time}'**
   String timerStart(String time);
+
+  /// Screen-reader label of a duration highlighted in step text; tapping it starts a timer.
+  ///
+  /// In de, this message translates to:
+  /// **'{duration}, Timer starten'**
+  String timerHighlight(String duration);
 
   /// On a finished timer chip, after its label: "Rösten fertig".
   ///

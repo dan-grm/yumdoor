@@ -227,8 +227,9 @@ Each service is an abstract class in `lib/platform/<name>/` with implementations
 - **Step templates:** a small parser for Tandoor's `{{ ingredients[n](.amount|.unit|.food|.note) }}` and
   `{{ scale(x) }}`, producing text spans with scaled values. It never evaluates code; anything else is left as text.
 - **Timer detection:** finds durations in step text in German and English ("10 Minuten", "1½ Stunden",
-  "5-7 min", "1 hour 20 minutes", "über Nacht" is ignored). Returns spans with a duration so the text can be
-  highlighted (butter token) and tapped to start a timer. `Step.time` adds an explicit timer.
+  "5-7 min", "1 hour 20 minutes", "über Nacht" is ignored). Returns spans with a duration (a range's upper
+  bound) so the text can be highlighted (butter token) and tapped to start a timer, in cooking mode only.
+  The "Timer starten" button below a step uses `Step.time`, or else the first detected duration.
 - **Shopping aggregation:** builds entries for one or more meal plans (scaled, minus on-hand and ignored foods),
   and groups existing entries by supermarket category and store order, merging amounts per food and unit.
 - **Recommendations:** see below.

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/core/failures.dart';
+import 'package:yumdoor/design/components/timer_chip.dart';
 import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/features/recipe/recipe_screen.dart';
 
@@ -258,6 +259,16 @@ void main() {
       // A named step keeps its number, with the name below.
       expect(find.text('SCHRITT 3'), findsOneWidget);
       expect(find.text('Anrichten'), findsOneWidget);
+    });
+
+    testWidgets('wide: durations aren\'t highlighted outside cooking mode', (
+      tester,
+    ) async {
+      await pumpRecipe(tester, ofenkarotten.id, size: tabletSize);
+
+      // Step 2 roasts "25 Minuten"; timers start in cooking mode only.
+      expect(find.textContaining('25 Minuten'), findsOneWidget);
+      expect(find.byType(TimerHighlight), findsNothing);
     });
 
     testWidgets('wide without any step text keeps one column', (tester) async {

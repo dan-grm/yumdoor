@@ -430,6 +430,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String timerHighlight(String duration) {
+    return '$duration, start timer';
+  }
+
+  @override
   String get timerFinished => 'done';
 
   @override

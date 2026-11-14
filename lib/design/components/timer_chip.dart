@@ -87,3 +87,79 @@ class TimerChip extends StatelessWidget {
     );
   }
 }
+
+/// A duration detected in step text ("25 Minuten"), inline
+/// (docs/design/components/TimerChip.md): `butter` behind it, `radius-s`,
+/// 6px side padding, weight 800. Tapping it starts a timer; a second tap
+/// within a second (a double tap) is ignored.
+///
+/// Put it in a [WidgetSpan] aligned to the baseline; the span scales it with
+/// the text, so the text inside doesn't scale again.
+class TimerHighlight extends StatefulWidget {
+  const TimerHighlight({
+    super.key,
+    required this.text,
+    required this.style,
+    required this.semanticsLabel,
+    required this.onTap,
+  });
+
+  /// The phrase as written: "25 Minuten".
+  final String text;
+
+  /// The running text's style around it.
+  final TextStyle style;
+
+  /// "25 Minuten, Timer starten".
+  final String semanticsLabel;
+  final VoidCallback onTap;
+
+  @override
+  State<TimerHighlight> createState() => _TimerHighlightState();
+}
+
+class _TimerHighlightState extends State<TimerHighlight> {
+  final _sinceTap = Stopwatch();
+
+  void _tap() {
+    if (_sinceTap.isRunning && _sinceTap.elapsed < const Duration(seconds: 1)) {
+      return;
+    }
+    _sinceTap
+      ..reset()
+      ..start();
+    widget.onTap();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final radius = BorderRadius.circular(t.radiusS);
+    return Semantics(
+      button: true,
+      label: widget.semanticsLabel,
+      onTap: _tap,
+      excludeSemantics: true,
+      child: Material(
+        color: t.butter,
+        borderRadius: radius,
+        child: InkWell(
+          onTap: _tap,
+          borderRadius: radius,
+          child: Padding(
+            // 6px, as in the spec.
+            padding: EdgeInsets.symmetric(horizontal: t.space1 * 1.5),
+            child: Text(
+              widget.text,
+              textScaler: TextScaler.noScaling,
+              style: widget.style.copyWith(
+                color: t.onButter,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
