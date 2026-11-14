@@ -598,11 +598,21 @@
   },
   "timerStart": "Timer starten · {time}",
   "@timerStart": {
-    "description": "Button below a step with an explicit time: starts a timer of that length.",
+    "description": "Button below a step with an explicit time, or a duration in its text: starts a timer of that length.",
     "placeholders": {
       "time": {
         "type": "String",
         "example": "25:00"
+      }
+    }
+  },
+  "timerHighlight": "{duration}, Timer starten",
+  "@timerHighlight": {
+    "description": "Screen-reader label of a duration highlighted in step text; tapping it starts a timer.",
+    "placeholders": {
+      "duration": {
+        "type": "String",
+        "example": "25 Minuten"
       }
     }
   },

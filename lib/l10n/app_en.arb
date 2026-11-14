@@ -107,6 +107,7 @@
   "cookingNoStepIngredients": "This step needs no ingredients.",
   "recipeMethod": "Method",
   "timerStart": "Start timer · {time}",
+  "timerHighlight": "{duration}, start timer",
   "timerFinished": "done",
   "timerChipRunning": "{label}, {time} left",
   "timerChipPaused": "{label}, paused at {time}",
