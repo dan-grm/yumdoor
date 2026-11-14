@@ -30,6 +30,17 @@ services:
     image: vabene1111/recipes:${TANDOOR_VERSION:-2.6.15}
     restart: unless-stopped
     env_file: *env
+    # The image's nginx also listens on [::]:80 and exits where the kernel has
+    # no IPv6 (Claude Code cloud VMs), leaving nothing on port 80. Drop that
+    # line only there; elsewhere this runs the image's own entrypoint unchanged.
+    entrypoint:
+      - /sbin/tini
+      - --
+      - sh
+      - -c
+      - |
+        [ -e /proc/net/if_inet6 ] || sed -i '/listen \[::\]/d' /opt/recipes/http.d/Recipes.conf.template
+        exec /opt/recipes/boot.sh
     volumes:
       - staticfiles:/opt/recipes/staticfiles
       - mediafiles:/opt/recipes/mediafiles
