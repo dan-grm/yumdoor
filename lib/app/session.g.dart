@@ -48,7 +48,7 @@ final class SessionControllerProvider
   SessionController create() => SessionController();
 }
 
-String _$sessionControllerHash() => r'2c59b6c102e703ccc16200c82d18bf44e8b4004e';
+String _$sessionControllerHash() => r'fe272e69dc9fc27de33a10f7a1162564d772cb05';
 
 /// The current login, kept across app starts in the [TokenStore]; `null`
 /// while nobody is logged in.

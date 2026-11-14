@@ -131,7 +131,7 @@ final class CookingProgressControllerProvider
 }
 
 String _$cookingProgressControllerHash() =>
-    r'ab1a805359ae8f2952aa19bf31a31aa20832b205';
+    r'78afcfa061d1d2a1a91d30222245f2d5f196c44a';
 
 /// The ingredients ticked off while cooking [recipeId], saved so they survive
 /// paging and a reload. Cooking mode watches it while open, so a failed save
