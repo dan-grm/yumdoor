@@ -35,6 +35,14 @@ void main() {
     expect(en.quantity(Quantity.of(2500000)), '2,500,000');
   });
 
+  test('countdowns round up, with hours from an hour on', () {
+    expect(de.countdown(const Duration(minutes: 4, seconds: 12)), '04:12');
+    expect(de.countdown(const Duration(milliseconds: 600)), '00:01');
+    expect(de.countdown(Duration.zero), '00:00');
+    expect(de.countdown(const Duration(hours: 1, minutes: 30)), '1:30:00');
+    expect(en.countdown(const Duration(seconds: 59)), '00:59');
+  });
+
   test('integers group thousands', () {
     expect(de.integer(12345), '12.345');
     expect(en.integer(12345), '12,345');

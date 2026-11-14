@@ -255,27 +255,39 @@ abstract class _$CookingProgressController extends $Notifier<CookingProgress> {
 }
 
 /// The timers running while cooking [recipeId], saved so they survive paging
-/// and a reload. Cooking mode keeps it alive while open and calls [tick]
-/// every second.
+/// and a reload.
+///
+/// Kept alive for the app's lifetime, with its own ticker, so a timer still
+/// alerts after cooking mode was closed with ×: once a second while timers
+/// run or have finished, it alerts for each finished one
+/// ([CookingTimer.needsAlert]) until it is turned off.
 
 @ProviderFor(CookingTimersController)
 final cookingTimersControllerProvider = CookingTimersControllerFamily._();
 
 /// The timers running while cooking [recipeId], saved so they survive paging
-/// and a reload. Cooking mode keeps it alive while open and calls [tick]
-/// every second.
+/// and a reload.
+///
+/// Kept alive for the app's lifetime, with its own ticker, so a timer still
+/// alerts after cooking mode was closed with ×: once a second while timers
+/// run or have finished, it alerts for each finished one
+/// ([CookingTimer.needsAlert]) until it is turned off.
 final class CookingTimersControllerProvider
     extends $NotifierProvider<CookingTimersController, List<CookingTimer>> {
   /// The timers running while cooking [recipeId], saved so they survive paging
-  /// and a reload. Cooking mode keeps it alive while open and calls [tick]
-  /// every second.
+  /// and a reload.
+  ///
+  /// Kept alive for the app's lifetime, with its own ticker, so a timer still
+  /// alerts after cooking mode was closed with ×: once a second while timers
+  /// run or have finished, it alerts for each finished one
+  /// ([CookingTimer.needsAlert]) until it is turned off.
   CookingTimersControllerProvider._({
     required CookingTimersControllerFamily super.from,
     required int super.argument,
   }) : super(
          retry: null,
          name: r'cookingTimersControllerProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -315,11 +327,15 @@ final class CookingTimersControllerProvider
 }
 
 String _$cookingTimersControllerHash() =>
-    r'382094a51b2fd5844db12f900b900ebad2d43fde';
+    r'07db58f553f6ad9a95d01912a9d437c7c6fb9912';
 
 /// The timers running while cooking [recipeId], saved so they survive paging
-/// and a reload. Cooking mode keeps it alive while open and calls [tick]
-/// every second.
+/// and a reload.
+///
+/// Kept alive for the app's lifetime, with its own ticker, so a timer still
+/// alerts after cooking mode was closed with ×: once a second while timers
+/// run or have finished, it alerts for each finished one
+/// ([CookingTimer.needsAlert]) until it is turned off.
 
 final class CookingTimersControllerFamily extends $Family
     with
@@ -336,12 +352,16 @@ final class CookingTimersControllerFamily extends $Family
         name: r'cookingTimersControllerProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
   /// The timers running while cooking [recipeId], saved so they survive paging
-  /// and a reload. Cooking mode keeps it alive while open and calls [tick]
-  /// every second.
+  /// and a reload.
+  ///
+  /// Kept alive for the app's lifetime, with its own ticker, so a timer still
+  /// alerts after cooking mode was closed with ×: once a second while timers
+  /// run or have finished, it alerts for each finished one
+  /// ([CookingTimer.needsAlert]) until it is turned off.
 
   CookingTimersControllerProvider call(int recipeId) =>
       CookingTimersControllerProvider._(argument: recipeId, from: this);
@@ -351,8 +371,12 @@ final class CookingTimersControllerFamily extends $Family
 }
 
 /// The timers running while cooking [recipeId], saved so they survive paging
-/// and a reload. Cooking mode keeps it alive while open and calls [tick]
-/// every second.
+/// and a reload.
+///
+/// Kept alive for the app's lifetime, with its own ticker, so a timer still
+/// alerts after cooking mode was closed with ×: once a second while timers
+/// run or have finished, it alerts for each finished one
+/// ([CookingTimer.needsAlert]) until it is turned off.
 
 abstract class _$CookingTimersController extends $Notifier<List<CookingTimer>> {
   late final _$args = ref.$arg as int;

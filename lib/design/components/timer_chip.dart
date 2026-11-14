@@ -11,6 +11,7 @@ class TimerChip extends StatelessWidget {
     required this.label,
     required this.time,
     required this.finished,
+    this.paused = false,
     required this.semanticsLabel,
     required this.onTap,
   });
@@ -22,6 +23,9 @@ class TimerChip extends StatelessWidget {
   final String time;
 
   final bool finished;
+
+  /// Shows a pause sign instead of the clock.
+  final bool paused;
 
   /// "Rösten, noch 04:12".
   final String semanticsLabel;
@@ -56,7 +60,11 @@ class TimerChip extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    finished ? Icons.check_rounded : Icons.schedule_rounded,
+                    finished
+                        ? Icons.check_rounded
+                        : paused
+                        ? Icons.pause_rounded
+                        : Icons.schedule_rounded,
                     size: iconSize,
                     color: foreground,
                   ),

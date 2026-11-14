@@ -14,19 +14,15 @@ import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import 'cooking_providers.dart';
 
-/// Rebuilds every second while [active], for remaining times on screen.
+/// Rebuilds every second while [keepTicking] is on, for remaining times on
+/// screen.
 mixin _Ticking<T extends StatefulWidget> on State<T> {
   Timer? _ticker;
-
-  /// Called on every tick, before the rebuild.
-  void onTick() {}
 
   void keepTicking(bool active) {
     if (active && _ticker == null) {
       _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-        if (!mounted) return;
-        onTick();
-        setState(() {});
+        if (mounted) setState(() {});
       });
     } else if (!active) {
       _ticker?.cancel();
@@ -42,8 +38,8 @@ mixin _Ticking<T extends StatefulWidget> on State<T> {
 }
 
 /// The running timers as chips, newest last, and a button to set one by
-/// hand. Ticks every second while timers exist and alerts for finished ones
-/// (`TimerAlertService`, through the controller) until they are turned off.
+/// hand. Wraps onto more lines when they don't fit. Rebuilds every second
+/// while a timer runs; the alerting itself is the controller's.
 class TimerBar extends ConsumerStatefulWidget {
   const TimerBar({super.key, required this.recipeId, required this.recipeName});
 
@@ -57,45 +53,30 @@ class TimerBar extends ConsumerStatefulWidget {
 }
 
 class _TimerBarState extends ConsumerState<TimerBar> with _Ticking<TimerBar> {
-  CookingTimersController get _controller =>
-      ref.read(cookingTimersControllerProvider(widget.recipeId).notifier);
-
-  @override
-  void onTick() {
-    final l10n = context.l10n;
-    unawaited(
-      _controller.tick(
-        title: (timer) => l10n.timerChipFinished(timer.label),
-        body: widget.recipeName,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
     final format = LocaleFormat.of(context);
-    final timers = ref.watch(cookingTimersControllerProvider(widget.recipeId));
-    keepTicking(timers.isNotEmpty);
+    final provider = cookingTimersControllerProvider(widget.recipeId);
+    final timers = ref.watch(provider);
+    ref
+        .read(provider.notifier)
+        .useWording(
+          title: (timer) => l10n.timerChipFinished(timer.label),
+          body: widget.recipeName,
+        );
     final now = ref.read(clockProvider)();
+    keepTicking(
+      timers.any((timer) => !timer.isPaused && !timer.isFinished(now)),
+    );
 
-    return Row(
+    return Wrap(
+      alignment: WrapAlignment.end,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: t.space2,
       children: [
-        Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            reverse: true,
-            child: Row(
-              spacing: t.space2,
-              children: [
-                for (final timer in timers)
-                  _chip(context, timer, now, format, l10n),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(width: t.space2),
+        for (final timer in timers) _chip(context, timer, now, format, l10n),
         RoundIconButton(
           icon: Icons.more_time_rounded,
           label: l10n.timerAdd,
@@ -119,6 +100,7 @@ class _TimerBarState extends ConsumerState<TimerBar> with _Ticking<TimerBar> {
       label: timer.label,
       time: finished ? l10n.timerFinished : time,
       finished: finished,
+      paused: timer.isPaused,
       semanticsLabel: finished
           ? l10n.timerChipFinished(timer.label)
           : timer.isPaused

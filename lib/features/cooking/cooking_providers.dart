@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../app/cooking_progress_store.dart';
 import '../../app/platform_providers.dart';
+import '../../app/session.dart';
 import '../../domain/models/cooking_progress.dart';
 import '../../domain/models/cooking_timer.dart';
 import '../../platform/timers/timer_alert_service.dart';
@@ -66,21 +67,62 @@ class CookingProgressController extends _$CookingProgressController {
 }
 
 /// The timers running while cooking [recipeId], saved so they survive paging
-/// and a reload. Cooking mode keeps it alive while open and calls [tick]
-/// every second.
-@riverpod
+/// and a reload.
+///
+/// Kept alive for the app's lifetime, with its own ticker, so a timer still
+/// alerts after cooking mode was closed with ×: once a second while timers
+/// run or have finished, it alerts for each finished one
+/// ([CookingTimer.needsAlert]) until it is turned off.
+@Riverpod(keepAlive: true)
 class CookingTimersController extends _$CookingTimersController {
   CookingProgressStore get _store => ref.read(cookingProgressStoreProvider);
-  TimerAlertService get _alerts => ref.read(timerAlertServiceProvider);
   DateTime _now() => ref.read(clockProvider)();
-  bool _forgotten = false;
+
+  late final TimerAlertService _alerts;
+  Timer? _ticker;
+  var _nextId = 0;
+  String Function(CookingTimer timer) _title = (timer) => timer.label;
+  String _body = '';
 
   @override
-  List<CookingTimer> build(int recipeId) => _store.readTimers(recipeId, _now());
+  List<CookingTimer> build(int recipeId) {
+    _alerts = ref.read(timerAlertServiceProvider);
+    ref.onDispose(() => _ticker?.cancel());
+    // Logout ends the timers too: the next login may be someone else.
+    ref.listen(sessionControllerProvider, (previous, next) {
+      if (previous?.value != null && next.value == null) forget();
+    });
+    final timers = _store.readTimers(recipeId, _now());
+    _keepTicking(timers);
+    return timers;
+  }
+
+  /// How notifications are worded, in the user's language: set by cooking
+  /// mode, which has the localizations.
+  void useWording({
+    required String Function(CookingTimer timer) title,
+    required String body,
+  }) {
+    _title = title;
+    _body = body;
+  }
 
   void _set(List<CookingTimer> timers) {
     state = timers;
-    if (!_forgotten) _store.writeTimers(recipeId, timers, _now());
+    _store.writeTimers(recipeId, timers, _now());
+    _keepTicking(timers);
+  }
+
+  /// Ticks only while something can change: a running or finished timer.
+  void _keepTicking(List<CookingTimer> timers) {
+    final now = _now();
+    final active = timers.any((t) => !t.isPaused || t.isFinished(now));
+    if (active && _ticker == null) {
+      _ticker = Timer.periodic(const Duration(seconds: 1), (_) => tick());
+    } else if (!active) {
+      _ticker?.cancel();
+      _ticker = null;
+    }
   }
 
   void _update(String id, CookingTimer Function(CookingTimer) change) =>
@@ -98,7 +140,7 @@ class CookingTimersController extends _$CookingTimersController {
     _set([
       ...state,
       CookingTimer.start(
-        id: '${now.microsecondsSinceEpoch}',
+        id: '${now.microsecondsSinceEpoch}-${_nextId++}',
         label: label,
         duration: duration,
         now: now,
@@ -112,8 +154,12 @@ class CookingTimersController extends _$CookingTimersController {
 
   void resume(String id) => _update(id, (t) => t.resume(_now()));
 
-  void addMinute(String id) =>
-      _update(id, (t) => t.extend(const Duration(minutes: 1), _now()));
+  /// One more minute; a finished timer runs again and its notification
+  /// goes.
+  void addMinute(String id) {
+    _update(id, (t) => t.extend(const Duration(minutes: 1), _now()));
+    unawaited(_alerts.dismissAlerts(tag: id));
+  }
 
   /// Cancels a running timer, or turns off a finished one.
   void remove(String id) {
@@ -121,18 +167,11 @@ class CookingTimersController extends _$CookingTimersController {
       for (final timer in state)
         if (timer.id != id) timer,
     ]);
-    final now = _now();
-    if (!state.any((timer) => timer.isFinished(now))) {
-      unawaited(_alerts.dismissAlerts());
-    }
+    unawaited(_alerts.dismissAlerts(tag: id));
   }
 
-  /// Alerts for every finished timer that is due ([CookingTimer.needsAlert]);
-  /// [title] and [body] word the notification.
-  Future<void> tick({
-    required String Function(CookingTimer timer) title,
-    required String body,
-  }) async {
+  /// Alerts, all at once, for every finished timer that is due.
+  Future<void> tick() async {
     final now = _now();
     final due = [
       for (final timer in state)
@@ -143,15 +182,15 @@ class CookingTimersController extends _$CookingTimersController {
       for (final timer in state)
         due.contains(timer) ? timer.alerted(now) : timer,
     ]);
-    for (final timer in due) {
-      await _alerts.alert(title: title(timer), body: body, tag: timer.id);
-    }
+    await Future.wait([
+      for (final timer in due)
+        _alerts.alert(title: _title(timer), body: _body, tag: timer.id),
+    ]);
   }
 
-  /// "Fertig": forgets the timers; they stay on screen while it closes.
+  /// "Fertig": the timers stop and are forgotten.
   void forget() {
-    _forgotten = true;
-    _store.writeTimers(recipeId, const [], _now());
+    _set(const []);
     unawaited(_alerts.dismissAlerts());
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/repository_providers.dart';
+import 'package:yumdoor/design/components/timer_chip.dart';
 import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/features/cooking/cooking_screen.dart';
 import 'package:yumdoor/platform/timers/timer_alert_service.dart';
@@ -434,7 +435,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
     }
 
-    Finder chip(String label) => find.bySemanticsLabel(RegExp('^$label'));
+    /// The chip whose screen-reader label starts with [label].
+    Finder chip(String label) => find.byWidgetPredicate(
+      (widget) =>
+          widget is TimerChip && widget.semanticsLabel.startsWith(label),
+    );
 
     testWidgets('start from the step\'s time; the chip counts down', (
       tester,
@@ -550,6 +555,49 @@ void main() {
       await pumpCooking(tester);
 
       expect(find.text('23:00'), findsOneWidget);
+    });
+
+    testWidgets('a timer still alerts after leaving with ×', (tester) async {
+      roastFor25Minutes();
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+      await tapAndWait(tester, find.text('Timer starten · 25:00'));
+      await tapAndWait(tester, find.byTooltip('Kochmodus beenden'));
+      expect(find.text('recipe screen'), findsOneWidget);
+
+      now = now.add(const Duration(minutes: 25));
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(alerts.chimes, 1);
+    });
+
+    testWidgets('many steps and timers fit on a narrow phone', (tester) async {
+      repository.recipes[7] = ofenkarotten.copyWith(
+        steps: [
+          for (var i = 0; i < 9; i++)
+            ofenkarotten.steps[1].copyWith(
+              id: 100 + i,
+              name: 'Schmoren und Ablöschen',
+              time: const Duration(minutes: 90),
+            ),
+        ],
+      );
+      alerts
+        ..runsInBackground = true
+        ..notificationAccess = NotificationAccess.granted;
+      await pumpCooking(tester, size: const Size(360, 740));
+      Future<void> startStepTimer() async {
+        final button = find.text('Timer starten · 1:30:00');
+        await tester.ensureVisible(button);
+        await tapAndWait(tester, button);
+      }
+
+      await startStepTimer();
+      await tapAndWait(tester, find.text('Weiter zu Schritt 2'));
+      await startStepTimer();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(TimerChip), findsNWidgets(2));
     });
 
     testWidgets('Fertig forgets the timers', (tester) async {

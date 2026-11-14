@@ -35,9 +35,9 @@ abstract interface class TimerAlertService {
     required String tag,
   });
 
-  /// Closes the notifications of finished timers, once the cook is back in
-  /// the app; they stay until then.
-  Future<void> dismissAlerts();
+  /// Closes the notifications of finished timers: the one of [tag], or all.
+  /// They stay until then.
+  Future<void> dismissAlerts({String? tag});
 }
 
 /// [TimerAlertService] over the [AlertChannels] of a platform. The fallback
@@ -81,7 +81,8 @@ class ChannelTimerAlertService implements TimerAlertService {
   }
 
   @override
-  Future<void> dismissAlerts() => _attempt(_channels.closeNotifications);
+  Future<void> dismissAlerts({String? tag}) =>
+      _attempt(() => _channels.closeNotifications(tag: tag));
 
   @override
   Future<TimerAlertOutcome> alert({
@@ -214,6 +215,7 @@ abstract interface class AlertChannels {
   Future<void> requestNotificationPermission();
   Future<void> showNotification(String title, String body, String tag);
 
-  /// Closes the notifications [showNotification] put up.
-  Future<void> closeNotifications();
+  /// Closes the notifications [showNotification] put up: the one of [tag],
+  /// or all.
+  Future<void> closeNotifications({String? tag});
 }

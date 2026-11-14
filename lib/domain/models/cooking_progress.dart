@@ -40,7 +40,12 @@ class CookingProgress {
   /// Whether the recipe was left alone for longer than [lifetime]. A change
   /// "in the future" (the clock was wrong then) counts the same way, so it
   /// can't stay forever.
-  bool isExpired(DateTime now) => now.difference(updatedAt).abs() > lifetime;
+  bool isExpired(DateTime now) => expired(updatedAt, now);
+
+  /// Whether something last changed at [changedAt] is older than [lifetime]
+  /// at [now]; also cooking timers.
+  static bool expired(DateTime changedAt, DateTime now) =>
+      now.difference(changedAt).abs() > lifetime;
 
   String toJson() => jsonEncode({
     'updatedAt': updatedAt.toUtc().toIso8601String(),

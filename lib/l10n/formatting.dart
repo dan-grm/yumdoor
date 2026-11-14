@@ -33,9 +33,9 @@ class LocaleFormat {
   };
 
   /// Time left on a timer: `04:12`, `1:04:12` from an hour on. The same in
-  /// every locale.
+  /// every locale. Rounds up, so `00:00` only shows once it is over.
   String countdown(Duration value) {
-    final seconds = value.inSeconds;
+    final seconds = (value.inMilliseconds + 999) ~/ 1000;
     String two(int n) => n.toString().padLeft(2, '0');
     final clock = '${two(seconds ~/ 60 % 60)}:${two(seconds % 60)}';
     return seconds >= 3600 ? '${seconds ~/ 3600}:$clock' : clock;

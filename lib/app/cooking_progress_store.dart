@@ -62,10 +62,7 @@ class CookingProgressStore {
         'timers': final List<Object?> timers,
       }) {
         final saved = DateTime.tryParse(savedAt);
-        if (saved == null ||
-            now.difference(saved).abs() > CookingProgress.lifetime) {
-          return null;
-        }
+        if (saved == null || CookingProgress.expired(saved, now)) return null;
         return [for (final json in timers) ?CookingTimer.fromJson(json)];
       }
     } on FormatException {
