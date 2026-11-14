@@ -18,6 +18,7 @@ import '../common/layout.dart';
 import '../common/markdown_text.dart';
 import '../common/offline_disabled.dart';
 import '../common/step_text.dart';
+import '../cook_log/cook_log_screen.dart';
 import 'ingredient_lines.dart';
 import 'recipe_meta.dart';
 import 'recipe_providers.dart';
@@ -109,7 +110,11 @@ class _RecipeViewState extends State<_RecipeView> {
                           children: [
                             _TitleBlock(recipe: recipe),
                             SizedBox(height: t.space4),
-                            const _WriteActions(),
+                            _WriteActions(
+                              onCooked: () => context.push(
+                                cookLogLocation(recipe.id, _servings),
+                              ),
+                            ),
                             SizedBox(height: t.space5),
                             Divider(height: 1, thickness: 1, color: t.line),
                             SizedBox(height: t.space4),
@@ -355,10 +360,13 @@ class _TitleBlock extends StatelessWidget {
   }
 }
 
-/// Plan, shop and edit: visible but disabled until their milestones, and
-/// while offline.
+/// "Als gekocht eintragen", then plan, shop and edit: visible but disabled
+/// until their milestones. All of them are disabled while offline.
 class _WriteActions extends ConsumerWidget {
-  const _WriteActions();
+  const _WriteActions({required this.onCooked});
+
+  /// Opens the cook log screen for the chosen servings.
+  final VoidCallback onCooked;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -374,6 +382,16 @@ class _WriteActions extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        OfflineDisabled(
+          builder: (context, enabled) => PillButton(
+            label: l10n.recipeCooked,
+            icon: Icons.check_rounded,
+            kind: PillButtonKind.secondary,
+            compact: true,
+            onPressed: enabled ? onCooked : null,
+          ),
+        ),
+        SizedBox(height: t.space2),
         Row(
           children: [
             for (final (index, (icon, label)) in actions.indexed) ...[

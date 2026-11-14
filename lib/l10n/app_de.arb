@@ -352,9 +352,9 @@
       }
     }
   },
-  "cookingDone": "Fertig",
+  "cookingDone": "Fertig gekocht",
   "@cookingDone": {
-    "description": "Button on the last step; returns to the recipe."
+    "description": "Button on the last step; opens the screen to rate the recipe and log it as cooked."
   },
   "cookingNoSteps": "Dieses Rezept hat keine Schritte.",
   "@cookingNoSteps": {
@@ -811,5 +811,72 @@
   "searchOfflineTimesNote": "Offline lässt sich nicht zählen, wie oft du ein Rezept gekocht hast. Gezeigt werden alle schon gekochten.",
   "@searchOfflineTimesNote": {
     "description": "Shown above offline results when the times-cooked filter asks for several times."
+  },
+  "cookLogTitle": "Guten Appetit!",
+  "@cookLogTitle": {
+    "description": "Heading of the screen after cooking, where the user rates the recipe."
+  },
+  "cookLogSubtitle": "{recipe} · {servings}",
+  "@cookLogSubtitle": {
+    "description": "Below the heading: the recipe name and the cooked servings, e.g. \"Ofenkarotten mit Feta · 4 Portionen\".",
+    "placeholders": {
+      "recipe": {
+        "type": "String"
+      },
+      "servings": {
+        "type": "String",
+        "example": "4 Portionen"
+      }
+    }
+  },
+  "cookLogClose": "Schließen, ohne zu speichern",
+  "@cookLogClose": {
+    "description": "Tooltip of the close button on the cook log screen."
+  },
+  "cookLogRatingQuestion": "Wie war's?",
+  "@cookLogRatingQuestion": {
+    "description": "Card title above the rating stars."
+  },
+  "cookLogRatingStar": "{count, plural, =1{1 Stern} other{{count} Sterne}}",
+  "@cookLogRatingStar": {
+    "description": "Screen-reader label of one rating star button.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "cookLogComment": "Kommentar (optional)",
+  "@cookLogComment": {
+    "description": "Label of the comment field."
+  },
+  "cookLogVisibility": "Für alle in diesem Tandoor-Space sichtbar",
+  "@cookLogVisibility": {
+    "description": "Note below the card: every member of the space can read cook log entries."
+  },
+  "cookLogSave": "Speichern",
+  "@cookLogSave": {
+    "description": "Saves the rating and comment to the cook log."
+  },
+  "cookLogSkip": "Überspringen",
+  "@cookLogSkip": {
+    "description": "Returns to the recipe without saving."
+  },
+  "cookLogSaved": "Im Kochprotokoll gespeichert",
+  "@cookLogSaved": {
+    "description": "Snackbar after saving a cook log entry."
+  },
+  "cookLogFailed": "Nicht gespeichert. {reason}",
+  "@cookLogFailed": {
+    "description": "Shown when saving the cook log entry failed; the reason is one of the error messages.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "recipeCooked": "Als gekocht eintragen",
+  "@recipeCooked": {
+    "description": "Button on the recipe screen that opens the cook log screen to rate the recipe."
   }
 }

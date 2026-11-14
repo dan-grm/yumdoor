@@ -266,7 +266,7 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get cookingDone => 'Fertig';
+  String get cookingDone => 'Fertig gekocht';
 
   @override
   String get cookingNoSteps => 'Dieses Rezept hat keine Schritte.';
@@ -574,4 +574,52 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get searchOfflineTimesNote =>
       'Offline lässt sich nicht zählen, wie oft du ein Rezept gekocht hast. Gezeigt werden alle schon gekochten.';
+
+  @override
+  String get cookLogTitle => 'Guten Appetit!';
+
+  @override
+  String cookLogSubtitle(String recipe, String servings) {
+    return '$recipe · $servings';
+  }
+
+  @override
+  String get cookLogClose => 'Schließen, ohne zu speichern';
+
+  @override
+  String get cookLogRatingQuestion => 'Wie war\'s?';
+
+  @override
+  String cookLogRatingStar(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Sterne',
+      one: '1 Stern',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cookLogComment => 'Kommentar (optional)';
+
+  @override
+  String get cookLogVisibility => 'Für alle in diesem Tandoor-Space sichtbar';
+
+  @override
+  String get cookLogSave => 'Speichern';
+
+  @override
+  String get cookLogSkip => 'Überspringen';
+
+  @override
+  String get cookLogSaved => 'Im Kochprotokoll gespeichert';
+
+  @override
+  String cookLogFailed(String reason) {
+    return 'Nicht gespeichert. $reason';
+  }
+
+  @override
+  String get recipeCooked => 'Als gekocht eintragen';
 }

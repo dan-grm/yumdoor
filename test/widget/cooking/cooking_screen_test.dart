@@ -72,6 +72,10 @@ void main() {
                 ),
               ),
             ),
+            GoRoute(
+              path: 'cooked',
+              builder: (context, state) => Text('cooked ${state.uri}'),
+            ),
           ],
         ),
       ],
@@ -173,19 +177,33 @@ void main() {
     expect(find.text('300 g'), findsOneWidget);
   });
 
-  testWidgets('the last step offers Fertig, which returns to the recipe', (
-    tester,
-  ) async {
-    await pumpCooking(tester);
+  testWidgets('the last step offers Fertig gekocht, which opens the cook '
+      'log in place of cooking mode', (tester) async {
+    final router = await pumpCooking(tester);
     await next(tester, 'Weiter zu Schritt 2');
     await next(tester, 'Weiter zu Schritt 3');
 
     expect(find.text('SCHRITT 3 · LETZTER'), findsOneWidget);
     expect(find.textContaining('Weiter zu'), findsNothing);
 
-    await next(tester, 'Fertig');
-    expect(find.text('recipe screen'), findsOneWidget);
+    await next(tester, 'Fertig gekocht');
+    expect(find.text('cooked /recipe/7/cooked?servings=4'), findsOneWidget);
     expect(find.byType(CookingScreen), findsNothing);
+
+    // Back from there leads to the recipe, not into cooking mode again.
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('recipe screen'), findsOneWidget);
+  });
+
+  testWidgets('Fertig gekocht passes the recipe\'s servings without '
+      '?servings=', (tester) async {
+    await pumpCooking(tester, query: '');
+    await next(tester, 'Weiter zu Schritt 2');
+    await next(tester, 'Weiter zu Schritt 3');
+
+    await next(tester, 'Fertig gekocht');
+    expect(find.text('cooked /recipe/7/cooked?servings=2'), findsOneWidget);
   });
 
   testWidgets('the close button returns to the recipe', (tester) async {
@@ -381,7 +399,7 @@ void main() {
       await tester.tap(find.text('Feta'));
       await tester.pump();
 
-      await next(tester, 'Fertig');
+      await next(tester, 'Fertig gekocht');
       expect(localStore.values, isEmpty);
 
       await pumpCooking(tester);
@@ -614,7 +632,7 @@ void main() {
       await tapAndWait(tester, find.text('Timer starten · 25:00'));
       await tapAndWait(tester, find.text('Weiter zu Schritt 3'));
 
-      await tapAndWait(tester, find.text('Fertig'));
+      await tapAndWait(tester, find.text('Fertig gekocht'));
 
       expect(localStore.values.keys, isNot(contains('cooking-timers.7')));
     });

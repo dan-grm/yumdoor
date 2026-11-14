@@ -263,7 +263,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get cookingDone => 'Done';
+  String get cookingDone => 'Done cooking';
 
   @override
   String get cookingNoSteps => 'This recipe has no steps.';
@@ -567,4 +567,52 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get searchOfflineTimesNote =>
       'Offline, how often you cooked a recipe isn\'t known. Showing every recipe you\'ve cooked.';
+
+  @override
+  String get cookLogTitle => 'Enjoy your meal!';
+
+  @override
+  String cookLogSubtitle(String recipe, String servings) {
+    return '$recipe · $servings';
+  }
+
+  @override
+  String get cookLogClose => 'Close without saving';
+
+  @override
+  String get cookLogRatingQuestion => 'How was it?';
+
+  @override
+  String cookLogRatingStar(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count stars',
+      one: '1 star',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cookLogComment => 'Comment (optional)';
+
+  @override
+  String get cookLogVisibility => 'Visible to everyone in this Tandoor space';
+
+  @override
+  String get cookLogSave => 'Save';
+
+  @override
+  String get cookLogSkip => 'Skip';
+
+  @override
+  String get cookLogSaved => 'Saved to the cook log';
+
+  @override
+  String cookLogFailed(String reason) {
+    return 'Not saved. $reason';
+  }
+
+  @override
+  String get recipeCooked => 'Log as cooked';
 }
