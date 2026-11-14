@@ -10,7 +10,11 @@ import 'package:yumdoor/l10n/l10n.dart';
 /// Phone width of the mockups.
 const phoneSize = Size(390, 844);
 
-/// Pumps [routes] in German at [phoneSize], starting at [location], and
+/// A phone in landscape, and a tablet in landscape.
+const landscapeSize = Size(844, 390);
+const tabletSize = Size(1024, 768);
+
+/// Pumps [routes] in German at [size] ([phoneSize] by default), starting at [location], and
 /// returns the router to inspect or drive navigation.
 Future<GoRouter> pumpRoutes(
   WidgetTester tester, {
@@ -18,9 +22,10 @@ Future<GoRouter> pumpRoutes(
   required List<RouteBase> routes,
   List<Override> overrides = const [],
   ThemeData? theme,
+  Size size = phoneSize,
 }) async {
   tester.view.devicePixelRatio = 1;
-  tester.view.physicalSize = phoneSize;
+  tester.view.physicalSize = size;
   addTearDown(tester.view.reset);
 
   final router = GoRouter(initialLocation: location, routes: routes);

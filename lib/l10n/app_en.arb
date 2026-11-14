@@ -96,5 +96,9 @@
   "markdownLinkTitle": "Open link?",
   "markdownLinkText": "This link goes to {host} and opens in a new tab.",
   "markdownLinkOpen": "Open",
-  "ingredientTickOff": "Tick off {name}"
+  "ingredientTickOff": "Tick off {name}",
+  "cookingIngredientsOfStep": "This step",
+  "cookingIngredientsAll": "All",
+  "cookingNoStepIngredients": "This step needs no ingredients.",
+  "recipeMethod": "Method"
 }

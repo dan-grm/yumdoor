@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../domain/services/scaling_service.dart';
 import '../../domain/services/step_template.dart';
 import '../../l10n/formatting.dart';
-import '../common/markdown_text.dart';
+import 'markdown_text.dart';
 
 /// A [MarkdownSpanBuilder] that replaces step templates with their scaled
 /// values, emphasized so they stand out like the amounts in the ingredient

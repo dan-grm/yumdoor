@@ -37,11 +37,13 @@ void main() {
     WidgetTester tester, {
     String query = '?servings=4',
     ThemeData? theme,
+    Size size = phoneSize,
   }) async {
     final router = await pumpRoutes(
       tester,
       location: '/recipe/7',
       theme: theme,
+      size: size,
       overrides: [
         recipeRepositoryProvider.overrideWithValue(repository),
         wakeLockServiceProvider.overrideWithValue(wakeLock),
@@ -427,8 +429,100 @@ void main() {
     expect(find.text('3.704 Vakuumpackungen à 500 Gramm'), findsOneWidget);
   });
 
+  group('layout', () {
+    for (final size in [phoneSize, landscapeSize, tabletSize]) {
+      testWidgets(
+        'step 2 fits at ${size.width.round()}×${size.height.round()}',
+        (tester) async {
+          await pumpCooking(tester, size: size);
+          await next(tester, 'Weiter zu Schritt 2');
+
+          expect(tester.takeException(), isNull);
+          expect(find.textContaining('Karotten schräg'), findsOneWidget);
+          expect(find.text('Karotten'), findsOneWidget);
+          final step = tester.getTopLeft(
+            find.textContaining('Karotten schräg'),
+          );
+          final ingredient = tester.getTopLeft(find.text('Karotten'));
+          if (size.width >= YumdoorTokens.light.sizeWide) {
+            // Side by side: the ingredients right of the step, not below it.
+            expect(ingredient.dx, greaterThan(step.dx + size.width / 3));
+          } else {
+            expect(ingredient.dy, greaterThan(step.dy));
+            expect(find.text('Alle'), findsNothing);
+          }
+        },
+      );
+    }
+
+    testWidgets('wide: all ingredients from a toggle, still tickable', (
+      tester,
+    ) async {
+      await pumpCooking(tester, size: tabletSize);
+      await next(tester, 'Weiter zu Schritt 2');
+      expect(find.text('Feta'), findsNothing);
+
+      await tester.tap(find.text('Alle'));
+      await tester.pumpAndSettle();
+      expect(find.text('Feta'), findsOneWidget);
+      expect(find.text('ANRICHTEN'), findsOneWidget);
+      await tester.tap(find.text('Feta'));
+      await tester.pump();
+
+      // The choice stays while paging; the tick belongs to step 3.
+      await next(tester, 'Weiter zu Schritt 3');
+      expect(find.text('Karotten'), findsOneWidget);
+      await tester.tap(find.text('Dieser Schritt'));
+      await tester.pumpAndSettle();
+      expect(find.text('Karotten'), findsNothing);
+      expect(
+        tester
+            .getSemantics(find.bySemanticsLabel('Feta abhaken'))
+            .getSemanticsData()
+            .flagsCollection
+            .isChecked,
+        CheckedState.isTrue,
+      );
+    });
+
+    testWidgets('wide: a step without ingredients says so', (tester) async {
+      await pumpCooking(tester, size: tabletSize);
+
+      expect(
+        find.text('Für diesen Schritt brauchst du keine Zutaten.'),
+        findsOneWidget,
+      );
+    });
+  });
+
   group('goldens', skip: goldenSkip, () {
     for (final (name, theme) in [('light', lightTheme), ('dark', darkTheme)]) {
+      testWidgets('step 2 on a tablet in $name', tags: goldenTags, (
+        tester,
+      ) async {
+        await pumpCooking(tester, theme: theme, size: tabletSize);
+        await next(tester, 'Weiter zu Schritt 2');
+        await tester.tap(find.text('Karotten'));
+        await tester.pump();
+
+        await expectLater(
+          find.byType(CookingScreen),
+          matchesGoldenFile('../goldens/cooking_step_tablet_$name.png'),
+        );
+      });
+
+      testWidgets('step 2 in landscape in $name', tags: goldenTags, (
+        tester,
+      ) async {
+        await pumpCooking(tester, theme: theme, size: landscapeSize);
+        await next(tester, 'Weiter zu Schritt 2');
+
+        await expectLater(
+          find.byType(CookingScreen),
+          matchesGoldenFile('../goldens/cooking_step_landscape_$name.png'),
+        );
+      });
+
       testWidgets('step 2 at 4 servings in $name', tags: goldenTags, (
         tester,
       ) async {

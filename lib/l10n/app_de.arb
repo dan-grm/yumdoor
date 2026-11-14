@@ -523,5 +523,21 @@
         "example": "Karotten"
       }
     }
+  },
+  "cookingIngredientsOfStep": "Dieser Schritt",
+  "@cookingIngredientsOfStep": {
+    "description": "Chip in wide cooking mode: show only the current step's ingredients."
+  },
+  "cookingIngredientsAll": "Alle",
+  "@cookingIngredientsAll": {
+    "description": "Chip in wide cooking mode: show the ingredients of every step."
+  },
+  "cookingNoStepIngredients": "Für diesen Schritt brauchst du keine Zutaten.",
+  "@cookingNoStepIngredients": {
+    "description": "Wide cooking mode, when the current step has no ingredients."
+  },
+  "recipeMethod": "Zubereitung",
+  "@recipeMethod": {
+    "description": "Title of the steps column on the recipe screen on tablets and in landscape."
   }
 }

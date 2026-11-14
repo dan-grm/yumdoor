@@ -7,8 +7,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/platform_providers.dart';
 import '../../design/components/buttons.dart';
+import '../../design/components/filter_chips.dart';
 import '../../design/components/step_dots.dart';
 import '../../design/design.dart';
+import '../../domain/models/cooking_progress.dart';
+import '../../domain/models/ingredient.dart';
 import '../../domain/models/recipe.dart';
 import '../../domain/models/recipe_step.dart';
 import '../../domain/services/scaling_service.dart';
@@ -17,10 +20,10 @@ import '../../l10n/l10n.dart';
 import '../../platform/wake_lock/wake_lock_service.dart';
 import '../common/failure_view.dart';
 import '../common/markdown_text.dart';
+import '../common/step_text.dart';
 import '../recipe/ingredient_lines.dart';
 import '../recipe/recipe_providers.dart';
 import 'cooking_providers.dart';
-import 'step_text.dart';
 
 /// Cooking mode: one step per page with its scaled ingredients
 /// (mockup `05-kochmodus`).
@@ -187,6 +190,7 @@ class _CookingView extends StatefulWidget {
 class _CookingViewState extends State<_CookingView> {
   final _pages = PageController();
   var _page = 0;
+  var _allIngredients = false;
 
   @override
   void dispose() {
@@ -288,6 +292,10 @@ class _CookingViewState extends State<_CookingView> {
                 for (final (index, step) in steps.indexed)
                   _StepPage(
                     recipeId: widget.recipe.id,
+                    steps: steps,
+                    allIngredients: _allIngredients,
+                    onAllIngredientsChanged: (value) =>
+                        setState(() => _allIngredients = value),
                     step: step,
                     number: index + 1,
                     isLast: index == steps.length - 1,
@@ -334,116 +342,196 @@ class _CookingViewState extends State<_CookingView> {
 class _StepPage extends StatelessWidget {
   const _StepPage({
     required this.recipeId,
+    required this.steps,
     required this.step,
     required this.number,
     required this.isLast,
     required this.scaling,
     required this.servings,
+    required this.allIngredients,
+    required this.onAllIngredientsChanged,
   });
 
   final int recipeId;
+
+  /// All steps of the recipe, for the "Alle" ingredients in the wide layout.
+  final List<RecipeStep> steps;
   final RecipeStep step;
   final int number;
   final bool isLast;
   final ScalingService scaling;
   final String servings;
 
+  /// Wide layout: the right column lists every step's ingredients.
+  final bool allIngredients;
+  final ValueChanged<bool> onAllIngredientsChanged;
+
   @override
   Widget build(BuildContext context) {
+    final t = context.tokens;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < t.sizeWide) {
+          return SingleChildScrollView(
+            padding: EdgeInsets.only(top: t.space2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _stepCard(context),
+                if (step.ingredients.isNotEmpty) ...[
+                  SizedBox(height: t.space5),
+                  _ingredientsHeader(context),
+                  SizedBox(height: t.space2),
+                  _ingredients([step]),
+                ],
+              ],
+            ),
+          );
+        }
+        // Wide: the step left, its ingredients (or all of them) right.
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(top: t.space2),
+                child: _stepCard(context),
+              ),
+            ),
+            SizedBox(width: t.space8),
+            Expanded(
+              flex: 2,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(top: t.space2),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _ingredientsHeader(context),
+                    SizedBox(height: t.space1),
+                    _ingredientsToggle(context),
+                    SizedBox(height: t.space2),
+                    if (allIngredients)
+                      _ingredients(steps)
+                    else if (step.ingredients.isEmpty)
+                      Text(
+                        context.l10n.cookingNoStepIngredients,
+                        style: t.body.copyWith(color: t.inkMuted),
+                      )
+                    else
+                      _ingredients([step]),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _stepCard(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
     final name = step.name.trim();
     final instruction = step.instruction.trim();
-
-    return SingleChildScrollView(
-      padding: EdgeInsets.only(top: t.space2),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: t.surface,
-              border: Border.all(color: t.line),
-              borderRadius: BorderRadius.circular(t.radiusL),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: t.surface,
+        border: Border.all(color: t.line),
+        borderRadius: BorderRadius.circular(t.radiusL),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(t.space5),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              (isLast
+                      ? l10n.cookingLastStep(number)
+                      : l10n.recipeStepTitle(number))
+                  .toUpperCase(),
+              style: t.overline.copyWith(color: t.sage),
             ),
-            child: Padding(
-              padding: EdgeInsets.all(t.space5),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    (isLast
-                            ? l10n.cookingLastStep(number)
-                            : l10n.recipeStepTitle(number))
-                        .toUpperCase(),
-                    style: t.overline.copyWith(color: t.sage),
-                  ),
-                  if (name.isNotEmpty) ...[
-                    SizedBox(height: t.space1),
-                    Text(name, style: t.titleS.copyWith(color: t.ink)),
-                  ],
-                  if (instruction.isNotEmpty) ...[
-                    SizedBox(height: t.space2),
-                    MarkdownText(
-                      instruction,
-                      style: t.step.copyWith(color: t.ink),
-                      spanBuilder: stepTemplateSpans(
-                        context,
-                        StepTemplate(
-                          ingredients: step.ingredients,
-                          scaling: scaling,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+            if (name.isNotEmpty) ...[
+              SizedBox(height: t.space1),
+              Text(name, style: t.titleS.copyWith(color: t.ink)),
+            ],
+            if (instruction.isNotEmpty) ...[
+              SizedBox(height: t.space2),
+              MarkdownText(
+                instruction,
+                style: t.step.copyWith(color: t.ink),
+                spanBuilder: stepTemplateSpans(
+                  context,
+                  StepTemplate(ingredients: step.ingredients, scaling: scaling),
+                ),
               ),
-            ),
-          ),
-          if (step.ingredients.isNotEmpty) ...[
-            SizedBox(height: t.space5),
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: t.space3,
-              children: [
-                Semantics(
-                  header: true,
-                  child: Text(
-                    l10n.recipeIngredients,
-                    style: t.titleS.copyWith(color: t.ink),
-                  ),
-                ),
-                Text(
-                  l10n.cookingForServings(servings),
-                  style: t.body.copyWith(color: t.inkMuted),
-                ),
-              ],
-            ),
-            SizedBox(height: t.space2),
-            Consumer(
-              builder: (context, ref, _) {
-                final progress = ref.watch(
-                  cookingProgressControllerProvider(recipeId),
-                );
-                return IngredientLines(
-                  ingredients: step.ingredients,
-                  scaling: scaling,
-                  isDone: (ingredient) => progress.isDone((
-                    stepId: step.id,
-                    ingredientId: ingredient.id,
-                  )),
-                  onToggle: (ingredient) => ref
-                      .read(
-                        cookingProgressControllerProvider(recipeId).notifier,
-                      )
-                      .toggle((stepId: step.id, ingredientId: ingredient.id)),
-                );
-              },
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
+
+  Widget _ingredientsHeader(BuildContext context) {
+    final t = context.tokens;
+    final l10n = context.l10n;
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: t.space3,
+      children: [
+        Semantics(
+          header: true,
+          child: Text(
+            l10n.recipeIngredients,
+            style: t.titleS.copyWith(color: t.ink),
+          ),
+        ),
+        Text(
+          l10n.cookingForServings(servings),
+          style: t.body.copyWith(color: t.inkMuted),
+        ),
+      ],
+    );
+  }
+
+  Widget _ingredientsToggle(BuildContext context) {
+    final t = context.tokens;
+    final l10n = context.l10n;
+    return Wrap(
+      spacing: t.space2,
+      children: [
+        ChoiceFilterChip(
+          label: l10n.cookingIngredientsOfStep,
+          selected: !allIngredients,
+          onSelected: () => onAllIngredientsChanged(false),
+        ),
+        ChoiceFilterChip(
+          label: l10n.cookingIngredientsAll,
+          selected: allIngredients,
+          onSelected: () => onAllIngredientsChanged(true),
+        ),
+      ],
+    );
+  }
+
+  /// The ingredients of [steps], tickable per step.
+  Widget _ingredients(List<RecipeStep> steps) => Consumer(
+    builder: (context, ref, _) {
+      final progress = ref.watch(cookingProgressControllerProvider(recipeId));
+      IngredientOccurrence occurrence(RecipeStep step, Ingredient ingredient) =>
+          (stepId: step.id, ingredientId: ingredient.id);
+      return IngredientGroups(
+        steps: steps,
+        scaling: scaling,
+        isDone: (step, ingredient) =>
+            progress.isDone(occurrence(step, ingredient)),
+        onToggle: (step, ingredient) => ref
+            .read(cookingProgressControllerProvider(recipeId).notifier)
+            .toggle(occurrence(step, ingredient)),
+      );
+    },
+  );
 }

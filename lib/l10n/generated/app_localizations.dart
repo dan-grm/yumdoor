@@ -679,6 +679,30 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{name} abhaken'**
   String ingredientTickOff(String name);
+
+  /// Chip in wide cooking mode: show only the current step's ingredients.
+  ///
+  /// In de, this message translates to:
+  /// **'Dieser Schritt'**
+  String get cookingIngredientsOfStep;
+
+  /// Chip in wide cooking mode: show the ingredients of every step.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle'**
+  String get cookingIngredientsAll;
+
+  /// Wide cooking mode, when the current step has no ingredients.
+  ///
+  /// In de, this message translates to:
+  /// **'Für diesen Schritt brauchst du keine Zutaten.'**
+  String get cookingNoStepIngredients;
+
+  /// Title of the steps column on the recipe screen on tablets and in landscape.
+  ///
+  /// In de, this message translates to:
+  /// **'Zubereitung'**
+  String get recipeMethod;
 }
 
 class _AppLocalizationsDelegate

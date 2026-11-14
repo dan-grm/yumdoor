@@ -101,6 +101,53 @@ class AddFilterChip extends StatelessWidget {
   }
 }
 
+/// One of a few mutually exclusive choices, as a chip
+/// (docs/design/components/FilterChip.md): `surface` with a `line` border, or
+/// `sage-soft` with a leading check when [selected].
+class ChoiceFilterChip extends StatelessWidget {
+  const ChoiceFilterChip({
+    super.key,
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final iconSize = t.label.fontSize! + t.space1;
+    return _ChipTapArea(
+      label: label,
+      selected: selected,
+      onTap: onSelected,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: selected ? t.sageSoft : t.surface,
+          border: selected ? null : Border.all(color: t.line),
+          borderRadius: BorderRadius.circular(t.radiusM),
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: t.space3),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (selected) ...[
+                Icon(Icons.check_rounded, size: iconSize, color: t.ink),
+                SizedBox(width: t.space1),
+              ],
+              Text(label, style: t.label.copyWith(color: t.ink)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// A `size-chip` tall chip inside a `size-touch` tall tap area.
 class _ChipTapArea extends StatelessWidget {
   const _ChipTapArea({
