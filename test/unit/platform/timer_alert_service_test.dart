@@ -1,0 +1,177 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:yumdoor/platform/timers/timer_alert_service.dart';
+
+import '../../fakes/fake_alert_channels.dart';
+
+void main() {
+  late FakeAlertChannels channels;
+  late TimerAlertService service;
+
+  void start(FakeAlertChannels fake) {
+    channels = fake;
+    service = TimerAlertService.withChannels(fake);
+  }
+
+  Future<TimerAlertOutcome> alert() =>
+      service.alert(title: 'Ofen ist fertig', body: 'Ofenkarotten mit Feta');
+
+  group('prepare', () {
+    test('unlocks sound and asks for notifications once', () async {
+      start(FakeAlertChannels());
+
+      final capabilities = await service.prepare();
+      await service.prepare();
+
+      expect(channels.unlocks, 1);
+      expect(channels.permissionRequests, 1);
+      expect(capabilities.notifications, NotificationAccess.granted);
+      expect(capabilities.backgroundAlerts, isTrue);
+    });
+
+    test('doesn\'t ask again after an earlier answer', () async {
+      for (final access in [
+        NotificationAccess.granted,
+        NotificationAccess.denied,
+        NotificationAccess.unsupported,
+      ]) {
+        start(FakeAlertChannels(notificationAccess: access));
+
+        await service.prepare();
+
+        expect(channels.permissionRequests, 0, reason: '$access');
+      }
+    });
+
+    test('a denied prompt leaves no background alerts', () async {
+      start(FakeAlertChannels(answer: NotificationAccess.denied));
+
+      final capabilities = await service.prepare();
+
+      expect(capabilities.notifications, NotificationAccess.denied);
+      expect(capabilities.backgroundAlerts, isFalse);
+    });
+  });
+
+  test('iOS: notifications granted, but no background alerts', () {
+    start(
+      FakeAlertChannels(
+        notificationAccess: NotificationAccess.granted,
+        runsInBackground: false,
+      ),
+    );
+
+    expect(service.capabilities.backgroundAlerts, isFalse);
+  });
+
+  group('alert', () {
+    test('in the foreground: sound and vibration, no notification', () async {
+      start(FakeAlertChannels(notificationAccess: NotificationAccess.granted));
+
+      final outcome = await alert();
+
+      expect(outcome.sound, isTrue);
+      expect(outcome.vibration, isTrue);
+      expect(outcome.notification, isFalse);
+      expect(channels.notifications, isEmpty);
+    });
+
+    test('in the background: a notification too', () async {
+      start(
+        FakeAlertChannels(
+          notificationAccess: NotificationAccess.granted,
+          isVisible: false,
+        ),
+      );
+
+      final outcome = await alert();
+
+      expect(outcome.notification, isTrue);
+      expect(channels.notifications, [
+        ('Ofen ist fertig', 'Ofenkarotten mit Feta'),
+      ]);
+    });
+
+    test('no notification when denied, unasked or unsupported', () async {
+      for (final access in [
+        NotificationAccess.denied,
+        NotificationAccess.notAsked,
+        NotificationAccess.unsupported,
+      ]) {
+        start(FakeAlertChannels(notificationAccess: access, isVisible: false));
+
+        final outcome = await alert();
+
+        expect(outcome.notification, isFalse, reason: '$access');
+        expect(outcome.sound, isTrue, reason: '$access');
+      }
+    });
+
+    test('without sound, vibration still works', () async {
+      start(FakeAlertChannels(canPlaySound: false));
+
+      final outcome = await alert();
+
+      expect(outcome.sound, isFalse);
+      expect(outcome.vibration, isTrue);
+      expect(channels.chimes, 0);
+    });
+
+    test('without vibration (desktop, iOS), sound still works', () async {
+      start(FakeAlertChannels(canVibrate: false));
+
+      final outcome = await alert();
+
+      expect(outcome.vibration, isFalse);
+      expect(outcome.sound, isTrue);
+    });
+
+    test('a failing channel doesn\'t stop the others', () async {
+      start(
+        FakeAlertChannels(
+          notificationAccess: NotificationAccess.granted,
+          isVisible: false,
+        ),
+      );
+      channels
+        ..soundFails = true
+        ..vibrationFails = true;
+
+      final outcome = await alert();
+
+      expect(outcome.sound, isFalse);
+      expect(outcome.vibration, isFalse);
+      expect(outcome.notification, isTrue);
+    });
+
+    test('nothing at all is reported as silent', () async {
+      start(
+        FakeAlertChannels(
+          canPlaySound: false,
+          canVibrate: false,
+          notificationAccess: NotificationAccess.unsupported,
+        ),
+      );
+
+      expect((await alert()).silent, isTrue);
+      expect(service.capabilities.backgroundAlerts, isFalse);
+    });
+  });
+
+  test('the native placeholder offers nothing and never throws', () async {
+    final service = TimerAlertService();
+
+    final capabilities = await service.prepare();
+    final outcome = await service.alert(title: 't', body: 'b');
+
+    expect(
+      capabilities,
+      const TimerAlertCapabilities(
+        sound: false,
+        vibration: false,
+        notifications: NotificationAccess.unsupported,
+        backgroundAlerts: false,
+      ),
+    );
+    expect(outcome.silent, isTrue);
+  });
+}

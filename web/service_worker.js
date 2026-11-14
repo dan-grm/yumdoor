@@ -84,6 +84,23 @@ self.addEventListener('message', (event) => {
   event.waitUntil(cacheLoaded(event.data.urls));
 });
 
+// A finished timer's notification (TimerAlertService): clicking it brings the
+// app back, focusing an open window if there is one.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(focusApp());
+});
+
+async function focusApp() {
+  const windows = await self.clients.matchAll({
+    type: 'window',
+    includeUncontrolled: true,
+  });
+  const app = windows.find((client) => client.url.startsWith(self.registration.scope));
+  if (app) return app.focus();
+  return self.clients.openWindow(self.registration.scope);
+}
+
 async function networkFirst(event, request, key) {
   const cache = await caches.open(CACHE);
   try {
