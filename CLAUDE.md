@@ -87,8 +87,9 @@ docker compose -f docker/tandoor/compose.yml down -v        # reset: delete data
 - `main` is protected: no direct pushes, CI must be green. Reviews from the other developer are welcome but not
   required. Claude merges its own PRs through the REST API once the required checks pass.
 - The usual flow is the project skills: `/milestone plan M2` turns a roadmap milestone into issues,
-  `/milestone run` ships them one by one, `/ship <issue>` ships a single issue, and `/ship <bug description>` files
-  a bug report and fixes it. The developers mostly don't read the code; they test the app and report bugs.
+  `/milestone run` ships them with one subagent per issue (in parallel where they're independent), `/ship <issue>`
+  ships a single issue, and `/ship <bug description>` files a bug report and fixes it. The developers mostly don't
+  read the code; they test the app and report bugs.
 - Sessions often run in Claude Code's cloud (`tool/cloud/README.md`). There, GitHub is reachable only through
   `gh api` (REST); `gh pr` and `gh issue` use GraphQL and fail. Use `gh api` everywhere.
   PRs are squash-merged with the PR title as the commit message, so the title must be a Conventional Commit.
