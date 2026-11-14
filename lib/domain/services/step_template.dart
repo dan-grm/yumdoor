@@ -1,19 +1,27 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
 import '../models/ingredient.dart';
 import 'scaling_service.dart';
+
+part 'step_template.freezed.dart';
 
 /// Resolves the template subset Tandoor allows in step text, so the values
 /// scale with the chosen servings:
 ///
 /// - `{{ ingredients[n] }}`: amount, unit and food of the step's n-th
-///   ingredient, like its ingredient row (the note is left out, as in Tandoor);
+///   ingredient (without the note, as in Tandoor);
 /// - `{{ ingredients[n].amount }}`, `.unit`, `.food`, `.note`: one part;
 /// - `{{ scale(x) }}`: the number x, scaled.
 ///
 /// `n` counts the step's ingredients in their order on the server, headers
-/// included (Tandoor 2.6.15, `cookbook/helper/template_helper.py`). Nothing is
+/// included, and may be negative like a Python index (Tandoor 2.6.15,
+/// `cookbook/helper/template_helper.py`). Headers render empty. Nothing is
 /// evaluated: anything else between `{{ }}`, an index out of range or broken
-/// braces stays in the text as written. Tandoor would replace the whole step
-/// with an error message instead.
+/// braces stays in the text as written, where Tandoor would replace the whole
+/// step with an error message.
+///
+/// Units and foods are singular or plural like the ingredient rows (plural
+/// above a scaled amount of 1).
 class StepTemplate {
   const StepTemplate({required this.ingredients, required this.scaling});
 
@@ -22,10 +30,12 @@ class StepTemplate {
   final ScalingService scaling;
 
   /// `{{ … }}` without another `{{` inside, so a stray opening brace doesn't
-  /// swallow the expression after it.
-  static final _expression = RegExp(r'\{\{((?:(?!\{\{).)*?)\}\}');
+  /// swallow the expression after it. May span lines, as in Jinja.
+  static final _expression = RegExp(r'\{\{((?:(?!\{\{).)*?)\}\}', dotAll: true);
+
+  /// At most 9 digits, so the index always fits in an int.
   static final _ingredient = RegExp(
-    r'^ingredients\s*\[\s*(\d+)\s*\](?:\s*\.\s*(amount|unit|food|note))?$',
+    r'^ingredients\s*\[\s*(-?\d{1,9})\s*\](?:\s*\.\s*(amount|unit|food|note))?$',
   );
   static final _scale = RegExp(
     r'''^scale\s*\(\s*(['"]?)(\d+(?:\.\d*)?|\.\d+)\1\s*\)$''',
@@ -39,110 +49,85 @@ class StepTemplate {
       final value = _value(match.group(1)!.trim());
       if (value == null) continue;
       if (match.start > position) {
-        parts.add(StepText(text.substring(position, match.start)));
+        parts.add(StepTextPart.text(text.substring(position, match.start)));
       }
       parts.add(value);
       position = match.end;
     }
-    if (position < text.length) parts.add(StepText(text.substring(position)));
+    if (position < text.length) {
+      parts.add(StepTextPart.text(text.substring(position)));
+    }
     return parts;
   }
 
   StepTextPart? _value(String expression) {
     if (_ingredient.firstMatch(expression) case final match?) {
-      final index = int.parse(match.group(1)!);
-      if (index >= ingredients.length) return null;
-      final line = scaling.scale(ingredients[index]);
-      // A header renders empty in Tandoor, whatever the field.
-      if (line.isHeader) return const StepValue('');
-      return switch (match.group(2)) {
-        null => StepIngredient(line),
-        'amount' => StepAmount(line.amount),
-        'unit' => StepValue(line.unit),
-        'food' => StepValue(line.name),
-        _ => StepValue(line.ingredient.note),
-      };
+      var index = int.parse(match.group(1)!);
+      if (index < 0) index += ingredients.length;
+      if (index < 0 || index >= ingredients.length) return null;
+      return _ingredientValue(ingredients[index], match.group(2));
     }
     if (_scale.firstMatch(expression) case final match?) {
       final number = double.parse(match.group(2)!);
-      return StepAmount(Quantity.of(number * scaling.factor));
+      return StepTextPart.amount(Quantity.of(number * scaling.factor));
     }
     return null;
+  }
+
+  StepTextPart _ingredientValue(Ingredient ingredient, String? field) {
+    if (ingredient.isHeader) return const StepTextPart.value('');
+
+    // Like Tandoor: an amount of 0 is shown as 0, only `noAmount` hides it;
+    // unit and food are shown whenever the ingredient has them.
+    final scaled = ingredient.noAmount
+        ? null
+        : ingredient.amount * scaling.factor;
+    final amount = scaled == null ? null : Quantity.of(scaled);
+    final plural = scaled != null && scaled > 1;
+    final unit = switch (ingredient.unit) {
+      final unit? => ScalingService.pickName(
+        unit.name,
+        unit.pluralName,
+        plural: plural,
+      ),
+      null => '',
+    };
+    final food = switch (ingredient.food) {
+      final food? => ScalingService.pickName(
+        food.name,
+        food.pluralName,
+        plural: plural,
+      ),
+      null => '',
+    };
+
+    return switch (field) {
+      null => StepTextPart.ingredient(amount: amount, unit: unit, food: food),
+      'amount' => StepTextPart.amount(amount),
+      'unit' => StepTextPart.value(unit),
+      'food' => StepTextPart.value(food),
+      _ => StepTextPart.value(ingredient.note),
+    };
   }
 }
 
 /// A piece of resolved step text.
-sealed class StepTextPart {
-  const StepTextPart();
-}
+@freezed
+sealed class StepTextPart with _$StepTextPart {
+  /// Text as written, including unresolved `{{ }}` expressions.
+  const factory StepTextPart.text(String text) = StepText;
 
-/// Text as written, including unresolved `{{ }}` expressions.
-final class StepText extends StepTextPart {
-  const StepText(this.text);
+  /// `{{ ingredients[n] }}`: "600 g Karotten". Empty pieces are left out when
+  /// shown.
+  const factory StepTextPart.ingredient({
+    Quantity? amount,
+    required String unit,
+    required String food,
+  }) = StepIngredient;
 
-  final String text;
+  /// A scaled number; `null` if the ingredient has no amount.
+  const factory StepTextPart.amount(Quantity? quantity) = StepAmount;
 
-  @override
-  bool operator ==(Object other) => other is StepText && other.text == text;
-
-  @override
-  int get hashCode => text.hashCode;
-
-  @override
-  String toString() => 'StepText($text)';
-}
-
-/// `{{ ingredients[n] }}`: shown like the ingredient row, "600 g Karotten".
-final class StepIngredient extends StepTextPart {
-  const StepIngredient(this.line);
-
-  final ScaledIngredient line;
-
-  @override
-  bool operator ==(Object other) =>
-      other is StepIngredient &&
-      other.line.ingredient == line.ingredient &&
-      other.line.name == line.name &&
-      other.line.amount == line.amount &&
-      other.line.unit == line.unit;
-
-  @override
-  int get hashCode => Object.hash(line.ingredient, line.amount);
-
-  @override
-  String toString() =>
-      'StepIngredient(${line.amount} ${line.unit} ${line.name})';
-}
-
-/// A scaled number; `null` if the ingredient has no amount.
-final class StepAmount extends StepTextPart {
-  const StepAmount(this.quantity);
-
-  final Quantity? quantity;
-
-  @override
-  bool operator ==(Object other) =>
-      other is StepAmount && other.quantity == quantity;
-
-  @override
-  int get hashCode => quantity.hashCode;
-
-  @override
-  String toString() => 'StepAmount($quantity)';
-}
-
-/// A unit, food or note, already in singular or plural.
-final class StepValue extends StepTextPart {
-  const StepValue(this.text);
-
-  final String text;
-
-  @override
-  bool operator ==(Object other) => other is StepValue && other.text == text;
-
-  @override
-  int get hashCode => text.hashCode;
-
-  @override
-  String toString() => 'StepValue($text)';
+  /// A unit, food or note, already in singular or plural.
+  const factory StepTextPart.value(String text) = StepValue;
 }

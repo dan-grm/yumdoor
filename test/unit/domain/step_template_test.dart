@@ -27,6 +27,7 @@ void main() {
   const salz = Ingredient(
     id: 4,
     food: Food(id: 3, name: 'Salz'),
+    unit: Unit(id: 2, name: 'Prise'),
     noAmount: true,
   );
   const ingredients = [karotten, header, ei, salz];
@@ -45,25 +46,33 @@ void main() {
   });
 
   group('ingredients[n]', () {
-    test('is the whole ingredient line', () {
-      final parts = resolve('{{ ingredients[0] }} schälen.');
-
-      expect(parts, hasLength(2));
-      final line = (parts.first as StepIngredient).line;
-      expect(line.amount, const DecimalQuantity(300));
-      expect(line.unit, 'g');
-      expect(line.name, 'Karotten');
-      expect(parts.last, const StepText(' schälen.'));
+    test('is amount, unit and food, without the note', () {
+      expect(resolve('{{ ingredients[0] }} schälen.'), [
+        const StepIngredient(
+          amount: DecimalQuantity(300),
+          unit: 'g',
+          food: 'Karotten',
+        ),
+        const StepText(' schälen.'),
+      ]);
     });
 
     test('counts headers, as Tandoor does', () {
-      final parts = resolve('{{ ingredients[2] }}');
-
-      expect((parts.single as StepIngredient).line.name, 'Ei');
+      expect(resolve('{{ ingredients[2] }}'), [
+        const StepIngredient(amount: DecimalQuantity(1), unit: '', food: 'Ei'),
+      ]);
     });
 
-    test('works without spaces inside the braces', () {
+    test('negative indexes count from the end, like in Python', () {
+      expect(resolve('{{ ingredients[-4].food }}'), [
+        const StepValue('Karotten'),
+      ]);
+      expect(resolve('{{ ingredients[-1].food }}'), [const StepValue('Salz')]);
+    });
+
+    test('works without spaces and across lines', () {
       expect(resolve('{{ingredients[2]}}').single, isA<StepIngredient>());
+      expect(resolve('{{ ingredients[2]\n}}').single, isA<StepIngredient>());
     });
   });
 
@@ -81,10 +90,45 @@ void main() {
       ]);
     });
 
-    test('an ingredient without amount has an empty amount and unit', () {
+    test('noAmount hides the amount but keeps the unit', () {
       expect(resolve('{{ ingredients[3].amount }}'), [const StepAmount(null)]);
-      expect(resolve('{{ ingredients[3].unit }}'), [const StepValue('')]);
-      expect(resolve('{{ ingredients[3].food }}'), [const StepValue('Salz')]);
+      expect(resolve('{{ ingredients[3].unit }}'), [const StepValue('Prise')]);
+      expect(resolve('{{ ingredients[3] }}'), [
+        const StepIngredient(unit: 'Prise', food: 'Salz'),
+      ]);
+    });
+
+    test('an amount of 0 is shown as 0, as in Tandoor', () {
+      final parts = StepTemplate(
+        ingredients: const [Ingredient(id: 9, food: Food(id: 9, name: 'Öl'))],
+        scaling: const ScalingService(recipeServings: 2, servings: 4),
+      ).resolve('{{ ingredients[0].amount }}');
+
+      expect(parts, [const StepAmount(DecimalQuantity(0))]);
+    });
+
+    test('an ingredient without food keeps amount and unit', () {
+      final parts = StepTemplate(
+        ingredients: const [
+          Ingredient(
+            id: 9,
+            unit: Unit(id: 9, name: 'ml'),
+            amount: 200,
+            note: 'lauwarm',
+          ),
+        ],
+        scaling: const ScalingService(recipeServings: 2, servings: 2),
+      ).resolve('{{ ingredients[0] }}|{{ ingredients[0].food }}');
+
+      expect(parts, [
+        const StepIngredient(
+          amount: DecimalQuantity(200),
+          unit: 'ml',
+          food: '',
+        ),
+        const StepText('|'),
+        const StepValue(''),
+      ]);
     });
 
     test('a header is empty, as in Tandoor', () {
@@ -113,35 +157,48 @@ void main() {
 
   group('scaling', () {
     test('at 2× the amounts double and the food stays plural', () {
-      final parts = resolve(
-        '{{ ingredients[0] }}, {{ ingredients[2] }}',
-        servings: 4,
+      expect(
+        resolve('{{ ingredients[0] }}, {{ ingredients[2] }}', servings: 4),
+        [
+          const StepIngredient(
+            amount: DecimalQuantity(600),
+            unit: 'g',
+            food: 'Karotten',
+          ),
+          const StepText(', '),
+          const StepIngredient(
+            amount: DecimalQuantity(2),
+            unit: '',
+            food: 'Eier',
+          ),
+        ],
       );
-
-      final karotte = (parts[0] as StepIngredient).line;
-      expect(karotte.amount, const DecimalQuantity(600));
-      final eier = (parts[2] as StepIngredient).line;
-      expect(eier.amount, const DecimalQuantity(2));
-      expect(eier.name, 'Eier');
     });
 
     test('at ½× the amounts halve and become fractions', () {
-      final parts = resolve(
-        '{{ ingredients[0].amount }} {{ ingredients[2] }}',
-        servings: 1,
+      expect(
+        resolve(
+          '{{ ingredients[0].amount }} {{ ingredients[2] }}',
+          servings: 1,
+        ),
+        [
+          const StepAmount(DecimalQuantity(150)),
+          const StepText(' '),
+          const StepIngredient(
+            amount: FractionQuantity(0, Fraction.half),
+            unit: '',
+            food: 'Ei',
+          ),
+        ],
       );
-
-      expect(parts.first, const StepAmount(DecimalQuantity(150)));
-      final ei = (parts.last as StepIngredient).line;
-      expect(ei.amount, const FractionQuantity(0, Fraction.half));
-      expect(ei.name, 'Ei');
     });
   });
 
   group('stays as written', () {
     for (final text in [
       '{{ ingredients[4] }}',
-      '{{ ingredients[-1] }}',
+      '{{ ingredients[-5] }}',
+      '{{ ingredients[99999999999999999999] }}',
       '{{ ingredients[0].price }}',
       '{{ ingredients }}',
       '{{ scale() }}',

@@ -38,16 +38,17 @@ class ScalingService {
     final unit = ingredient.unit;
     return ScaledIngredient(
       ingredient,
-      name: _pick(food.name, food.pluralName, plural: plural),
+      name: pickName(food.name, food.pluralName, plural: plural),
       note: ingredient.note,
       amount: amount == null ? null : Quantity.of(amount),
       unit: ingredient.noAmount || unit == null
           ? ''
-          : _pick(unit.name, unit.pluralName, plural: plural),
+          : pickName(unit.name, unit.pluralName, plural: plural),
     );
   }
 
-  static String _pick(
+  /// [pluralName] if [plural] and the server has one, else [singular].
+  static String pickName(
     String singular,
     String? pluralName, {
     required bool plural,
