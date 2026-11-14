@@ -1,4 +1,4 @@
-import 'dart:ui' show CheckedState;
+import 'dart:ui' show CheckedState, Tristate;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -483,6 +483,16 @@ void main() {
             .isChecked,
         CheckedState.isTrue,
       );
+    });
+
+    testWidgets('wide: the chips are one exclusive choice', (tester) async {
+      await pumpCooking(tester, size: tabletSize);
+
+      final data = tester
+          .getSemantics(find.bySemanticsLabel('Dieser Schritt'))
+          .getSemanticsData();
+      expect(data.flagsCollection.isInMutuallyExclusiveGroup, isTrue);
+      expect(data.flagsCollection.isSelected, Tristate.isTrue);
     });
 
     testWidgets('wide: a step without ingredients says so', (tester) async {

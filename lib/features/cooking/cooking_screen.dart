@@ -19,6 +19,7 @@ import '../../domain/services/step_template.dart';
 import '../../l10n/l10n.dart';
 import '../../platform/wake_lock/wake_lock_service.dart';
 import '../common/failure_view.dart';
+import '../common/layout.dart';
 import '../common/markdown_text.dart';
 import '../common/step_text.dart';
 import '../recipe/ingredient_lines.dart';
@@ -369,9 +370,9 @@ class _StepPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < t.sizeWide) {
+    return Builder(
+      builder: (context) {
+        if (!isWideLayout(context)) {
           return SingleChildScrollView(
             padding: EdgeInsets.only(top: t.space2),
             child: Column(

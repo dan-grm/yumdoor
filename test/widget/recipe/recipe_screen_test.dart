@@ -242,6 +242,37 @@ void main() {
       );
     });
 
+    testWidgets('wide: steps are numbered; steps without text are left out', (
+      tester,
+    ) async {
+      repository.recipes[ofenkarotten.id] = ofenkarotten.copyWith(
+        steps: [
+          ofenkarotten.steps[0].copyWith(instruction: ''),
+          ...ofenkarotten.steps.skip(1),
+        ],
+      );
+      await pumpRecipe(tester, ofenkarotten.id, size: tabletSize);
+
+      expect(find.text('SCHRITT 1'), findsNothing);
+      expect(find.text('SCHRITT 2'), findsWidgets);
+      // A named step keeps its number, with the name below.
+      expect(find.text('SCHRITT 3'), findsOneWidget);
+      expect(find.text('Anrichten'), findsOneWidget);
+    });
+
+    testWidgets('wide without any step text keeps one column', (tester) async {
+      repository.recipes[ofenkarotten.id] = ofenkarotten.copyWith(
+        steps: [
+          for (final step in ofenkarotten.steps)
+            step.copyWith(instruction: '', name: ''),
+        ],
+      );
+      await pumpRecipe(tester, ofenkarotten.id, size: tabletSize);
+
+      expect(find.text('Zubereitung'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('long German names fit on a phone in landscape', (
       tester,
     ) async {

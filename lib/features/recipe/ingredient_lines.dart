@@ -7,6 +7,7 @@ import '../../domain/models/recipe_step.dart';
 import '../../domain/services/scaling_service.dart';
 import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
+import '../common/step_text.dart';
 
 /// [count] servings in words, with the recipe's own serving unit if it has one:
 /// "4 Portionen", "12 Stück".
@@ -85,6 +86,9 @@ class IngredientLines extends StatelessWidget {
 /// The ingredients of [steps], grouped by step. Step titles only appear when
 /// more than one step has ingredients.
 ///
+/// [steps] is either all of the recipe's steps, which are numbered by their
+/// position, or a single step, which gets no title.
+///
 /// With [onToggle], rows can be ticked off per step (cooking mode).
 class IngredientGroups extends StatelessWidget {
   const IngredientGroups({
@@ -146,9 +150,3 @@ class IngredientGroups extends StatelessWidget {
     );
   }
 }
-
-/// The step's own name, or "Schritt 3" for [index] 2.
-String stepTitle(BuildContext context, RecipeStep step, int index) =>
-    step.name.trim().isEmpty
-    ? context.l10n.recipeStepTitle(index + 1)
-    : step.name.trim();

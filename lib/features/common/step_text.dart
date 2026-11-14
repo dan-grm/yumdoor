@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/services/scaling_service.dart';
+import '../../domain/models/recipe_step.dart';
 import '../../domain/services/step_template.dart';
 import '../../l10n/formatting.dart';
+import '../../l10n/l10n.dart';
 import 'markdown_text.dart';
 
 /// A [MarkdownSpanBuilder] that replaces step templates with their scaled
@@ -39,3 +41,9 @@ MarkdownSpanBuilder stepTemplateSpans(
     ];
   };
 }
+
+/// The step's own name, or "Schritt 3" for [index] 2.
+String stepTitle(BuildContext context, RecipeStep step, int index) =>
+    step.name.trim().isEmpty
+    ? context.l10n.recipeStepTitle(index + 1)
+    : step.name.trim();
