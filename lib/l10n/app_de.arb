@@ -513,5 +513,15 @@
   "markdownLinkOpen": "Öffnen",
   "@markdownLinkOpen": {
     "description": "Button in the link dialog that opens the link."
+  },
+  "ingredientTickOff": "{name} abhaken",
+  "@ingredientTickOff": {
+    "description": "Screen-reader label of an ingredient row in cooking mode; tapping ticks the ingredient off or back on.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      }
+    }
   }
 }

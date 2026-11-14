@@ -22,6 +22,8 @@ class IngredientLines extends StatelessWidget {
     required this.ingredients,
     required this.scaling,
     this.dividers = false,
+    this.isDone,
+    this.onToggle,
   });
 
   final List<Ingredient> ingredients;
@@ -29,6 +31,12 @@ class IngredientLines extends StatelessWidget {
 
   /// Hairlines between the rows, as on the recipe screen.
   final bool dividers;
+
+  /// Whether a row is ticked off; only used with [onToggle].
+  final bool Function(Ingredient ingredient)? isDone;
+
+  /// Makes the rows tickable (cooking mode).
+  final void Function(Ingredient ingredient)? onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +62,12 @@ class IngredientLines extends StatelessWidget {
             IngredientRow(
               name: line.name,
               note: line.note,
+              done:
+                  onToggle != null && (isDone?.call(line.ingredient) ?? false),
+              onToggle: onToggle == null
+                  ? null
+                  : () => onToggle!(line.ingredient),
+              toggleLabel: context.l10n.ingredientTickOff(line.name),
               amount: [
                 if (line.amount case final amount?) format.quantity(amount),
                 line.unit,

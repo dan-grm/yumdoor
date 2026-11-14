@@ -1,3 +1,5 @@
+import 'dart:ui' show Tristate;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +11,7 @@ import 'package:yumdoor/platform/wake_lock/wake_lock_service.dart';
 
 import '../../fakes/fake_recipe_repository.dart';
 import '../../fakes/fake_wake_lock_service.dart';
+import '../../fakes/in_memory_local_store.dart';
 import '../../fixtures/recipes.dart';
 import '../fonts.dart';
 import '../golden.dart';
@@ -17,12 +20,16 @@ import '../harness.dart';
 void main() {
   late FakeRecipeRepository repository;
   late FakeWakeLockService wakeLock;
+  late InMemoryLocalStore localStore;
+  late DateTime now;
 
   setUpAll(loadBundledFonts);
 
   setUp(() {
     repository = FakeRecipeRepository([ofenkarotten]);
     wakeLock = FakeWakeLockService();
+    localStore = InMemoryLocalStore();
+    now = DateTime.utc(2026, 11, 14, 18);
   });
 
   /// Cooking mode pushed over a stand-in recipe screen, like the app does.
@@ -38,6 +45,8 @@ void main() {
       overrides: [
         recipeRepositoryProvider.overrideWithValue(repository),
         wakeLockServiceProvider.overrideWithValue(wakeLock),
+        localStoreProvider.overrideWithValue(localStore),
+        clockProvider.overrideWithValue(() => now),
       ],
       routes: [
         GoRoute(
@@ -276,6 +285,100 @@ void main() {
     );
   });
 
+  group('ticking off ingredients', () {
+    /// The tick-off button of [name]'s row.
+    Finder row(String name) => find.bySemanticsLabel('$name abhaken');
+
+    bool isDone(WidgetTester tester, String name) {
+      final data = tester.getSemantics(row(name)).getSemanticsData();
+      return data.flagsCollection.isToggled == Tristate.isTrue;
+    }
+
+    testWidgets('a tap toggles a row, announced as toggled', (tester) async {
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+
+      expect(isDone(tester, 'Karotten'), isFalse);
+      await tester.tap(find.text('Karotten'));
+      await tester.pump();
+      expect(isDone(tester, 'Karotten'), isTrue);
+      expect(isDone(tester, 'Olivenöl'), isFalse);
+
+      await tester.tap(find.text('Karotten'));
+      await tester.pump();
+      expect(isDone(tester, 'Karotten'), isFalse);
+    });
+
+    testWidgets('survives paging and a reload', (tester) async {
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+      await tester.tap(find.text('Karotten'));
+      await tester.pump();
+
+      await next(tester, 'Weiter zu Schritt 3');
+      await tester.tap(find.byTooltip('Zurück zu Schritt 2'));
+      await tester.pumpAndSettle();
+      expect(isDone(tester, 'Karotten'), isTrue);
+
+      // A reload: a new app with the same storage.
+      await tester.pumpWidget(const SizedBox());
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+      expect(isDone(tester, 'Karotten'), isTrue);
+    });
+
+    testWidgets('is per step', (tester) async {
+      final step3 = ofenkarotten.steps[2].copyWith(
+        ingredients: [
+          ...ofenkarotten.steps[2].ingredients,
+          ofenkarotten.steps[1].ingredients.first,
+        ],
+      );
+      repository.recipes[7] = ofenkarotten.copyWith(
+        steps: [ofenkarotten.steps[0], ofenkarotten.steps[1], step3],
+      );
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+      await tester.tap(find.text('Karotten'));
+      await tester.pump();
+
+      await next(tester, 'Weiter zu Schritt 3');
+      expect(isDone(tester, 'Karotten'), isFalse);
+    });
+
+    testWidgets('is forgotten after Fertig', (tester) async {
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+      await tester.tap(find.text('Karotten'));
+      await tester.pump();
+      await next(tester, 'Weiter zu Schritt 3');
+      await tester.tap(find.text('Feta'));
+      await tester.pump();
+
+      await next(tester, 'Fertig');
+      expect(localStore.values, isEmpty);
+
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+      expect(isDone(tester, 'Karotten'), isFalse);
+    });
+
+    testWidgets('is forgotten a day after the last change', (tester) async {
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+      await tester.tap(find.text('Karotten'));
+      await tester.pump();
+      await tester.tap(find.byTooltip('Kochmodus beenden'));
+      await tester.pumpAndSettle();
+
+      now = now.add(const Duration(hours: 25));
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+      expect(isDone(tester, 'Karotten'), isFalse);
+      expect(localStore.values, isEmpty);
+    });
+  });
+
   testWidgets('a recipe without steps says so', (tester) async {
     repository.recipes[7] = ofenkarotten.copyWith(steps: []);
     await pumpCooking(tester);
@@ -315,6 +418,9 @@ void main() {
       ) async {
         await pumpCooking(tester, theme: theme);
         await next(tester, 'Weiter zu Schritt 2');
+        // As in the mockup: the first ingredient is already in the pot.
+        await tester.tap(find.text('Karotten'));
+        await tester.pump();
 
         await expectLater(
           find.byType(CookingScreen),

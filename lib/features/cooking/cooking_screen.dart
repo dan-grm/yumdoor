@@ -80,6 +80,14 @@ class _CookingScreenState extends ConsumerState<CookingScreen> {
       ? unawaited(_wakeLock.release())
       : unawaited(_keepScreenOn());
 
+  /// "Fertig": the ticked-off ingredients are forgotten.
+  void _finish() {
+    ref
+        .read(cookingProgressControllerProvider(widget.recipeId).notifier)
+        .clear();
+    _leave();
+  }
+
   void _leave() => context.canPop()
       ? context.pop()
       : context.go('/recipe/${widget.recipeId}');
@@ -107,7 +115,7 @@ class _CookingScreenState extends ConsumerState<CookingScreen> {
                 status: _wakeLockStatus,
                 onToggle: _toggleWakeLock,
               ),
-              onDone: _leave,
+              onDone: _finish,
             ),
             AsyncError(:final error) => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,6 +284,7 @@ class _CookingViewState extends State<_CookingView> {
               children: [
                 for (final (index, step) in steps.indexed)
                   _StepPage(
+                    recipeId: widget.recipe.id,
                     step: step,
                     number: index + 1,
                     isLast: index == steps.length - 1,
@@ -321,6 +330,7 @@ class _CookingViewState extends State<_CookingView> {
 /// One step: its text in a card, then its ingredients for the servings.
 class _StepPage extends StatelessWidget {
   const _StepPage({
+    required this.recipeId,
     required this.step,
     required this.number,
     required this.isLast,
@@ -328,6 +338,7 @@ class _StepPage extends StatelessWidget {
     required this.servings,
   });
 
+  final int recipeId;
   final RecipeStep step;
   final int number;
   final bool isLast;
@@ -407,7 +418,26 @@ class _StepPage extends StatelessWidget {
               ],
             ),
             SizedBox(height: t.space2),
-            IngredientLines(ingredients: step.ingredients, scaling: scaling),
+            Consumer(
+              builder: (context, ref, _) {
+                final progress = ref.watch(
+                  cookingProgressControllerProvider(recipeId),
+                );
+                return IngredientLines(
+                  ingredients: step.ingredients,
+                  scaling: scaling,
+                  isDone: (ingredient) => progress.isDone((
+                    stepId: step.id,
+                    ingredientId: ingredient.id,
+                  )),
+                  onToggle: (ingredient) => ref
+                      .read(
+                        cookingProgressControllerProvider(recipeId).notifier,
+                      )
+                      .toggle((stepId: step.id, ingredientId: ingredient.id)),
+                );
+              },
+            ),
           ],
         ],
       ),
