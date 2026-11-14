@@ -70,6 +70,69 @@ abstract class _$WakeLockHintShown extends $Notifier<bool> {
   }
 }
 
+/// Whether cooking mode already said, in this app session, that timers can't
+/// alert while the app is in the background.
+
+@ProviderFor(TimerBackgroundHintShown)
+final timerBackgroundHintShownProvider = TimerBackgroundHintShownProvider._();
+
+/// Whether cooking mode already said, in this app session, that timers can't
+/// alert while the app is in the background.
+final class TimerBackgroundHintShownProvider
+    extends $NotifierProvider<TimerBackgroundHintShown, bool> {
+  /// Whether cooking mode already said, in this app session, that timers can't
+  /// alert while the app is in the background.
+  TimerBackgroundHintShownProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'timerBackgroundHintShownProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$timerBackgroundHintShownHash();
+
+  @$internal
+  @override
+  TimerBackgroundHintShown create() => TimerBackgroundHintShown();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$timerBackgroundHintShownHash() =>
+    r'c0513b5e53f00c6bebd3151c8fb614e1f57a03cd';
+
+/// Whether cooking mode already said, in this app session, that timers can't
+/// alert while the app is in the background.
+
+abstract class _$TimerBackgroundHintShown extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 /// The ingredients ticked off while cooking [recipeId], saved so they survive
 /// paging and a reload. Cooking mode watches it while open, so a failed save
 /// still keeps the ticks in memory until the screen closes.
@@ -184,6 +247,127 @@ abstract class _$CookingProgressController extends $Notifier<CookingProgress> {
             as $ClassProviderElement<
               AnyNotifier<CookingProgress, CookingProgress>,
               CookingProgress,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, () => build(_$args));
+  }
+}
+
+/// The timers running while cooking [recipeId], saved so they survive paging
+/// and a reload. Cooking mode keeps it alive while open and calls [tick]
+/// every second.
+
+@ProviderFor(CookingTimersController)
+final cookingTimersControllerProvider = CookingTimersControllerFamily._();
+
+/// The timers running while cooking [recipeId], saved so they survive paging
+/// and a reload. Cooking mode keeps it alive while open and calls [tick]
+/// every second.
+final class CookingTimersControllerProvider
+    extends $NotifierProvider<CookingTimersController, List<CookingTimer>> {
+  /// The timers running while cooking [recipeId], saved so they survive paging
+  /// and a reload. Cooking mode keeps it alive while open and calls [tick]
+  /// every second.
+  CookingTimersControllerProvider._({
+    required CookingTimersControllerFamily super.from,
+    required int super.argument,
+  }) : super(
+         retry: null,
+         name: r'cookingTimersControllerProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$cookingTimersControllerHash();
+
+  @override
+  String toString() {
+    return r'cookingTimersControllerProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  CookingTimersController create() => CookingTimersController();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<CookingTimer> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<CookingTimer>>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CookingTimersControllerProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$cookingTimersControllerHash() =>
+    r'382094a51b2fd5844db12f900b900ebad2d43fde';
+
+/// The timers running while cooking [recipeId], saved so they survive paging
+/// and a reload. Cooking mode keeps it alive while open and calls [tick]
+/// every second.
+
+final class CookingTimersControllerFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          CookingTimersController,
+          List<CookingTimer>,
+          List<CookingTimer>,
+          List<CookingTimer>,
+          int
+        > {
+  CookingTimersControllerFamily._()
+    : super(
+        retry: null,
+        name: r'cookingTimersControllerProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// The timers running while cooking [recipeId], saved so they survive paging
+  /// and a reload. Cooking mode keeps it alive while open and calls [tick]
+  /// every second.
+
+  CookingTimersControllerProvider call(int recipeId) =>
+      CookingTimersControllerProvider._(argument: recipeId, from: this);
+
+  @override
+  String toString() => r'cookingTimersControllerProvider';
+}
+
+/// The timers running while cooking [recipeId], saved so they survive paging
+/// and a reload. Cooking mode keeps it alive while open and calls [tick]
+/// every second.
+
+abstract class _$CookingTimersController extends $Notifier<List<CookingTimer>> {
+  late final _$args = ref.$arg as int;
+  int get recipeId => _$args;
+
+  List<CookingTimer> build(int recipeId);
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<List<CookingTimer>, List<CookingTimer>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<List<CookingTimer>, List<CookingTimer>>,
+              List<CookingTimer>,
               Object?,
               Object?
             >;

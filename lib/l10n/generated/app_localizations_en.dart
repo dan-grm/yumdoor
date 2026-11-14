@@ -400,4 +400,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipeMethod => 'Method';
+
+  @override
+  String timerStart(String time) {
+    return 'Start timer · $time';
+  }
+
+  @override
+  String get timerFinished => 'done';
+
+  @override
+  String timerChipRunning(String label, String time) {
+    return '$label, $time left';
+  }
+
+  @override
+  String timerChipPaused(String label, String time) {
+    return '$label, paused at $time';
+  }
+
+  @override
+  String timerChipFinished(String label) {
+    return '$label is done';
+  }
+
+  @override
+  String get timerAdd => 'Set a timer';
+
+  @override
+  String get timerManualLabel => 'Timer';
+
+  @override
+  String get timerNew => 'New timer';
+
+  @override
+  String timerMinutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String get timerLess => 'One minute less';
+
+  @override
+  String get timerMore => 'One minute more';
+
+  @override
+  String get timerStartManual => 'Start';
+
+  @override
+  String get timerPause => 'Pause';
+
+  @override
+  String get timerResume => 'Resume';
+
+  @override
+  String get timerAddMinute => '+1 min';
+
+  @override
+  String get timerDelete => 'Delete timer';
+
+  @override
+  String get timerTurnOff => 'Turn off';
+
+  @override
+  String get timerBackgroundHint => 'Timers only alert while Yumdoor is open.';
 }

@@ -703,6 +703,114 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Zubereitung'**
   String get recipeMethod;
+
+  /// Button below a step with an explicit time: starts a timer of that length.
+  ///
+  /// In de, this message translates to:
+  /// **'Timer starten · {time}'**
+  String timerStart(String time);
+
+  /// On a finished timer chip, after its label: "Rösten fertig".
+  ///
+  /// In de, this message translates to:
+  /// **'fertig'**
+  String get timerFinished;
+
+  /// Screen-reader label of a running timer chip.
+  ///
+  /// In de, this message translates to:
+  /// **'{label}, noch {time}'**
+  String timerChipRunning(String label, String time);
+
+  /// Screen-reader label of a paused timer chip.
+  ///
+  /// In de, this message translates to:
+  /// **'{label}, angehalten bei {time}'**
+  String timerChipPaused(String label, String time);
+
+  /// Screen-reader label of a finished timer chip, and the notification title.
+  ///
+  /// In de, this message translates to:
+  /// **'{label} ist fertig'**
+  String timerChipFinished(String label);
+
+  /// Tooltip of the button in cooking mode that sets a new timer by hand.
+  ///
+  /// In de, this message translates to:
+  /// **'Timer stellen'**
+  String get timerAdd;
+
+  /// Name of a timer set by hand.
+  ///
+  /// In de, this message translates to:
+  /// **'Timer'**
+  String get timerManualLabel;
+
+  /// Title of the sheet that sets a timer by hand.
+  ///
+  /// In de, this message translates to:
+  /// **'Neuer Timer'**
+  String get timerNew;
+
+  /// Length of a new timer in the sheet.
+  ///
+  /// In de, this message translates to:
+  /// **'{count} Min'**
+  String timerMinutes(int count);
+
+  /// Tooltip: shortens the new timer by a minute.
+  ///
+  /// In de, this message translates to:
+  /// **'Eine Minute weniger'**
+  String get timerLess;
+
+  /// Tooltip: lengthens the new timer by a minute.
+  ///
+  /// In de, this message translates to:
+  /// **'Eine Minute mehr'**
+  String get timerMore;
+
+  /// Button in the sheet that starts the new timer.
+  ///
+  /// In de, this message translates to:
+  /// **'Starten'**
+  String get timerStartManual;
+
+  /// Button in the timer sheet that pauses a running timer.
+  ///
+  /// In de, this message translates to:
+  /// **'Anhalten'**
+  String get timerPause;
+
+  /// Button in the timer sheet that resumes a paused timer.
+  ///
+  /// In de, this message translates to:
+  /// **'Fortsetzen'**
+  String get timerResume;
+
+  /// Button in the timer sheet that adds a minute.
+  ///
+  /// In de, this message translates to:
+  /// **'+1 Min'**
+  String get timerAddMinute;
+
+  /// Button in the timer sheet that cancels a timer.
+  ///
+  /// In de, this message translates to:
+  /// **'Timer löschen'**
+  String get timerDelete;
+
+  /// Button in the timer sheet that turns off a finished timer.
+  ///
+  /// In de, this message translates to:
+  /// **'Ausschalten'**
+  String get timerTurnOff;
+
+  /// Shown once when a timer starts on a device that can't alert in the background (phones).
+  ///
+  /// In de, this message translates to:
+  /// **'Timer melden sich nur, solange Yumdoor geöffnet ist.'**
+  String get timerBackgroundHint;
 }
 
 class _AppLocalizationsDelegate

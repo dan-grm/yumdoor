@@ -7,8 +7,10 @@ import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/features/cooking/cooking_screen.dart';
+import 'package:yumdoor/platform/timers/timer_alert_service.dart';
 import 'package:yumdoor/platform/wake_lock/wake_lock_service.dart';
 
+import '../../fakes/fake_alert_channels.dart';
 import '../../fakes/fake_recipe_repository.dart';
 import '../../fakes/fake_wake_lock_service.dart';
 import '../../fakes/in_memory_local_store.dart';
@@ -22,6 +24,7 @@ void main() {
   late FakeWakeLockService wakeLock;
   late InMemoryLocalStore localStore;
   late DateTime now;
+  late FakeAlertChannels alerts;
 
   setUpAll(loadBundledFonts);
 
@@ -30,6 +33,7 @@ void main() {
     wakeLock = FakeWakeLockService();
     localStore = InMemoryLocalStore();
     now = DateTime.utc(2026, 11, 14, 18);
+    alerts = FakeAlertChannels(runsInBackground: false);
   });
 
   /// Cooking mode pushed over a stand-in recipe screen, like the app does.
@@ -49,6 +53,9 @@ void main() {
         wakeLockServiceProvider.overrideWithValue(wakeLock),
         localStoreProvider.overrideWithValue(localStore),
         clockProvider.overrideWithValue(() => now),
+        timerAlertServiceProvider.overrideWithValue(
+          ChannelTimerAlertService(alerts),
+        ),
       ],
       routes: [
         GoRoute(
@@ -397,6 +404,171 @@ void main() {
     });
   });
 
+  group('timers', () {
+    /// Step 2 roasts for 25 minutes, named like in mockup 07.
+    void roastFor25Minutes() {
+      repository.recipes[7] = ofenkarotten.copyWith(
+        steps: [
+          ofenkarotten.steps[0],
+          ofenkarotten.steps[1].copyWith(
+            name: 'Rösten',
+            time: const Duration(minutes: 25),
+          ),
+          ofenkarotten.steps[2],
+        ],
+      );
+    }
+
+    /// Lets [seconds] pass on the clock and the tickers.
+    Future<void> wait(WidgetTester tester, int seconds) async {
+      for (var i = 0; i < seconds; i++) {
+        now = now.add(const Duration(seconds: 1));
+        await tester.pump(const Duration(seconds: 1));
+      }
+    }
+
+    /// Taps [label] while timers tick, where pumpAndSettle never settles.
+    Future<void> tapAndWait(WidgetTester tester, Finder finder) async {
+      await tester.tap(finder);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+    }
+
+    Finder chip(String label) => find.bySemanticsLabel(RegExp('^$label'));
+
+    testWidgets('start from the step\'s time; the chip counts down', (
+      tester,
+    ) async {
+      roastFor25Minutes();
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+
+      await tapAndWait(tester, find.text('Timer starten · 25:00'));
+      expect(find.text('25:00'), findsOneWidget);
+      expect(find.text('Timer starten · 25:00'), findsNothing);
+      // The first timer prepares the alerts: audio, notification prompt.
+      expect(alerts.unlocks, 1);
+      expect(alerts.permissionRequests, 1);
+
+      await wait(tester, 3);
+      expect(find.text('24:57'), findsOneWidget);
+      expect(chip('Rösten, noch 24:57'), findsOneWidget);
+    });
+
+    testWidgets('phones are told once that timers need the app open', (
+      tester,
+    ) async {
+      roastFor25Minutes();
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+
+      await tapAndWait(tester, find.text('Timer starten · 25:00'));
+      expect(
+        find.text('Timer melden sich nur, solange Yumdoor geöffnet ist.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('two timers run at once, also across steps', (tester) async {
+      roastFor25Minutes();
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+      await tapAndWait(tester, find.text('Timer starten · 25:00'));
+      await wait(tester, 60);
+
+      await tapAndWait(tester, find.byTooltip('Timer stellen'));
+      await tapAndWait(tester, find.byTooltip('Eine Minute mehr'));
+      expect(find.text('6 Min'), findsOneWidget);
+      await tapAndWait(tester, find.text('Starten'));
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('24:00'), findsOneWidget);
+      expect(find.text('06:00'), findsOneWidget);
+      await tapAndWait(tester, find.text('Weiter zu Schritt 3'));
+      expect(chip('Rösten'), findsOneWidget);
+      expect(chip('Timer'), findsOneWidget);
+    });
+
+    testWidgets('a finished timer alerts until it is turned off', (
+      tester,
+    ) async {
+      roastFor25Minutes();
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+      await tapAndWait(tester, find.text('Timer starten · 25:00'));
+
+      now = now.add(const Duration(minutes: 25));
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('fertig'), findsOneWidget);
+      expect(chip('Rösten ist fertig'), findsOneWidget);
+      expect(alerts.chimes, 1);
+
+      await wait(tester, 30);
+      expect(alerts.chimes, 2);
+
+      await tapAndWait(tester, find.text('fertig'));
+      await tapAndWait(tester, find.text('Ausschalten'));
+      expect(find.text('fertig'), findsNothing);
+      expect(alerts.closes, 1);
+      await wait(tester, 30);
+      expect(alerts.chimes, 2);
+      // The step can be timed again.
+      expect(find.text('Timer starten · 25:00'), findsOneWidget);
+    });
+
+    testWidgets('pause, +1 min and delete from the sheet', (tester) async {
+      roastFor25Minutes();
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+      await tapAndWait(tester, find.text('Timer starten · 25:00'));
+
+      await tapAndWait(tester, find.text('25:00').first);
+      await tapAndWait(tester, find.text('Anhalten'));
+      await wait(tester, 10);
+      expect(find.text('25:00'), findsWidgets);
+      expect(chip('Rösten, angehalten bei 25:00'), findsOneWidget);
+
+      await tapAndWait(tester, find.text('+1 Min'));
+      await tapAndWait(tester, find.text('Fortsetzen'));
+      await wait(tester, 1);
+      expect(find.text('25:59'), findsWidgets);
+
+      await tapAndWait(tester, find.text('Timer löschen'));
+      expect(find.text('25:58'), findsNothing);
+      expect(localStore.values.keys, isNot(contains('cooking-timers.7')));
+    });
+
+    testWidgets('timers survive paging and a reload', (tester) async {
+      roastFor25Minutes();
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+      await tapAndWait(tester, find.text('Timer starten · 25:00'));
+
+      // A reload two minutes later: a new app with the same storage.
+      await tester.pumpWidget(const SizedBox());
+      now = now.add(const Duration(minutes: 2));
+      await pumpCooking(tester);
+
+      expect(find.text('23:00'), findsOneWidget);
+    });
+
+    testWidgets('Fertig forgets the timers', (tester) async {
+      // A desktop: no hint over the buttons.
+      alerts
+        ..runsInBackground = true
+        ..notificationAccess = NotificationAccess.granted;
+      roastFor25Minutes();
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+      await tapAndWait(tester, find.text('Timer starten · 25:00'));
+      await tapAndWait(tester, find.text('Weiter zu Schritt 3'));
+
+      await tapAndWait(tester, find.text('Fertig'));
+
+      expect(localStore.values.keys, isNot(contains('cooking-timers.7')));
+    });
+  });
+
   testWidgets('a recipe without steps says so', (tester) async {
     repository.recipes[7] = ofenkarotten.copyWith(steps: []);
     await pumpCooking(tester);
@@ -545,6 +717,71 @@ void main() {
 
   group('goldens', skip: goldenSkip, () {
     for (final (name, theme) in [('light', lightTheme), ('dark', darkTheme)]) {
+      testWidgets('mockup 05: a running timer in $name', tags: goldenTags, (
+        tester,
+      ) async {
+        repository.recipes[7] = ofenkarotten.copyWith(
+          steps: [
+            ofenkarotten.steps[0].copyWith(
+              name: 'Ofen',
+              time: const Duration(minutes: 10),
+            ),
+            ofenkarotten.steps[1].copyWith(time: const Duration(minutes: 25)),
+            ofenkarotten.steps[2],
+          ],
+        );
+        alerts
+          ..runsInBackground = true
+          ..notificationAccess = NotificationAccess.granted;
+        await pumpCooking(tester, theme: theme);
+        await tester.tap(find.text('Timer starten · 10:00'));
+        await tester.pump();
+        now = now.add(const Duration(minutes: 5, seconds: 48));
+        await tester.tap(find.text('Weiter zu Schritt 2'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.tap(find.text('Karotten'));
+        await tester.pump();
+
+        await expectLater(
+          find.byType(CookingScreen),
+          matchesGoldenFile('../goldens/cooking_timer_running_$name.png'),
+        );
+      });
+
+      testWidgets('mockup 07: a finished timer in $name', tags: goldenTags, (
+        tester,
+      ) async {
+        repository.recipes[7] = ofenkarotten.copyWith(
+          steps: [
+            ofenkarotten.steps[0],
+            ofenkarotten.steps[1].copyWith(
+              name: 'Rösten',
+              time: const Duration(minutes: 25),
+            ),
+            ofenkarotten.steps[2],
+          ],
+        );
+        alerts
+          ..runsInBackground = true
+          ..notificationAccess = NotificationAccess.granted;
+        await pumpCooking(tester, theme: theme);
+        await next(tester, 'Weiter zu Schritt 2');
+        await tester.tap(find.text('Timer starten · 25:00'));
+        await tester.pump();
+        now = now.add(const Duration(minutes: 25));
+        await tester.tap(find.text('Weiter zu Schritt 3'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.tap(find.text('Feta'));
+        await tester.pump();
+
+        await expectLater(
+          find.byType(CookingScreen),
+          matchesGoldenFile('../goldens/cooking_timer_finished_$name.png'),
+        );
+      });
+
       testWidgets('step 2 on a tablet in $name', tags: goldenTags, (
         tester,
       ) async {
