@@ -12,6 +12,7 @@ import '../../design/design.dart';
 import '../../domain/models/recipe.dart';
 import '../../domain/models/recipe_step.dart';
 import '../../domain/services/scaling_service.dart';
+import '../../domain/services/step_template.dart';
 import '../../l10n/l10n.dart';
 import '../../platform/wake_lock/wake_lock_service.dart';
 import '../common/failure_view.dart';
@@ -19,6 +20,7 @@ import '../common/markdown_text.dart';
 import '../recipe/ingredient_lines.dart';
 import '../recipe/recipe_providers.dart';
 import 'cooking_providers.dart';
+import 'step_text.dart';
 
 /// Cooking mode: one step per page with its scaled ingredients
 /// (mockup `05-kochmodus`).
@@ -368,10 +370,16 @@ class _StepPage extends StatelessWidget {
                   ],
                   if (instruction.isNotEmpty) ...[
                     SizedBox(height: t.space2),
-                    // Templates and timers hook in through spanBuilder.
                     MarkdownText(
                       instruction,
                       style: t.step.copyWith(color: t.ink),
+                      spanBuilder: stepTemplateSpans(
+                        context,
+                        StepTemplate(
+                          ingredients: step.ingredients,
+                          scaling: scaling,
+                        ),
+                      ),
                     ),
                   ],
                 ],
