@@ -29,14 +29,19 @@ don't cut any of them short to finish faster. Follow `CLAUDE.md` throughout.
 If the issue is unclear in a way that changes what you build, ask the user before writing code. Don't ask about
 things `docs/`, the mockups or the existing code already answer.
 
+**As a subagent of `/milestone run`:** you can't ask the user. Where you would ask, stop before writing code and end
+with `blocked: <the question>`. Otherwise end with exactly one line, `merged #<pr>: <what changed for the user>`;
+the orchestrator keeps only that line, so put everything the user should know into the PR description.
+
 ## 2. Branch
 
 ```sh
-git switch main && git pull --ff-only
-git switch -c <type>/<issue>-<slug>
+git fetch origin main
+git switch -c <type>/<issue>-<slug> origin/main
 ```
 
-Start from `main`; don't stack on an unmerged PR. If the issue depends on one, wait for it to merge.
+Start from the latest `main`; don't stack on an unmerged PR. If the issue depends on one, wait for it to merge.
+Branching from `origin/main` also works in a git worktree, where `main` may be checked out elsewhere.
 
 ## 3. Implement
 
@@ -98,11 +103,19 @@ gh api "repos/{owner}/{repo}/commits/<sha>/check-runs?per_page=100" \
   --jq '.check_runs[] | "\(.name)\t\(.status)\t\(.conclusion)"'
 ```
 
-- **All succeeded:** merge with your own credentials, so the push to `main` triggers the image workflow:
+- **`main` moved since you branched** (another PR merged meanwhile; check with `git fetch origin main` and
+  `git merge-base --is-ancestor origin/main HEAD`): branch protection doesn't require up-to-date branches, so two
+  PRs that are green on their own can still break `main` together. Rebase onto `origin/main`, re-run the codegen
+  (`build_runner`, `gen-l10n`, `gen_tokens`, goldens if UI changed) and the checks from step 4, push with
+  `--force-with-lease`, and wait for the checks again. Conflicts in generated files are resolved by regenerating,
+  never by hand.
+- **All succeeded** on an up-to-date branch: merge with your own credentials, so the push to `main` triggers the
+  image workflow:
   `gh api -X PUT repos/{owner}/{repo}/pulls/<pr>/merge -f merge_method=squash`. Don't let a GitHub Actions token
   merge or enable auto-merge; workflows don't run on pushes made with that token.
 - **One failed:** read its log (`gh run view <run-id> --log-failed`), fix the cause, push, and wait again. After
   three failed rounds, or if the fix would mean changing the issue's scope, stop and tell the user what is wrong.
 
-After the merge: `git switch main && git pull --ff-only`. Report in two or three sentences what changed for the user
+After the merge: `git fetch origin main` (in your own checkout, not a worktree, also
+`git switch main && git pull --ff-only`). Report in two or three sentences what changed for the user
 and what to try in the app.

@@ -1,6 +1,6 @@
 ---
 name: milestone
-description: Plan a roadmap milestone into GitHub issues, or work through a milestone's open issues one after another with the ship skill. Use when asked to plan, start, continue or finish a milestone.
+description: Plan a roadmap milestone into GitHub issues, or ship a milestone's open issues by orchestrating one ship subagent per issue, in parallel where they don't depend on each other and with a model matched to each issue. Use when asked to plan, start, continue or finish a milestone.
 argument-hint: "plan <M2> | run [<M2>]"
 ---
 
@@ -33,20 +33,75 @@ Talk to GitHub only through `gh api` (REST), as the `ship` skill explains: cloud
    recommendation each.
 6. Report the issue list (number, title, one line each) so the user can reorder or cut scope before `run`.
 
-## `run [milestone]`: ship the open issues in order
+## `run [milestone]`: orchestrate one subagent per issue
 
 Without a name, use the lowest open milestone.
 
-1. List its open issues. Pick the next one whose dependencies are closed, lowest number first.
-2. Ship it with the `ship` skill, including waiting for the merge.
-3. Repeat until the milestone has no open issues.
+You are the orchestrator. Each issue is shipped by its own subagent with a fresh context, so the cost of one issue
+doesn't carry into the next. Keep your own context small: don't read code, run checks or review diffs yourself; work
+from the issue list and the subagents' one-line results.
 
-Stop and ask the user when:
+### Loop
 
-- an issue needs a decision that isn't in the docs, or turns out bigger than one PR (propose a split instead),
-- the `ship` skill gives up on a failing check,
-- the remaining issues all depend on something still open.
+1. List the milestone's open issues with their `Depends on` lines. An issue is **ready** when all its dependencies
+   are closed and no subagent is working on it.
+2. Pick the ready issues to start now (see *Parallel or not*), lowest numbers first.
+3. Start one subagent per picked issue with the Agent tool: `subagent_type: "general-purpose"`,
+   `isolation: "worktree"` (each gets its own checkout; parallel agents must never share one), `model` as chosen in
+   *Which model*, in the background. Prompt:
 
-After each merged issue, give a one-line status (`#52 merged: timers start from step text. 6 left.`). At the end,
+   > Ship issue #<n> of dan-grm/yumdoor with the `ship` skill, as a subagent of the milestone orchestrator: don't
+   > ask the user anything. Work in your own worktree on `<type>/<n>-<slug>`. Other issues may merge meanwhile, so
+   > follow the ship skill's rule for a moved `main` before merging. Finish with exactly one line:
+   > `merged #<pr>: <what changed for the user>`, or `blocked: <reason, with the question for the user if any>`.
+
+4. When a subagent finishes, record its line, then go back to step 1: a merge can make new issues ready. Don't
+   wait for every subagent of a wave before starting the next ready issue.
+5. Repeat until the milestone has no open issues.
+
+### Parallel or not
+
+Run issues at the same time only when all of this holds; otherwise start them one after another:
+
+- **Independent:** neither depends on the other, directly or through an open issue.
+- **Separate areas:** they change different features (`lib/features/<area>/`) and don't both change shared code:
+  domain models or services in `lib/domain/`, design components or tokens, `lib/app/` (router, providers),
+  platform services, or the same screen. Both adding strings to the ARB files is fine; the second rebases.
+- **One data change at a time:** at most one running issue touches `lib/data/`, the seed or the Tandoor setup. They
+  share the one local Tandoor and the integration tests.
+- **At most 3** subagents at once (the cloud VM has 4 vCPUs, and every subagent runs builds, tests and goldens).
+
+When unsure, run them in sequence: a wasted rebase costs more than waiting.
+
+### Which model
+
+Pick the cheapest model that can ship the issue without extra rounds. Read the issue's scope and acceptance
+criteria, and the files it names; don't open code for this.
+
+- **`haiku`**: mechanical changes with no new logic. Docs, copy or ARB-only changes, config, renames, a version
+  bump that the build verifies.
+- **`sonnet`** (the default): well-scoped work that follows a pattern the code already has. Another filter chip
+  next to the existing ones, a screen like an existing screen, a mapper for one more field, small domain logic
+  with a clear spec and unit tests.
+- **`opus`**: the issue is a foundation others build on (domain models, services, design components), or the
+  hard part isn't in the code yet. Platform code and JS interop, offline cache and the data layer, concurrency
+  and time (timers, background behavior), security (rendering server content, auth, tokens), anything whose
+  behavior must first be verified against Tandoor.
+
+When unsure between two, take the stronger one: a failed or blocked run costs more than the difference. Escalate
+on a retry: if a subagent returns `blocked:` for a reason a stronger model could solve (it couldn't make the checks
+pass, or got the design wrong), start the issue again one model up, telling it what the earlier run found. Questions
+for the user are not a reason to escalate.
+
+Put the model into the status line: `#53 merged (sonnet): cookable-now filter. 2 left.`
+
+### Stop and ask the user
+
+- A subagent returns `blocked:` with a decision that isn't in the docs, or an issue turns out bigger than one PR
+  (propose a split instead). Let the other running subagents finish first.
+- The `ship` skill gave up on a failing check.
+- The remaining issues all depend on something still open.
+
+After each merged issue, give a one-line status (`#52 merged (opus): timers start from step text. 6 left.`). At the end,
 close the milestone (`gh api -X PATCH repos/{owner}/{repo}/milestones/<n> -f state=closed`) and list what the
 user should try in the app.
