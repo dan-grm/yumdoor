@@ -6,6 +6,12 @@ argument-hint: "plan <M2> | run [<M2>]"
 
 # Milestones
 
+Talk to GitHub only through `gh api` (REST), as the `ship` skill explains: cloud sessions block `gh issue` and
+`gh pr`. Create an issue with `gh api repos/{owner}/{repo}/issues -f title=… -F body=@file -f "labels[]=…"
+-F milestone=<number>`; list a milestone's issues with
+`gh api "repos/{owner}/{repo}/issues?milestone=<number>&state=open&per_page=100"`, skipping entries that have a
+`pull_request` field.
+
 ## `plan <milestone>`: turn the roadmap into issues
 
 1. Read the milestone's section in `docs/ROADMAP.md`, its open decisions, and the docs and mockups it touches.
@@ -21,6 +27,8 @@ argument-hint: "plan <M2> | run [<M2>]"
    - `## Acceptance criteria`: checkable statements, including the tests that prove them.
    - `## Depends on`: issue numbers, or "Nothing".
    - Labels from `tool/repo_settings.dart` (type plus area), and the milestone.
+   - Issues reference each other by number, so create them first and fill in `Depends on` afterwards
+     (`gh api -X PATCH repos/{owner}/{repo}/issues/<n> -F body=@file`).
 5. Open decisions the milestone needs: don't decide them in an issue. List them for the user with a
    recommendation each.
 6. Report the issue list (number, title, one line each) so the user can reorder or cut scope before `run`.

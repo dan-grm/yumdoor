@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Implement one GitHub issue end to end (branch, code, tests, checks, self-review, PR with auto-merge) and wait until it merges. Use when asked to ship, implement or fix an issue, or to fix a bug the user describes.
+description: Implement one GitHub issue end to end (branch, code, tests, checks, self-review, PR) and merge it once CI is green. Use when asked to ship, implement or fix an issue, or to fix a bug the user describes.
 argument-hint: "[issue number | bug description]"
 ---
 
@@ -9,13 +9,22 @@ argument-hint: "[issue number | bug description]"
 Nobody reads the code before it merges. The tests, the checks and your own review are the only safety net, so
 don't cut any of them short to finish faster. Follow `CLAUDE.md` throughout.
 
+**GitHub only through `gh api` (REST).** Cloud sessions block GitHub's GraphQL API, and with it `gh pr` and
+`gh issue`. `gh run` and `gh workflow` use REST and work. `gh api` fills in `{owner}/{repo}` from the git remote.
+
 ## 1. Pick the issue
 
-- A number: `gh issue view <n> --comments`.
-- A bug described in words: file it first (`gh issue create`, title `fix(<scope>): <symptom>`, label `fix`, the
-  current milestone if it blocks it), with what the user saw, what they expected and how to reproduce it. Then
-  ship that issue.
+- A number: `gh api repos/{owner}/{repo}/issues/<n>` and `…/issues/<n>/comments`.
+- A bug described in words: file it first, then ship that issue. Title `fix(<scope>): <symptom>`, label `fix`, the
+  current milestone if it blocks it; the body says what the user saw, what they expected and how to reproduce it.
+
+  ```sh
+  gh api repos/{owner}/{repo}/issues -f title="…" -F body=@issue.md -f "labels[]=fix" -F milestone=<number>
+  ```
+
 - Nothing: the lowest-numbered open issue in the lowest open milestone whose `Depends on` issues are all closed.
+  `gh api "repos/{owner}/{repo}/issues?milestone=<number>&state=open&per_page=100"` lists issues and PRs; skip
+  entries that have a `pull_request` field.
 
 If the issue is unclear in a way that changes what you build, ask the user before writing code. Don't ask about
 things `docs/`, the mockups or the existing code already answer.
@@ -53,8 +62,12 @@ flutter test --exclude-tags integration
 
 When `lib/data/` or the seed changed: start the local Tandoor, seed it and run `flutter test --tags integration`.
 
-Goldens are compared on Linux. Push the branch, run `gh workflow run update-goldens.yml --ref <branch>`, download
-the `goldens` artifact when it finishes (see the workflow's header), unpack and commit the PNGs.
+Goldens are compared on Linux:
+
+- **On Linux** (cloud sessions): `flutter test --tags golden --exclude-tags integration --update-goldens`, then
+  look at the changed PNGs and commit them.
+- **Elsewhere:** push the branch, `gh workflow run update-goldens.yml --ref <branch>`, download the `goldens` artifact
+  when it finishes (see the workflow's header), unpack and commit the PNGs.
 
 ## 5. Review yourself
 
@@ -65,19 +78,31 @@ until nothing real is left. Also check the diff against the issue's acceptance c
 
 ```sh
 git push -u origin HEAD
-gh pr create --title "<conventional commit>" --body-file <file> --milestone "<milestone>"
-gh pr merge --auto --squash
+gh api repos/{owner}/{repo}/pulls -f title="<conventional commit>" -f head=<branch> -f base=main \
+  -F body=@pr.md --jq .number
+gh api -X PATCH repos/{owner}/{repo}/issues/<pr> -F milestone=<number>
 ```
 
 The title becomes the commit on `main`. The body follows the earlier PRs: `Closes #<n>`, **What** (and why where it
 isn't obvious), **How it was tested**, the goldens as screenshots for UI changes, and anything the user should
-check by hand in the app.
+check by hand in the app. In a cloud session, end the body with a link to the session
+(`https://claude.ai/code/$CLAUDE_CODE_REMOTE_SESSION_ID`).
 
-## 7. Wait for the merge
+## 7. Merge when green
 
-Watch the checks (`gh pr checks <pr> --watch`, in the background). If one fails, read its log
-(`gh run view <id> --log-failed`), fix the cause, push, and watch again. After three failed rounds, or if the fix
-would mean changing the issue's scope, stop and tell the user what is wrong.
+Wait for the required checks (the list in `tool/repo_settings.dart`) on the PR's head commit. Poll from a
+background command or a monitor, about once a minute, not with a foreground sleep:
 
-When the PR has merged: `git switch main && git pull --ff-only`. Report in two or three sentences what changed for
-the user and what to try in the app.
+```sh
+gh api "repos/{owner}/{repo}/commits/<sha>/check-runs?per_page=100" \
+  --jq '.check_runs[] | "\(.name)\t\(.status)\t\(.conclusion)"'
+```
+
+- **All succeeded:** merge with your own credentials, so the push to `main` triggers the image workflow:
+  `gh api -X PUT repos/{owner}/{repo}/pulls/<pr>/merge -f merge_method=squash`. Don't let a GitHub Actions token
+  merge or enable auto-merge; workflows don't run on pushes made with that token.
+- **One failed:** read its log (`gh run view <run-id> --log-failed`), fix the cause, push, and wait again. After
+  three failed rounds, or if the fix would mean changing the issue's scope, stop and tell the user what is wrong.
+
+After the merge: `git switch main && git pull --ff-only`. Report in two or three sentences what changed for the user
+and what to try in the app.
