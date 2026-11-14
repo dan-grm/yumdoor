@@ -273,3 +273,96 @@ final class LinkOpenerProvider
 }
 
 String _$linkOpenerHash() => r'efd9c315d7fb7cc807c1bd63702ed7ca7b37b862';
+
+@ProviderFor(localStore)
+final localStoreProvider = LocalStoreProvider._();
+
+final class LocalStoreProvider
+    extends $FunctionalProvider<LocalStore, LocalStore, LocalStore>
+    with $Provider<LocalStore> {
+  LocalStoreProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'localStoreProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$localStoreHash();
+
+  @$internal
+  @override
+  $ProviderElement<LocalStore> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  LocalStore create(Ref ref) {
+    return localStore(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(LocalStore value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<LocalStore>(value),
+    );
+  }
+}
+
+String _$localStoreHash() => r'a74858d5c66d3e3c7055281e69c4b83c2e449a87';
+
+/// The current time; tests override it to move the clock.
+
+@ProviderFor(clock)
+final clockProvider = ClockProvider._();
+
+/// The current time; tests override it to move the clock.
+
+final class ClockProvider
+    extends
+        $FunctionalProvider<
+          DateTime Function(),
+          DateTime Function(),
+          DateTime Function()
+        >
+    with $Provider<DateTime Function()> {
+  /// The current time; tests override it to move the clock.
+  ClockProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'clockProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$clockHash();
+
+  @$internal
+  @override
+  $ProviderElement<DateTime Function()> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  DateTime Function() create(Ref ref) {
+    return clock(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DateTime Function() value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DateTime Function()>(value),
+    );
+  }
+}
+
+String _$clockHash() => r'3f65ad34ac6fcd532de9004042bdf2ed2bd85b13';

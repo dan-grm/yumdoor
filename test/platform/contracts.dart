@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/platform/connectivity/connectivity_service.dart';
 import 'package:yumdoor/platform/link_opener/link_opener.dart';
+import 'package:yumdoor/platform/local_store/local_store.dart';
 import 'package:yumdoor/platform/token_store/token_store.dart';
 import 'package:yumdoor/platform/wake_lock/wake_lock_service.dart';
 
@@ -130,4 +131,37 @@ void linkOpenerContract(LinkOpener Function() create) {
       expect(create().open(Uri.parse(url)), throwsArgumentError);
     });
   }
+}
+
+void localStoreContract(LocalStore Function() create) {
+  late LocalStore store;
+  setUp(() {
+    store = create();
+    for (final key in store.keys.toList()) {
+      store.delete(key);
+    }
+  });
+
+  test('round-trips values', () {
+    store.write('a', 'eins');
+    store.write('b', '{"x": [1, 2]}');
+
+    expect(store.read('a'), 'eins');
+    expect(store.read('b'), '{"x": [1, 2]}');
+    expect(store.keys, unorderedEquals(['a', 'b']));
+  });
+
+  test('a missing key reads null', () {
+    expect(store.read('missing'), isNull);
+  });
+
+  test('write replaces, delete removes', () {
+    store.write('a', 'eins');
+    store.write('a', 'zwei');
+    expect(store.read('a'), 'zwei');
+
+    store.delete('a');
+    expect(store.read('a'), isNull);
+    expect(store.keys, isEmpty);
+  });
 }

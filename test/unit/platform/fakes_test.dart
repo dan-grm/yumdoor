@@ -5,12 +5,15 @@ import 'package:yumdoor/platform/wake_lock/wake_lock_service.dart';
 
 import '../../fakes/fake_connectivity_service.dart';
 import '../../fakes/fake_link_opener.dart';
+import '../../fakes/in_memory_local_store.dart';
 import '../../fakes/fake_wake_lock_service.dart';
 import '../../fakes/in_memory_token_store.dart';
 import '../../platform/contracts.dart';
 
 void main() {
   group('InMemoryTokenStore', () => tokenStoreContract(InMemoryTokenStore.new));
+
+  group('InMemoryLocalStore', () => localStoreContract(InMemoryLocalStore.new));
 
   group('FakeLinkOpener', () {
     linkOpenerContract(FakeLinkOpener.new);

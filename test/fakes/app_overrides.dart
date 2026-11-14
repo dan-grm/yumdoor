@@ -7,6 +7,7 @@ import 'fake_auth_repository.dart';
 import 'fake_connectivity_service.dart';
 import 'fake_food_keyword_repositories.dart';
 import 'fake_link_opener.dart';
+import 'in_memory_local_store.dart';
 import 'fake_offline_cache.dart';
 import 'fake_recipe_repository.dart';
 import 'fake_server_repository.dart';
@@ -34,6 +35,7 @@ List<Override> appOverrides({
   FakeKeywordRepository? keywords,
   FakeOfflineCache? offlineCache,
   FakeLinkOpener? linkOpener,
+  InMemoryLocalStore? localStore,
   Uri? webOrigin,
 }) => [
   tokenStoreProvider.overrideWithValue(tokenStore ?? InMemoryTokenStore()),
@@ -51,5 +53,6 @@ List<Override> appOverrides({
     connectivity ?? FakeConnectivityService(),
   ),
   linkOpenerProvider.overrideWithValue(linkOpener ?? FakeLinkOpener()),
+  localStoreProvider.overrideWithValue(localStore ?? InMemoryLocalStore()),
   webOriginProvider.overrideWithValue(webOrigin),
 ];
