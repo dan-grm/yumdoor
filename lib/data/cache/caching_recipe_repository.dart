@@ -93,10 +93,7 @@ class CachingRecipeRepository implements RecipeRepository {
 /// keywords (like the universal search), and foods and keywords without
 /// their children.
 bool _matches(Recipe recipe, RecipeQuery query, TextMatcher text) {
-  final foods = [
-    for (final step in recipe.steps)
-      for (final ingredient in step.ingredients) ?ingredient.food,
-  ];
+  final foods = recipe.foods;
   final foodIds = {for (final food in foods) food.id};
   final keywordIds = {for (final keyword in recipe.keywords) keyword.id};
   if (!text.isEmpty &&

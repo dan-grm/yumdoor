@@ -28,7 +28,7 @@ class UniversalSearch {
     required this.recipes,
     required this.foods,
     required this.keywords,
-    this.candidateLimit = 20,
+    this.candidateLimit = 50,
   });
 
   final RecipeRepository recipes;
@@ -168,11 +168,15 @@ class RecipeSearch {
           ..exhausted = true;
       }
       // Name matches first, as online.
-      final recipes = name.buffer.toList();
+      final byName = <RecipeSummary>[];
+      final others = <RecipeSummary>[];
+      for (final recipe in name.buffer) {
+        (_matcher.contains(recipe.name) ? byName : others).add(recipe);
+      }
       name.buffer
         ..clear()
-        ..addAll(recipes.where((r) => _matcher.contains(r.name)))
-        ..addAll(recipes.where((r) => !_matcher.contains(r.name)));
+        ..addAll(byName)
+        ..addAll(others);
       _total = name.count ?? 0;
       return {};
     }
@@ -220,6 +224,8 @@ class RecipeSearch {
       }
       _fromCache = true;
     }
+    // A source whose first page failed during the first call wasn't counted.
+    if (_started && source.count == null) _total += page.totalCount;
     source
       ..nextPage += 1
       ..count = page.totalCount

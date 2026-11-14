@@ -13,6 +13,7 @@ import '../../design/design.dart';
 import '../../domain/models/food.dart';
 import '../../domain/models/recipe_match.dart';
 import '../../domain/models/recipe_query.dart';
+import '../../domain/services/scaling_service.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import '../recipe/recipe_meta.dart';
@@ -182,7 +183,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 String _foodLabel(BuildContext context, Food food) =>
     context.l10n.searchFoodFilter(_plural(food));
 
-String _plural(Food food) => food.pluralName ?? food.name;
+String _plural(Food food) =>
+    ScalingService.pickName(food.name, food.pluralName, plural: true);
 
 /// Why a result matched, for its pill: "enthält Karotten oder Möhren ·
 /// Stichwort: Vegetarisch". Also echoes the [filterFoods], which every
@@ -204,9 +206,10 @@ String? _matchLabel(
       l10n.searchFoodFilter(
         _list(l10n, [for (final f in match.foods) _plural(f)], or: true),
       ),
+    // Like foods: a child keyword may be what matched.
     if (match.keywords.isNotEmpty)
       l10n.searchMatchKeyword(
-        _list(l10n, [for (final k in match.keywords) k.name]),
+        _list(l10n, [for (final k in match.keywords) k.name], or: true),
       ),
     if (echoed.isNotEmpty) l10n.searchFoodFilter(_list(l10n, echoed)),
   ];

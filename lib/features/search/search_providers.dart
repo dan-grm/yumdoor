@@ -91,7 +91,14 @@ class SearchResults extends _$SearchResults {
   /// is none.
   Future<void> loadMore() async {
     final current = state.value;
-    if (current == null || !current.hasMore || current.loadingMore) return;
+    // While the search reloads (e.g. back online), the next page would come
+    // from the new search before its first page.
+    if (current == null ||
+        state.isLoading ||
+        !current.hasMore ||
+        current.loadingMore) {
+      return;
+    }
     state = AsyncData(
       RecipeResults(
         items: current.items,

@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'food.dart';
 import 'keyword.dart';
 import 'recipe_step.dart';
 import 'recipe_summary.dart';
@@ -45,6 +46,15 @@ abstract class Recipe with _$Recipe {
   /// change to this model or the ones it contains needs a new cache version.
   factory Recipe.fromJson(Map<String, dynamic> json) => _$RecipeFromJson(json);
 
+  /// The foods of all ingredients, each once, in order of appearance.
+  List<Food> get foods => {
+    for (final food in [
+      for (final step in steps)
+        for (final ingredient in step.ingredients) ?ingredient.food,
+    ])
+      food.id: food,
+  }.values.toList();
+
   /// The recipe as it appears in a list.
   RecipeSummary get summary => RecipeSummary(
     id: id,
@@ -52,13 +62,7 @@ abstract class Recipe with _$Recipe {
     description: description,
     image: image,
     keywords: keywords,
-    foods: {
-      for (final food in [
-        for (final step in steps)
-          for (final ingredient in step.ingredients) ?ingredient.food,
-      ])
-        food.id: food,
-    }.values.toList(),
+    foods: foods,
     servings: servings,
     servingsText: servingsText,
     workingTime: workingTime,
