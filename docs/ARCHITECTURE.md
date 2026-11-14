@@ -190,8 +190,9 @@ shows the origin and explains the constraint.
 - `CachingRecipeRepository` wraps the Tandoor repository: network first, cache fallback on `OfflineFailure` for
   recipe detail; every fetched recipe is written through, and its image is downloaded in the background (without
   the token, at most 5 MB). A `NotFoundFailure` removes the recipe from the cache. Search is online only; offline,
-  page 1 falls back to the cached recipes (name, plus exact food/keyword/rating filters without child foods) and
-  `ResultPage.fromCache` makes the UI say so.
+  page 1 falls back to the cached recipes (the text against name, ingredient foods and keywords, plus exact
+  food/keyword/rating filters without child foods) and `ResultPage.fromCache` makes the UI say so. The universal
+  search then uses that one result instead of its separate food and keyword searches.
 - `ConnectivityService` plus requests drive the `isOffline` provider (`lib/app/offline.dart`): a request that can't
   connect sets it, any answer from the server (errors included) or the network coming back clears it. When offline,
   a banner is shown on every screen (`MaterialApp.builder`) and write actions are disabled (not hidden) through

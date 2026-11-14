@@ -293,7 +293,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchFieldLabel => 'Search recipes';
 
   @override
-  String get searchFieldHint => 'Recipe name';
+  String get searchFieldHint => 'Recipe, ingredient or keyword';
 
   @override
   String get searchClear => 'Clear search text';
@@ -307,6 +307,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String searchFoodFilter(String food) {
     return 'with $food';
+  }
+
+  @override
+  String searchMatchKeyword(String keyword) {
+    return 'Keyword: $keyword';
+  }
+
+  @override
+  String searchMatchOr(String first, String last) {
+    return '$first or $last';
+  }
+
+  @override
+  String searchMatchList(String first, String next) {
+    return '$first, $next';
+  }
+
+  @override
+  String get searchMatchMore => 'others';
+
+  @override
+  String searchMatchJoin(String first, String second) {
+    return '$first · $second';
   }
 
   @override
@@ -347,7 +370,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchOfflineResults =>
-      'Offline: only searching names of recipes you\'ve already opened.';
+      'Offline: only searching recipes you\'ve already opened.';
 
   @override
   String get searchOfflineEmpty => 'None of the saved recipes match.';

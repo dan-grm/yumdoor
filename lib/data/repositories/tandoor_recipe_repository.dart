@@ -32,6 +32,11 @@ class TandoorRecipeRepository implements RecipeRepository {
       keywordsAnd: query.keywordIds.isEmpty
           ? null
           : BuiltList.of(query.keywordIds),
+      // Combined with the other parameters by AND, like all of them.
+      foodsOr: query.anyFoodIds.isEmpty ? null : BuiltList.of(query.anyFoodIds),
+      keywordsOr: query.anyKeywordIds.isEmpty
+          ? null
+          : BuiltList.of(query.anyKeywordIds),
       ratingGte: query.minRating,
       cookedonLte: switch (query.lastCookedBefore) {
         final day? => api.Date(day.year, day.month, day.day),

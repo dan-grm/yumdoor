@@ -121,8 +121,7 @@ void main() {
     expect(find.text(_banner), findsOneWidget);
     expect(
       find.text(
-        'Offline: Gesucht wird nur in Rezepten, die du schon geöffnet hast, '
-        'und nur im Namen.',
+        'Offline: Gesucht wird nur in Rezepten, die du schon geöffnet hast.',
       ),
       findsOneWidget,
     );

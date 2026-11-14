@@ -8,6 +8,7 @@ import 'package:yumdoor/domain/models/recipe.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
 import 'package:yumdoor/features/search/search_providers.dart';
 
+import '../../../fakes/fake_food_keyword_repositories.dart';
 import '../../../fakes/fake_recipe_repository.dart';
 
 void main() {
@@ -22,7 +23,11 @@ void main() {
         Recipe(id: i, name: 'Rezept $i'),
     ]);
     container = ProviderContainer(
-      overrides: [recipeRepositoryProvider.overrideWithValue(repository)],
+      overrides: [
+        recipeRepositoryProvider.overrideWithValue(repository),
+        foodRepositoryProvider.overrideWithValue(FakeFoodRepository()),
+        keywordRepositoryProvider.overrideWithValue(FakeKeywordRepository()),
+      ],
     );
     addTearDown(container.dispose);
   });
@@ -55,7 +60,7 @@ void main() {
     await notifier.loadMore();
 
     expect(repository.searches.map((s) => s.page), [1, 2, 3]);
-    expect(current().items.map((r) => r.id).toSet(), hasLength(55));
+    expect(current().items.map((r) => r.recipe.id).toSet(), hasLength(55));
   });
 
   test('loads a page only once while it is loading', () async {

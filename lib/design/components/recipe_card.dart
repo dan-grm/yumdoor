@@ -81,6 +81,8 @@ class RecipeCard extends StatelessWidget {
                           ),
                           child: Text(
                             match,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                             style: t.caption.copyWith(
                               color: t.ink,
                               fontWeight: t.label.fontWeight,

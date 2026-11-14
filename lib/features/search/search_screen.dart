@@ -11,7 +11,9 @@ import '../../design/components/recipe_card.dart';
 import '../../design/components/search_field.dart';
 import '../../design/design.dart';
 import '../../domain/models/food.dart';
+import '../../domain/models/recipe_match.dart';
 import '../../domain/models/recipe_query.dart';
+import '../../domain/services/scaling_service.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import '../recipe/recipe_meta.dart';
@@ -179,7 +181,51 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
 /// "enthält Karotten": the plural if the food has one.
 String _foodLabel(BuildContext context, Food food) =>
-    context.l10n.searchFoodFilter(food.pluralName ?? food.name);
+    context.l10n.searchFoodFilter(_plural(food));
+
+String _plural(Food food) =>
+    ScalingService.pickName(food.name, food.pluralName, plural: true);
+
+/// Why a result matched, for its pill: "enthält Karotten oder Möhren ·
+/// Stichwort: Vegetarisch". Also echoes the [filterFoods], which every
+/// result contains, as server results don't say which ingredient matched.
+String? _matchLabel(
+  AppLocalizations l10n,
+  RecipeMatch match,
+  List<Food> filterFoods,
+) {
+  final matchedIds = {for (final food in match.foods) food.id};
+  final echoed = [
+    for (final food in filterFoods)
+      if (!matchedIds.contains(food.id)) _plural(food),
+  ];
+  final parts = [
+    // The recipe contains at least one of these; server results don't say
+    // which.
+    if (match.foods.isNotEmpty)
+      l10n.searchFoodFilter(
+        _list(l10n, [for (final f in match.foods) _plural(f)], or: true),
+      ),
+    // Like foods: a child keyword may be what matched.
+    if (match.keywords.isNotEmpty)
+      l10n.searchMatchKeyword(
+        _list(l10n, [for (final k in match.keywords) k.name], or: true),
+      ),
+    if (echoed.isNotEmpty) l10n.searchFoodFilter(_list(l10n, echoed)),
+  ];
+  return parts.isEmpty ? null : parts.reduce(l10n.searchMatchJoin);
+}
+
+/// "Karotten, Kartoffeln", or with [or] "Karotten oder Kartoffeln"; at most
+/// three names, so a pill stays short.
+String _list(AppLocalizations l10n, List<String> names, {bool or = false}) {
+  final shown = [...names.take(3), if (names.length > 3) l10n.searchMatchMore];
+  if (shown.length == 1) return shown.single;
+  final head = shown.sublist(0, shown.length - 1).reduce(l10n.searchMatchList);
+  return or
+      ? l10n.searchMatchOr(head, shown.last)
+      : l10n.searchMatchList(head, shown.last);
+}
 
 class _FoodChip extends ConsumerWidget {
   const _FoodChip({required this.id, required this.onRemove});
@@ -273,11 +319,6 @@ class _ResultList extends ConsumerWidget {
     final foods = [
       for (final id in query.foodIds) ?ref.watch(foodProvider(id)).value,
     ];
-    final match = foods.isEmpty
-        ? null
-        : l10n.searchFoodFilter(
-            foods.map((food) => food.pluralName ?? food.name).join(', '),
-          );
     final footer = results.hasMore ? 1 : 0;
 
     return ListView.builder(
@@ -317,7 +358,8 @@ class _ResultList extends ConsumerWidget {
             onLoadMore: onLoadMore,
           );
         }
-        final recipe = items[index - 1];
+        final match = items[index - 1];
+        final recipe = match.recipe;
         return Padding(
           padding: EdgeInsets.only(bottom: t.space2),
           child: RecipeCard(
@@ -328,7 +370,7 @@ class _ResultList extends ConsumerWidget {
               rating: recipe.rating,
               lastCooked: recipe.lastCooked,
             ),
-            match: match,
+            match: _matchLabel(l10n, match, foods),
             onTap: () => context.push('/recipe/${recipe.id}'),
           ),
         );

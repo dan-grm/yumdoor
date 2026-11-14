@@ -6,8 +6,9 @@ import '../../core/cancellation.dart';
 import '../../core/failures.dart';
 import '../../domain/models/food.dart';
 import '../../domain/models/keyword.dart';
+import '../../domain/models/recipe_match.dart';
 import '../../domain/models/recipe_query.dart';
-import '../../domain/models/recipe_summary.dart';
+import '../../domain/services/universal_search.dart';
 
 part 'search_providers.g.dart';
 
@@ -31,7 +32,7 @@ class RecipeResults {
     this.loadMoreError,
   });
 
-  final List<RecipeSummary> items;
+  final List<RecipeMatch> items;
 
   /// The number of results over all pages.
   final int totalCount;
@@ -48,24 +49,30 @@ class RecipeResults {
   final Failure? loadMoreError;
 }
 
+/// Searches names, ingredients and keywords at once.
+@riverpod
+UniversalSearch universalSearch(Ref ref) => UniversalSearch(
+  recipes: ref.watch(recipeRepositoryProvider),
+  foods: ref.watch(foodRepositoryProvider),
+  keywords: ref.watch(keywordRepositoryProvider),
+);
+
 /// Results for [query], one page at a time.
 ///
-/// A new query is a new provider; the old one is disposed and its request
+/// A new query is a new provider; the old one is disposed and its requests
 /// cancelled, so a slow answer to an old query can't replace a newer one.
 @Riverpod(retry: _noRetry)
 class SearchResults extends _$SearchResults {
-  late CancelSignal _cancel;
-  var _pages = 0;
+  late RecipeSearch _search;
 
   @override
   Future<RecipeResults> build(RecipeQuery query) async {
-    final cancel = _cancel = CancelSignal();
+    final cancel = CancelSignal();
     ref.onDispose(cancel.cancel);
-    _pages = 0;
-    final page = await ref
-        .watch(recipeRepositoryProvider)
-        .search(query, pageSize: searchPageSize, cancel: cancel);
-    _pages = 1;
+    final search = _search = ref
+        .watch(universalSearchProvider)
+        .start(query, pageSize: searchPageSize, cancel: cancel);
+    final page = await search.next();
     if (page.fromCache) {
       // Ask the server again as soon as it may answer.
       ref.listen(isOfflineProvider, (_, offline) {
@@ -84,41 +91,44 @@ class SearchResults extends _$SearchResults {
   /// is none.
   Future<void> loadMore() async {
     final current = state.value;
-    if (current == null || !current.hasMore || current.loadingMore) return;
+    // While the search reloads (e.g. back online), the next page would come
+    // from the new search before its first page.
+    if (current == null ||
+        state.isLoading ||
+        !current.hasMore ||
+        current.loadingMore) {
+      return;
+    }
     state = AsyncData(
       RecipeResults(
         items: current.items,
         totalCount: current.totalCount,
         hasMore: true,
+        fromCache: current.fromCache,
         loadingMore: true,
       ),
     );
-    final cancel = _cancel;
+    final search = _search;
     try {
-      final page = await ref
-          .read(recipeRepositoryProvider)
-          .search(
-            query,
-            page: _pages + 1,
-            pageSize: searchPageSize,
-            cancel: cancel,
-          );
-      if (cancel.isCancelled) return;
-      _pages++;
+      final page = await search.next();
+      if (!identical(search, _search) || !ref.mounted) return;
       state = AsyncData(
         RecipeResults(
           items: [...current.items, ...page.items],
           totalCount: page.totalCount,
           hasMore: page.hasMore,
+          fromCache: page.fromCache,
         ),
       );
     } on Failure catch (failure) {
-      if (cancel.isCancelled) return;
+      if (!identical(search, _search) || !ref.mounted) return;
+      if (failure is CancelledFailure) return;
       state = AsyncData(
         RecipeResults(
           items: current.items,
           totalCount: current.totalCount,
           hasMore: true,
+          fromCache: current.fromCache,
           loadMoreError: failure,
         ),
       );

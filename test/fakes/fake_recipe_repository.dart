@@ -21,7 +21,7 @@ typedef SearchCall = ({
 ///
 /// Search matches the text against names, foods against the ingredients
 /// (without child foods) and keywords against the recipe's keywords, in the
-/// order of [recipes].
+/// order of [recipes]. Like Tandoor, every part of the query must match.
 class FakeRecipeRepository implements RecipeRepository {
   FakeRecipeRepository(Iterable<Recipe> recipes)
     : recipes = {for (final r in recipes) r.id: r};
@@ -29,7 +29,12 @@ class FakeRecipeRepository implements RecipeRepository {
   final Map<int, Recipe> recipes;
   Failure? failure;
 
-  /// Marks search results as coming from the offline cache.
+  /// Makes the searches it returns `true` for throw [failure] instead of
+  /// all of them.
+  bool Function(RecipeQuery query)? failWhen;
+
+  /// Marks search results as coming from the offline cache, which returns
+  /// every match on one page.
   bool fromCache = false;
   int fetchCount = 0;
   final searches = <SearchCall>[];
@@ -59,9 +64,20 @@ class FakeRecipeRepository implements RecipeRepository {
     ));
     if (gate case final gate?) await gate.future;
     if (cancel?.isCancelled ?? false) throw const CancelledFailure();
-    if (failure case final failure?) throw failure;
+    if (failure case final failure? when failWhen?.call(query) ?? true) {
+      throw failure;
+    }
 
     final matches = recipes.values.where((r) => _matches(r, query)).toList();
+    if (fromCache) {
+      if (page > 1) throw const OfflineFailure();
+      return ResultPage(
+        items: [for (final r in matches) _summary(r)],
+        totalCount: matches.length,
+        hasMore: false,
+        fromCache: true,
+      );
+    }
     final start = (page - 1) * pageSize;
     if (page > 1 && start >= matches.length) throw const NotFoundFailure();
     final end = (start + pageSize).clamp(0, matches.length);
@@ -81,7 +97,10 @@ class FakeRecipeRepository implements RecipeRepository {
     final keywords = {for (final k in recipe.keywords) k.id};
     return recipe.name.toLowerCase().contains(query.text.toLowerCase()) &&
         foods.containsAll(query.foodIds) &&
-        keywords.containsAll(query.keywordIds);
+        keywords.containsAll(query.keywordIds) &&
+        (query.anyFoodIds.isEmpty || query.anyFoodIds.any(foods.contains)) &&
+        (query.anyKeywordIds.isEmpty ||
+            query.anyKeywordIds.any(keywords.contains));
   }
 
   static RecipeSummary _summary(Recipe recipe) => RecipeSummary(

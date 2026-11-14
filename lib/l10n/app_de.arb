@@ -394,9 +394,9 @@
   "@searchFieldLabel": {
     "description": "Accessible label of the search text field."
   },
-  "searchFieldHint": "Rezeptname",
+  "searchFieldHint": "Rezept, Zutat oder Stichwort",
   "@searchFieldHint": {
-    "description": "Placeholder of the search text field. By default Tandoor's text search only matches recipe names."
+    "description": "Placeholder of the search text field. The text matches recipe names, ingredients and keywords."
   },
   "searchClear": "Suchtext löschen",
   "@searchClear": {
@@ -417,6 +417,62 @@
       "food": {
         "type": "String",
         "example": "Karotten"
+      }
+    }
+  },
+  "searchMatchKeyword": "Stichwort: {keyword}",
+  "@searchMatchKeyword": {
+    "description": "Pill on a search result that matched the search text by one of its keywords. Several keywords are separated by commas.",
+    "placeholders": {
+      "keyword": {
+        "type": "String",
+        "example": "Vegetarisch"
+      }
+    }
+  },
+  "searchMatchOr": "{first} oder {last}",
+  "@searchMatchOr": {
+    "description": "The last two names of a list of alternatives on a result's pill: the recipe contains at least one of these foods.",
+    "placeholders": {
+      "first": {
+        "type": "String",
+        "example": "Karotten"
+      },
+      "last": {
+        "type": "String",
+        "example": "Möhren"
+      }
+    }
+  },
+  "searchMatchList": "{first}, {next}",
+  "@searchMatchList": {
+    "description": "Joins names in a list on a result's pill.",
+    "placeholders": {
+      "first": {
+        "type": "String",
+        "example": "Karotten"
+      },
+      "next": {
+        "type": "String",
+        "example": "Zwiebeln"
+      }
+    }
+  },
+  "searchMatchMore": "weitere",
+  "@searchMatchMore": {
+    "description": "Ends a shortened list of names on a result's pill: \"Karotten, Möhren, Rüben oder weitere\"."
+  },
+  "searchMatchJoin": "{first} · {second}",
+  "@searchMatchJoin": {
+    "description": "Joins the reasons a result matched on its pill.",
+    "placeholders": {
+      "first": {
+        "type": "String",
+        "example": "enthält Karotten"
+      },
+      "second": {
+        "type": "String",
+        "example": "Stichwort: Vegetarisch"
       }
     }
   },
@@ -460,7 +516,7 @@
   "@searchEmptyServer": {
     "description": "Empty state when an unfiltered search finds nothing."
   },
-  "searchOfflineResults": "Offline: Gesucht wird nur in Rezepten, die du schon geöffnet hast, und nur im Namen.",
+  "searchOfflineResults": "Offline: Gesucht wird nur in Rezepten, die du schon geöffnet hast.",
   "@searchOfflineResults": {
     "description": "Note above search results that come from the offline cache."
   },
