@@ -280,6 +280,60 @@ List<md.Node> parseMarkdown(String data) => md.Document(
   encodeHtml: false,
 ).parse(data.replaceAll('\r\n', '\n'));
 
+/// The runs of plain text in [data] that [MarkdownText] passes to its span
+/// builder, in order; link text isn't one. Lets a caller know up front what
+/// the builder will see, e.g. which durations a step highlights.
+List<String> markdownTextRuns(String data) {
+  final runs = <String>[];
+
+  void inline(List<md.Node> nodes) {
+    final collected = <_Run>[];
+    _collectRuns(nodes, const _Format(), collected);
+    for (final run in collected) {
+      if (run.format.link == null) runs.add(run.text);
+    }
+  }
+
+  // Mirrors _MarkdownTextState._blocks, _block and _list.
+  void blocks(List<md.Node> nodes) {
+    final pending = <md.Node>[];
+    void flush() {
+      if (pending.isEmpty) return;
+      inline(List.of(pending));
+      pending.clear();
+    }
+
+    for (final node in nodes) {
+      if (node is! md.Element || !_blockTags.contains(node.tag)) {
+        pending.add(node);
+        continue;
+      }
+      flush();
+      switch (node.tag) {
+        case 'p' || 'h1' || 'h2' || 'h3' || 'h4' || 'h5' || 'h6':
+          inline(node.children ?? const []);
+        case 'ul' || 'ol':
+          for (final item in node.children ?? const <md.Node>[]) {
+            if (item is md.Element && item.tag == 'li') {
+              blocks(item.children ?? const []);
+            }
+          }
+        case 'blockquote':
+          blocks(node.children ?? const []);
+        case 'hr':
+          break;
+        default:
+          final text = node.textContent.trimRight();
+          if (text.isNotEmpty) runs.add(text);
+      }
+    }
+    flush();
+  }
+
+  blocks(parseMarkdown(data));
+  return runs;
+}
+
 const _blockTags = {
   'p',
   'h1',

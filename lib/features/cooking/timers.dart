@@ -10,7 +10,6 @@ import '../../design/components/timer_chip.dart';
 import '../../design/design.dart';
 import '../../domain/models/cooking_timer.dart';
 import '../../domain/models/recipe_step.dart';
-import '../../domain/services/timer_detection.dart';
 import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import 'cooking_providers.dart';
@@ -146,27 +145,57 @@ Future<void> startTimer(
   messenger.showSnackBar(SnackBar(content: Text(hint)));
 }
 
-/// How long the "Timer starten" button below [step] runs: the step's own
-/// time, or else the first duration in its text; zero if neither.
-Duration stepTimerDuration(RecipeStep step) {
-  if (step.time > Duration.zero) return step.time;
-  final found = TimerDetection.find(step.instruction);
-  return found.isEmpty ? Duration.zero : found.first.duration;
+/// The timer [stepId] has of [duration], if any: one started from the step's
+/// button or a duration in its text, still running or not yet turned off.
+CookingTimer? _stepTimer(
+  List<CookingTimer> timers,
+  int stepId,
+  Duration duration,
+) => timers
+    .where((timer) => timer.stepId == stepId && timer.duration == duration)
+    .firstOrNull;
+
+/// A tap on a duration in step text: starts a timer of [duration] named
+/// [label], or, if the step already has one of that length, shows it. So a
+/// double tap doesn't start two.
+Future<void> startOrShowStepTimer(
+  BuildContext context,
+  WidgetRef ref, {
+  required int recipeId,
+  required int stepId,
+  required String label,
+  required Duration duration,
+}) {
+  final timers = ref.read(cookingTimersControllerProvider(recipeId));
+  if (_stepTimer(timers, stepId, duration) case final timer?) {
+    return showTimerSheet(context, recipeId: recipeId, timerId: timer.id);
+  }
+  return startTimer(
+    context,
+    ref,
+    recipeId: recipeId,
+    label: label,
+    duration: duration,
+    stepId: stepId,
+  );
 }
 
-/// "Timer starten · 25:00" for a step with an explicit time or a duration in
-/// its text ([stepTimerDuration]), with space above it, unless a timer for
-/// the step is already set.
+/// "Timer starten · 25:00" below a step, with space above it, unless the
+/// step already has a timer of [duration] or [duration] is zero.
 class StepTimerButton extends ConsumerWidget {
   const StepTimerButton({
     super.key,
     required this.recipeId,
     required this.step,
+    required this.duration,
     required this.label,
   });
 
   final int recipeId;
   final RecipeStep step;
+
+  /// The step's own time, or else the first duration in its text.
+  final Duration duration;
 
   /// The timer's name: the step's name, or "Schritt 2".
   final String label;
@@ -174,9 +203,8 @@ class StepTimerButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final timers = ref.watch(cookingTimersControllerProvider(recipeId));
-    final duration = stepTimerDuration(step);
     if (duration <= Duration.zero ||
-        timers.any((timer) => timer.stepId == step.id)) {
+        _stepTimer(timers, step.id, duration) != null) {
       return const SizedBox.shrink();
     }
     return Padding(

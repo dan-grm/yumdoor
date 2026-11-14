@@ -82,6 +82,14 @@ MarkdownSpanBuilder stepTemplateSpans(
   };
 }
 
+/// The durations [stepTemplateSpans] highlights in [instruction], in order.
+List<Duration> stepDurations(String instruction, StepTemplate template) => [
+  for (final run in markdownTextRuns(instruction))
+    for (final part in template.resolve(run))
+      if (part case StepText(:final text))
+        for (final found in TimerDetection.find(text)) found.duration,
+];
+
 /// "Schritt 3" for [index] 2, with the step's name if it has one:
 /// "Schritt 3 · Anrichten". The number matches cooking mode.
 String stepTitle(BuildContext context, RecipeStep step, int index) {

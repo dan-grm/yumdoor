@@ -661,6 +661,45 @@ void main() {
         expect(find.byType(TimerChip), findsNWidgets(2));
       });
 
+      testWidgets('a second tap shows the timer instead of starting one', (
+        tester,
+      ) async {
+        step2('25 Minuten rösten.');
+        await pumpCooking(tester);
+        await next(tester, 'Weiter zu Schritt 2');
+
+        await tapAndWait(tester, highlight('25 Minuten'));
+        await tapAndWait(tester, highlight('25 Minuten'));
+        await tester.pump(const Duration(milliseconds: 500));
+
+        expect(find.byType(TimerChip), findsOneWidget);
+        expect(find.text('Anhalten'), findsOneWidget);
+      });
+
+      testWidgets('a highlight keeps the button for the step\'s own time', (
+        tester,
+      ) async {
+        step2(
+          'Erst 5 Minuten anbraten, dann köcheln.',
+          time: const Duration(minutes: 15),
+        );
+        await pumpCooking(tester);
+        await next(tester, 'Weiter zu Schritt 2');
+
+        await tapAndWait(tester, highlight('5 Minuten'));
+        expect(chip('Schritt 2, noch 05:00'), findsOneWidget);
+        expect(find.text('Timer starten · 15:00'), findsOneWidget);
+      });
+
+      testWidgets('link text starts no timer', (tester) async {
+        step2('Wie im [Video 10 min](https://example.com/) köcheln.');
+        await pumpCooking(tester);
+        await next(tester, 'Weiter zu Schritt 2');
+
+        expect(find.byType(TimerHighlight), findsNothing);
+        expect(find.textContaining('Timer starten'), findsNothing);
+      });
+
       testWidgets('Timer starten uses the first duration without a time', (
         tester,
       ) async {

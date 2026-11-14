@@ -92,6 +92,10 @@ void main() {
         min * 40,
       ),
       ('2 hours 10–15 minutes', '2 hours 10–15 minutes', min * 135),
+      // "or two": the upper bound.
+      ('a minute or two', 'a minute or two', min * 2),
+      ('cook an hour or two', 'an hour or two', h * 2),
+      ('eine Minute oder zwei', 'eine Minute oder zwei', min * 2),
     ];
     for (final (text, phrase, duration) in cases) {
       test('"$phrase" in "$text"', () {
@@ -125,6 +129,9 @@ void main() {
       'Add a second egg.',
       'Do it a second time.',
       'H1 2 Hz',
+      // Clock notation isn't understood; better nothing than 30 hours.
+      'Garzeit 1:30 h',
+      '0:45 Std.',
       // Without a duration.
       'Über Nacht ziehen lassen.',
       'Leave overnight.',
@@ -160,6 +167,14 @@ void main() {
     expect(find('5 Minuten braten und 2 Minuten ruhen lassen'), [
       ('5 Minuten', min * 5),
       ('2 Minuten', min * 2),
+    ]);
+    expect(find('Im Ofen 1 Stunde. 10 Minuten vor Ende Käse darauf.'), [
+      ('1 Stunde', h),
+      ('10 Minuten', min * 10),
+    ]);
+    expect(find('Bake for 1 hour. 15 minutes before the end, add cheese.'), [
+      ('1 hour', h),
+      ('15 minutes', min * 15),
     ]);
     expect(find('1 Stunde.\n20 Minuten'), [
       ('1 Stunde', h),

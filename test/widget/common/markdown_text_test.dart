@@ -303,6 +303,33 @@ void main() {
     expect(plain('EINGERÜCKT'), findsOneWidget);
   });
 
+  testWidgets('markdownTextRuns lists what the span builder gets', (
+    tester,
+  ) async {
+    const data =
+        '# Vorbereiten\n\n'
+        'Erst **5 Minuten** anbraten, [Video 10 min](https://example.com/), '
+        'dann _ruhen_.  \nNeue Zeile\n\n'
+        '- Punkt 1\n- Punkt **2**\n\n'
+        '3. drei\n\n'
+        '> Zitat 25 Minuten\n\n'
+        '---\n\n'
+        '    Code 2 h\n\n'
+        'Ende';
+    final runs = <String>[];
+    await pumpMarkdown(
+      tester,
+      data,
+      spanBuilder: (text, style) {
+        runs.add(text);
+        return [TextSpan(text: text, style: style)];
+      },
+    );
+
+    expect(runs, isNot(contains(contains('Video'))));
+    expect(markdownTextRuns(data), runs);
+  });
+
   testWidgets('long German text fits at 390 px', (tester) async {
     await pumpMarkdown(
       tester,

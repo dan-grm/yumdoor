@@ -72,16 +72,19 @@ abstract final class TimerDetection {
       final first = components[i];
       var end = first.end;
       var duration = first.duration;
-      var rank = first.rank;
+      var last = first;
       while (i + 1 < components.length) {
         final next = components[i + 1];
-        if (next.rank >= rank ||
-            !_joiner.hasMatch(text.substring(end, next.start))) {
+        // A dot only after an abbreviation ("1 Std. 20 Min"), not at the
+        // end of a sentence ("1 Stunde. 10 Minuten vor Ende …").
+        final joiner = last.abbreviated ? _joinerAfterDot : _joiner;
+        if (next.rank >= last.rank ||
+            !joiner.hasMatch(text.substring(end, next.start))) {
           break;
         }
         end = next.end;
         duration += next.duration;
-        rank = next.rank;
+        last = next;
         i++;
       }
       result.add(
@@ -92,17 +95,19 @@ abstract final class TimerDetection {
   }
 
   static _Component? _genericComponent(RegExpMatch match) {
-    final (unit, rank) = match.namedGroup('h') != null
-        ? (const Duration(hours: 1), _hours)
-        : match.namedGroup('m') != null
-        ? (const Duration(minutes: 1), _minutes)
-        : (const Duration(seconds: 1), _seconds);
+    final hours = match.namedGroup('h');
+    final minutes = match.namedGroup('m');
+    final (unit, rank, unitText) = hours != null
+        ? (const Duration(hours: 1), _hours, hours)
+        : minutes != null
+        ? (const Duration(minutes: 1), _minutes, minutes)
+        : (const Duration(seconds: 1), _seconds, match.namedGroup('s')!);
     final from = match.namedGroup('from')!;
     final to = match.namedGroup('to');
     // "a second egg" is no duration: English seconds need a number in
     // digits.
     if (rank == _seconds &&
-        match.namedGroup('s')!.toLowerCase().startsWith('sec') &&
+        unitText.toLowerCase().startsWith('sec') &&
         _startsWithWord.hasMatch(to ?? from)) {
       return null;
     }
@@ -110,6 +115,10 @@ abstract final class TimerDetection {
     var value = _number(to ?? from);
     if (value == null) return null;
     if (match.namedGroup('half') != null) value += 0.5;
+    // "a minute or two": the upper bound, like a range.
+    if (match.namedGroup('more') case final more?) {
+      value = _words[more.trim().split(_space).last.toLowerCase()]!;
+    }
     final duration = Duration(
       milliseconds: (value * unit.inMilliseconds).round(),
     );
@@ -120,6 +129,7 @@ abstract final class TimerDetection {
       match.end,
       Duration(seconds: duration.inSeconds),
       rank,
+      abbreviated: !_fullUnits.contains(unitText.toLowerCase()),
     );
   }
 
@@ -165,7 +175,7 @@ abstract final class TimerDetection {
   static const _s = r'[^\S\r\n]';
 
   /// Not inside a word or number: "Minutensteaks", "A4", the 5 in "1.5".
-  static const _before = r'(?<![\p{L}\p{N}]|\p{N}[.,/])';
+  static const _before = r'(?<![\p{L}\p{N}]|\p{N}[.,/:])';
   static const _after = r'(?![\p{L}\p{N}])';
 
   static const _glyphs = {
@@ -220,6 +230,7 @@ abstract final class TimerDetection {
     '|(?<s>sekunden|sekunde|sek|seconds|second|secs|sec)'
     ')'
     '(?<half>$_s+and$_s+a$_s+half)?'
+    '(?<more>$_s+(?:or|oder)$_s+(?:two|three|zwei|drei))?'
     '$_after',
     caseSensitive: false,
     unicode: true,
@@ -273,13 +284,25 @@ abstract final class TimerDetection {
     (_phrase('half$_s+a$_s+minute'), const Duration(seconds: 30), _minutes),
   ];
 
-  /// Between parts of a combination: spaces, or "und" / "and", maybe after
-  /// an abbreviation's dot ("1 Std. 20 Min").
+  /// Between parts of a combination: spaces, or "und" / "and"; after an
+  /// abbreviation also its dot ("1 Std. 20 Min").
   static final _joiner = RegExp(
+    '^(?:$_s*|$_s+(?:und|and)$_s+)\$',
+    caseSensitive: false,
+  );
+
+  static final _joinerAfterDot = RegExp(
     '^\\.?(?:$_s*|$_s+(?:und|and)$_s+)\$',
     caseSensitive: false,
   );
 
+  static const _fullUnits = {
+    'stunden', 'stunde', 'hours', 'hour', //
+    'minuten', 'minute', 'minutes', //
+    'sekunden', 'sekunde', 'seconds', 'second',
+  };
+
+  static final _space = RegExp(r'\s+');
   static final _startsWithWord = RegExp(r'^\p{L}', unicode: true);
   static final _andAHalf = RegExp('$_s+and$_s+a$_s+half\$');
   static final _mixed = RegExp(
@@ -296,7 +319,13 @@ abstract final class TimerDetection {
 }
 
 class _Component {
-  _Component(this.start, this.end, this.duration, this.rank);
+  _Component(
+    this.start,
+    this.end,
+    this.duration,
+    this.rank, {
+    this.abbreviated = false,
+  });
 
   final int start;
   final int end;
@@ -304,4 +333,7 @@ class _Component {
 
   /// 3 for hours, 2 for minutes, 1 for seconds: combinations fall.
   final int rank;
+
+  /// Ends in an abbreviated unit ("Std", "min"), which may take a dot.
+  final bool abbreviated;
 }
