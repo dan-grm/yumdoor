@@ -133,6 +133,10 @@ in the request are ignored.
 - Step text can contain Jinja templates: `{{ ingredients[0] }}`, `{{ ingredients[0].amount }}`, `.unit`, `.food`,
   `.note`, and `{{ scale(100) }}`. Yumdoor implements this small subset in the domain layer (pure Dart,
   no template execution) so the values scale with servings. Unknown template syntax is shown as plain text.
+  - `ingredients[n]` indexes the step's ingredients in `['order', 'pk']` order, **headers included**; a header
+    renders as empty text (verified on 2.6.15). `ingredients[n]` alone is `amount unit food`, without the note.
+  - Tandoor replaces the **whole step** with "Could not parse template code" on a Jinja error and strips every
+    leftover `{` and `}`. Yumdoor keeps the step and shows unknown expressions as written instead.
 - Same for `MealPlan.note_markdown`: use `note`, not the HTML.
 - Images: `PUT /api/recipe/{id}/image/` (multipart `image`, or `image_url`).
 
