@@ -41,3 +41,6 @@ Thumbs.db
 *.log
 *.swp
 .history
+
+# Golden test failure output (CI uploads it as an artifact)
+**/failures/

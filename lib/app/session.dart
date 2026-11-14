@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../core/failures.dart';
 import '../domain/models/session.dart';
 import '../platform/token_store/token_store.dart';
+import 'cooking_progress_store.dart';
 import 'platform_providers.dart';
 import 'repository_providers.dart';
 
@@ -103,6 +104,7 @@ class SessionController extends _$SessionController {
     if (state.value != session) return;
     // The server URL stays, so login can prefill it. The offline cache goes:
     // the next login may be someone else, or another server.
+    ref.read(cookingProgressStoreProvider).clear();
     await ref.read(offlineCacheProvider).clear();
     await ref.read(tokenStoreProvider).clearToken();
     state = const AsyncData(null);

@@ -95,5 +95,6 @@
   "pickerEmpty": "Nothing found",
   "markdownLinkTitle": "Open link?",
   "markdownLinkText": "This link goes to {host} and opens in a new tab.",
-  "markdownLinkOpen": "Open"
+  "markdownLinkOpen": "Open",
+  "ingredientTickOff": "Tick off {name}"
 }

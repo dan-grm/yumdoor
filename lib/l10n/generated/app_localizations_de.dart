@@ -388,4 +388,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get markdownLinkOpen => 'Öffnen';
+
+  @override
+  String ingredientTickOff(String name) {
+    return '$name abhaken';
+  }
 }

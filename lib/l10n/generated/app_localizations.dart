@@ -673,6 +673,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Öffnen'**
   String get markdownLinkOpen;
+
+  /// Screen-reader label of an ingredient row in cooking mode; tapping ticks the ingredient off or back on.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} abhaken'**
+  String ingredientTickOff(String name);
 }
 
 class _AppLocalizationsDelegate
