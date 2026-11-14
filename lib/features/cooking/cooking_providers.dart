@@ -2,7 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../app/platform_providers.dart';
 import '../../domain/models/cooking_progress.dart';
-import '../../platform/local_store/local_store.dart';
+import '../../app/cooking_progress_store.dart';
 
 part 'cooking_providers.g.dart';
 
@@ -16,37 +16,27 @@ class WakeLockHintShown extends _$WakeLockHintShown {
   void markShown() => state = true;
 }
 
-/// The ingredients ticked off while cooking [recipeId], kept in the
-/// [LocalStore] so they survive paging and a reload. Expired progress, of
-/// this or any other recipe, is dropped when cooking mode opens.
+/// The ingredients ticked off while cooking [recipeId], saved so they survive
+/// paging and a reload. Cooking mode watches it while open, so a failed save
+/// still keeps the ticks in memory until the screen closes.
 @riverpod
 class CookingProgressController extends _$CookingProgressController {
-  static const _prefix = 'cooking-progress.';
-
-  LocalStore get _store => ref.read(localStoreProvider);
+  CookingProgressStore get _store => ref.read(cookingProgressStoreProvider);
   DateTime _now() => ref.read(clockProvider)();
-  String get _key => '$_prefix$recipeId';
 
   @override
   CookingProgress build(int recipeId) {
     final now = _now();
-    for (final key in _store.keys.where((k) => k.startsWith(_prefix))) {
-      final saved = CookingProgress.fromJson(_store.read(key) ?? '');
-      if (saved == null || saved.isExpired(now)) _store.delete(key);
-    }
-    final saved = _store.read(_key);
-    return (saved == null ? null : CookingProgress.fromJson(saved)) ??
-        CookingProgress.empty(now);
+    _store.prune(now);
+    return _store.read(recipeId, now) ?? CookingProgress.empty(now);
   }
 
   void toggle(IngredientOccurrence occurrence) {
     state = state.toggle(occurrence, _now());
-    _store.write(_key, state.toJson());
+    _store.write(recipeId, state);
   }
 
-  /// Forgets the progress, after "Fertig".
-  void clear() {
-    _store.delete(_key);
-    state = CookingProgress.empty(_now());
-  }
+  /// Forgets the saved progress, after "Fertig". The ticks stay on screen
+  /// while it closes.
+  void forget() => _store.delete(recipeId);
 }

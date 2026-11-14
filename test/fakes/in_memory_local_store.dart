@@ -5,11 +5,16 @@ import 'package:yumdoor/platform/local_store/local_store.dart';
 class InMemoryLocalStore implements LocalStore {
   final values = <String, String>{};
 
+  /// Plays a full quota or disabled storage: writes are dropped.
+  bool refuseWrites = false;
+
   @override
   String? read(String key) => values[key];
 
   @override
-  void write(String key, String value) => values[key] = value;
+  void write(String key, String value) {
+    if (!refuseWrites) values[key] = value;
+  }
 
   @override
   void delete(String key) => values.remove(key);

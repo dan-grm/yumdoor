@@ -12,12 +12,14 @@ import '../../fakes/fake_auth_repository.dart';
 import '../../fakes/fake_connectivity_service.dart';
 import '../../fakes/fake_offline_cache.dart';
 import '../../fakes/in_memory_token_store.dart';
+import '../../fakes/in_memory_local_store.dart';
 
 void main() {
   late InMemoryTokenStore store;
   late FakeAuthRepository auth;
   late FakeConnectivityService connectivity;
   late FakeOfflineCache offlineCache;
+  late InMemoryLocalStore localStore;
   late ProviderContainer container;
 
   void start(InMemoryTokenStore tokenStore) {
@@ -28,6 +30,7 @@ void main() {
         auth: auth,
         connectivity: connectivity,
         offlineCache: offlineCache,
+        localStore: localStore,
       ),
     );
     addTearDown(container.dispose);
@@ -43,6 +46,7 @@ void main() {
     auth = FakeAuthRepository();
     connectivity = FakeConnectivityService();
     offlineCache = FakeOfflineCache();
+    localStore = InMemoryLocalStore();
   });
 
   test('restores the stored session without asking the server', () async {
@@ -121,6 +125,19 @@ void main() {
   });
 
   group('logout', () {
+    test('forgets ticked-off ingredients, keeps other local state', () async {
+      localStore
+        ..write('cooking-progress.7', '{}')
+        ..write('cooking-progress.8', '{}')
+        ..write('other', 'bleibt');
+      start(loggedInTokenStore());
+      await session();
+
+      await controller().logout();
+
+      expect(localStore.values, {'other': 'bleibt'});
+    });
+
     test('revokes the device token and keeps the server URL', () async {
       start(loggedInTokenStore());
       final before = await session();

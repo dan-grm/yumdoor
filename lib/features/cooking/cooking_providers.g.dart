@@ -70,21 +70,21 @@ abstract class _$WakeLockHintShown extends $Notifier<bool> {
   }
 }
 
-/// The ingredients ticked off while cooking [recipeId], kept in the
-/// [LocalStore] so they survive paging and a reload. Expired progress, of
-/// this or any other recipe, is dropped when cooking mode opens.
+/// The ingredients ticked off while cooking [recipeId], saved so they survive
+/// paging and a reload. Cooking mode watches it while open, so a failed save
+/// still keeps the ticks in memory until the screen closes.
 
 @ProviderFor(CookingProgressController)
 final cookingProgressControllerProvider = CookingProgressControllerFamily._();
 
-/// The ingredients ticked off while cooking [recipeId], kept in the
-/// [LocalStore] so they survive paging and a reload. Expired progress, of
-/// this or any other recipe, is dropped when cooking mode opens.
+/// The ingredients ticked off while cooking [recipeId], saved so they survive
+/// paging and a reload. Cooking mode watches it while open, so a failed save
+/// still keeps the ticks in memory until the screen closes.
 final class CookingProgressControllerProvider
     extends $NotifierProvider<CookingProgressController, CookingProgress> {
-  /// The ingredients ticked off while cooking [recipeId], kept in the
-  /// [LocalStore] so they survive paging and a reload. Expired progress, of
-  /// this or any other recipe, is dropped when cooking mode opens.
+  /// The ingredients ticked off while cooking [recipeId], saved so they survive
+  /// paging and a reload. Cooking mode watches it while open, so a failed save
+  /// still keeps the ticks in memory until the screen closes.
   CookingProgressControllerProvider._({
     required CookingProgressControllerFamily super.from,
     required int super.argument,
@@ -131,11 +131,11 @@ final class CookingProgressControllerProvider
 }
 
 String _$cookingProgressControllerHash() =>
-    r'887539620b2967e8432871002b4f5e9a73c8f2b6';
+    r'ab1a805359ae8f2952aa19bf31a31aa20832b205';
 
-/// The ingredients ticked off while cooking [recipeId], kept in the
-/// [LocalStore] so they survive paging and a reload. Expired progress, of
-/// this or any other recipe, is dropped when cooking mode opens.
+/// The ingredients ticked off while cooking [recipeId], saved so they survive
+/// paging and a reload. Cooking mode watches it while open, so a failed save
+/// still keeps the ticks in memory until the screen closes.
 
 final class CookingProgressControllerFamily extends $Family
     with
@@ -155,9 +155,9 @@ final class CookingProgressControllerFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// The ingredients ticked off while cooking [recipeId], kept in the
-  /// [LocalStore] so they survive paging and a reload. Expired progress, of
-  /// this or any other recipe, is dropped when cooking mode opens.
+  /// The ingredients ticked off while cooking [recipeId], saved so they survive
+  /// paging and a reload. Cooking mode watches it while open, so a failed save
+  /// still keeps the ticks in memory until the screen closes.
 
   CookingProgressControllerProvider call(int recipeId) =>
       CookingProgressControllerProvider._(argument: recipeId, from: this);
@@ -166,9 +166,9 @@ final class CookingProgressControllerFamily extends $Family
   String toString() => r'cookingProgressControllerProvider';
 }
 
-/// The ingredients ticked off while cooking [recipeId], kept in the
-/// [LocalStore] so they survive paging and a reload. Expired progress, of
-/// this or any other recipe, is dropped when cooking mode opens.
+/// The ingredients ticked off while cooking [recipeId], saved so they survive
+/// paging and a reload. Cooking mode watches it while open, so a failed save
+/// still keeps the ticks in memory until the screen closes.
 
 abstract class _$CookingProgressController extends $Notifier<CookingProgress> {
   late final _$args = ref.$arg as int;

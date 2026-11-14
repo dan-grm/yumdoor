@@ -84,7 +84,7 @@ class _CookingScreenState extends ConsumerState<CookingScreen> {
   void _finish() {
     ref
         .read(cookingProgressControllerProvider(widget.recipeId).notifier)
-        .clear();
+        .forget();
     _leave();
   }
 
@@ -96,6 +96,8 @@ class _CookingScreenState extends ConsumerState<CookingScreen> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final recipe = ref.watch(recipeProvider(widget.recipeId));
+    // Kept alive while cooking, also on steps without ingredients.
+    ref.watch(cookingProgressControllerProvider(widget.recipeId));
     final closeButton = RoundIconButton(
       icon: Icons.close_rounded,
       label: context.l10n.cookingClose,

@@ -32,6 +32,14 @@ void main() {
     );
   });
 
+  test('a change in the future expires too', () {
+    final progress = CookingProgress.empty(
+      start.add(const Duration(days: 365)),
+    );
+
+    expect(progress.isExpired(start), isTrue);
+  });
+
   test('round-trips through JSON', () {
     final progress = CookingProgress.empty(start)
         .toggle(karotten, start)

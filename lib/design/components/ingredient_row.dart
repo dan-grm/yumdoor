@@ -9,7 +9,7 @@ import '../design.dart';
 /// instead of pushing the pill out; the pill takes at most 45% of the width.
 ///
 /// With [onToggle], the row starts with a tick-off circle and the whole row
-/// toggles [done]; screen readers get a toggle button labeled [toggleLabel].
+/// toggles [done]; screen readers get a checkbox labeled [toggleLabel].
 class IngredientRow extends StatelessWidget {
   const IngredientRow({
     super.key,
@@ -89,10 +89,9 @@ class IngredientRow extends StatelessWidget {
       ),
     );
     if (onToggle == null) return row;
-    // One toggle for screen readers: "Karotten abhaken", value "600 g".
+    // One checkbox for screen readers: "Karotten abhaken", value "600 g".
     return Semantics(
-      button: true,
-      toggled: done,
+      checked: done,
       label: toggleLabel,
       value: [amount, note].where((part) => part.isNotEmpty).join(', '),
       onTap: onToggle,

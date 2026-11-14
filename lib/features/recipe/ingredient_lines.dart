@@ -67,7 +67,9 @@ class IngredientLines extends StatelessWidget {
               onToggle: onToggle == null
                   ? null
                   : () => onToggle!(line.ingredient),
-              toggleLabel: context.l10n.ingredientTickOff(line.name),
+              toggleLabel: onToggle == null
+                  ? ''
+                  : context.l10n.ingredientTickOff(line.name),
               amount: [
                 if (line.amount case final amount?) format.quantity(amount),
                 line.unit,

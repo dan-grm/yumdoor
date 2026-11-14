@@ -215,6 +215,8 @@ Each service is an abstract class in `lib/platform/<name>/` with implementations
 | `TimerAlertService` | Timers store their end time, not a countdown, so they survive the tab being suspended; they are recomputed on resume. Alert by sound + vibration (where available) when visible; `Notification` when permitted. Background alerts on iOS PWAs are not possible; the UI says so once. | Local notifications scheduled at start |
 | `TokenStore` | `flutter_secure_storage`: `localStorage`, not secure (see Authentication) | Keychain / Keystore |
 | `ConnectivityService` | `navigator.onLine` + request failures | `connectivity_plus` + request failures |
+| `LinkOpener` | A temporary `<a target="_blank" rel="noopener noreferrer">`, clicked | `url_launcher` (system browser) |
+| `LocalStore` | `localStorage`, keys prefixed `yumdoor.`; small non-sensitive state such as ticked-off ingredients | `shared_preferences` |
 
 ## Domain services
 

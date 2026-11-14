@@ -1,4 +1,4 @@
-import 'dart:ui' show Tristate;
+import 'dart:ui' show CheckedState;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -291,10 +291,10 @@ void main() {
 
     bool isDone(WidgetTester tester, String name) {
       final data = tester.getSemantics(row(name)).getSemanticsData();
-      return data.flagsCollection.isToggled == Tristate.isTrue;
+      return data.flagsCollection.isChecked == CheckedState.isTrue;
     }
 
-    testWidgets('a tap toggles a row, announced as toggled', (tester) async {
+    testWidgets('a tap toggles a row, announced as checked', (tester) async {
       await pumpCooking(tester);
       await next(tester, 'Weiter zu Schritt 2');
 
@@ -325,6 +325,22 @@ void main() {
       await pumpCooking(tester);
       await next(tester, 'Weiter zu Schritt 2');
       expect(isDone(tester, 'Karotten'), isTrue);
+    });
+
+    testWidgets('stays in memory when it can\'t be saved', (tester) async {
+      localStore.refuseWrites = true;
+      await pumpCooking(tester);
+      await next(tester, 'Weiter zu Schritt 2');
+      await tester.tap(find.text('Karotten'));
+      await tester.pump();
+
+      // Step 1 has no ingredients, so step 2's rows are gone meanwhile.
+      await tester.tap(find.byTooltip('Zurück zu Schritt 1'));
+      await tester.pumpAndSettle();
+      await next(tester, 'Weiter zu Schritt 2');
+
+      expect(isDone(tester, 'Karotten'), isTrue);
+      expect(localStore.values, isEmpty);
     });
 
     testWidgets('is per step', (tester) async {
