@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../platform/connectivity/connectivity_service.dart';
 import '../platform/csrf/csrf_token_source.dart';
+import '../platform/link_opener/link_opener.dart';
 import '../platform/token_store/secure_storage_token_store.dart';
 import '../platform/token_store/token_store.dart';
 import '../platform/wake_lock/wake_lock_service.dart';
@@ -37,3 +38,6 @@ ConnectivityService connectivityService(Ref ref) {
   ref.onDispose(service.dispose);
   return service;
 }
+
+@Riverpod(keepAlive: true)
+LinkOpener linkOpener(Ref ref) => LinkOpener();

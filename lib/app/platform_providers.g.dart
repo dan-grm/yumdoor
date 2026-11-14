@@ -232,3 +232,44 @@ final class ConnectivityServiceProvider
 
 String _$connectivityServiceHash() =>
     r'8aad782a54ee2cf5a02eced6652ee1a3bb1b3acd';
+
+@ProviderFor(linkOpener)
+final linkOpenerProvider = LinkOpenerProvider._();
+
+final class LinkOpenerProvider
+    extends $FunctionalProvider<LinkOpener, LinkOpener, LinkOpener>
+    with $Provider<LinkOpener> {
+  LinkOpenerProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'linkOpenerProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$linkOpenerHash();
+
+  @$internal
+  @override
+  $ProviderElement<LinkOpener> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  LinkOpener create(Ref ref) {
+    return linkOpener(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(LinkOpener value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<LinkOpener>(value),
+    );
+  }
+}
+
+String _$linkOpenerHash() => r'efd9c315d7fb7cc807c1bd63702ed7ca7b37b862';
