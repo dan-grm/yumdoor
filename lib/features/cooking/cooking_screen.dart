@@ -15,6 +15,7 @@ import '../../domain/services/scaling_service.dart';
 import '../../l10n/l10n.dart';
 import '../../platform/wake_lock/wake_lock_service.dart';
 import '../common/failure_view.dart';
+import '../common/markdown_text.dart';
 import '../recipe/ingredient_lines.dart';
 import '../recipe/recipe_providers.dart';
 import 'cooking_providers.dart';
@@ -367,8 +368,11 @@ class _StepPage extends StatelessWidget {
                   ],
                   if (instruction.isNotEmpty) ...[
                     SizedBox(height: t.space2),
-                    // Plain text until markdown, templates and timers (M2).
-                    Text(instruction, style: t.step.copyWith(color: t.ink)),
+                    // Templates and timers hook in through spanBuilder.
+                    MarkdownText(
+                      instruction,
+                      style: t.step.copyWith(color: t.ink),
+                    ),
                   ],
                 ],
               ),

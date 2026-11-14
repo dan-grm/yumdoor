@@ -14,7 +14,7 @@ const _bunch = Unit(id: 4, name: 'Bund');
 const ofenkarotten = Recipe(
   id: 7,
   name: 'Ofenkarotten mit Feta',
-  description: 'Süß, salzig und knusprig.',
+  description: 'Süß, salzig und *knusprig*.',
   servings: 2,
   workingTime: Duration(minutes: 15),
   waitingTime: Duration(minutes: 20),
@@ -28,7 +28,7 @@ const ofenkarotten = Recipe(
     RecipeStep(
       id: 2,
       instruction:
-          'Karotten schräg in 1 cm dicke Scheiben schneiden, mit Öl, Honig '
+          'Karotten **schräg** in 1 cm dicke Scheiben schneiden, mit Öl, Honig '
           'und Kreuzkümmel mischen und 25 Minuten rösten.',
       ingredients: [
         Ingredient(

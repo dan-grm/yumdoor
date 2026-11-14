@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/platform/connectivity/connectivity_service.dart';
+import 'package:yumdoor/platform/link_opener/link_opener.dart';
 import 'package:yumdoor/platform/token_store/token_store.dart';
 import 'package:yumdoor/platform/wake_lock/wake_lock_service.dart';
 
@@ -115,4 +116,18 @@ void connectivityContract(ConnectivityService Function() create) {
     expect(connectivity.isOnline, isA<bool>());
     expect(changes, isEmpty);
   });
+}
+
+void linkOpenerContract(LinkOpener Function() create) {
+  for (final url in [
+    'javascript:alert(1)',
+    'data:text/html,hi',
+    'file:///etc/passwd',
+    '/relative',
+    'https:no-host',
+  ]) {
+    test('refuses $url', () {
+      expect(create().open(Uri.parse(url)), throwsArgumentError);
+    });
+  }
 }

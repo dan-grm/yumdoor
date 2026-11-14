@@ -3,20 +3,30 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/core/failures.dart';
+import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/features/recipe/recipe_screen.dart';
 
 import '../../fakes/fake_recipe_repository.dart';
 import '../../fixtures/recipes.dart';
+import '../fonts.dart';
+import '../golden.dart';
 import '../harness.dart';
 
 void main() {
   late FakeRecipeRepository repository;
 
+  setUpAll(loadBundledFonts);
+
   setUp(() => repository = FakeRecipeRepository([ofenkarotten, longNames]));
 
-  Future<GoRouter> pumpRecipe(WidgetTester tester, int id) => pumpRoutes(
+  Future<GoRouter> pumpRecipe(
+    WidgetTester tester,
+    int id, {
+    ThemeData? theme,
+  }) => pumpRoutes(
     tester,
     location: '/recipe/$id',
+    theme: theme,
     overrides: [recipeRepositoryProvider.overrideWithValue(repository)],
     routes: [
       GoRoute(
@@ -168,5 +178,38 @@ void main() {
       ),
       findsOneWidget,
     );
+  });
+
+  testWidgets('the description is rendered as Markdown', (tester) async {
+    repository.recipes[ofenkarotten.id] = ofenkarotten.copyWith(
+      description: 'Süß und **knusprig**.\n\n- passt zu Couscous',
+    );
+    await pumpRecipe(tester, ofenkarotten.id);
+
+    expect(find.text('Süß und knusprig.', findRichText: true), findsOneWidget);
+    expect(find.text('passt zu Couscous', findRichText: true), findsOneWidget);
+    expect(find.textContaining('**'), findsNothing);
+  });
+
+  group('goldens', skip: goldenSkip, () {
+    for (final (name, theme) in [('light', lightTheme), ('dark', darkTheme)]) {
+      testWidgets('Markdown description in $name', tags: goldenTags, (
+        tester,
+      ) async {
+        repository.recipes[ofenkarotten.id] = ofenkarotten.copyWith(
+          description:
+              'Süß, salzig und *knusprig*. Nach einem Rezept von '
+              '[Oma Erna](https://example.com/oma).\n\n'
+              '- passt zu **Couscous**\n'
+              '- schmeckt auch kalt',
+        );
+        await pumpRecipe(tester, ofenkarotten.id, theme: theme);
+
+        await expectLater(
+          find.byType(RecipeScreen),
+          matchesGoldenFile('../goldens/recipe_description_$name.png'),
+        );
+      });
+    }
   });
 }

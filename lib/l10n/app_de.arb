@@ -495,5 +495,23 @@
   "pickerEmpty": "Nichts gefunden",
   "@pickerEmpty": {
     "description": "Empty state of the ingredient and keyword pickers."
+  },
+  "markdownLinkTitle": "Link öffnen?",
+  "@markdownLinkTitle": {
+    "description": "Title of the dialog shown before a link from a recipe opens."
+  },
+  "markdownLinkText": "Der Link führt zu {host} und öffnet sich in einem neuen Tab.",
+  "@markdownLinkText": {
+    "description": "Body of the link dialog: where a link from recipe text leads.",
+    "placeholders": {
+      "host": {
+        "type": "String",
+        "example": "www.example.com"
+      }
+    }
+  },
+  "markdownLinkOpen": "Öffnen",
+  "@markdownLinkOpen": {
+    "description": "Button in the link dialog that opens the link."
   }
 }

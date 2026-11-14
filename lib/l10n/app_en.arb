@@ -92,5 +92,8 @@
   "pickerFoodHint": "Search ingredients",
   "pickerKeywordHint": "Search keywords",
   "pickerFoodNote": "Child ingredients count too.",
-  "pickerEmpty": "Nothing found"
+  "pickerEmpty": "Nothing found",
+  "markdownLinkTitle": "Open link?",
+  "markdownLinkText": "This link goes to {host} and opens in a new tab.",
+  "markdownLinkOpen": "Open"
 }

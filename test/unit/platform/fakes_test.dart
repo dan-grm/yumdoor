@@ -4,12 +4,23 @@ import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/platform/wake_lock/wake_lock_service.dart';
 
 import '../../fakes/fake_connectivity_service.dart';
+import '../../fakes/fake_link_opener.dart';
 import '../../fakes/fake_wake_lock_service.dart';
 import '../../fakes/in_memory_token_store.dart';
 import '../../platform/contracts.dart';
 
 void main() {
   group('InMemoryTokenStore', () => tokenStoreContract(InMemoryTokenStore.new));
+
+  group('FakeLinkOpener', () {
+    linkOpenerContract(FakeLinkOpener.new);
+
+    test('records opened links', () async {
+      final links = FakeLinkOpener();
+      await links.open(Uri.parse('https://example.com/'));
+      expect(links.opened, [Uri.parse('https://example.com/')]);
+    });
+  });
 
   group('FakeWakeLockService', () {
     for (final outcome in [
