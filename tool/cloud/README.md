@@ -15,6 +15,9 @@ usual (`/milestone run`, `/ship 51`, `/ship <bug description>`).
    - **Setup script:** paste the contents of [`setup.sh`](setup.sh). It installs Flutter and pulls the Tandoor
      images; the result is cached, so later sessions start in seconds.
    - **Environment variables:** none. Don't add a `GH_TOKEN`; GitHub access goes through Anthropic's proxy.
+3. **Check it:** in the first session, ask Claude to run `flutter --version` and
+   `flutter test --exclude-tags integration`, start the local Tandoor, seed it and run the integration tests. If
+   something fails, fix the scripts here in a PR.
 
 ## What happens in a session
 
