@@ -31,7 +31,7 @@ class PlatformAlertChannels implements AlertChannels {
   Future<void> requestNotificationPermission() async {}
 
   @override
-  Future<void> closeNotifications() async {}
+  Future<void> closeNotifications({String? tag}) async {}
 
   @override
   Future<void> showNotification(String title, String body, String tag) =>

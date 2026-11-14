@@ -539,5 +539,115 @@
   "recipeMethod": "Zubereitung",
   "@recipeMethod": {
     "description": "Title of the steps column on the recipe screen on tablets and in landscape."
+  },
+  "timerStart": "Timer starten · {time}",
+  "@timerStart": {
+    "description": "Button below a step with an explicit time: starts a timer of that length.",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "example": "25:00"
+      }
+    }
+  },
+  "timerFinished": "fertig",
+  "@timerFinished": {
+    "description": "On a finished timer chip, after its label: \"Rösten fertig\"."
+  },
+  "timerChipRunning": "{label}, noch {time}",
+  "@timerChipRunning": {
+    "description": "Screen-reader label of a running timer chip.",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "Rösten"
+      },
+      "time": {
+        "type": "String",
+        "example": "04:12"
+      }
+    }
+  },
+  "timerChipPaused": "{label}, angehalten bei {time}",
+  "@timerChipPaused": {
+    "description": "Screen-reader label of a paused timer chip.",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "Rösten"
+      },
+      "time": {
+        "type": "String",
+        "example": "04:12"
+      }
+    }
+  },
+  "timerChipFinished": "{label} ist fertig",
+  "@timerChipFinished": {
+    "description": "Screen-reader label of a finished timer chip, and the notification title.",
+    "placeholders": {
+      "label": {
+        "type": "String",
+        "example": "Rösten"
+      }
+    }
+  },
+  "timerAdd": "Timer stellen",
+  "@timerAdd": {
+    "description": "Tooltip of the button in cooking mode that sets a new timer by hand."
+  },
+  "timerManualLabel": "Timer",
+  "@timerManualLabel": {
+    "description": "Name of a timer set by hand."
+  },
+  "timerNew": "Neuer Timer",
+  "@timerNew": {
+    "description": "Title of the sheet that sets a timer by hand."
+  },
+  "timerMinutes": "{count} Min",
+  "@timerMinutes": {
+    "description": "Length of a new timer in the sheet.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "5"
+      }
+    }
+  },
+  "timerLess": "Eine Minute weniger",
+  "@timerLess": {
+    "description": "Tooltip: shortens the new timer by a minute."
+  },
+  "timerMore": "Eine Minute mehr",
+  "@timerMore": {
+    "description": "Tooltip: lengthens the new timer by a minute."
+  },
+  "timerStartManual": "Starten",
+  "@timerStartManual": {
+    "description": "Button in the sheet that starts the new timer."
+  },
+  "timerPause": "Anhalten",
+  "@timerPause": {
+    "description": "Button in the timer sheet that pauses a running timer."
+  },
+  "timerResume": "Fortsetzen",
+  "@timerResume": {
+    "description": "Button in the timer sheet that resumes a paused timer."
+  },
+  "timerAddMinute": "+1 Min",
+  "@timerAddMinute": {
+    "description": "Button in the timer sheet that adds a minute."
+  },
+  "timerDelete": "Timer löschen",
+  "@timerDelete": {
+    "description": "Button in the timer sheet that cancels a timer."
+  },
+  "timerTurnOff": "Ausschalten",
+  "@timerTurnOff": {
+    "description": "Button in the timer sheet that turns off a finished timer."
+  },
+  "timerBackgroundHint": "Timer melden sich nur, solange Yumdoor geöffnet ist.",
+  "@timerBackgroundHint": {
+    "description": "Shown once when a timer starts on a device that can't alert in the background (phones)."
   }
 }

@@ -32,6 +32,15 @@ class LocaleFormat {
     )..maximumFractionDigits = 6).format(value),
   };
 
+  /// Time left on a timer: `04:12`, `1:04:12` from an hour on. The same in
+  /// every locale. Rounds up, so `00:00` only shows once it is over.
+  String countdown(Duration value) {
+    final seconds = (value.inMilliseconds + 999) ~/ 1000;
+    String two(int n) => n.toString().padLeft(2, '0');
+    final clock = '${two(seconds ~/ 60 % 60)}:${two(seconds % 60)}';
+    return seconds >= 3600 ? '${seconds ~/ 3600}:$clock' : clock;
+  }
+
   /// A whole number with grouped thousands (`1.234`).
   String integer(int value) =>
       NumberFormat.decimalPattern(_locale).format(value);

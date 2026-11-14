@@ -70,6 +70,69 @@ abstract class _$WakeLockHintShown extends $Notifier<bool> {
   }
 }
 
+/// Whether cooking mode already said, in this app session, that timers can't
+/// alert while the app is in the background.
+
+@ProviderFor(TimerBackgroundHintShown)
+final timerBackgroundHintShownProvider = TimerBackgroundHintShownProvider._();
+
+/// Whether cooking mode already said, in this app session, that timers can't
+/// alert while the app is in the background.
+final class TimerBackgroundHintShownProvider
+    extends $NotifierProvider<TimerBackgroundHintShown, bool> {
+  /// Whether cooking mode already said, in this app session, that timers can't
+  /// alert while the app is in the background.
+  TimerBackgroundHintShownProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'timerBackgroundHintShownProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$timerBackgroundHintShownHash();
+
+  @$internal
+  @override
+  TimerBackgroundHintShown create() => TimerBackgroundHintShown();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$timerBackgroundHintShownHash() =>
+    r'c0513b5e53f00c6bebd3151c8fb614e1f57a03cd';
+
+/// Whether cooking mode already said, in this app session, that timers can't
+/// alert while the app is in the background.
+
+abstract class _$TimerBackgroundHintShown extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 /// The ingredients ticked off while cooking [recipeId], saved so they survive
 /// paging and a reload. Cooking mode watches it while open, so a failed save
 /// still keeps the ticks in memory until the screen closes.
@@ -190,3 +253,196 @@ abstract class _$CookingProgressController extends $Notifier<CookingProgress> {
     return element.handleCreate(ref, () => build(_$args));
   }
 }
+
+/// The timers running while cooking [recipeId], saved so they survive paging
+/// and a reload.
+///
+/// Kept alive for the app's lifetime, with its own ticker, so a timer still
+/// alerts after cooking mode was closed with ×: once a second while timers
+/// run or have finished, it alerts for each finished one
+/// ([CookingTimer.needsAlert]) until it is turned off.
+
+@ProviderFor(CookingTimersController)
+final cookingTimersControllerProvider = CookingTimersControllerFamily._();
+
+/// The timers running while cooking [recipeId], saved so they survive paging
+/// and a reload.
+///
+/// Kept alive for the app's lifetime, with its own ticker, so a timer still
+/// alerts after cooking mode was closed with ×: once a second while timers
+/// run or have finished, it alerts for each finished one
+/// ([CookingTimer.needsAlert]) until it is turned off.
+final class CookingTimersControllerProvider
+    extends $NotifierProvider<CookingTimersController, List<CookingTimer>> {
+  /// The timers running while cooking [recipeId], saved so they survive paging
+  /// and a reload.
+  ///
+  /// Kept alive for the app's lifetime, with its own ticker, so a timer still
+  /// alerts after cooking mode was closed with ×: once a second while timers
+  /// run or have finished, it alerts for each finished one
+  /// ([CookingTimer.needsAlert]) until it is turned off.
+  CookingTimersControllerProvider._({
+    required CookingTimersControllerFamily super.from,
+    required int super.argument,
+  }) : super(
+         retry: null,
+         name: r'cookingTimersControllerProvider',
+         isAutoDispose: false,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$cookingTimersControllerHash();
+
+  @override
+  String toString() {
+    return r'cookingTimersControllerProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  CookingTimersController create() => CookingTimersController();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<CookingTimer> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<CookingTimer>>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is CookingTimersControllerProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$cookingTimersControllerHash() =>
+    r'c72c810bb5110d50cf90f9d52e26aa745240afb5';
+
+/// The timers running while cooking [recipeId], saved so they survive paging
+/// and a reload.
+///
+/// Kept alive for the app's lifetime, with its own ticker, so a timer still
+/// alerts after cooking mode was closed with ×: once a second while timers
+/// run or have finished, it alerts for each finished one
+/// ([CookingTimer.needsAlert]) until it is turned off.
+
+final class CookingTimersControllerFamily extends $Family
+    with
+        $ClassFamilyOverride<
+          CookingTimersController,
+          List<CookingTimer>,
+          List<CookingTimer>,
+          List<CookingTimer>,
+          int
+        > {
+  CookingTimersControllerFamily._()
+    : super(
+        retry: null,
+        name: r'cookingTimersControllerProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: false,
+      );
+
+  /// The timers running while cooking [recipeId], saved so they survive paging
+  /// and a reload.
+  ///
+  /// Kept alive for the app's lifetime, with its own ticker, so a timer still
+  /// alerts after cooking mode was closed with ×: once a second while timers
+  /// run or have finished, it alerts for each finished one
+  /// ([CookingTimer.needsAlert]) until it is turned off.
+
+  CookingTimersControllerProvider call(int recipeId) =>
+      CookingTimersControllerProvider._(argument: recipeId, from: this);
+
+  @override
+  String toString() => r'cookingTimersControllerProvider';
+}
+
+/// The timers running while cooking [recipeId], saved so they survive paging
+/// and a reload.
+///
+/// Kept alive for the app's lifetime, with its own ticker, so a timer still
+/// alerts after cooking mode was closed with ×: once a second while timers
+/// run or have finished, it alerts for each finished one
+/// ([CookingTimer.needsAlert]) until it is turned off.
+
+abstract class _$CookingTimersController extends $Notifier<List<CookingTimer>> {
+  late final _$args = ref.$arg as int;
+  int get recipeId => _$args;
+
+  List<CookingTimer> build(int recipeId);
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<List<CookingTimer>, List<CookingTimer>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<List<CookingTimer>, List<CookingTimer>>,
+              List<CookingTimer>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, () => build(_$args));
+  }
+}
+
+/// Brings back the saved timers of every recipe at app start, so they keep
+/// alerting after a reload without opening cooking mode again.
+
+@ProviderFor(restoredTimers)
+final restoredTimersProvider = RestoredTimersProvider._();
+
+/// Brings back the saved timers of every recipe at app start, so they keep
+/// alerting after a reload without opening cooking mode again.
+
+final class RestoredTimersProvider extends $FunctionalProvider<int, int, int>
+    with $Provider<int> {
+  /// Brings back the saved timers of every recipe at app start, so they keep
+  /// alerting after a reload without opening cooking mode again.
+  RestoredTimersProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'restoredTimersProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$restoredTimersHash();
+
+  @$internal
+  @override
+  $ProviderElement<int> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  int create(Ref ref) {
+    return restoredTimers(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$restoredTimersHash() => r'316a9c2d9af45878a5deab806bdd62d690bd78c6';

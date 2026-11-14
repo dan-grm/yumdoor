@@ -73,9 +73,9 @@ class FakeAlertChannels implements AlertChannels {
   int closes = 0;
 
   @override
-  Future<void> closeNotifications() async {
+  Future<void> closeNotifications({String? tag}) async {
     closes++;
-    notifications.clear();
+    notifications.removeWhere((n) => tag == null || n.$3 == tag);
   }
 
   @override

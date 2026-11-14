@@ -125,7 +125,7 @@ class PlatformAlertChannels implements AlertChannels {
   Future<void> showNotification(String title, String body, String tag) async {
     final options = web.NotificationOptions(
       body: body,
-      tag: 'yumdoor-timer-$tag',
+      tag: _tag(tag),
       renotify: true,
       requireInteraction: true,
     );
@@ -138,6 +138,11 @@ class PlatformAlertChannels implements AlertChannels {
         return;
       }
     }
+    // A re-alert replaces the timer's earlier notification.
+    for (final old in _shown.where((n) => n.tag == _tag(tag)).toList()) {
+      old.close();
+      _shown.remove(old);
+    }
     final notification = web.Notification(title, options);
     _shown.add(notification);
     notification.onclick = (web.Event _) {
@@ -149,20 +154,25 @@ class PlatformAlertChannels implements AlertChannels {
   /// Notifications shown without a service worker.
   final _shown = <web.Notification>[];
 
+  static String _tag(String tag) => 'yumdoor-timer-$tag';
+
   @override
-  Future<void> closeNotifications() async {
-    for (final notification in _shown) {
+  Future<void> closeNotifications({String? tag}) async {
+    bool ours(web.Notification notification) => tag == null
+        ? notification.tag.startsWith(_tag(''))
+        : notification.tag == _tag(tag);
+    for (final notification in _shown.where(ours).toList()) {
       notification.close();
+      _shown.remove(notification);
     }
-    _shown.clear();
     if (!_navigator.has('serviceWorker')) return;
     final registration = await web.window.navigator.serviceWorker
         .getRegistration()
         .toDart;
     if (registration == null) return;
     final open = await registration.getNotifications().toDart;
-    for (final notification in open.toDart) {
-      if (notification.tag.startsWith('yumdoor-timer-')) notification.close();
+    for (final notification in open.toDart.where(ours)) {
+      notification.close();
     }
   }
 }

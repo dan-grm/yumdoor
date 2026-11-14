@@ -25,6 +25,7 @@ import '../common/step_text.dart';
 import '../recipe/ingredient_lines.dart';
 import '../recipe/recipe_providers.dart';
 import 'cooking_providers.dart';
+import 'timers.dart';
 
 /// Cooking mode: one step per page with its scaled ingredients
 /// (mockup `05-kochmodus`).
@@ -89,6 +90,9 @@ class _CookingScreenState extends ConsumerState<CookingScreen> {
     ref
         .read(cookingProgressControllerProvider(widget.recipeId).notifier)
         .forget();
+    ref
+        .read(cookingTimersControllerProvider(widget.recipeId).notifier)
+        .forget();
     _leave();
   }
 
@@ -103,6 +107,7 @@ class _CookingScreenState extends ConsumerState<CookingScreen> {
     // Kept alive while cooking, also on steps without ingredients; the step
     // pages watch it themselves.
     ref.listen(cookingProgressControllerProvider(widget.recipeId), (_, _) {});
+    ref.listen(cookingTimersControllerProvider(widget.recipeId), (_, _) {});
     final closeButton = RoundIconButton(
       icon: Icons.close_rounded,
       label: context.l10n.cookingClose,
@@ -265,7 +270,9 @@ class _CookingViewState extends State<_CookingView> {
             ],
           ),
         ),
-        if (steps.isEmpty)
+        if (steps.isEmpty) ...[
+          SizedBox(height: t.space2),
+          TimerBar(recipeId: recipe.id, recipeName: recipe.name),
           Expanded(
             child: Center(
               child: Text(
@@ -273,16 +280,20 @@ class _CookingViewState extends State<_CookingView> {
                 style: t.body.copyWith(color: t.inkMuted),
               ),
             ),
-          )
-        else ...[
+          ),
+        ] else ...[
           SizedBox(height: t.space2),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: StepDots(
-              count: steps.length,
-              current: _page,
-              onSelected: _goTo,
-            ),
+          // The timers sit next to the dots, and below them when they
+          // don't fit.
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: t.space3,
+            runSpacing: t.space1,
+            children: [
+              StepDots(count: steps.length, current: _page, onSelected: _goTo),
+              TimerBar(recipeId: recipe.id, recipeName: recipe.name),
+            ],
           ),
           SizedBox(height: t.space2),
           Expanded(
@@ -383,6 +394,7 @@ class _StepPage extends StatelessWidget {
               SizedBox(height: t.space2),
               _ingredients([step]),
             ],
+            _timerButton(context),
           ],
         ),
       );
@@ -395,7 +407,10 @@ class _StepPage extends StatelessWidget {
           flex: 3,
           child: SingleChildScrollView(
             padding: EdgeInsets.only(top: t.space2),
-            child: _stepCard(context),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [_stepCard(context), _timerButton(context)],
+            ),
           ),
         ),
         SizedBox(width: t.space8),
@@ -426,6 +441,16 @@ class _StepPage extends StatelessWidget {
       ],
     );
   }
+
+  /// "Timer starten" for the step's own time; the timer is named after the
+  /// step.
+  Widget _timerButton(BuildContext context) => StepTimerButton(
+    recipeId: recipeId,
+    step: step,
+    label: step.name.trim().isEmpty
+        ? context.l10n.recipeStepTitle(number)
+        : step.name.trim(),
+  );
 
   Widget _stepCard(BuildContext context) {
     final t = context.tokens;
