@@ -68,8 +68,11 @@ class TandoorRecipeRepository implements RecipeRepository {
     final extraQuery = <String, Object>{};
     final checked = <_SavedSearch>{};
     for (final search in searches) {
+      // Its own parameters don't clash with each other, only with those of
+      // the saved searches before it.
+      final earlier = extraQuery.keys.toSet();
       for (final MapEntry(:key, :value) in search.mergeable.entries) {
-        if (ExtraQueryInterceptor.clashes(key, extraQuery.keys.toSet())) {
+        if (ExtraQueryInterceptor.clashes(key, earlier)) {
           checked.add(search);
         } else {
           extraQuery[key] = value;
@@ -100,10 +103,10 @@ class TandoorRecipeRepository implements RecipeRepository {
       if (checked.isEmpty) return _resultPage(body);
       // A parameter both send can only hold one value: this request left out
       // the saved search's, so keep what the whole saved search finds.
-      final ids = [
+      final ids = (await Future.wait([
         for (final search in checked)
-          await _whileWanted(search.ids(() => _savedSearchIds(search)), cancel),
-      ].reduce((a, b) => a.intersection(b));
+          _whileWanted(search.ids(() => _savedSearchIds(search)), cancel),
+      ])).reduce((a, b) => a.intersection(b));
       final items = [
         for (final recipe in body.results)
           if (ids.contains(recipe.id)) recipe.toDomain(),

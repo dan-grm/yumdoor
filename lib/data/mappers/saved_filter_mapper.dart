@@ -57,9 +57,15 @@ RecipeQuery? _apply(RecipeQuery query, String key, Object value) {
     case 'query':
       return value is String ? query.copyWith(text: value.trim()) : null;
     case 'foods_and':
-      return _withIds(value, (ids) => query.copyWith(foodIds: ids));
+      return _withIds(
+        value,
+        (ids) => query.copyWith(foodIds: {...query.foodIds, ...ids}),
+      );
     case 'keywords_and':
-      return _withIds(value, (ids) => query.copyWith(keywordIds: ids));
+      return _withIds(
+        value,
+        (ids) => query.copyWith(keywordIds: {...query.keywordIds, ...ids}),
+      );
     // "Any of": a single one is the same as "all of"; more can't be shown.
     case 'foods' || 'foods_or':
       return _withIds(
@@ -162,7 +168,9 @@ String savedSearchJson(RecipeQuery query) {
       'timescooked': 0
     else
       'timescooked_gte': ?query.minTimesCooked,
-    'makenow': ?query.maxMissingFoods,
+    // Tandoor's search page only knows "true"; the server reads a number.
+    if (query.maxMissingFoods case final missing?)
+      'makenow': missing == 0 ? 'true' : missing,
     'createdby': ?query.createdBy,
     'sort_order': ?sortOrder,
     'version': '2',

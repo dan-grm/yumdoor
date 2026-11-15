@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../app/offline.dart';
 import '../../app/repository_providers.dart';
 import '../../core/failures.dart';
 import '../../design/components/filter_chips.dart';
@@ -17,8 +16,11 @@ import 'search_providers.dart';
 const savedFilterNameLength = 128;
 
 /// Whether [filter] is the search [query] shows.
+/// One that finds every recipe in the default order is never applied:
+/// tapping it would change nothing.
 bool isSavedFilterApplied(SavedFilter filter, RecipeQuery query) =>
     switch (filter.query) {
+      const RecipeQuery() => false,
       final saved? => saved == query.copyWith(text: query.text.trim()),
       null => query.savedFilter == filter.id,
     };
@@ -33,10 +35,15 @@ class SavedFilterRow extends ConsumerWidget {
     super.key,
     required this.query,
     required this.onChange,
+    this.current,
   });
 
   final RecipeQuery query;
   final void Function(RecipeQuery query) onChange;
+
+  /// The search as it is now, with text typed since [query]; saving saves
+  /// that. [query] if `null`.
+  final RecipeQuery Function()? current;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -70,10 +77,12 @@ class SavedFilterRow extends ConsumerWidget {
                 ),
               ),
             if (canSave)
-              AddFilterChip(
-                label: l10n.searchSavedSave,
-                tooltip: l10n.searchSavedSave,
-                onPressed: () => _save(context, ref),
+              OfflineDisabled(
+                builder: (context, enabled) => AddFilterChip(
+                  label: l10n.searchSavedSave,
+                  tooltip: l10n.searchSavedSave,
+                  onPressed: enabled ? () => _save(context, ref) : null,
+                ),
               ),
             if (filters.isNotEmpty)
               _TextAction(
@@ -90,23 +99,21 @@ class SavedFilterRow extends ConsumerWidget {
   Future<void> _save(BuildContext context, WidgetRef ref) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
-    // Offline is read-only: say so rather than queueing the write.
-    if (ref.read(isOfflineProvider)) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.offlineWriteDisabled)),
-      );
-      return;
-    }
+    // The providers outlive this row, which may be gone when the request
+    // returns.
+    final container = ProviderScope.containerOf(context, listen: false);
+    final query = current?.call() ?? this.query;
     final name = await _askName(
       context,
       title: l10n.searchSavedSave,
       hint: l10n.searchSavedSaveHint,
     );
     if (name == null || !context.mounted) return;
-    final repository = ref.read(savedFilterRepositoryProvider);
     try {
-      final saved = await repository.create(name, query);
-      ref.invalidate(savedFiltersProvider);
+      final saved = await container
+          .read(savedFilterRepositoryProvider)
+          .create(name, query);
+      container.invalidate(savedFiltersProvider);
       messenger.showSnackBar(
         SnackBar(content: Text(l10n.searchSavedSaved(saved.name))),
       );
@@ -342,11 +349,8 @@ class _ManagedFilter extends ConsumerWidget {
       initial: filter.name,
     );
     if (name == null || name == filter.name || !context.mounted) return;
-    await _change(
-      context,
-      ref,
-      () => ref.read(savedFilterRepositoryProvider).rename(filter.id, name),
-    );
+    final repository = ref.read(savedFilterRepositoryProvider);
+    await _change(context, () => repository.rename(filter.id, name));
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
@@ -373,21 +377,19 @@ class _ManagedFilter extends ConsumerWidget {
       },
     );
     if (confirmed != true || !context.mounted) return;
-    await _change(
-      context,
-      ref,
-      () => ref.read(savedFilterRepositoryProvider).delete(filter.id),
-    );
+    final repository = ref.read(savedFilterRepositoryProvider);
+    await _change(context, () => repository.delete(filter.id));
   }
 
   /// Runs [change], then reloads the list; a failure is shown as a message.
   Future<void> _change(
     BuildContext context,
-    WidgetRef ref,
     Future<void> Function() change,
   ) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
+    // The sheet may be closed when the request returns.
+    final container = ProviderScope.containerOf(context, listen: false);
     try {
       await change();
     } on Failure catch (failure) {
@@ -401,7 +403,7 @@ class _ManagedFilter extends ConsumerWidget {
       );
       return;
     }
-    ref.invalidate(savedFiltersProvider);
+    container.invalidate(savedFiltersProvider);
   }
 }
 

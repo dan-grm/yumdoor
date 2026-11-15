@@ -247,6 +247,20 @@ void main() {
       expect(page.items, hasLength(3));
     });
 
+    test('sends an exact value and its range of its own together', () async {
+      final adapter = server([
+        filter(3, 'Nie', '{"timescooked":0,"timescooked_gte":1}'),
+      ]);
+
+      await TandoorRecipeRepository(client(adapter))
+          .search(const RecipeQuery(savedFilter: 3));
+
+      // Tandoor lets the exact value win; nothing to check by ids.
+      final query = recipeSearches(adapter).single;
+      expect(query['timescooked'], ['0']);
+      expect(query['timescooked_gte'], ['1']);
+    });
+
     test('finds nothing when it is gone', () async {
       final adapter = server([filter(4, 'Andere', '{"units":[6]}')]);
 

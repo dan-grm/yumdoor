@@ -182,15 +182,16 @@ snake case, plus `"version": "2"`: `query`, `keywords`/`keywords_and`/…, `food
 of local midnight, e.g. `2026-10-31T23:00:00.000Z`), `createdby`, `sort_order` (`random` is a sort order there),
 `include_children`. A filter without `version` is in the 1.x format, which the page converts on load. Yumdoor
 writes the same format, so its saved searches open in Tandoor: `query`, `foods_and`, `keywords_and`, `books`,
-`rating_gte`, `cookedon_lte` (`YYYY-MM-DD`), `timescooked: 0` or `timescooked_gte`, `makenow` (number of missing
-foods), `createdby`, `sort_order` (`-score` for relevance) and `version`. Yumdoor's search text matches ingredients
+`rating_gte`, `cookedon_lte` (`YYYY-MM-DD`), `timescooked: 0` or `timescooked_gte`, `makenow` (`"true"` for
+cookable now, as the search page reads it; else the number of missing foods), `createdby`, `sort_order` (`-score` for relevance) and `version`. Yumdoor's search text matches ingredients
 and keywords too; saved, it is `query`, which Tandoor matches by name only.
 
 A saved search whose parameters all have a chip in Yumdoor is applied as chips (a single "any of" food or keyword
 counts as one chip). Otherwise it is applied the way a dynamic book's is: its parameters are sent next to Yumdoor's
 own (never as `filter=<id>`, which drops every other parameter), and where they clash, only the recipes the saved
 search finds on its own are kept (see above). Applying both a saved search and a dynamic book works the same way;
-the book's parameters go first.
+the book's parameters go first. A saved search's own parameters never clash with each other (`timescooked` and
+`timescooked_gte` together are sent as they are; Tandoor lets the exact one win).
 
 Writing a book with a nested `filter` object (`POST`/`PATCH /api/recipe-book/`) **updates that CustomFilter**
 with the fields given (`WritableNestedModelSerializer`): send the whole filter, or its `search` is overwritten.

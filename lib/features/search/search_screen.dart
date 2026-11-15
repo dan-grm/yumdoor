@@ -187,7 +187,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ]),
               ),
             ),
-            SavedFilterRow(query: query, onChange: _replace),
+            SavedFilterRow(
+              query: query,
+              onChange: _replace,
+              current: () => query.copyWith(text: _text.text.trim()),
+            ),
             Expanded(
               child: _Results(query: query, onChange: _show),
             ),

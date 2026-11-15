@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/core/failures.dart';
+import 'package:yumdoor/design/components/filter_chips.dart';
 import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/domain/models/food.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
@@ -846,6 +847,37 @@ void main() {
       );
     });
 
+    testWidgets('saves text typed moments ago', (tester) async {
+      await pumpSearch(tester, location: '/search?keyword=2');
+
+      await tester.enterText(searchField(), 'Feta');
+      // Before the search follows the typing.
+      await tapTooltip(tester, 'Suche speichern');
+      await tester.pumpAndSettle();
+      await tester.enterText(inDialog(find.byType(TextField)), 'Feta');
+      await tester.tap(inDialog(find.text('Speichern')));
+      await tester.pumpAndSettle();
+
+      expect(
+        savedFilters.created.single,
+        const RecipeQuery(text: 'Feta', keywordIds: {2}),
+      );
+    });
+
+    testWidgets('one that finds everything is never shown as applied', (
+      tester,
+    ) async {
+      savedFilters = FakeSavedFilterRepository(const [
+        SavedFilter(id: 5, name: 'Alles', query: RecipeQuery()),
+      ]);
+      await pumpSearch(tester);
+
+      expect(
+        tester.getSemantics(chip('Alles')),
+        isSemantics(isSelected: false),
+      );
+    });
+
     testWidgets('offers no saving without a search', (tester) async {
       savedFilters = FakeSavedFilterRepository();
       await pumpSearch(tester);
@@ -916,15 +948,13 @@ void main() {
         connectivity: FakeConnectivityService(isOnline: false),
       );
 
-      await tapTooltip(tester, 'Suche speichern');
+      final save = find.byWidgetPredicate(
+        (w) => w is AddFilterChip && w.label == 'Suche speichern',
+      );
+      expect(tester.widget<AddFilterChip>(save).onPressed, isNull);
+      await tester.tap(save);
       await tester.pumpAndSettle();
       expect(find.byType(AlertDialog), findsNothing);
-      expect(
-        find.text(
-          'Offline kannst du nichts ändern. Sobald du wieder verbunden bist, geht es weiter.',
-        ),
-        findsOneWidget,
-      );
 
       await tapChip(tester, 'Verwalten');
       final rename = tester.widget<IconButton>(

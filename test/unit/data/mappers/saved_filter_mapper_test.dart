@@ -38,6 +38,23 @@ void main() {
       );
     });
 
+    test('adds "all of" to a single "any of", in either order', () {
+      for (final json in [
+        '{"keywords":[3],"keywords_and":[5,6]}',
+        '{"keywords_and":[5,6],"keywords":[3]}',
+      ]) {
+        expect(
+          savedSearchQuery(json),
+          const RecipeQuery(keywordIds: {3, 5, 6}),
+          reason: json,
+        );
+      }
+      expect(
+        savedSearchQuery('{"foods_or":[1],"foods_and":[2]}'),
+        const RecipeQuery(foodIds: {1, 2}),
+      );
+    });
+
     test('takes a date and time as the local day', () {
       final midnight = DateTime(2026, 11, 1).toUtc().toIso8601String();
       expect(
@@ -133,7 +150,7 @@ void main() {
           ),
         ),
         '{"query":"Suppe","keywords_and":[3],"cookedon_lte":"2026-02-03",'
-        '"makenow":0,"sort_order":"-score","version":"2"}',
+        '"makenow":"true","sort_order":"-score","version":"2"}',
       );
     });
 
