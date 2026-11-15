@@ -1,4 +1,5 @@
 import '../../domain/models/recipe_query.dart';
+import '../../domain/models/recipe_sort.dart';
 
 /// The path of the search screen.
 const searchPath = '/search';
@@ -6,7 +7,8 @@ const searchPath = '/search';
 // Query parameters, so a search survives reload and can be shared:
 // `/search?q=suppe&food=12&food=40&keyword=3&rating=4&cooked_before=2026-09-01`,
 // `never=1` and `times_min=5` for the times cooked, `missing=0` for cookable
-// now (`1`: one food missing), `book=4&book=7` and `created_by=2`.
+// now (`1`: one food missing), `book=4&book=7`, `created_by=2` and
+// `sort=rating` (only when the user chose an order).
 const _text = 'q';
 const _food = 'food';
 const _keyword = 'keyword';
@@ -17,6 +19,18 @@ const _minTimesCooked = 'times_min';
 const _maxMissingFoods = 'missing';
 const _book = 'book';
 const _createdBy = 'created_by';
+const _sort = 'sort';
+
+/// The value of the sort parameter for [sort].
+String _sortName(RecipeSort sort) => switch (sort) {
+  RecipeSort.relevance => 'relevance',
+  RecipeSort.name => 'name',
+  RecipeSort.lastCooked => 'last_cooked',
+  RecipeSort.rating => 'rating',
+  RecipeSort.newest => 'newest',
+  RecipeSort.recentlyViewed => 'viewed',
+  RecipeSort.random => 'random',
+};
 
 /// The most missing foods a link may ask for; the search screen offers 0
 /// and 1.
@@ -43,6 +57,7 @@ String searchLocation(RecipeQuery query) {
     if (query.bookIds.isNotEmpty)
       _book: [for (final id in query.bookIds) '$id'],
     if (query.createdBy case final user?) _createdBy: ['$user'],
+    if (query.sort case final sort?) _sort: [_sortName(sort)],
   };
   return Uri(
     path: searchPath,
@@ -86,6 +101,9 @@ RecipeQuery searchQueryFromUri(Uri uri) {
       final user? when user > 0 => user,
       _ => null,
     },
+    sort: RecipeSort.values
+        .where((sort) => _sortName(sort) == params[_sort]?.first)
+        .firstOrNull,
   );
 }
 

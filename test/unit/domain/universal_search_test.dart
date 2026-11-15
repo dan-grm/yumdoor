@@ -7,6 +7,7 @@ import 'package:yumdoor/domain/models/keyword.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
 import 'package:yumdoor/domain/models/recipe_match.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
+import 'package:yumdoor/domain/models/recipe_sort.dart';
 import 'package:yumdoor/domain/models/recipe_step.dart';
 import 'package:yumdoor/domain/models/recipe_summary.dart';
 import 'package:yumdoor/domain/models/result_page.dart';
@@ -167,6 +168,112 @@ void main() {
       ]);
       expect(recipes.searches, hasLength(1));
       expect(foods.queries, isEmpty);
+    });
+  });
+
+  group('sort', () {
+    test('by rating merges every source in that order', () async {
+      const ratings = {1: 5.0, 2: 3.0, 3: 4.0, 6: 4.0};
+      for (final MapEntry(:key, :value) in ratings.entries) {
+        recipes.recipes[key] = recipes.recipes[key]!.copyWith(rating: value);
+      }
+
+      final pages = await allPages(
+        const RecipeQuery(text: 'Karotte', sort: RecipeSort.rating),
+        pageSize: 25,
+      );
+
+      // Equal ratings: name matches first. Unrated last.
+      expect(pages, [
+        [1, 6, 3, 2, 4],
+      ]);
+      expect(
+        recipes.searches.where((s) => s.pageSize > 1).map((s) => s.query.sort),
+        everyElement(RecipeSort.rating),
+      );
+    });
+
+    test('by name merges across pages of every source', () async {
+      final pages = await allPages(
+        const RecipeQuery(text: 'Karotte', sort: RecipeSort.name),
+      );
+
+      // Apfelkuchen, Bolognese, Gemüsepfanne, Karottenkuchen, Karottensuppe.
+      expect(pages, [
+        [1, 4],
+        [3, 6],
+        [2],
+      ]);
+      // The overlaps are counted unsorted.
+      final counts = recipes.searches.where((s) => s.pageSize == 1);
+      expect(counts, isNotEmpty);
+      expect(counts.map((s) => s.query.sort), everyElement(isNull));
+    });
+
+    test('a failing source ends the page where it failed', () async {
+      final results = search().start(
+        const RecipeQuery(text: 'Karotte', sort: RecipeSort.name),
+        pageSize: 2,
+      );
+      List<int> ids(ResultPage<RecipeMatch> page) => [
+        for (final m in page.items) m.recipe.id,
+      ];
+
+      expect(ids(await results.next()), [1, 4]);
+      recipes
+        ..failure = const ServerFailure()
+        ..failWhen = (query) => query.anyFoodIds.isNotEmpty;
+      // The food search's second page may hold a recipe before
+      // Karottenkuchen, so the page stops before it.
+      final second = await results.next();
+      expect(ids(second), [3]);
+      expect(second.hasMore, isTrue);
+      recipes.failure = null;
+      expect(ids(await results.next()), [6, 2]);
+    });
+
+    test('by newest merges by id, newest first', () async {
+      final pages = await allPages(
+        const RecipeQuery(text: 'Karotte', sort: RecipeSort.newest),
+        pageSize: 25,
+      );
+
+      expect(pages, [
+        [6, 4, 3, 2, 1],
+      ]);
+    });
+
+    test('without a key in the results, name matches come first', () async {
+      for (final sort in [
+        RecipeSort.lastCooked,
+        RecipeSort.recentlyViewed,
+        RecipeSort.random,
+      ]) {
+        final pages = await allPages(
+          RecipeQuery(text: 'Karotte', sort: sort),
+          pageSize: 25,
+        );
+
+        expect(pages, [
+          [2, 6, 3, 4, 1],
+        ], reason: '$sort');
+      }
+    });
+
+    test('relevance without text is by name', () {
+      expect(const RecipeQuery().effectiveSort, RecipeSort.name);
+      expect(
+        const RecipeQuery(sort: RecipeSort.relevance).effectiveSort,
+        RecipeSort.name,
+      );
+      expect(
+        const RecipeQuery(text: 'Suppe').effectiveSort,
+        RecipeSort.relevance,
+      );
+      expect(
+        const RecipeQuery(text: 'Suppe', sort: RecipeSort.rating).effectiveSort,
+        RecipeSort.rating,
+      );
     });
   });
 
@@ -395,6 +502,27 @@ void main() {
       expect(page.items[0].foods, isEmpty);
       expect(page.items[1].foods, const [karotte]);
       expect(page.items[2].keywords, const [karottenzeit]);
+    });
+
+    test('keeps the order of the cache when sorted', () async {
+      final cached = FakeRecipeRepository([
+        recipe(3, 'Gemüsepfanne', foods: [karotte, zwiebel]),
+        recipe(1, 'Apfelkuchen', keywords: [karottenzeit]),
+        recipe(2, 'Karottensuppe', foods: [karotte]),
+      ])..fromCache = true;
+
+      final page =
+          await UniversalSearch(
+                recipes: _MatchAll(cached),
+                foods: foods,
+                keywords: keywords,
+              )
+              .start(
+                const RecipeQuery(text: 'Karotte', sort: RecipeSort.rating),
+              )
+              .next();
+
+      expect(page.items.map((m) => m.recipe.id), [3, 1, 2]);
     });
   });
 

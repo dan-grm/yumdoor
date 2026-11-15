@@ -13,12 +13,14 @@ import '../../design/design.dart';
 import '../../domain/models/food.dart';
 import '../../domain/models/recipe_match.dart';
 import '../../domain/models/recipe_query.dart';
+import '../../domain/models/recipe_sort.dart';
 import '../../domain/services/scaling_service.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import '../recipe/recipe_meta.dart';
 import 'filter_picker_sheet.dart';
 import 'history_filters.dart';
+import 'option_sheet.dart';
 import 'search_location.dart';
 import 'search_providers.dart';
 import 'space_filters.dart';
@@ -177,7 +179,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 ]),
               ),
             ),
-            Expanded(child: _Results(query: query)),
+            Expanded(
+              child: _Results(query: query, onChange: _show),
+            ),
           ],
         ),
       ),
@@ -285,9 +289,10 @@ class _KeywordChip extends ConsumerWidget {
 }
 
 class _Results extends ConsumerWidget {
-  const _Results({required this.query});
+  const _Results({required this.query, required this.onChange});
 
   final RecipeQuery query;
+  final void Function(RecipeQuery query) onChange;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -302,6 +307,7 @@ class _Results extends ConsumerWidget {
         query: query,
         results: value,
         onLoadMore: () => ref.read(provider.notifier).loadMore(),
+        onChange: onChange,
       ),
       AsyncError(:final error) => FailureView(
         error: error,
@@ -317,11 +323,13 @@ class _ResultList extends ConsumerWidget {
     required this.query,
     required this.results,
     required this.onLoadMore,
+    required this.onChange,
   });
 
   final RecipeQuery query;
   final RecipeResults results;
   final VoidCallback onLoadMore;
+  final void Function(RecipeQuery query) onChange;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -342,39 +350,54 @@ class _ResultList extends ConsumerWidget {
       itemBuilder: (context, index) {
         if (index == 0) {
           return Padding(
-            padding: EdgeInsets.only(bottom: t.space2),
-            child: Semantics(
-              liveRegion: true,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (results.fromCache) ...[
-                    Text(
-                      l10n.searchOfflineResults,
-                      style: t.caption.copyWith(color: t.inkMuted),
-                    ),
-                    SizedBox(height: t.space1),
-                    if ((query.minTimesCooked ?? 0) > 1) ...[
-                      Text(
-                        l10n.searchOfflineTimesNote,
-                        style: t.caption.copyWith(color: t.inkMuted),
-                      ),
-                      SizedBox(height: t.space1),
+            padding: EdgeInsets.only(bottom: t.space1),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Semantics(
+                  liveRegion: true,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (results.fromCache) ...[
+                        Text(
+                          l10n.searchOfflineResults,
+                          style: t.caption.copyWith(color: t.inkMuted),
+                        ),
+                        SizedBox(height: t.space1),
+                        if ((query.minTimesCooked ?? 0) > 1) ...[
+                          Text(
+                            l10n.searchOfflineTimesNote,
+                            style: t.caption.copyWith(color: t.inkMuted),
+                          ),
+                          SizedBox(height: t.space1),
+                        ],
+                        if (query.maxMissingFoods != null) ...[
+                          Text(
+                            l10n.searchOfflineCookableNote,
+                            style: t.caption.copyWith(color: t.inkMuted),
+                          ),
+                          SizedBox(height: t.space1),
+                        ],
+                      ],
                     ],
-                    if (query.maxMissingFoods != null) ...[
-                      Text(
-                        l10n.searchOfflineCookableNote,
-                        style: t.caption.copyWith(color: t.inkMuted),
-                      ),
-                      SizedBox(height: t.space1),
-                    ],
-                  ],
-                  Text(
-                    l10n.searchResultCount(results.totalCount),
-                    style: t.label.copyWith(color: t.ink),
                   ),
-                ],
-              ),
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          l10n.searchResultCount(results.totalCount),
+                          style: t.label.copyWith(color: t.ink),
+                        ),
+                      ),
+                    ),
+                    _SortButton(query: query, onChange: onChange),
+                  ],
+                ),
+              ],
             ),
           );
         }
@@ -403,6 +426,65 @@ class _ResultList extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// "Sortiert: passend": opens a sheet of the orders (mockup `03-suche`).
+/// Relevance is only offered with search text; without, it is by name.
+class _SortButton extends StatelessWidget {
+  const _SortButton({required this.query, required this.onChange});
+
+  final RecipeQuery query;
+  final void Function(RecipeQuery query) onChange;
+
+  Future<void> _pick(BuildContext context) async {
+    final l10n = context.l10n;
+    final current = query.effectiveSort;
+    final sort = await showOptionSheet<RecipeSort>(
+      context,
+      title: l10n.searchSortTitle,
+      hint: l10n.searchSortHint,
+      selected: current,
+      options: [
+        for (final sort in RecipeSort.values)
+          if (sort != RecipeSort.relevance || query.text.trim().isNotEmpty)
+            (l10n.searchSortOption(sort.name), sort),
+      ],
+    );
+    // Kept even when it is the default now, so it stays when the text changes.
+    if (sort != null && sort != query.sort) {
+      onChange(query.copyWith(sort: sort));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final l10n = context.l10n;
+    return InkWell(
+      onTap: () => _pick(context),
+      borderRadius: BorderRadius.circular(t.radiusM),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: t.sizeTouch),
+        child: Padding(
+          padding: EdgeInsets.only(left: t.space3, right: t.space1),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.searchSortButton(query.effectiveSort.name),
+                style: t.caption.copyWith(color: t.inkMuted),
+              ),
+              Icon(
+                Icons.expand_more_rounded,
+                size: t.label.fontSize! + t.space1,
+                color: t.inkMuted,
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

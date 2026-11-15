@@ -678,4 +678,41 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get searchBookAllChosen => 'Alle deine Bücher sind schon ausgewählt.';
+
+  @override
+  String searchSortButton(String sort) {
+    String _temp0 = intl.Intl.selectLogic(sort, {
+      'relevance': 'passend',
+      'name': 'nach Name',
+      'lastCooked': 'zuletzt gekocht',
+      'rating': 'nach Bewertung',
+      'newest': 'neueste zuerst',
+      'recentlyViewed': 'zuletzt angesehen',
+      'random': 'zufällig',
+      'other': 'passend',
+    });
+    return 'Sortiert: $_temp0';
+  }
+
+  @override
+  String get searchSortTitle => 'Sortieren';
+
+  @override
+  String get searchSortHint =>
+      'Zuletzt gekocht, Bewertung und Zuletzt angesehen zählen nur deine eigenen Kochprotokolle und Aufrufe.';
+
+  @override
+  String searchSortOption(String sort) {
+    String _temp0 = intl.Intl.selectLogic(sort, {
+      'relevance': 'Passend zur Suche',
+      'name': 'Name (A–Z)',
+      'lastCooked': 'Zuletzt gekocht',
+      'rating': 'Beste Bewertung',
+      'newest': 'Neueste zuerst',
+      'recentlyViewed': 'Zuletzt angesehen',
+      'random': 'Zufällig',
+      'other': 'Passend zur Suche',
+    });
+    return '$_temp0';
+  }
 }

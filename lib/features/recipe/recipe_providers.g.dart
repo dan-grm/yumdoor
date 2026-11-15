@@ -9,6 +9,8 @@ part of 'recipe_providers.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 /// The recipe with its steps, shared by the recipe screen and cooking mode.
+/// Loading it records a view for the "recently viewed" search order, like
+/// opening a recipe in Tandoor; if that fails, it just isn't recorded.
 ///
 /// Failures are shown with a retry button instead of retrying on their own.
 
@@ -16,6 +18,8 @@ part of 'recipe_providers.dart';
 final recipeProvider = RecipeFamily._();
 
 /// The recipe with its steps, shared by the recipe screen and cooking mode.
+/// Loading it records a view for the "recently viewed" search order, like
+/// opening a recipe in Tandoor; if that fails, it just isn't recorded.
 ///
 /// Failures are shown with a retry button instead of retrying on their own.
 
@@ -23,6 +27,8 @@ final class RecipeProvider
     extends $FunctionalProvider<AsyncValue<Recipe>, Recipe, FutureOr<Recipe>>
     with $FutureModifier<Recipe>, $FutureProvider<Recipe> {
   /// The recipe with its steps, shared by the recipe screen and cooking mode.
+  /// Loading it records a view for the "recently viewed" search order, like
+  /// opening a recipe in Tandoor; if that fails, it just isn't recorded.
   ///
   /// Failures are shown with a retry button instead of retrying on their own.
   RecipeProvider._({
@@ -68,9 +74,11 @@ final class RecipeProvider
   }
 }
 
-String _$recipeHash() => r'e909fdcafdbb278743449e0ddfc2c0a3e94da2f0';
+String _$recipeHash() => r'bdef7038158a564d60a9ea0face3e121c600b657';
 
 /// The recipe with its steps, shared by the recipe screen and cooking mode.
+/// Loading it records a view for the "recently viewed" search order, like
+/// opening a recipe in Tandoor; if that fails, it just isn't recorded.
 ///
 /// Failures are shown with a retry button instead of retrying on their own.
 
@@ -86,6 +94,8 @@ final class RecipeFamily extends $Family
       );
 
   /// The recipe with its steps, shared by the recipe screen and cooking mode.
+  /// Loading it records a view for the "recently viewed" search order, like
+  /// opening a recipe in Tandoor; if that fails, it just isn't recorded.
   ///
   /// Failures are shown with a retry button instead of retrying on their own.
 

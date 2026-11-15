@@ -12,6 +12,7 @@ import '../../domain/repositories/recipe_repository.dart';
 import '../api/api_failures.dart';
 import '../mappers/mapping.dart';
 import '../mappers/recipe_mapper.dart';
+import '../mappers/recipe_sort_mapper.dart';
 
 class TandoorRecipeRepository implements RecipeRepository {
   TandoorRecipeRepository(this._api, {this.lastCooked});
@@ -31,6 +32,10 @@ class TandoorRecipeRepository implements RecipeRepository {
     CancelSignal? cancel,
   }) => guardRequest(() async {
     final text = query.text.trim();
+    // Tandoor's default order is ours: by relevance with text, else by name.
+    final sort = query.sort == null
+        ? (sortOrder: null, random: null)
+        : sortParams(query.effectiveSort);
     final response = await _api.apiRecipeList(
       query: text.isEmpty ? null : text,
       // `foods_and` includes child foods (`include_children` defaults to
@@ -58,6 +63,11 @@ class TandoorRecipeRepository implements RecipeRepository {
       makenow: query.maxMissingFoods,
       booksOr: query.bookIds.isEmpty ? null : BuiltList.of(query.bookIds),
       createdby: query.createdBy,
+      // A single key: Tandoor has no second key for ties, so recipes that
+      // are equal can move between pages (docs/TANDOOR_API.md).
+      sortOrder: sort.sortOrder,
+      // Every page is drawn anew; the universal search drops repeats.
+      random: sort.random,
       page: page,
       pageSize: pageSize,
       cancelToken: cancelTokenFor(cancel),
@@ -82,6 +92,13 @@ class TandoorRecipeRepository implements RecipeRepository {
     if (recipe.lastCooked != null) return recipe;
     return recipe.copyWith(lastCooked: await cooked);
   }
+
+  @override
+  Future<void> recordView(int id) => guardRequest(() async {
+    // Tandoor keeps one view per recipe and user every 5 minutes, so opening
+    // a recipe again soon after doesn't add one (docs/TANDOOR_API.md).
+    await _api.apiViewLogCreate(viewLog: api.ViewLog((b) => b..recipe = id));
+  });
 
   Future<DateTime?> _lastCooked(int id) async {
     try {

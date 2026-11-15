@@ -1123,6 +1123,30 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Alle deine Bücher sind schon ausgewählt.'**
   String get searchBookAllChosen;
+
+  /// Button next to the result count that opens the sort sheet; shows the current order (mockup 03-suche: 'Sortiert: passend').
+  ///
+  /// In de, this message translates to:
+  /// **'Sortiert: {sort, select, relevance{passend} name{nach Name} lastCooked{zuletzt gekocht} rating{nach Bewertung} newest{neueste zuerst} recentlyViewed{zuletzt angesehen} random{zufällig} other{passend}}'**
+  String searchSortButton(String sort);
+
+  /// Title of the sort sheet.
+  ///
+  /// In de, this message translates to:
+  /// **'Sortieren'**
+  String get searchSortTitle;
+
+  /// Under the title of the sort sheet: Tandoor sorts by the user's own cook logs and views.
+  ///
+  /// In de, this message translates to:
+  /// **'Zuletzt gekocht, Bewertung und Zuletzt angesehen zählen nur deine eigenen Kochprotokolle und Aufrufe.'**
+  String get searchSortHint;
+
+  /// A choice in the sort sheet.
+  ///
+  /// In de, this message translates to:
+  /// **'{sort, select, relevance{Passend zur Suche} name{Name (A–Z)} lastCooked{Zuletzt gekocht} rating{Beste Bewertung} newest{Neueste zuerst} recentlyViewed{Zuletzt angesehen} random{Zufällig} other{Passend zur Suche}}'**
+  String searchSortOption(String sort);
 }
 
 class _AppLocalizationsDelegate

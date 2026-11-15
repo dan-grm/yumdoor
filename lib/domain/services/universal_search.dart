@@ -7,11 +7,13 @@ import '../models/food.dart';
 import '../models/keyword.dart';
 import '../models/recipe_match.dart';
 import '../models/recipe_query.dart';
+import '../models/recipe_sort.dart';
 import '../models/recipe_summary.dart';
 import '../models/result_page.dart';
 import '../repositories/food_repository.dart';
 import '../repositories/keyword_repository.dart';
 import '../repositories/recipe_repository.dart';
+import 'recipe_order.dart';
 import 'text_match.dart';
 
 /// Finds recipes whose name, ingredients or keywords match the search text.
@@ -21,8 +23,21 @@ import 'text_match.dart';
 /// with AND. So this looks up the foods and keywords that match the text and
 /// runs three searches, each with the other filters of the query: by name,
 /// by any of those foods (`foods_or`) and by any of those keywords
-/// (`keywords_or`). Their results are merged page by page: name matches
-/// first, then food matches, then keyword matches, each recipe once.
+/// (`keywords_or`). Their results are merged page by page, each recipe once.
+///
+/// How they are merged depends on the query's [RecipeQuery.effectiveSort].
+/// Every search is sorted by the server in that order, and the merge always
+/// takes the next recipe from the search whose next recipe comes first:
+///
+/// - By name, rating and newest, the results carry what they are sorted by
+///   ([recipeOrder]), so the merged results are in that order as a whole.
+///   Recipes that are equal come name matches first.
+/// - By relevance, nothing is compared: name matches come first, then food
+///   matches, then keyword matches, each part in the server's order.
+/// - Last cooked, recently viewed and random can't be compared either
+///   (results carry no last-cooked or viewed date), so they are merged like
+///   relevance: name matches in that order first, then food matches, then
+///   keyword matches.
 class UniversalSearch {
   const UniversalSearch({
     required this.recipes,
@@ -66,7 +81,9 @@ class _Source {
 class RecipeSearch {
   RecipeSearch._(this._search, this.query, this.pageSize, this._cancel)
     : _text = query.text.trim(),
-      _matcher = TextMatcher(query.text) {
+      _matcher = TextMatcher(query.text),
+      _sorted = recipeOrder(query.effectiveSort) != null,
+      _order = recipeOrder(query.effectiveSort) ?? _sourceOrder {
     _sources = _text.isEmpty
         ? [_Source(_Kind.name)]
         : [for (final kind in _Kind.values) _Source(kind)];
@@ -78,6 +95,14 @@ class RecipeSearch {
   final CancelSignal? _cancel;
   final String _text;
   final TextMatcher _matcher;
+
+  /// Which of two recipes from different sources comes first; equal ones
+  /// come in the order of [_sources].
+  final Comparator<RecipeSummary> _order;
+
+  /// Whether [_order] compares anything, rather than keeping the sources in
+  /// their order.
+  final bool _sorted;
   late final List<_Source> _sources;
 
   /// Recipes already returned, so none is returned twice.
@@ -97,8 +122,9 @@ class RecipeSearch {
   ///
   /// Throws a [Failure] when the name search fails on the first call, or
   /// when nothing could be loaded. A food or keyword search that fails is
-  /// skipped for this page and tried again on the next call, so its results
-  /// may come after those of the sources behind it.
+  /// tried again on the next call. By relevance it is skipped for this page,
+  /// so its results may come after those of the sources behind it; sorted,
+  /// the page ends where it failed, unless it would be empty.
   Future<ResultPage<RecipeMatch>> next() async {
     _checkCancelled();
     // Sources that already failed during this call aren't asked again.
@@ -106,22 +132,36 @@ class RecipeSearch {
     if (!_started) failed.addAll(await _start());
 
     final items = <RecipeMatch>[];
-    for (final source in _sources) {
-      while (items.length < pageSize && !failed.containsKey(source)) {
-        if (source.buffer.isNotEmpty) {
-          final recipe = source.buffer.removeFirst();
-          if (_seen.add(recipe.id)) items.add(_match(source.kind, recipe));
-          continue;
+    var withoutFailed = false;
+    while (items.length < pageSize) {
+      final empty = _sourcesToLoad(failed);
+      if (empty.isNotEmpty) {
+        final failures = await Future.wait(empty.map(_tryAdvance));
+        _checkCancelled();
+        for (final (i, failure) in failures.indexed) {
+          if (failure != null) failed[empty[i]] = failure;
         }
-        if (source.exhausted) break;
-        try {
-          await _advance(source);
-        } on Failure catch (failure) {
-          _checkCancelled();
-          failed[source] = failure;
+        continue;
+      }
+      _Source? first;
+      for (final source in _sources) {
+        if (source.buffer.isEmpty || failed.containsKey(source)) continue;
+        if (first == null ||
+            _order(source.buffer.first, first.buffer.first) < 0) {
+          first = source;
         }
       }
-      if (items.length >= pageSize) break;
+      if (first == null) break;
+      // Sorted: a source that failed may hold recipes that come before this
+      // one, so the page ends here and the next call asks it again. A page
+      // that would be empty goes on without it, so the search shows what it
+      // can, possibly out of order.
+      if (_sorted && failed.isNotEmpty && !withoutFailed) {
+        if (items.isNotEmpty) break;
+        withoutFailed = true;
+      }
+      final recipe = first.buffer.removeFirst();
+      if (_seen.add(recipe.id)) items.add(_match(first.kind, recipe));
     }
     if (items.isEmpty && failed.isNotEmpty) throw failed.values.first;
     return _page(
@@ -167,7 +207,12 @@ class RecipeSearch {
           ..buffer.clear()
           ..exhausted = true;
       }
-      // Name matches first, as online.
+      // The cache sorted them; by relevance, name matches come first, as
+      // online.
+      if (query.effectiveSort != RecipeSort.relevance) {
+        _total = name.count ?? 0;
+        return {};
+      }
       final byName = <RecipeSummary>[];
       final others = <RecipeSummary>[];
       for (final recipe in name.buffer) {
@@ -337,7 +382,9 @@ class RecipeSearch {
     final query = await _queryFor(kinds);
     if (query == null) return 0;
     final page = await _search.recipes.search(
-      query,
+      // Only the count matters; sorting would make the server work for
+      // nothing.
+      query.copyWith(sort: null),
       pageSize: 1,
       cancel: _cancel,
     );
@@ -392,6 +439,22 @@ class RecipeSearch {
         );
     }
   }
+
+  /// The sources that need their next page before the next recipe can be
+  /// picked. Sorted, that is every source that ran out; otherwise only the
+  /// first one still in play, as the others aren't reached before it ends.
+  List<_Source> _sourcesToLoad(Map<_Source, Failure> failed) {
+    final load = <_Source>[];
+    for (final source in _sources) {
+      if (failed.containsKey(source)) continue;
+      if (source.buffer.isEmpty && !source.exhausted) load.add(source);
+      if (!_sorted && (source.buffer.isNotEmpty || !source.exhausted)) break;
+    }
+    return load;
+  }
+
+  /// Sources in their order: name, foods, keywords.
+  static int _sourceOrder(RecipeSummary a, RecipeSummary b) => 0;
 
   void _checkCancelled() {
     if (_cancel?.isCancelled ?? false) throw const CancelledFailure();

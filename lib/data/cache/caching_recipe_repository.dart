@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:math';
 import 'dart:typed_data';
 
 import '../../core/cancellation.dart';
 import '../../core/failures.dart';
 import '../../domain/models/recipe.dart';
 import '../../domain/models/recipe_query.dart';
+import '../../domain/models/recipe_sort.dart';
 import '../../domain/models/recipe_summary.dart';
 import '../../domain/models/result_page.dart';
 import '../../domain/repositories/recipe_repository.dart';
+import '../../domain/services/recipe_order.dart';
 import '../../domain/services/text_match.dart';
 import 'recipe_cache.dart';
 
@@ -70,6 +73,7 @@ class CachingRecipeRepository implements RecipeRepository {
         for (final recipe in recipes)
           if (_matches(recipe, query, text)) recipe.summary,
       ];
+      _sort(items, query);
       return ResultPage(
         items: items,
         totalCount: items.length,
@@ -78,6 +82,11 @@ class CachingRecipeRepository implements RecipeRepository {
       );
     }
   }
+
+  /// Views are only recorded online; offline there is nothing to record
+  /// them in (offline is read-only).
+  @override
+  Future<void> recordView(int id) => _remote.recordView(id);
 
   Future<void> _store(Recipe recipe) async {
     // A missing date usually means the cook log couldn't be read (see
@@ -95,6 +104,25 @@ class CachingRecipeRepository implements RecipeRepository {
     final bytes = await download(url);
     if (bytes != null) await _cache.putImage(url, bytes);
   }
+}
+
+/// Sorts [items], which come most recently opened first, in the order of
+/// [query] ([RecipeQuery.effectiveSort]), as close to the server as the
+/// stored data allows. By relevance (there is no score offline; the universal
+/// search puts name matches first) and by recently viewed (opened in
+/// Yumdoor) they stay as they are; equal ones too.
+void _sort(List<RecipeSummary> items, RecipeQuery query) {
+  if (query.effectiveSort == RecipeSort.random) {
+    items.shuffle(Random());
+    return;
+  }
+  final order = recipeOrder(query.effectiveSort);
+  if (order == null) return;
+  final position = {for (final (i, r) in items.indexed) r.id: i};
+  items.sort((a, b) {
+    final result = order(a, b);
+    return result != 0 ? result : position[a.id]! - position[b.id]!;
+  });
 }
 
 /// Whether [recipe] matches [query], as close to the server as the stored

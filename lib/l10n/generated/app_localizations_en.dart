@@ -671,4 +671,41 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchBookAllChosen => 'All your books are chosen already.';
+
+  @override
+  String searchSortButton(String sort) {
+    String _temp0 = intl.Intl.selectLogic(sort, {
+      'relevance': 'best match',
+      'name': 'by name',
+      'lastCooked': 'last cooked',
+      'rating': 'by rating',
+      'newest': 'newest first',
+      'recentlyViewed': 'recently viewed',
+      'random': 'random',
+      'other': 'best match',
+    });
+    return 'Sorted: $_temp0';
+  }
+
+  @override
+  String get searchSortTitle => 'Sort';
+
+  @override
+  String get searchSortHint =>
+      'Last cooked, rating and recently viewed count only your own cook logs and views.';
+
+  @override
+  String searchSortOption(String sort) {
+    String _temp0 = intl.Intl.selectLogic(sort, {
+      'relevance': 'Best match',
+      'name': 'Name (A–Z)',
+      'lastCooked': 'Last cooked',
+      'rating': 'Best rated',
+      'newest': 'Newest first',
+      'recentlyViewed': 'Recently viewed',
+      'random': 'Random',
+      'other': 'Best match',
+    });
+    return '$_temp0';
+  }
 }

@@ -8,17 +8,20 @@ import '../common/failure_view.dart';
 typedef SheetOption<T> = (String label, T value);
 
 /// Lets the user pick one of [options] and returns its value, or `null` if
-/// the sheet was closed. [hint] explains the choices under the [title].
+/// the sheet was closed. [hint] explains the choices under the [title]; the
+/// option with the value [selected], if any, is marked as the current one.
 Future<T?> showOptionSheet<T>(
   BuildContext context, {
   required String title,
   String? hint,
   required List<SheetOption<T>> options,
+  T? selected,
 }) => showLoadingOptionSheet<T>(
   context,
   title: title,
   hint: hint,
   options: (_) => AsyncData(options),
+  selected: selected,
 );
 
 /// Like [showOptionSheet] for options that are loaded: [options] watches
@@ -31,6 +34,7 @@ Future<T?> showLoadingOptionSheet<T>(
   required AsyncValue<List<SheetOption<T>>> Function(WidgetRef ref) options,
   void Function(WidgetRef ref)? retry,
   String Function(WidgetRef ref)? empty,
+  T? selected,
 }) {
   final t = context.tokens;
   return showModalBottomSheet<T>(
@@ -46,6 +50,7 @@ Future<T?> showLoadingOptionSheet<T>(
       options: options,
       retry: retry,
       empty: empty,
+      selected: selected,
     ),
   );
 }
@@ -57,6 +62,7 @@ class _OptionSheet<T> extends ConsumerWidget {
     required this.options,
     required this.retry,
     required this.empty,
+    required this.selected,
   });
 
   final String title;
@@ -64,6 +70,7 @@ class _OptionSheet<T> extends ConsumerWidget {
   final AsyncValue<List<SheetOption<T>>> Function(WidgetRef ref) options;
   final void Function(WidgetRef ref)? retry;
   final String Function(WidgetRef ref)? empty;
+  final T? selected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -100,16 +107,28 @@ class _OptionSheet<T> extends ConsumerWidget {
                 ],
               AsyncData(value: final choices) => [
                 for (final (label, value) in choices)
-                  InkWell(
-                    onTap: () => Navigator.of(context).pop(value),
-                    borderRadius: BorderRadius.circular(t.radiusM),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: t.sizeTouch),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          label,
-                          style: t.body.copyWith(color: t.ink),
+                  Semantics(
+                    selected: selected == null ? null : value == selected,
+                    child: InkWell(
+                      onTap: () => Navigator.of(context).pop(value),
+                      borderRadius: BorderRadius.circular(t.radiusM),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: t.sizeTouch),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                label,
+                                style: t.body.copyWith(color: t.ink),
+                              ),
+                            ),
+                            if (selected != null && value == selected)
+                              Icon(
+                                Icons.check_rounded,
+                                size: t.body.fontSize! + t.space1,
+                                color: t.sage,
+                              ),
+                          ],
                         ),
                       ),
                     ),
