@@ -29,10 +29,10 @@ class TandoorRecipeRepository implements RecipeRepository {
   /// (see [CookLogRepository.lastCooked]).
   final Future<DateTime?> Function(int recipeId)? lastCooked;
 
-  /// The saved searches of dynamic books by book id, shared by the searches
-  /// and pages that need one within [_savedSearchLifetime].
+  /// The saved searches of dynamic books and saved filters, shared by the
+  /// searches and pages that need one within [_savedSearchLifetime].
   final _savedSearches =
-      <int, ({DateTime loaded, Future<_SavedSearch?> search})>{};
+      <_SavedSearchSource, ({DateTime loaded, Future<_SavedSearch?> search})>{};
 
   @override
   Future<ResultPage<RecipeSummary>> search(
@@ -41,19 +41,43 @@ class TandoorRecipeRepository implements RecipeRepository {
     int pageSize = 25,
     CancelSignal? cancel,
   }) async {
-    final book = query.savedSearchOfBook;
-    if (book == null) {
+    final sources = [
+      if (query.savedSearchOfBook case final book?) (book: true, id: book),
+      if (query.savedFilter case final filter?) (book: false, id: filter),
+    ];
+    if (sources.isEmpty) {
       return guardRequest(() async {
         final response = await _list(query, page, pageSize, cancel);
         return _resultPage(requireBody(response.data));
       });
     }
     final saved = await _whileWanted(
-      _savedSearch(book, firstPage: page == 1),
+      Future.wait([
+        for (final source in sources)
+          _savedSearch(source, firstPage: page == 1),
+      ]),
       cancel,
     );
-    if (saved == null) {
+    if (saved.contains(null)) {
       return const ResultPage(items: [], totalCount: 0, hasMore: false);
+    }
+    final searches = saved.nonNulls.toList();
+    // The first saved search's parameters go with ours; a later one's where
+    // they don't clash with an earlier one's. Each one that couldn't send
+    // all of its own is checked by the ids it finds.
+    final extraQuery = <String, Object>{};
+    final checked = <_SavedSearch>{};
+    for (final search in searches) {
+      // Its own parameters don't clash with each other, only with those of
+      // the saved searches before it.
+      final earlier = extraQuery.keys.toSet();
+      for (final MapEntry(:key, :value) in search.mergeable.entries) {
+        if (ExtraQueryInterceptor.clashes(key, earlier)) {
+          checked.add(search);
+        } else {
+          extraQuery[key] = value;
+        }
+      }
     }
     return guardRequest(() async {
       final response = await _list(
@@ -63,22 +87,26 @@ class TandoorRecipeRepository implements RecipeRepository {
         // ones save round trips. Always, so the pages of a search line up.
         max(pageSize, _idPageSize),
         cancel,
-        extraQuery: saved.mergeable,
+        extraQuery: extraQuery,
       );
       final body = requireBody(response.data);
       final skipped =
           response.requestOptions.extra[ExtraQueryInterceptor.skippedKey];
-      // Without the interceptor's answer, nothing of the saved search was
-      // sent.
-      if (!saved.needsIds && skipped is List && skipped.isEmpty) {
-        return _resultPage(body);
+      for (final search in searches) {
+        // Without the interceptor's answer, nothing of it was sent.
+        if (search.needsIds ||
+            skipped is! List ||
+            search.mergeable.keys.any(skipped.contains)) {
+          checked.add(search);
+        }
       }
+      if (checked.isEmpty) return _resultPage(body);
       // A parameter both send can only hold one value: this request left out
       // the saved search's, so keep what the whole saved search finds.
-      final ids = await _whileWanted(
-        saved.ids(() => _savedSearchIds(saved)),
-        cancel,
-      );
+      final ids = (await Future.wait([
+        for (final search in checked)
+          _whileWanted(search.ids(() => _savedSearchIds(search)), cancel),
+      ])).reduce((a, b) => a.intersection(b));
       final items = [
         for (final recipe in body.results)
           if (ids.contains(recipe.id)) recipe.toDomain(),
@@ -101,25 +129,30 @@ class TandoorRecipeRepository implements RecipeRepository {
         hasMore: body.next != null,
       );
 
-  /// The saved search of [bookId], `null` if it has none (any more), can't
-  /// be read or the book isn't there (any more). For a [firstPage], only one
+  /// The saved search of [source], `null` if a book has none (any more), it
+  /// can't be read or isn't there (any more). For a [firstPage], only one
   /// loaded moments ago is reused: the searches of one universal search
   /// start together, a new one sees changes made since.
-  Future<_SavedSearch?> _savedSearch(int bookId, {required bool firstPage}) {
+  Future<_SavedSearch?> _savedSearch(
+    _SavedSearchSource source, {
+    required bool firstPage,
+  }) {
     final now = DateTime.now();
     _savedSearches.removeWhere(
       (_, entry) => now.difference(entry.loaded) > _savedSearchLifetime,
     );
-    if (_savedSearches[bookId] case final entry?
+    if (_savedSearches[source] case final entry?
         when !firstPage || now.difference(entry.loaded) < _sameSearch) {
       return entry.search;
     }
-    final load = _loadSavedSearch(bookId);
-    _savedSearches[bookId] = (loaded: now, search: load);
+    final load = source.book
+        ? _loadSavedSearchOfBook(source.id)
+        : _loadSavedFilter(source.id);
+    _savedSearches[source] = (loaded: now, search: load);
     // A failed load isn't kept; the caller gets the failure from [load].
     load.catchError((Object _) {
-      if (identical(_savedSearches[bookId]?.search, load)) {
-        _savedSearches.remove(bookId);
+      if (identical(_savedSearches[source]?.search, load)) {
+        _savedSearches.remove(source);
       }
       return null;
     });
@@ -137,7 +170,7 @@ class TandoorRecipeRepository implements RecipeRepository {
     ]);
   }
 
-  Future<_SavedSearch?> _loadSavedSearch(int bookId) async {
+  Future<_SavedSearch?> _loadSavedSearchOfBook(int bookId) async {
     try {
       return await guardRequest(() async {
         final response = await _api.apiRecipeBookRetrieve(id: bookId);
@@ -149,6 +182,23 @@ class TandoorRecipeRepository implements RecipeRepository {
       return null;
     }
   }
+
+  /// The saved filter [id], from the list: Tandoor answers 403 when someone
+  /// it is shared with asks for it by id (docs/TANDOOR_API.md).
+  Future<_SavedSearch?> _loadSavedFilter(int id) => guardRequest(() async {
+    for (var page = 1; ; page++) {
+      final response = await _api.apiCustomFilterList(
+        page: page,
+        pageSize: _idPageSize,
+      );
+      final body = requireBody(response.data);
+      for (final filter in body.results) {
+        if (filter.id == id) return _SavedSearch.parse(filter.search);
+      }
+      // Deleted, or no longer shared with the user.
+      if (body.next == null) return null;
+    }
+  });
 
   /// The ids of every recipe [saved] finds, by itself. Not cancelled with
   /// one search: others may be waiting for it.
@@ -282,6 +332,9 @@ const _idParallelPages = 4;
 /// How long a dynamic book's saved search, and what it finds, is reused for
 /// the later pages of a search.
 const _savedSearchLifetime = Duration(minutes: 1);
+
+/// Where a saved search comes from: a dynamic book or a saved filter, by id.
+typedef _SavedSearchSource = ({bool book, int id});
 
 /// How long it is reused for first pages, which belong to one search.
 const _sameSearch = Duration(seconds: 5);

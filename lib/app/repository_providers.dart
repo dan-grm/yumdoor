@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../data/api/tandoor_dio.dart';
 import '../data/cache/cache_database.dart';
 import '../data/cache/recipe_cache.dart';
+import '../data/cache/saved_filter_cache.dart';
 import '../data/repositories/tandoor_auth_repository.dart';
 import '../data/repositories/tandoor_repositories.dart';
 import '../data/repositories/tandoor_server_repository.dart';
@@ -15,6 +16,7 @@ import '../domain/repositories/food_repository.dart';
 import '../domain/repositories/keyword_repository.dart';
 import '../domain/repositories/offline_cache.dart';
 import '../domain/repositories/recipe_repository.dart';
+import '../domain/repositories/saved_filter_repository.dart';
 import '../domain/repositories/server_repository.dart';
 import '../domain/repositories/user_repository.dart';
 import 'offline.dart';
@@ -61,6 +63,7 @@ TandoorRepositories _tandoorRepositories(Ref ref) {
       }
     },
     cache: ref.watch(_recipeCacheProvider),
+    savedFilterCache: SavedFilterCache(ref.watch(_cacheDatabaseProvider)),
   );
   ref.onDispose(repositories.close);
   return repositories;
@@ -89,6 +92,10 @@ BookRepository bookRepository(Ref ref) =>
 @Riverpod(keepAlive: true)
 UserRepository userRepository(Ref ref) =>
     ref.watch(_tandoorRepositoriesProvider).users;
+
+@Riverpod(keepAlive: true)
+SavedFilterRepository savedFilterRepository(Ref ref) =>
+    ref.watch(_tandoorRepositoriesProvider).savedFilters;
 
 @Riverpod(keepAlive: true)
 CacheDatabase _cacheDatabase(Ref ref) {

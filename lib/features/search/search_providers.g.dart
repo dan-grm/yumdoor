@@ -579,3 +579,52 @@ final class SpaceUsersProvider
 }
 
 String _$spaceUsersHash() => r'd2a862ad6eb063268cf9da61eedb562be3ddd187';
+
+/// The user's saved searches and those shared with them, by name. Offline,
+/// the list as last loaded.
+
+@ProviderFor(savedFilters)
+final savedFiltersProvider = SavedFiltersProvider._();
+
+/// The user's saved searches and those shared with them, by name. Offline,
+/// the list as last loaded.
+
+final class SavedFiltersProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<SavedFilter>>,
+          List<SavedFilter>,
+          FutureOr<List<SavedFilter>>
+        >
+    with
+        $FutureModifier<List<SavedFilter>>,
+        $FutureProvider<List<SavedFilter>> {
+  /// The user's saved searches and those shared with them, by name. Offline,
+  /// the list as last loaded.
+  SavedFiltersProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: _noRetry,
+        name: r'savedFiltersProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$savedFiltersHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<SavedFilter>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<SavedFilter>> create(Ref ref) {
+    return savedFilters(ref);
+  }
+}
+
+String _$savedFiltersHash() => r'5f0594db82521262541dd365b4f2d7cd8965343f';

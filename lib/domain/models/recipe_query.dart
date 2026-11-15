@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'recipe_sort.dart';
+import 'saved_filter.dart';
 
 part 'recipe_query.freezed.dart';
 
@@ -62,6 +63,11 @@ abstract class RecipeQuery with _$RecipeQuery {
     /// The user who created the recipe.
     int? createdBy,
 
+    /// The recipe is found by this saved search (a Tandoor `CustomFilter`)
+    /// as well. Only for saved searches the filter chips can't show
+    /// ([SavedFilter.query] is `null`); the others set the chips instead.
+    int? savedFilter,
+
     /// The order the user chose, `null` for the default ([effectiveSort]).
     /// Doesn't narrow the search.
     RecipeSort? sort,
@@ -91,5 +97,6 @@ abstract class RecipeQuery with _$RecipeQuery {
       maxMissingFoods == null &&
       bookIds.isEmpty &&
       savedSearchOfBook == null &&
-      createdBy == null;
+      createdBy == null &&
+      savedFilter == null;
 }

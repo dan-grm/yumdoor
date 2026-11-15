@@ -1,0 +1,51 @@
+{
+  "count": 3,
+  "next": null,
+  "previous": null,
+  "timestamp": "2026-11-15T22:08:01.700028+00:00",
+  "results": [
+    {
+      "id": 2,
+      "name": "Schnell & vegetarisch",
+      "search": "{\"keywords_and\":[24,31],\"version\":\"2\"}",
+      "shared": [
+        {
+          "id": 6,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      ],
+      "created_by": 5
+    },
+    {
+      "id": 3,
+      "name": "Selten gekocht",
+      "search": "{\"timescooked_lte\":2,\"sort_order\":\"name\",\"version\":\"2\"}",
+      "shared": [],
+      "created_by": 5
+    },
+    {
+      "id": 4,
+      "name": "Bens Backideen",
+      "search": "{\"query\":\"Kuchen\",\"version\":\"2\"}",
+      "shared": [
+        {
+          "id": 5,
+          "username": "anna",
+          "first_name": "Anna",
+          "last_name": "",
+          "display_name": "Anna ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      ],
+      "created_by": 6
+    }
+  ]
+}

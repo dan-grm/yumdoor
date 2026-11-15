@@ -21,6 +21,7 @@ import '../recipe/recipe_meta.dart';
 import 'filter_picker_sheet.dart';
 import 'history_filters.dart';
 import 'option_sheet.dart';
+import 'saved_filters.dart';
 import 'search_location.dart';
 import 'search_providers.dart';
 import 'space_filters.dart';
@@ -69,6 +70,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     _debounce?.cancel();
     final location = searchLocation(query.copyWith(text: _text.text.trim()));
     Router.neglect(context, () => context.go(location));
+  }
+
+  /// Shows [query] with its own text, e.g. a saved search.
+  void _replace(RecipeQuery query) {
+    _text.text = query.text;
+    _show(query);
   }
 
   void _onTextChanged(String _) {
@@ -176,8 +183,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ),
                   ...historyFilterChips(context, query: query, onChange: _show),
                   ...spaceFilterChips(context, query: query, onChange: _show),
+                  ...savedFilterChips(context, query: query, onChange: _show),
                 ]),
               ),
+            ),
+            SavedFilterRow(
+              query: query,
+              onChange: _replace,
+              current: () => query.copyWith(text: _text.text.trim()),
             ),
             Expanded(
               child: _Results(query: query, onChange: _show),
@@ -583,7 +596,9 @@ class _Empty extends StatelessWidget {
             if (fromCache) ...[
               SizedBox(height: t.space2),
               for (final note in [
-                if (query.bookIds.isNotEmpty)
+                if (query.savedFilter != null)
+                  l10n.searchOfflineSavedNote
+                else if (query.bookIds.isNotEmpty)
                   l10n.searchOfflineBookNote
                 else
                   l10n.searchOfflineResults,

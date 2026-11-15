@@ -8,7 +8,8 @@ const searchPath = '/search';
 // `/search?q=suppe&food=12&food=40&keyword=3&rating=4&cooked_before=2026-09-01`,
 // `never=1` and `times_min=5` for the times cooked, `missing=0` for cookable
 // now (`1`: one food missing), `book=4&book=7`, `created_by=2` and
-// `sort=rating` (only when the user chose an order).
+// `sort=rating` (only when the user chose an order), `saved=5` for a saved
+// search the chips can't show.
 const _text = 'q';
 const _food = 'food';
 const _keyword = 'keyword';
@@ -20,6 +21,7 @@ const _maxMissingFoods = 'missing';
 const _book = 'book';
 const _createdBy = 'created_by';
 const _sort = 'sort';
+const _savedFilter = 'saved';
 
 /// The value of the sort parameter for [sort].
 String _sortName(RecipeSort sort) => switch (sort) {
@@ -58,6 +60,7 @@ String searchLocation(RecipeQuery query) {
       _book: [for (final id in query.bookIds) '$id'],
     if (query.createdBy case final user?) _createdBy: ['$user'],
     if (query.sort case final sort?) _sort: [_sortName(sort)],
+    if (query.savedFilter case final filter?) _savedFilter: ['$filter'],
   };
   return Uri(
     path: searchPath,
@@ -99,6 +102,10 @@ RecipeQuery searchQueryFromUri(Uri uri) {
     bookIds: ids(_book),
     createdBy: switch (int.tryParse(params[_createdBy]?.first ?? '')) {
       final user? when user > 0 => user,
+      _ => null,
+    },
+    savedFilter: switch (int.tryParse(params[_savedFilter]?.first ?? '')) {
+      final filter? when filter > 0 => filter,
       _ => null,
     },
     sort: RecipeSort.values

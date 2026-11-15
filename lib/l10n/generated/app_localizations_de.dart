@@ -715,4 +715,88 @@ class AppLocalizationsDe extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get searchSavedSave => 'Suche speichern';
+
+  @override
+  String get searchSavedSaveHint =>
+      'Text und Filter werden unter diesem Namen in Tandoor gespeichert.';
+
+  @override
+  String get searchSavedName => 'Name';
+
+  @override
+  String get searchSavedNameEmpty => 'Gib einen Namen ein.';
+
+  @override
+  String get searchSavedConfirm => 'Speichern';
+
+  @override
+  String searchSavedSaved(String name) {
+    return '„$name“ gespeichert';
+  }
+
+  @override
+  String searchSavedFailed(String reason) {
+    return 'Das hat nicht geklappt. $reason';
+  }
+
+  @override
+  String get searchSavedManage => 'Verwalten';
+
+  @override
+  String get searchSavedManageTitle => 'Gespeicherte Suchen';
+
+  @override
+  String get searchSavedManageHint =>
+      'Umbenennen und löschen kannst du deine eigenen; geteilte nur verwenden.';
+
+  @override
+  String get searchSavedNone => 'Du hast noch keine Suche gespeichert.';
+
+  @override
+  String get searchSavedShared => 'Mit dir geteilt';
+
+  @override
+  String get searchSavedRenameTitle => 'Suche umbenennen';
+
+  @override
+  String searchSavedRenameLabel(String name) {
+    return '$name umbenennen';
+  }
+
+  @override
+  String searchSavedDeleteLabel(String name) {
+    return '$name löschen';
+  }
+
+  @override
+  String searchSavedDeleteTitle(String name) {
+    return '„$name“ löschen?';
+  }
+
+  @override
+  String get searchSavedDeleteText =>
+      'Die Suche wird auch in Tandoor gelöscht, für alle, mit denen sie geteilt ist. Ein Kochbuch mit dieser Suche zeigt danach nur noch seine fest hinzugefügten Rezepte. Rezepte bleiben erhalten.';
+
+  @override
+  String get searchSavedDelete => 'Löschen';
+
+  @override
+  String searchSavedFilter(String name) {
+    return 'Gespeichert: $name';
+  }
+
+  @override
+  String get searchOfflineSavedNote =>
+      'Offline lässt sich diese gespeicherte Suche nicht anwenden.';
+
+  @override
+  String get searchSavedNameTaken =>
+      'Eine gespeicherte Suche mit diesem Namen gibt es schon.';
+
+  @override
+  String get searchSavedNameConflict =>
+      'Nicht gespeichert. In Tandoor gibt es den Namen vielleicht schon – versuch einen anderen.';
 }

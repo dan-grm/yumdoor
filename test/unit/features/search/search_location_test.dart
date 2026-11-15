@@ -56,6 +56,18 @@ void main() {
     }
   });
 
+  test('round-trips a saved search the chips can\'t show', () {
+    const query = RecipeQuery(savedFilter: 5, text: 'Suppe');
+
+    final location = searchLocation(query);
+
+    expect(location, '/search?q=Suppe&saved=5');
+    expect(parse(location), query);
+    expect(query.copyWith(text: '').isEmpty, isFalse);
+    expect(parse('/search?saved=0'), const RecipeQuery());
+    expect(parse('/search?saved=x'), const RecipeQuery());
+  });
+
   test('round-trips every sort order', () {
     for (final sort in RecipeSort.values) {
       final query = RecipeQuery(text: 'Suppe', sort: sort);

@@ -982,5 +982,129 @@
         "description": "relevance, name, lastCooked, rating, newest, recentlyViewed or random"
       }
     }
+  },
+  "searchSavedSave": "Suche speichern",
+  "@searchSavedSave": {
+    "description": "Chip after the saved searches that saves the current search; also the title of its dialog."
+  },
+  "searchSavedSaveHint": "Text und Filter werden unter diesem Namen in Tandoor gespeichert.",
+  "@searchSavedSaveHint": {
+    "description": "Explanation in the save-search dialog."
+  },
+  "searchSavedName": "Name",
+  "@searchSavedName": {
+    "description": "Label of the name field when saving or renaming a search."
+  },
+  "searchSavedNameEmpty": "Gib einen Namen ein.",
+  "@searchSavedNameEmpty": {
+    "description": "Error under an empty name field."
+  },
+  "searchSavedConfirm": "Speichern",
+  "@searchSavedConfirm": {
+    "description": "Confirm button of the save-search and rename dialogs."
+  },
+  "searchSavedSaved": "„{name}“ gespeichert",
+  "@searchSavedSaved": {
+    "description": "Message after a search was saved.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Schnell & vegetarisch"
+      }
+    }
+  },
+  "searchSavedFailed": "Das hat nicht geklappt. {reason}",
+  "@searchSavedFailed": {
+    "description": "Message when saving, renaming or deleting a saved search failed; reason is an error message.",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "Der Server antwortet nicht."
+      }
+    }
+  },
+  "searchSavedManage": "Verwalten",
+  "@searchSavedManage": {
+    "description": "Button at the end of the saved searches that opens the list to rename and delete them."
+  },
+  "searchSavedManageTitle": "Gespeicherte Suchen",
+  "@searchSavedManageTitle": {
+    "description": "Title of the sheet that lists the saved searches."
+  },
+  "searchSavedManageHint": "Umbenennen und löschen kannst du deine eigenen; geteilte nur verwenden.",
+  "@searchSavedManageHint": {
+    "description": "Explanation under the title of the saved searches sheet."
+  },
+  "searchSavedNone": "Du hast noch keine Suche gespeichert.",
+  "@searchSavedNone": {
+    "description": "Saved searches sheet without any."
+  },
+  "searchSavedShared": "Mit dir geteilt",
+  "@searchSavedShared": {
+    "description": "Under a saved search someone else created."
+  },
+  "searchSavedRenameTitle": "Suche umbenennen",
+  "@searchSavedRenameTitle": {
+    "description": "Title of the rename dialog."
+  },
+  "searchSavedRenameLabel": "{name} umbenennen",
+  "@searchSavedRenameLabel": {
+    "description": "Accessible label of the rename button of a saved search.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Schnell & vegetarisch"
+      }
+    }
+  },
+  "searchSavedDeleteLabel": "{name} löschen",
+  "@searchSavedDeleteLabel": {
+    "description": "Accessible label of the delete button of a saved search.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Schnell & vegetarisch"
+      }
+    }
+  },
+  "searchSavedDeleteTitle": "„{name}“ löschen?",
+  "@searchSavedDeleteTitle": {
+    "description": "Title of the dialog that confirms deleting a saved search.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Schnell & vegetarisch"
+      }
+    }
+  },
+  "searchSavedDeleteText": "Die Suche wird auch in Tandoor gelöscht, für alle, mit denen sie geteilt ist. Ein Kochbuch mit dieser Suche zeigt danach nur noch seine fest hinzugefügten Rezepte. Rezepte bleiben erhalten.",
+  "@searchSavedDeleteText": {
+    "description": "Text of the dialog that confirms deleting a saved search."
+  },
+  "searchSavedDelete": "Löschen",
+  "@searchSavedDelete": {
+    "description": "Confirm button of the delete dialog."
+  },
+  "searchSavedFilter": "Gespeichert: {name}",
+  "@searchSavedFilter": {
+    "description": "Label of the filter chip of a saved search that the other chips can't show.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Selten gekocht"
+      }
+    }
+  },
+  "searchOfflineSavedNote": "Offline lässt sich diese gespeicherte Suche nicht anwenden.",
+  "@searchOfflineSavedNote": {
+    "description": "Shown with offline results when a saved search the chips can't show is applied."
+  },
+  "searchSavedNameTaken": "Eine gespeicherte Suche mit diesem Namen gibt es schon.",
+  "searchSavedNameConflict": "Nicht gespeichert. In Tandoor gibt es den Namen vielleicht schon – versuch einen anderen.",
+  "@searchSavedNameTaken": {
+    "description": "Error under the name field when another saved search the user can see has that name."
+  },
+  "@searchSavedNameConflict": {
+    "description": "Message when Tandoor refused a saved search's name, most likely because a saved search in the space (perhaps one the user can't see) has it."
   }
 }

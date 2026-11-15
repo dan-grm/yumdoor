@@ -203,7 +203,7 @@ final class _TandoorRepositoriesProvider
 }
 
 String _$_tandoorRepositoriesHash() =>
-    r'930bb9519f2ff4ab4a9d86581f1e4c9b198a6239';
+    r'442b86a20bf773fa8cfeea83d57d534e67526a57';
 
 @ProviderFor(recipeRepository)
 final recipeRepositoryProvider = RecipeRepositoryProvider._();
@@ -467,6 +467,54 @@ final class UserRepositoryProvider
 }
 
 String _$userRepositoryHash() => r'6ce7e0a54c2658b663434db9aaa512b7d0cebb79';
+
+@ProviderFor(savedFilterRepository)
+final savedFilterRepositoryProvider = SavedFilterRepositoryProvider._();
+
+final class SavedFilterRepositoryProvider
+    extends
+        $FunctionalProvider<
+          SavedFilterRepository,
+          SavedFilterRepository,
+          SavedFilterRepository
+        >
+    with $Provider<SavedFilterRepository> {
+  SavedFilterRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'savedFilterRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$savedFilterRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<SavedFilterRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SavedFilterRepository create(Ref ref) {
+    return savedFilterRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SavedFilterRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SavedFilterRepository>(value),
+    );
+  }
+}
+
+String _$savedFilterRepositoryHash() =>
+    r'd932d3f3f8dbec3fc907798f61bb04d84b877ffe';
 
 @ProviderFor(_cacheDatabase)
 final _cacheDatabaseProvider = _CacheDatabaseProvider._();

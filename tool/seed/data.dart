@@ -1022,6 +1022,47 @@ const seedBooks = <SeedBook>[
   ),
 ];
 
+/// A saved search (Tandoor `CustomFilter`). [keywords] are keyword names,
+/// saved as `keywords_and`; [search] holds the other parameters as Tandoor's
+/// search page saves them.
+class SeedSavedFilter {
+  const SeedSavedFilter(
+    this.name, {
+    required this.owner,
+    this.sharedWith = const [],
+    this.keywords = const [],
+    this.search = const {},
+  });
+
+  final String name;
+  final String owner;
+  final List<String> sharedWith;
+  final List<String> keywords;
+  final Map<String, Object> search;
+}
+
+const seedSavedFilters = <SeedSavedFilter>[
+  // Shown as chips in Yumdoor.
+  SeedSavedFilter(
+    'Schnell & vegetarisch',
+    owner: 'anna',
+    sharedWith: ['ben'],
+    keywords: ['Vegetarisch', 'Schnell'],
+  ),
+  // `timescooked_lte` has no chip: applied as one "Gespeichert" chip.
+  SeedSavedFilter(
+    'Selten gekocht',
+    owner: 'anna',
+    search: {'timescooked_lte': 2, 'sort_order': 'name'},
+  ),
+  SeedSavedFilter(
+    'Bens Backideen',
+    owner: 'ben',
+    sharedWith: ['anna'],
+    search: {'query': 'Kuchen'},
+  ),
+];
+
 /// Comments for cook logs; picked deterministically.
 const seedComments = <String?>[
   'Sehr lecker, gerne wieder!',

@@ -52,17 +52,20 @@ class AddFilterChip extends StatelessWidget {
 
   /// The accessible label: "Zutat hinzufügen".
   final String tooltip;
-  final VoidCallback onPressed;
+
+  /// `null` disables the chip, e.g. a write action while offline.
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final color = onPressed == null ? t.inkMuted : t.ink;
     return _ChipTapArea(
       label: tooltip,
       onTap: onPressed,
       child: CustomPaint(
         painter: _DashedOutlinePainter(
-          color: t.controlBorder,
+          color: onPressed == null ? t.line : t.controlBorder,
           radius: t.radiusM,
         ),
         child: Padding(
@@ -73,10 +76,10 @@ class AddFilterChip extends StatelessWidget {
               Icon(
                 Icons.add_rounded,
                 size: t.label.fontSize! + t.space1,
-                color: t.ink,
+                color: color,
               ),
               SizedBox(width: t.space1),
-              Text(label, style: t.label.copyWith(color: t.ink)),
+              Text(label, style: t.label.copyWith(color: color)),
             ],
           ),
         ),
@@ -168,7 +171,7 @@ class _ChipTapArea extends StatelessWidget {
   });
 
   final String label;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Widget child;
   final bool? selected;
 
@@ -195,6 +198,7 @@ class _ChipTapArea extends StatelessWidget {
     );
     return Semantics(
       button: true,
+      enabled: onTap == null ? false : null,
       selected: selected,
       // Screen readers announce a radio button only with a checked state.
       checked: exclusive ? (selected ?? false) : null,

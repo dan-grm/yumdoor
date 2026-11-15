@@ -391,6 +391,8 @@ class RecipeSearch {
     if (_sources.any((s) => s.savedSearchOfBook != null && s.count! > 0)) {
       return estimate;
     }
+    // Nor those of a saved search, whose counts can be upper bounds.
+    if (query.savedFilter != null) return estimate;
 
     // Inclusion–exclusion: |A ∪ B ∪ C| = Σ|A| − Σ|A ∩ B| + |A ∩ B ∩ C|.
     final subsets = <Set<_Kind>>[

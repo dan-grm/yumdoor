@@ -105,8 +105,10 @@ class RecipeCache implements OfflineCache {
 
   @override
   Future<void> clear() => _db.transaction(() async {
-    await _db.delete(_db.cachedRecipes).go();
-    await _db.delete(_db.cachedImages).go();
+    // Every table, saved searches included.
+    for (final table in _db.allTables) {
+      await _db.delete(table).go();
+    }
   });
 
   /// The recipe in [row], or `null` (and the row deleted) if it can't be

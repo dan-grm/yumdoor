@@ -13,6 +13,7 @@ import 'fake_food_keyword_repositories.dart';
 import 'fake_link_opener.dart';
 import 'fake_offline_cache.dart';
 import 'fake_recipe_repository.dart';
+import 'fake_saved_filter_repository.dart';
 import 'fake_server_repository.dart';
 import 'in_memory_local_store.dart';
 import 'in_memory_token_store.dart';
@@ -40,6 +41,7 @@ List<Override> appOverrides({
   FakeCookLogRepository? cookLogs,
   FakeBookRepository? books,
   FakeUserRepository? users,
+  FakeSavedFilterRepository? savedFilters,
   FakeOfflineCache? offlineCache,
   TimerAlertService? timerAlerts,
   FakeLinkOpener? linkOpener,
@@ -61,6 +63,9 @@ List<Override> appOverrides({
   ),
   bookRepositoryProvider.overrideWithValue(books ?? FakeBookRepository()),
   userRepositoryProvider.overrideWithValue(users ?? FakeUserRepository()),
+  savedFilterRepositoryProvider.overrideWithValue(
+    savedFilters ?? FakeSavedFilterRepository(),
+  ),
   offlineCacheProvider.overrideWithValue(offlineCache ?? FakeOfflineCache()),
   connectivityServiceProvider.overrideWithValue(
     connectivity ?? FakeConnectivityService(),

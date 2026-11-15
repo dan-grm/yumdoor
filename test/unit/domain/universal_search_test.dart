@@ -148,6 +148,25 @@ void main() {
       expect(first.totalCount, 5);
     });
 
+    test('estimates the count with a saved search', () async {
+      // The repository may only know an upper bound of what a saved search
+      // finds; overlaps of upper bounds can't be counted.
+      recipes.savedFilters = {
+        9: {1, 2, 3, 4, 5, 6},
+      };
+      final results = search().start(
+        const RecipeQuery(text: 'Karotte', savedFilter: 9),
+        pageSize: 25,
+      );
+
+      final first = await results.next();
+
+      expect(recipes.searches.where((s) => s.pageSize == 1), isEmpty);
+      expect(first.items, hasLength(5));
+      expect(first.totalCount, 5);
+      expect(recipes.searches.map((s) => s.query.savedFilter), everyElement(9));
+    });
+
     test('applies the other filters to every source', () async {
       final pages = await allPages(
         const RecipeQuery(text: 'Karotte', foodIds: {3}),

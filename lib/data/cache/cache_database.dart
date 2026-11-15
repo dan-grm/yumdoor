@@ -40,9 +40,30 @@ class CachedImages extends Table {
   Set<Column<Object>> get primaryKey => {url};
 }
 
+/// The user's saved searches, so they can be applied offline.
+@DataClassName('CachedSavedFilterRow')
+class CachedSavedFilters extends Table {
+  @override
+  String get tableName => 'cached_saved_filter';
+
+  IntColumn get id => integer()();
+  TextColumn get name => text()();
+
+  /// The search as the `search` JSON of a saved search, `null` for one the
+  /// filter chips can't show (`SavedFilter.query`).
+  TextColumn get search => text().nullable()();
+  BoolColumn get own => boolean()();
+
+  /// The position in the list.
+  IntColumn get position => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
 /// The offline cache. Everything in it can be fetched again, so migrations
 /// start over instead of converting rows.
-@DriftDatabase(tables: [CachedRecipes, CachedImages])
+@DriftDatabase(tables: [CachedRecipes, CachedImages, CachedSavedFilters])
 class CacheDatabase extends _$CacheDatabase {
   CacheDatabase(super.executor);
 
@@ -63,7 +84,7 @@ class CacheDatabase extends _$CacheDatabase {
   /// Bump this whenever a cached domain model (`Recipe` and the models in
   /// it) or a table changes; opening the database then drops all rows.
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(

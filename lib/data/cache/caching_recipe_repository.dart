@@ -65,7 +65,10 @@ class CachingRecipeRepository implements RecipeRepository {
       if (page != 1) rethrow;
       // Which books a recipe is in isn't stored, nor saved searches; nothing
       // is known to match.
-      final recipes = query.bookIds.isEmpty && query.savedSearchOfBook == null
+      final recipes =
+          query.bookIds.isEmpty &&
+              query.savedSearchOfBook == null &&
+              query.savedFilter == null
           ? await _cache.all()
           : const <Recipe>[];
       if (cancel?.isCancelled ?? false) throw const CancelledFailure();

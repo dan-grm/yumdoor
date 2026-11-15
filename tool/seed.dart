@@ -144,6 +144,7 @@ List<String> seedDataProblems() {
   final recipes = {for (final recipe in seedRecipes) recipe.name};
   final users = {for (final user in seedUsers) user.username};
   final mealTypes = {for (final type in seedMealTypes) type.name};
+  final keywords = {for (final recipe in seedRecipes) ...recipe.keywords};
   return [
     for (final food in seedFoods)
       if (food.parent != null && !foods.contains(food.parent))
@@ -160,6 +161,16 @@ List<String> seedDataProblems() {
       for (final recipe in book.recipes)
         if (!recipes.contains(recipe))
           'book ${book.name}: unknown recipe $recipe',
+    for (final filter in seedSavedFilters) ...[
+      if (!users.contains(filter.owner))
+        'saved search ${filter.name}: unknown owner',
+      for (final user in filter.sharedWith)
+        if (!users.contains(user))
+          'saved search ${filter.name}: unknown user $user',
+      for (final keyword in filter.keywords)
+        if (!keywords.contains(keyword))
+          'saved search ${filter.name}: unknown keyword $keyword',
+    ],
     for (final plan in seedMealPlans) ...[
       if (plan.recipe != null && !recipes.contains(plan.recipe))
         'meal plan: unknown recipe ${plan.recipe}',
@@ -354,6 +365,7 @@ class Seeder {
     await _step('recipes', _recipesStep);
     await _step('cook logs', _cookLogs);
     await _step('recipe books', _books);
+    await _step('saved searches', _savedFilters);
     await _step('on-hand foods', _markOnHand);
     await _step('meal plans and shopping list', _mealPlans);
   }
@@ -486,6 +498,37 @@ class Seeder {
         });
       }
     }
+  }
+
+  Future<void> _savedFilters() async {
+    for (final filter in seedSavedFilters) {
+      final client = clients[filter.owner]!;
+      final keywordIds = [
+        for (final name in filter.keywords) await _keywordId(client, name),
+      ];
+      await client.post('/api/custom-filter/', {
+        'name': filter.name,
+        'search': jsonEncode({
+          if (keywordIds.isNotEmpty) 'keywords_and': keywordIds,
+          ...filter.search,
+          'version': '2',
+        }),
+        'shared': [
+          for (final user in filter.sharedWith) {'id': boot.user(user).userId},
+        ],
+      });
+    }
+  }
+
+  /// The id of the keyword [name], which a seeded recipe created.
+  Future<int> _keywordId(TandoorClient client, String name) async {
+    final page = await client.get(
+      '/api/keyword/?query=${Uri.encodeQueryComponent(name)}',
+    ) as Map;
+    final keyword = (page['results'] as List)
+        .cast<Map<String, dynamic>>()
+        .firstWhere((k) => k['name'] == name);
+    return keyword['id'] as int;
   }
 
   /// On hand is per household, so marking it as Anna covers Ben too.
