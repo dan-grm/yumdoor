@@ -10,6 +10,10 @@ int requireId(int? id, String type) =>
 Uri? optionalUri(String? value) =>
     value == null || value.isEmpty ? null : Uri.tryParse(value);
 
+/// Optional text that Tandoor sends as `null` or empty.
+String? optionalText(String? value) =>
+    value == null || value.isEmpty ? null : value;
+
 /// Tandoor stores durations as whole minutes.
 Duration minutes(int? value) => Duration(minutes: value ?? 0);
 

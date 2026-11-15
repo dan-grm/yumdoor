@@ -316,6 +316,8 @@ class TandoorRecipeRepository implements RecipeRepository {
 
   @override
   Future<Recipe> updateRecipe(int id, RecipeDraft draft) async {
+    // In parallel, as in fetchRecipe.
+    final cooked = _lastCooked(id);
     // A PATCH, so the fields a draft doesn't hold stay as they are
     // (docs/TANDOOR_API.md#recipe-writes). The response is the recipe as
     // saved, like a fetch.
@@ -326,9 +328,8 @@ class TandoorRecipeRepository implements RecipeRepository {
       );
       return requireBody(response.data).toDomain();
     });
-    // Only once saved: a failed save needn't read the cook log.
     if (recipe.lastCooked != null) return recipe;
-    return recipe.copyWith(lastCooked: await _lastCooked(id));
+    return recipe.copyWith(lastCooked: await cooked);
   }
 
   @override

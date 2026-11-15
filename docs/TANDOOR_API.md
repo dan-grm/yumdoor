@@ -282,7 +282,8 @@ each step with `id` (if saved), `name`, `instruction`, `time`, `order` and `ingr
 `id` (if saved), `food` and `unit` as `{id?, name}`, `amount`, `no_amount`, `is_header`, `note`, `order` and
 `original_text` (and `checked: false`, a default of the generated client; read-only on the server).
 Everything else of the recipe, its steps and its ingredients is left out and so survives a save.
-On create the same plus `internal: true`.
+On create the same without step and ingredient ids (a draft made from another recipe would otherwise share its
+steps and ingredients) plus `internal: true`.
 
 ## Cook log (ratings, comments, feed)
 

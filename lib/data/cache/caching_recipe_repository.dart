@@ -43,7 +43,7 @@ class CachingRecipeRepository implements RecipeRepository {
       rethrow;
     }
     // In the background: the recipe is there, however slow the cache is.
-    unawaited(_ignoreErrors(_store(recipe)));
+    unawaited(_ignoreErrors(_store(recipe).then(_storeImage)));
     return recipe;
   }
 
@@ -93,10 +93,7 @@ class CachingRecipeRepository implements RecipeRepository {
   /// its image, if it needs downloading, afterwards.
   @override
   Future<Recipe> createRecipe(RecipeDraft draft) async {
-    final recipe = await _remote.createRecipe(draft);
-    await _ignoreErrors(_store(recipe, image: false));
-    unawaited(_ignoreErrors(_storeImage(recipe)));
-    return recipe;
+    return _storeSaved(await _remote.createRecipe(draft));
   }
 
   @override
@@ -109,9 +106,7 @@ class CachingRecipeRepository implements RecipeRepository {
       await _ignoreErrors(_cache.remove(id));
       rethrow;
     }
-    await _ignoreErrors(_store(recipe, image: false));
-    unawaited(_ignoreErrors(_storeImage(recipe)));
-    return recipe;
+    return _storeSaved(recipe);
   }
 
   /// Views are only recorded online; offline there is nothing to record
@@ -119,8 +114,21 @@ class CachingRecipeRepository implements RecipeRepository {
   @override
   Future<void> recordView(int id) => _remote.recordView(id);
 
-  /// Stores [recipe], and its [image] unless that is `false`.
-  Future<void> _store(Recipe recipe, {bool image = true}) async {
+  /// Stores a recipe that was just saved, its image in the background, and
+  /// returns it as stored.
+  Future<Recipe> _storeSaved(Recipe recipe) async {
+    try {
+      recipe = await _store(recipe);
+    } on Object {
+      // The cache is a convenience; the save went through.
+      return recipe;
+    }
+    unawaited(_ignoreErrors(_storeImage(recipe)));
+    return recipe;
+  }
+
+  /// Stores [recipe] and returns it as stored.
+  Future<Recipe> _store(Recipe recipe) async {
     // A missing date usually means the cook log couldn't be read (see
     // TandoorRecipeRepository.lastCooked); keep the one stored before.
     if (recipe.lastCooked == null) {
@@ -128,7 +136,7 @@ class CachingRecipeRepository implements RecipeRepository {
       if (stored != null) recipe = recipe.copyWith(lastCooked: stored);
     }
     await _cache.put(recipe);
-    if (image) await _storeImage(recipe);
+    return recipe;
   }
 
   Future<void> _storeImage(Recipe recipe) async {

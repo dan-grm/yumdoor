@@ -187,12 +187,34 @@ void main() {
     });
   });
 
-  test('create sends the same and marks the recipe as written in Tandoor', () {
+  test('create sends the same as an update, as written in Tandoor', () {
     final draft = RecipeDraft.fromRecipe(suppe.toDomain());
+    final update = wire(draft.toPatchedRecipe());
 
     final create = wire(draft.toApiRecipe());
 
-    expect(create, {...wire(draft.toPatchedRecipe()), 'internal': true});
+    // New steps and ingredients: with ids, the copy would share the
+    // original's. Foods, units and keywords keep theirs.
+    expect(create, {
+      ...update,
+      'steps': [
+        for (final step
+            in (update['steps']! as List).cast<Map<String, Object?>>())
+          {
+            ...step,
+            'ingredients': [
+              for (final i
+                  in (step['ingredients'] as List).cast<Map<String, Object?>>())
+                {...i}..remove('id'),
+            ],
+          }..remove('id'),
+      ],
+      'internal': true,
+    });
+    expect(
+      ((create['steps']! as List).first as Map)['ingredients'],
+      contains(containsPair('food', {'id': 178, 'name': 'Karotte'})),
+    );
   });
 
   test('a recipe read back maps to the draft that was saved', () {
@@ -202,7 +224,7 @@ void main() {
       api.Recipe.serializer,
       {
         ...tandoorFixture('recipe_karottensuppe.json')! as Map<String, Object?>,
-        ...wire(draft.toApiRecipe()),
+        ...wire(draft.toPatchedRecipe()),
       },
     )!;
 

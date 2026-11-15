@@ -39,10 +39,7 @@ extension RecipeMapper on api.Recipe {
     workingTime: minutes(workingTime),
     waitingTime: minutes(waitingTime),
     steps: [for (final step in steps) step.toDomain()],
-    sourceUrl: switch (sourceUrl) {
-      null || '' => null,
-      final text => text,
-    },
+    sourceUrl: optionalText(sourceUrl),
     rating: rating,
     lastCooked: lastCooked,
     createdBy: createdBy?.toDomain(),

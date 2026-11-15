@@ -311,6 +311,18 @@ void main() {
       expect(await cache.get(7), saved);
     });
 
+    test('an update keeps the stored last cooked date', () async {
+      await fetch(8);
+      // The cook log can't be read during the save.
+      remote.recipes[8] = _suppe.copyWith(lastCooked: null);
+      final draft = RecipeDraft.fromRecipe(_suppe).copyWith(name: 'Neu');
+
+      final saved = await repository.updateRecipe(8, draft);
+
+      expect(saved.lastCooked, _suppe.lastCooked);
+      expect(await cache.get(8), saved);
+    });
+
     test('a new recipe is stored', () async {
       final saved = await repository.createRecipe(
         const RecipeDraft(name: 'Brot'),
