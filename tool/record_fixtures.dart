@@ -66,6 +66,9 @@ Future<void> main() async {
       'cook_log_list.json': '/api/cook-log/?page_size=3',
       // Anna's own book, shared with Ben.
       'recipe_book_list.json': '/api/recipe-book/',
+      // Anna's saved searches and Ben's shared with her: one the chips can
+      // show, one they can't.
+      'custom_filter_list.json': '/api/custom-filter/',
       // Not paginated; `display_name` with a trailing space.
       'user_list.json': '/api/user/',
     };
