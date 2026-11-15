@@ -5,6 +5,7 @@ import '../../domain/repositories/cook_log_repository.dart';
 import '../api/api_failures.dart';
 import '../mappers/cook_log_mapper.dart';
 import '../mappers/mapping.dart';
+import 'current_user.dart';
 
 /// Cook log entries per request page; the server allows up to 200.
 const _pageSize = 100;
@@ -14,12 +15,11 @@ const _pageSize = 100;
 const _maxPages = 3;
 
 class TandoorCookLogRepository implements CookLogRepository {
-  TandoorCookLogRepository(this._api);
+  TandoorCookLogRepository(this._api, {CurrentUser? currentUser})
+    : _currentUser = currentUser ?? CurrentUser(_api);
 
   final api.ApiApi _api;
-
-  /// The current user's id, read once.
-  Future<int>? _userId;
+  final CurrentUser _currentUser;
 
   @override
   Future<CookLog> create(NewCookLog entry) => guardRequest(() async {
@@ -47,7 +47,7 @@ class TandoorCookLogRepository implements CookLogRepository {
 
     // Most recipes have fewer entries than one page, so page 1 usually
     // answers it. The user is looked up meanwhile.
-    final user = _currentUserId();
+    final user = _currentUser.id();
     final first = await page(1);
     final userId = await user;
     final lastPage = (first.count / _pageSize).ceil();
@@ -64,22 +64,4 @@ class TandoorCookLogRepository implements CookLogRepository {
     }
     return null;
   });
-
-  /// Shared by concurrent calls, and asked again after a failure. Its
-  /// errors count as handled, so a failing page can be thrown first.
-  Future<int> _currentUserId() {
-    if (_userId case final id?) return id;
-    final id = _userId = _readUserId();
-    id.then<void>((_) {}, onError: (Object _) => _userId = null).ignore();
-    id.ignore();
-    return id;
-  }
-
-  // `/api/user-preference/` lists only the caller's own preferences, for
-  // every user; there is no "current user" endpoint.
-  Future<int> _readUserId() async {
-    final response = await _api.apiUserPreferenceList();
-    final user = requireBody(response.data).firstOrNull?.user;
-    return requireId(user?.id, 'User');
-  }
 }
