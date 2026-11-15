@@ -48,7 +48,16 @@ abstract class RecipeQuery with _$RecipeQuery {
 
     /// The recipe is in at least one of these books. Empty means no
     /// restriction.
+    ///
+    /// `RecipeRepository.search` only finds the recipes added to a book; the
+    /// `UniversalSearch` also finds those a dynamic book's saved search finds
+    /// (`RecipeBook.isDynamic`), with [savedSearchOfBook].
     @Default({}) Set<int> bookIds,
+
+    /// The recipe is found by the saved search of this (dynamic) book,
+    /// whether or not it was added to it. Set by the `UniversalSearch`, not
+    /// part of a search link.
+    int? savedSearchOfBook,
 
     /// The user who created the recipe.
     int? createdBy,
@@ -81,5 +90,6 @@ abstract class RecipeQuery with _$RecipeQuery {
       minTimesCooked == null &&
       maxMissingFoods == null &&
       bookIds.isEmpty &&
+      savedSearchOfBook == null &&
       createdBy == null;
 }

@@ -8,6 +8,7 @@ import 'package:yumdoor/domain/models/recipe.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
 import 'package:yumdoor/features/search/search_providers.dart';
 
+import '../../../fakes/fake_book_user_repositories.dart';
 import '../../../fakes/fake_food_keyword_repositories.dart';
 import '../../../fakes/fake_recipe_repository.dart';
 
@@ -27,6 +28,7 @@ void main() {
         recipeRepositoryProvider.overrideWithValue(repository),
         foodRepositoryProvider.overrideWithValue(FakeFoodRepository()),
         keywordRepositoryProvider.overrideWithValue(FakeKeywordRepository()),
+        bookRepositoryProvider.overrideWithValue(FakeBookRepository()),
       ],
     );
     addTearDown(container.dispose);

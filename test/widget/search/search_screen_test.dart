@@ -783,6 +783,7 @@ void main() {
             RecipeBook(id: 7, name: 'Backen'),
             RecipeBook(id: 8, name: 'Schnelle Feierabendküche'),
           ]);
+          recipes.bookEntries = {4: recipes.recipes.keys.toSet()};
           await pumpSearch(
             tester,
             location: '/search?missing=1&book=4&created_by=2',

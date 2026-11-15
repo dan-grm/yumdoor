@@ -79,6 +79,7 @@ void main() {
       recipes: anna.recipes,
       foods: anna.foods,
       keywords: anna.keywords,
+      books: anna.books,
     ).start(const RecipeQuery(text: 'Karotte', sort: RecipeSort.rating));
     final ratings = <double?>[];
     while (true) {

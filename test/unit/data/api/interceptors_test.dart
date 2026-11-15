@@ -4,12 +4,39 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/data/api/api_failures.dart';
+import 'package:yumdoor/data/api/extra_query_interceptor.dart';
 import 'package:yumdoor/data/api/tandoor_dio.dart';
 
 import '../../../fakes/fake_http_adapter.dart';
 
 void main() {
   final serverUrl = Uri.parse('https://example.com');
+
+  test('extra query parameters never replace the request\'s own', () async {
+    final adapter = FakeHttpAdapter((_) => jsonResponse({}));
+    final dio = createTandoorDio(serverUrl)..httpClientAdapter = adapter;
+
+    final response = await dio.get<Object?>(
+      '/api/recipe/',
+      queryParameters: {'query': 'Suppe'},
+      options: Options(
+        extra: {
+          ExtraQueryInterceptor.paramsKey: <String, Object>{
+            'query': 'Kuchen',
+            'keywords_or': ListParam(['1', '2'], ListFormat.multi),
+          },
+        },
+      ),
+    );
+
+    expect(adapter.requests.single.uri.queryParametersAll, {
+      'query': ['Suppe'],
+      'keywords_or': ['1', '2'],
+    });
+    expect(response.requestOptions.extra[ExtraQueryInterceptor.skippedKey], [
+      'query',
+    ]);
+  });
 
   group('CSRF token', () {
     test('goes with unsafe requests only', () async {

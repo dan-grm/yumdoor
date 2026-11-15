@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import 'auth_interceptor.dart';
 import 'csrf_interceptor.dart';
+import 'extra_query_interceptor.dart';
 import 'reachability_interceptor.dart';
 
 /// A server and the token to use with it.
@@ -48,6 +49,7 @@ Dio createTandoorDio(
       headers: {'Accept': 'application/json'},
     ),
   );
+  dio.interceptors.add(const ExtraQueryInterceptor());
   if (csrfToken != null) dio.interceptors.add(CsrfInterceptor(csrfToken));
   if (token != null) {
     dio.interceptors.add(

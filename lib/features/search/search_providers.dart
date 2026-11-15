@@ -57,6 +57,7 @@ UniversalSearch universalSearch(Ref ref) => UniversalSearch(
   recipes: ref.watch(recipeRepositoryProvider),
   foods: ref.watch(foodRepositoryProvider),
   keywords: ref.watch(keywordRepositoryProvider),
+  books: ref.watch(bookRepositoryProvider),
 );
 
 /// Results for [query], one page at a time.

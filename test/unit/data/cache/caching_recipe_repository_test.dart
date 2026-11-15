@@ -256,8 +256,9 @@ void main() {
         expect(await ids(const RecipeQuery(maxMissingFoods: 1)), [8]);
         expect(await ids(const RecipeQuery(createdBy: 2)), [8]);
         expect(await ids(const RecipeQuery(createdBy: 3)), isEmpty);
-        // Book entries aren't cached.
+        // Book entries aren't cached, nor saved searches.
         expect(await ids(const RecipeQuery(bookIds: {1})), isEmpty);
+        expect(await ids(const RecipeQuery(savedSearchOfBook: 1)), isEmpty);
       });
 
       test('sorts in the chosen order as far as the cache can', () async {

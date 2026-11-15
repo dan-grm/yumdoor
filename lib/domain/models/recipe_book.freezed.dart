@@ -15,7 +15,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$RecipeBook {
 
- int get id; String get name;
+ int get id; String get name;/// The book has a saved search: besides the recipes added to it, it
+/// holds every recipe that search finds (Tandoor shows both).
+ bool get isDynamic;
 /// Create a copy of RecipeBook
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +29,20 @@ $RecipeBookCopyWith<RecipeBook> get copyWith => _$RecipeBookCopyWithImpl<RecipeB
 @override
 bool operator ==(Object other) {
   final _this = this as RecipeBook;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecipeBook&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RecipeBook&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.isDynamic, _this.isDynamic) || other.isDynamic == _this.isDynamic));
 }
 
 
 @override
 int get hashCode {
   final _this = this as RecipeBook;
-  return Object.hash(runtimeType,_this.id,_this.name);
+  return Object.hash(runtimeType,_this.id,_this.name,_this.isDynamic);
 }
 
 @override
 String toString() {
   final _this = this as RecipeBook;
-  return 'RecipeBook(id: ${_this.id}, name: ${_this.name})';
+  return 'RecipeBook(id: ${_this.id}, name: ${_this.name}, isDynamic: ${_this.isDynamic})';
 }
 
 
@@ -51,7 +53,7 @@ abstract mixin class $RecipeBookCopyWith<$Res>  {
   factory $RecipeBookCopyWith(RecipeBook value, $Res Function(RecipeBook) _then) = _$RecipeBookCopyWithImpl;
 @useResult
 $Res call({
- int id, String name
+ int id, String name, bool isDynamic
 });
 
 
@@ -68,11 +70,12 @@ class _$RecipeBookCopyWithImpl<$Res>
 
 /// Create a copy of RecipeBook
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? isDynamic = null,}) {
   return _then(RecipeBook(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,
+as String,isDynamic: null == isDynamic ? _self.isDynamic : isDynamic // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -157,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  bool isDynamic)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RecipeBook() when $default != null:
-return $default(_that.id,_that.name);case _:
+return $default(_that.id,_that.name,_that.isDynamic);case _:
   return orElse();
 
 }
@@ -178,10 +181,10 @@ return $default(_that.id,_that.name);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  bool isDynamic)  $default,) {final _that = this;
 switch (_that) {
 case _RecipeBook():
-return $default(_that.id,_that.name);case _:
+return $default(_that.id,_that.name,_that.isDynamic);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +201,10 @@ return $default(_that.id,_that.name);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  bool isDynamic)?  $default,) {final _that = this;
 switch (_that) {
 case _RecipeBook() when $default != null:
-return $default(_that.id,_that.name);case _:
+return $default(_that.id,_that.name,_that.isDynamic);case _:
   return null;
 
 }
@@ -213,11 +216,14 @@ return $default(_that.id,_that.name);case _:
 
 
 class _RecipeBook implements RecipeBook {
-  const _RecipeBook({required this.id, required this.name});
+  const _RecipeBook({required this.id, required this.name, this.isDynamic = false});
   
 
 @override final  int id;
 @override final  String name;
+/// The book has a saved search: besides the recipes added to it, it
+/// holds every recipe that search finds (Tandoor shows both).
+@override@JsonKey() final  bool isDynamic;
 
 /// Create a copy of RecipeBook
 /// with the given fields replaced by the non-null parameter values.
@@ -229,18 +235,18 @@ _$RecipeBookCopyWith<_RecipeBook> get copyWith => __$RecipeBookCopyWithImpl<_Rec
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RecipeBook&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RecipeBook&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.isDynamic, isDynamic) || other.isDynamic == isDynamic));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,name);
+    return Object.hash(runtimeType,id,name,isDynamic);
 }
 
 @override
 String toString() {
-    return 'RecipeBook(id: $id, name: $name)';
+    return 'RecipeBook(id: $id, name: $name, isDynamic: $isDynamic)';
 }
 
 
@@ -251,7 +257,7 @@ abstract mixin class _$RecipeBookCopyWith<$Res> implements $RecipeBookCopyWith<$
   factory _$RecipeBookCopyWith(_RecipeBook value, $Res Function(_RecipeBook) _then) = __$RecipeBookCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name
+ int id, String name, bool isDynamic
 });
 
 
@@ -268,11 +274,12 @@ class __$RecipeBookCopyWithImpl<$Res>
 
 /// Create a copy of RecipeBook
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? isDynamic = null,}) {
   return _then(_RecipeBook(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
-as String,
+as String,isDynamic: null == isDynamic ? _self.isDynamic : isDynamic // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

@@ -177,6 +177,147 @@ void main() {
       });
     });
 
+    group('saved search of a dynamic book', () {
+      final recipeList = tandoorFixture('recipe_list.json')! as Map;
+      final overviews = [
+        for (final r in recipeList['results'] as List) r as Map,
+      ];
+
+      Map<String, Object?> book(String? search) => {
+        ...(tandoorFixture('recipe_book_list.json')! as Map)['results'].single
+            as Map<String, dynamic>,
+        'id': 5,
+        'filter': search == null
+            ? null
+            : {
+                'id': 3,
+                'name': 'Gespeichert',
+                'search': search,
+                'shared': <Object>[],
+                'created_by': 2,
+              },
+      };
+
+      /// Answers the book with [search] and every recipe search with the
+      /// fixture, or with [all] when the request asks for 200 at once.
+      FakeHttpAdapter tandoor(String? search, {List<int> all = const []}) =>
+          FakeHttpAdapter((request) {
+            if (request.uri.path.endsWith('/recipe-book/5/')) {
+              return jsonResponse(book(search));
+            }
+            if (request.uri.queryParameters['page_size'] == '200') {
+              return jsonResponse({
+                'count': all.length,
+                'next': null,
+                'previous': null,
+                'results': [
+                  for (final o in overviews)
+                    if (all.contains(o['id'])) o,
+                ],
+              });
+            }
+            return jsonResponse(recipeList);
+          });
+
+      List<Map<String, List<String>>> recipeSearches(FakeHttpAdapter a) => [
+        for (final r in a.requests)
+          if (r.uri.path.endsWith('/api/recipe/')) r.uri.queryParametersAll,
+      ];
+
+      test('is sent with the other filters, without its order', () async {
+        final adapter = tandoor(
+          '{"keywords_or":[1,2],"rating_gte":3,"makenow":true,"query":"",'
+          '"sort_order":"-rating","new":true,"version":"2"}',
+        );
+
+        final page = await TandoorRecipeRepository(client(adapter)).search(
+          const RecipeQuery(
+            savedSearchOfBook: 5,
+            foodIds: {9},
+            sort: RecipeSort.name,
+          ),
+        );
+
+        final query = recipeSearches(adapter).single;
+        expect(query['keywords_or'], ['1', '2']);
+        expect(query['rating_gte'], ['3']);
+        expect(query['makenow'], ['true']);
+        expect(query['foods_and'], ['9']);
+        expect(query['sort_order'], isNot(contains('-rating')));
+        expect(query.keys, isNot(contains('new')));
+        expect(query.keys, isNot(contains('version')));
+        expect(query.keys, isNot(contains('query')));
+        expect(query.keys, isNot(contains('books_or')));
+        expect(page.items, hasLength(3));
+        expect(page.totalCount, 25);
+      });
+
+      test(
+        'keeps what the whole saved search finds when a parameter clashes',
+        () async {
+          final adapter = tandoor('{"keywords_or":[1]}', all: [58, 67]);
+          final repository = TandoorRecipeRepository(client(adapter));
+
+          final first = await repository.search(
+            const RecipeQuery(savedSearchOfBook: 5, anyKeywordIds: {4}),
+            pageSize: 3,
+          );
+          final second = await repository.search(
+            const RecipeQuery(savedSearchOfBook: 5, anyKeywordIds: {4}),
+            page: 2,
+            pageSize: 3,
+          );
+
+          final [ours, all, ours2] = recipeSearches(adapter);
+          // Ours wins in the request; the saved search's alone gives the ids.
+          expect(ours['keywords_or'], ['4']);
+          expect(all['keywords_or'], ['1']);
+          expect(ours2['page'], ['2']);
+          expect([for (final r in first.items) r.id], [58, 67]);
+          expect(first.hasMore, isTrue);
+          expect(first.totalCount, 2);
+          expect(second.items, hasLength(2));
+          // The later page reuses the book and the ids.
+          expect(adapter.requests, hasLength(4));
+        },
+      );
+
+      test('is checked by itself when it changes child matching', () async {
+        final adapter = tandoor(
+          '{"foods_or":[3],"include_children":false}',
+          all: [72],
+        );
+
+        final page = await TandoorRecipeRepository(client(adapter))
+            .search(const RecipeQuery(savedSearchOfBook: 5, foodIds: {9}));
+
+        final [ours, all] = recipeSearches(adapter);
+        expect(ours['foods_or'], ['3']);
+        expect(ours.keys, isNot(contains('include_children')));
+        expect(all['include_children'], ['false']);
+        expect([for (final r in page.items) r.id], [72]);
+      });
+
+      test(
+        'finds nothing for a book without one, or without the book',
+        () async {
+          final none = tandoor(null);
+          final gone = FakeHttpAdapter(
+            (_) => jsonResponse({'detail': 'Not found.'}, status: 404),
+          );
+
+          for (final adapter in [none, gone]) {
+            final page = await TandoorRecipeRepository(client(adapter))
+                .search(const RecipeQuery(savedSearchOfBook: 5));
+
+            expect(page.items, isEmpty);
+            expect(page.hasMore, isFalse);
+            expect(recipeSearches(adapter), isEmpty);
+          }
+        },
+      );
+    });
+
     test('fetches a recipe', () async {
       final adapter = FakeHttpAdapter(
         (_) => jsonResponse(tandoorFixture('recipe_apfelkuchen.json')),

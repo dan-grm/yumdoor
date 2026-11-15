@@ -24,6 +24,7 @@ void main() {
       recipes: repositories.recipes,
       foods: repositories.foods,
       keywords: repositories.keywords,
+      books: repositories.books,
     );
   });
   tearDown(() => repositories.close());
