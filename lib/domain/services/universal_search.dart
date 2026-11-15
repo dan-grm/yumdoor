@@ -38,6 +38,12 @@ import 'text_match.dart';
 ///   (results carry no last-cooked or viewed date), so they are merged like
 ///   relevance: name matches in that order first, then food matches, then
 ///   keyword matches.
+///
+/// A dynamic book holds the recipes added to it and those its saved search
+/// finds. Tandoor can't search for both at once, so with books in the query
+/// each of those searches also runs once per book with the book's saved
+/// search ([RecipeQuery.savedSearchOfBook]; nothing for a book without
+/// one), right after the one for the recipes added to the books.
 class UniversalSearch {
   const UniversalSearch({
     required this.recipes,
@@ -66,9 +72,13 @@ enum _Kind { name, foods, keywords }
 
 /// One of the searches that are merged.
 class _Source {
-  _Source(this.kind);
+  _Source(this.kind, [this.savedSearchOfBook]);
 
   final _Kind kind;
+
+  /// The book whose saved search this source runs instead of the query's
+  /// books; `null` for the recipes added to them.
+  final int? savedSearchOfBook;
   var nextPage = 1;
   var exhausted = false;
 
@@ -84,9 +94,12 @@ class RecipeSearch {
       _matcher = TextMatcher(query.text),
       _sorted = recipeOrder(query.effectiveSort) != null,
       _order = recipeOrder(query.effectiveSort) ?? _sourceOrder {
-    _sources = _text.isEmpty
-        ? [_Source(_Kind.name)]
-        : [for (final kind in _Kind.values) _Source(kind)];
+    _sources = [
+      for (final kind in _text.isEmpty ? [_Kind.name] : _Kind.values) ...[
+        _Source(kind),
+        for (final book in query.bookIds) _Source(kind, book),
+      ],
+    ];
   }
 
   final UniversalSearch _search;
@@ -103,6 +116,10 @@ class RecipeSearch {
   /// Whether [_order] compares anything, rather than keeping the sources in
   /// their order.
   final bool _sorted;
+
+  /// The searches in their order: by kind (name, foods, keywords), each
+  /// first for the recipes added to the query's books, then for each book's
+  /// saved search.
   late final List<_Source> _sources;
 
   /// Recipes already returned, so none is returned twice.
@@ -240,7 +257,7 @@ class RecipeSearch {
 
   /// Loads the next page of [source].
   Future<void> _advance(_Source source) async {
-    final query = await _queryFor({source.kind});
+    final query = await _queryFor({source.kind}, source.savedSearchOfBook);
     if (query == null) {
       source
         ..count = 0
@@ -264,7 +281,9 @@ class RecipeSearch {
     if (page.fromCache) {
       // Only a whole search can come from the cache; offline results mixed
       // into server results would be misleading.
-      if (source.kind != _Kind.name || source.nextPage != 1 || _started) {
+      if (!identical(source, _sources.first) ||
+          source.nextPage != 1 ||
+          _started) {
         throw const OfflineFailure();
       }
       _fromCache = true;
@@ -279,8 +298,19 @@ class RecipeSearch {
   }
 
   /// The query for the recipes that every one of [kinds] matches, or `null`
-  /// if no recipe can match (no food or keyword matches the text).
-  Future<RecipeQuery?> _queryFor(Set<_Kind> kinds) async {
+  /// if no recipe can match (no food or keyword matches the text). With
+  /// [savedSearchOfBook], for those the book's saved search finds instead of
+  /// those added to the query's books.
+  Future<RecipeQuery?> _queryFor(
+    Set<_Kind> kinds, [
+    int? savedSearchOfBook,
+  ]) async {
+    final query = savedSearchOfBook == null
+        ? this.query
+        : this.query.copyWith(
+            bookIds: const {},
+            savedSearchOfBook: savedSearchOfBook,
+          );
     if (_text.isEmpty) return query;
     var result = query.copyWith(text: '');
     if (kinds.contains(_Kind.name)) result = result.copyWith(text: _text);
@@ -356,6 +386,11 @@ class RecipeSearch {
     ];
     if (_sources.any((s) => s.count == null)) return estimate;
     if (counted.length < 2) return estimate;
+    // Overlaps between a book's recipes and those of a saved search can't be
+    // counted without loading them. A book without one finds nothing.
+    if (_sources.any((s) => s.savedSearchOfBook != null && s.count! > 0)) {
+      return estimate;
+    }
 
     // Inclusion–exclusion: |A ∪ B ∪ C| = Σ|A| − Σ|A ∩ B| + |A ∩ B ∩ C|.
     final subsets = <Set<_Kind>>[

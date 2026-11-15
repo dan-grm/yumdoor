@@ -24,6 +24,7 @@ typedef SearchCall = ({
 /// (without child foods) and keywords against the recipe's keywords, in the
 /// order of [recipes], or in the query's order if it has a [RecipeQuery.sort]
 /// that summaries can be compared by (equal ones in the order of [recipes]).
+/// Books match [bookEntries], saved searches [savedSearches].
 /// Like Tandoor, every part of the query must match.
 class FakeRecipeRepository implements RecipeRepository {
   FakeRecipeRepository(Iterable<Recipe> recipes)
@@ -31,6 +32,12 @@ class FakeRecipeRepository implements RecipeRepository {
 
   final Map<int, Recipe> recipes;
   Failure? failure;
+
+  /// The recipes added to each book, by book id.
+  Map<int, Set<int>> bookEntries = {};
+
+  /// The recipes each dynamic book's saved search finds, by book id.
+  Map<int, Set<int>> savedSearches = {};
 
   /// Makes the searches it returns `true` for throw [failure] instead of
   /// all of them.
@@ -110,7 +117,17 @@ class FakeRecipeRepository implements RecipeRepository {
     );
   }
 
-  static bool _matches(Recipe recipe, RecipeQuery query) {
+  bool _matches(Recipe recipe, RecipeQuery query) {
+    if (query.bookIds.isNotEmpty &&
+        !query.bookIds.any(
+          (b) => bookEntries[b]?.contains(recipe.id) ?? false,
+        )) {
+      return false;
+    }
+    if (query.savedSearchOfBook case final book?
+        when !(savedSearches[book]?.contains(recipe.id) ?? false)) {
+      return false;
+    }
     final foods = {
       for (final step in recipe.steps)
         for (final ingredient in step.ingredients) ?ingredient.food?.id,

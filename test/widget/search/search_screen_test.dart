@@ -97,10 +97,13 @@ void main() {
   Finder searchField() => find.byType(TextField);
 
   /// The searches by name (or without text), leaving out the food and
-  /// keyword searches of the universal search.
+  /// keyword searches of the universal search and those for the saved
+  /// searches of books.
   List<SearchCall> nameSearches() => [
     for (final search in recipes.searches)
-      if (search.query.anyFoodIds.isEmpty && search.query.anyKeywordIds.isEmpty)
+      if (search.query.anyFoodIds.isEmpty &&
+          search.query.anyKeywordIds.isEmpty &&
+          search.query.savedSearchOfBook == null)
         search,
   ];
 
@@ -498,7 +501,7 @@ void main() {
 
     await pickFilter(tester, 'Nach Kochbuch filtern', 'Backen');
     expect(location(router), '/search?book=7');
-    expect(recipes.searches.last.query.bookIds, {7});
+    expect(nameSearches().last.query.bookIds, {7});
     expect(find.text('Buch: Backen'), findsOneWidget);
 
     await tapTooltip(tester, 'Nach Kochbuch filtern');
@@ -516,7 +519,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(location(router), '/search?book=7&book=4');
-    expect(recipes.searches.last.query.bookIds, {4, 7});
+    expect(nameSearches().last.query.bookIds, {4, 7});
 
     await tapTooltip(tester, 'Buch: Backen entfernen');
     await tester.pumpAndSettle();
@@ -783,6 +786,7 @@ void main() {
             RecipeBook(id: 7, name: 'Backen'),
             RecipeBook(id: 8, name: 'Schnelle Feierabendküche'),
           ]);
+          recipes.bookEntries = {4: recipes.recipes.keys.toSet()};
           await pumpSearch(
             tester,
             location: '/search?missing=1&book=4&created_by=2',
