@@ -12,6 +12,7 @@ import 'package:yumdoor/domain/models/keyword.dart';
 import 'package:yumdoor/domain/models/ingredient.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
 import 'package:yumdoor/domain/models/recipe_book.dart';
+import 'package:yumdoor/domain/models/recipe_sort.dart';
 import 'package:yumdoor/domain/models/recipe_step.dart';
 import 'package:yumdoor/domain/models/user_ref.dart';
 import 'package:yumdoor/features/search/search_location.dart';
@@ -315,6 +316,49 @@ void main() {
     await tester.pumpAndSettle();
     expect(location(router), '/search');
     expect(find.text('2 Rezepte'), findsOneWidget);
+  });
+
+  testWidgets('changes the sort order and keeps it in the URL', (tester) async {
+    final router = await pumpSearch(tester);
+
+    expect(find.text('Sortiert: nach Name'), findsOneWidget);
+    await tester.tap(find.text('Sortiert: nach Name'));
+    await tester.pumpAndSettle();
+    final sheet = find.byType(BottomSheet);
+    expect(
+      find.descendant(of: sheet, matching: find.text('Sortieren')),
+      findsOneWidget,
+    );
+    // Without text there is nothing to be relevant to.
+    expect(find.text('Passend zur Suche'), findsNothing);
+    expect(
+      find.descendant(of: sheet, matching: find.byIcon(Icons.check_rounded)),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Beste Bewertung'));
+    await tester.pumpAndSettle();
+
+    expect(location(router), '/search?sort=rating');
+    expect(recipes.searches.last.query.sort, RecipeSort.rating);
+    expect(find.text('Sortiert: nach Bewertung'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('offers relevance with text, the default there', (tester) async {
+    final router = await pumpSearch(tester, location: '/search?q=Feta');
+
+    await tester.tap(find.text('Sortiert: passend'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Zufällig'));
+    await tester.pumpAndSettle();
+    expect(location(router), '/search?q=Feta&sort=random');
+
+    await tester.tap(find.text('Sortiert: zufällig'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Passend zur Suche'));
+    await tester.pumpAndSettle();
+    expect(location(router), '/search?q=Feta&sort=relevance');
+    expect(find.text('Sortiert: passend'), findsOneWidget);
   });
 
   testWidgets('adds and removes the rating filter', (tester) async {
@@ -748,6 +792,22 @@ void main() {
           );
         },
       );
+
+      testWidgets('sort sheet in $name', tags: goldenTags, (tester) async {
+        await pumpSearch(
+          tester,
+          location: '/search?q=Feta&sort=last_cooked',
+          theme: theme,
+        );
+        await tester.tap(find.text('Sortiert: zuletzt gekocht'));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        await expectLater(
+          find.byType(MaterialApp),
+          matchesGoldenFile('../goldens/search_sort_$name.png'),
+        );
+      });
     }
   });
 }

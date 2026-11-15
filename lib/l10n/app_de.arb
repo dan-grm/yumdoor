@@ -954,5 +954,33 @@
   "searchBookAllChosen": "Alle deine Bücher sind schon ausgewählt.",
   "@searchBookAllChosen": {
     "description": "Cookbook filter sheet when every book is already a filter."
+  },
+  "searchSortButton": "Sortiert: {sort, select, relevance{passend} name{nach Name} lastCooked{zuletzt gekocht} rating{nach Bewertung} newest{neueste zuerst} recentlyViewed{zuletzt angesehen} random{zufällig} other{passend}}",
+  "@searchSortButton": {
+    "description": "Button next to the result count that opens the sort sheet; shows the current order (mockup 03-suche: 'Sortiert: passend').",
+    "placeholders": {
+      "sort": {
+        "type": "String",
+        "description": "relevance, name, lastCooked, rating, newest, recentlyViewed or random"
+      }
+    }
+  },
+  "searchSortTitle": "Sortieren",
+  "@searchSortTitle": {
+    "description": "Title of the sort sheet."
+  },
+  "searchSortHint": "Zuletzt gekocht, Bewertung und Zuletzt angesehen zählen nur deine eigenen Kochprotokolle und Aufrufe.",
+  "@searchSortHint": {
+    "description": "Under the title of the sort sheet: Tandoor sorts by the user's own cook logs and views."
+  },
+  "searchSortOption": "{sort, select, relevance{Passend zur Suche} name{Name (A–Z)} lastCooked{Zuletzt gekocht} rating{Beste Bewertung} newest{Neueste zuerst} recentlyViewed{Zuletzt angesehen} random{Zufällig} other{Passend zur Suche}}",
+  "@searchSortOption": {
+    "description": "A choice in the sort sheet.",
+    "placeholders": {
+      "sort": {
+        "type": "String",
+        "description": "relevance, name, lastCooked, rating, newest, recentlyViewed or random"
+      }
+    }
   }
 }

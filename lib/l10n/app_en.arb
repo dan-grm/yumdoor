@@ -170,5 +170,9 @@
   "searchCreatorFilter": "Created by {name}",
   "searchOfflineCookableNote": "Offline, what was on hand when a recipe was last opened counts, without substitutes.",
   "searchOfflineBookNote": "Offline, which recipes are in a book isn't known.",
-  "searchBookAllChosen": "All your books are chosen already."
+  "searchBookAllChosen": "All your books are chosen already.",
+  "searchSortButton": "Sorted: {sort, select, relevance{best match} name{by name} lastCooked{last cooked} rating{by rating} newest{newest first} recentlyViewed{recently viewed} random{random} other{best match}}",
+  "searchSortTitle": "Sort",
+  "searchSortHint": "Last cooked, rating and recently viewed count only your own cook logs and views.",
+  "searchSortOption": "{sort, select, relevance{Best match} name{Name (A–Z)} lastCooked{Last cooked} rating{Best rated} newest{Newest first} recentlyViewed{Recently viewed} random{Random} other{Best match}}"
 }

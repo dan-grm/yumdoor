@@ -39,14 +39,20 @@ void main() {
       placeholdersIn('{count, plural, =1{1 Portion} other{{count} Portionen}}'),
       {'count'},
     );
+    expect(
+      placeholdersIn('Sortiert: {sort, select, name{Name} other{passend}}'),
+      {'sort'},
+    );
   });
 }
 
 /// Names of the ICU arguments in an ARB message, e.g. `count` in `{count}` and
-/// in `{count, plural, …}`. Plural and select branches (`=1{…}`, `other{…}`)
-/// are not arguments.
+/// in `{count, plural, …}`. Plural and select branches (`=1{…}`, `other{…}`,
+/// `name{nach Name}`) are not arguments.
 Set<String> placeholdersIn(String message) => {
-  for (final match in RegExp(r'\{\s*(\w+)\s*[,}]').allMatches(message))
+  for (final match in RegExp(
+    r'(?<![\w=])\{\s*(\w+)\s*[,}]',
+  ).allMatches(message))
     match.group(1)!,
 };
 
