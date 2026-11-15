@@ -1267,6 +1267,18 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Offline lässt sich diese gespeicherte Suche nicht anwenden.'**
   String get searchOfflineSavedNote;
+
+  /// Error under the name field when another saved search the user can see has that name.
+  ///
+  /// In de, this message translates to:
+  /// **'Eine gespeicherte Suche mit diesem Namen gibt es schon.'**
+  String get searchSavedNameTaken;
+
+  /// Message when Tandoor refused a saved search's name, most likely because a saved search in the space (perhaps one the user can't see) has it.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht gespeichert. In Tandoor gibt es den Namen vielleicht schon – versuch einen anderen.'**
+  String get searchSavedNameConflict;
 }
 
 class _AppLocalizationsDelegate

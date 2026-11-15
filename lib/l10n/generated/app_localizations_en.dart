@@ -784,4 +784,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get searchOfflineSavedNote =>
       'This saved search can\'t be applied offline.';
+
+  @override
+  String get searchSavedNameTaken =>
+      'A saved search with this name already exists.';
+
+  @override
+  String get searchSavedNameConflict =>
+      'Not saved. The name may already exist in Tandoor – try another one.';
 }

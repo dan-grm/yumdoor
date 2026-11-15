@@ -1098,5 +1098,13 @@
   "searchOfflineSavedNote": "Offline lässt sich diese gespeicherte Suche nicht anwenden.",
   "@searchOfflineSavedNote": {
     "description": "Shown with offline results when a saved search the chips can't show is applied."
+  },
+  "searchSavedNameTaken": "Eine gespeicherte Suche mit diesem Namen gibt es schon.",
+  "searchSavedNameConflict": "Nicht gespeichert. In Tandoor gibt es den Namen vielleicht schon – versuch einen anderen.",
+  "@searchSavedNameTaken": {
+    "description": "Error under the name field when another saved search the user can see has that name."
+  },
+  "@searchSavedNameConflict": {
+    "description": "Message when Tandoor refused a saved search's name, most likely because a saved search in the space (perhaps one the user can't see) has it."
   }
 }

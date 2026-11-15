@@ -174,7 +174,10 @@ shared, created_by}`, paginated. `search` is a JSON **string** of search paramet
 user created or that are shared with them (`shared`, a list of users), dynamic books' filters included (they are
 the same model). The permission is `CustomIsOwner`: only the **creator** can retrieve, change or delete one by id;
 someone it is shared with gets **403** even for `GET /api/custom-filter/<id>/`, but can list it and search with it.
-So Yumdoor reads a filter's `search` from the list. `type` exists on the model but not in the serializer.
+So Yumdoor reads a filter's `search` from the list. `type` exists on the model but not in the serializer. The list
+is ordered by id. **Names are unique per space** (`cf_unique_name_per_space`), including filters the user can't
+see: a taken name is a **500** (`IntegrityError`), not a validation error. Yumdoor refuses the names it can see and
+explains a 500 on save or rename as a probably taken name.
 
 Tandoor's search page (`vue3/src/pages/SearchPage.vue`) saves the parameters that differ from their defaults, in
 snake case, plus `"version": "2"`: `query`, `keywords`/`keywords_and`/…, `foods…`, `books…`, `units`,

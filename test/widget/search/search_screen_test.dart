@@ -907,9 +907,45 @@ void main() {
       expect(find.text('Verwalten'), findsNothing);
     });
 
+    testWidgets('refuses a name that is taken', (tester) async {
+      await pumpSearch(tester, location: '/search?q=Feta');
+
+      await tapTooltip(tester, 'Suche speichern');
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        inDialog(find.byType(TextField)),
+        'Selten gekocht',
+      );
+      await tester.tap(inDialog(find.text('Speichern')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Eine gespeicherte Suche mit diesem Namen gibt es schon.'),
+        findsOneWidget,
+      );
+      expect(savedFilters.created, isEmpty);
+    });
+
+    testWidgets('explains a name Tandoor refused', (tester) async {
+      await pumpSearch(tester, location: '/search?q=Feta');
+      // A saved search the user can't see has the name.
+      savedFilters.failure = const ServerFailure(statusCode: 500);
+
+      await tapTooltip(tester, 'Suche speichern');
+      await tester.pumpAndSettle();
+      await tester.enterText(inDialog(find.byType(TextField)), 'Geheim');
+      await tester.tap(inDialog(find.text('Speichern')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('gibt es den Namen vielleicht schon'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('says why saving failed', (tester) async {
       await pumpSearch(tester, location: '/search?q=Feta');
-      savedFilters.failure = const ServerFailure();
+      savedFilters.failure = const ServerFailure(statusCode: 502);
 
       await tapTooltip(tester, 'Suche speichern');
       await tester.pumpAndSettle();

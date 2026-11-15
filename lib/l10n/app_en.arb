@@ -194,5 +194,7 @@
   "searchSavedDeleteText": "The search is deleted in Tandoor too, for everyone it is shared with. A cookbook using this search then shows only the recipes added to it. No recipes are deleted.",
   "searchSavedDelete": "Delete",
   "searchSavedFilter": "Saved: {name}",
-  "searchOfflineSavedNote": "This saved search can't be applied offline."
+  "searchOfflineSavedNote": "This saved search can't be applied offline.",
+  "searchSavedNameTaken": "A saved search with this name already exists.",
+  "searchSavedNameConflict": "Not saved. The name may already exist in Tandoor – try another one."
 }

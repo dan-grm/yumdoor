@@ -14,6 +14,11 @@ class CachingSavedFilterRepository implements SavedFilterRepository {
 
   final SavedFilterRepository _remote;
   final SavedFilterCache _cache;
+  var _closed = false;
+
+  /// Stops storing lists: the session ended, and logout clears the cache. A
+  /// list that arrives later must not bring the old user's back.
+  void close() => _closed = true;
 
   @override
   Future<List<SavedFilter>> savedFilters() async {
@@ -26,7 +31,7 @@ class CachingSavedFilterRepository implements SavedFilterRepository {
       if (stored == null || stored.isEmpty) rethrow;
       return stored;
     }
-    unawaited(_ignoreErrors(_cache.putAll(filters)));
+    if (!_closed) unawaited(_ignoreErrors(_cache.putAll(filters)));
     return filters;
   }
 

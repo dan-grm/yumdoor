@@ -82,6 +82,18 @@ void main() {
       expect(await cache.all(), listed);
     });
 
+    test('stores nothing once closed', () async {
+      final repository = CachingSavedFilterRepository(
+        FakeSavedFilterRepository(filters),
+        cache,
+      )..close();
+
+      await repository.savedFilters();
+      await pumpEventQueue();
+
+      expect(await cache.all(), isEmpty);
+    });
+
     test('answers from the cache offline', () async {
       await cache.putAll(filters);
       final remote = FakeSavedFilterRepository()

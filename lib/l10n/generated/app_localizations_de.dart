@@ -791,4 +791,12 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get searchOfflineSavedNote =>
       'Offline lässt sich diese gespeicherte Suche nicht anwenden.';
+
+  @override
+  String get searchSavedNameTaken =>
+      'Eine gespeicherte Suche mit diesem Namen gibt es schon.';
+
+  @override
+  String get searchSavedNameConflict =>
+      'Nicht gespeichert. In Tandoor gibt es den Namen vielleicht schon – versuch einen anderen.';
 }

@@ -109,6 +109,9 @@ class TandoorRepositories {
 
   /// Cancels open requests and frees the connection pool.
   void close() {
+    if (savedFilters case final CachingSavedFilterRepository cached) {
+      cached.close();
+    }
     _dio.close(force: true);
     _images?.close();
   }

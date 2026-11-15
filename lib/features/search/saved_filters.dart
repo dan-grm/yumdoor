@@ -16,8 +16,8 @@ import 'search_providers.dart';
 const savedFilterNameLength = 128;
 
 /// Whether [filter] is the search [query] shows.
-/// One that finds every recipe in the default order is never applied:
-/// tapping it would change nothing.
+/// One that finds every recipe in the default order never shows as applied:
+/// it is the plain search, and tapping it shows that.
 bool isSavedFilterApplied(SavedFilter filter, RecipeQuery query) =>
     switch (filter.query) {
       const RecipeQuery() => false,
@@ -76,8 +76,11 @@ class SavedFilterRow extends ConsumerWidget {
                 selected: isSavedFilterApplied(filter, query),
                 onSelected: () => onChange(switch (filter.query) {
                   _ when !isSavedFilterApplied(filter, query) => filter.search,
-                  // Only the saved search goes; what was added to it stays.
-                  null => query.copyWith(savedFilter: null),
+                  // Only the saved search goes; what was added to it stays,
+                  // text typed moments ago too.
+                  null => (current?.call() ?? query).copyWith(
+                    savedFilter: null,
+                  ),
                   _ => const RecipeQuery(),
                 }),
               ),
@@ -114,6 +117,12 @@ class SavedFilterRow extends ConsumerWidget {
       context,
       title: l10n.searchSavedSave,
       hint: l10n.searchSavedSaveHint,
+      taken: {
+        for (final f
+            in container.read(savedFiltersProvider).value ??
+                const <SavedFilter>[])
+          f.name,
+      },
     );
     if (name == null || !context.mounted) return;
     try {
@@ -127,14 +136,21 @@ class SavedFilterRow extends ConsumerWidget {
     } on Failure catch (failure) {
       if (!context.mounted) return;
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.searchSavedFailed(failureMessage(context, failure)),
-          ),
-        ),
+        SnackBar(content: Text(_failedMessage(context, failure))),
       );
     }
   }
+}
+
+/// Why saving or changing a saved search failed. Tandoor answers a name
+/// that another saved search in the space has, which the user may not see,
+/// with a server error (docs/TANDOOR_API.md#saved-searches).
+String _failedMessage(BuildContext context, Failure failure) {
+  final l10n = context.l10n;
+  return switch (failure) {
+    ServerFailure(statusCode: 500) => l10n.searchSavedNameConflict,
+    _ => l10n.searchSavedFailed(failureMessage(context, failure)),
+  };
 }
 
 /// The chip of an applied saved search that the other chips can't show
@@ -354,6 +370,11 @@ class _ManagedFilter extends ConsumerWidget {
       context,
       title: l10n.searchSavedRenameTitle,
       initial: filter.name,
+      taken: {
+        for (final f
+            in ref.read(savedFiltersProvider).value ?? const <SavedFilter>[])
+          if (f.id != filter.id) f.name,
+      },
     );
     if (name == null || name == filter.name || !context.mounted) return;
     final repository = ref.read(savedFilterRepositoryProvider);
@@ -393,7 +414,6 @@ class _ManagedFilter extends ConsumerWidget {
     BuildContext context,
     Future<void> Function() change,
   ) async {
-    final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     // The sheet may be closed when the request returns.
     final container = ProviderScope.containerOf(context, listen: false);
@@ -402,11 +422,7 @@ class _ManagedFilter extends ConsumerWidget {
     } on Failure catch (failure) {
       if (!context.mounted) return;
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.searchSavedFailed(failureMessage(context, failure)),
-          ),
-        ),
+        SnackBar(content: Text(_failedMessage(context, failure))),
       );
       return;
     }
@@ -415,22 +431,31 @@ class _ManagedFilter extends ConsumerWidget {
 }
 
 /// Asks for the name of a saved search; `null` if the dialog was closed.
+/// The names in [taken] are refused: Tandoor allows each name once.
 Future<String?> _askName(
   BuildContext context, {
   required String title,
   String? hint,
   String initial = '',
+  Set<String> taken = const {},
 }) => showDialog<String>(
   context: context,
-  builder: (context) => _NameDialog(title: title, hint: hint, initial: initial),
+  builder: (context) =>
+      _NameDialog(title: title, hint: hint, initial: initial, taken: taken),
 );
 
 class _NameDialog extends StatefulWidget {
-  const _NameDialog({required this.title, this.hint, required this.initial});
+  const _NameDialog({
+    required this.title,
+    this.hint,
+    required this.initial,
+    required this.taken,
+  });
 
   final String title;
   final String? hint;
   final String initial;
+  final Set<String> taken;
 
   @override
   State<_NameDialog> createState() => _NameDialogState();
@@ -438,7 +463,7 @@ class _NameDialog extends StatefulWidget {
 
 class _NameDialogState extends State<_NameDialog> {
   late final _name = TextEditingController(text: widget.initial);
-  var _showEmpty = false;
+  String? _error;
 
   @override
   void dispose() {
@@ -448,8 +473,14 @@ class _NameDialogState extends State<_NameDialog> {
 
   void _submit() {
     final name = _name.text.trim();
-    if (name.isEmpty) {
-      setState(() => _showEmpty = true);
+    final l10n = context.l10n;
+    final error = name.isEmpty
+        ? l10n.searchSavedNameEmpty
+        : widget.taken.contains(name)
+        ? l10n.searchSavedNameTaken
+        : null;
+    if (error != null) {
+      setState(() => _error = error);
       return;
     }
     Navigator.of(context).pop(name);
@@ -477,10 +508,10 @@ class _NameDialogState extends State<_NameDialog> {
             textInputAction: TextInputAction.done,
             decoration: InputDecoration(
               labelText: l10n.searchSavedName,
-              errorText: _showEmpty ? l10n.searchSavedNameEmpty : null,
+              errorText: _error,
             ),
             onChanged: (_) {
-              if (_showEmpty) setState(() => _showEmpty = false);
+              if (_error != null) setState(() => _error = null);
             },
             onSubmitted: (_) => _submit(),
           ),
