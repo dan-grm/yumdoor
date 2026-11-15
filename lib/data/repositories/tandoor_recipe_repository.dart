@@ -48,7 +48,10 @@ class TandoorRecipeRepository implements RecipeRepository {
         return _resultPage(requireBody(response.data));
       });
     }
-    final saved = await _whileWanted(_savedSearch(book), cancel);
+    final saved = await _whileWanted(
+      _savedSearch(book, firstPage: page == 1),
+      cancel,
+    );
     if (saved == null) {
       return const ResultPage(items: [], totalCount: 0, hasMore: false);
     }
@@ -56,7 +59,9 @@ class TandoorRecipeRepository implements RecipeRepository {
       final response = await _list(
         query,
         page,
-        pageSize,
+        // Pages filtered by the ids can come back nearly empty; fewer, larger
+        // ones save round trips. Always, so the pages of a search line up.
+        max(pageSize, _idPageSize),
         cancel,
         extraQuery: saved.mergeable,
       );
@@ -97,13 +102,18 @@ class TandoorRecipeRepository implements RecipeRepository {
       );
 
   /// The saved search of [bookId], `null` if it has none (any more), can't
-  /// be read or the book isn't there (any more).
-  Future<_SavedSearch?> _savedSearch(int bookId) {
+  /// be read or the book isn't there (any more). For a [firstPage], only one
+  /// loaded moments ago is reused: the searches of one universal search
+  /// start together, a new one sees changes made since.
+  Future<_SavedSearch?> _savedSearch(int bookId, {required bool firstPage}) {
     final now = DateTime.now();
     _savedSearches.removeWhere(
       (_, entry) => now.difference(entry.loaded) > _savedSearchLifetime,
     );
-    if (_savedSearches[bookId] case final entry?) return entry.search;
+    if (_savedSearches[bookId] case final entry?
+        when !firstPage || now.difference(entry.loaded) < _sameSearch) {
+      return entry.search;
+    }
     final load = _loadSavedSearch(bookId);
     _savedSearches[bookId] = (loaded: now, search: load);
     // A failed load isn't kept; the caller gets the failure from [load].
@@ -149,6 +159,9 @@ class TandoorRecipeRepository implements RecipeRepository {
             final response = await _api.apiRecipeList(
               page: page,
               pageSize: _idPageSize,
+              // By name, recipes of the same name could swap pages; creation
+              // times hardly ever tie.
+              sortOrder: 'created_at',
               extra: {ExtraQueryInterceptor.paramsKey: saved.all},
             );
             return requireBody<api.PaginatedRecipeOverviewList>(response.data);
@@ -266,8 +279,12 @@ const _idPageSize = 100;
 /// How many of those requests run at once.
 const _idParallelPages = 4;
 
-/// How long a dynamic book's saved search, and what it finds, is reused.
+/// How long a dynamic book's saved search, and what it finds, is reused for
+/// the later pages of a search.
 const _savedSearchLifetime = Duration(minutes: 1);
+
+/// How long it is reused for first pages, which belong to one search.
+const _sameSearch = Duration(seconds: 5);
 
 /// The saved search of a dynamic book (a Tandoor `CustomFilter`): the search
 /// parameters Tandoor stored as JSON, as query parameters.

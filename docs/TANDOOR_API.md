@@ -155,18 +155,17 @@ search parameters (`{"keywords_or": [3], "version": "2"}`, `_resolve_params` in
 `cookbook/helper/recipe_search.py`). Every other parameter except `page`/`page_size` is ignored: `filter=1&query=x`
 returns the same as `filter=1` (checked on 2.6.15). It is ignored if the user can't see the filter (not the
 creator, not shared with them, not on a book shared with them). So Yumdoor never sends `filter` for a dynamic
-book. It reads the book's filter (`GET /api/recipe-book/<id>/`, reused for a minute) and sends the decoded
-`search` parameters next to its own, without the ones that only order or pin
-(`sort_order`, `random`, `new`, `num_recent`, `version`). `keywords`, `foods` and `books` are read only when
-`keywords_or` (and so on) is missing, so they count as the same parameter. Where both use the same parameter
-(Yumdoor's `keywords_or` for search text, say), or an exact value and a range of the same field (`timescooked`
-and `rating` win over their `_gte`/`_lte`, checked on 2.6.15), it sends its own and keeps only the recipes whose
-ids the saved search finds on its own. It does the same if the saved search has `include_children: false`,
-which would change Yumdoor's food and keyword parameters too. Loading those ids takes one request per 100 recipes
-the saved search finds (reused for a minute), and when Yumdoor's parameters are much broader than the saved
-search, most pages filtered that way come back empty. The union of a book's entries and its filter needs separate
-searches; the universal search runs each of its searches (name, foods, keywords) once more per selected book and
-merges them.
+book. It reads the book's filter (`GET /api/recipe-book/<id>/`, once per search) and sends the decoded `search`
+parameters next to its own, without the ones that only order or pin (`sort_order`, `random`, `new`, `num_recent`,
+`version`). `keywords`, `foods` and `books` are read only when `keywords_or` (and so on) is missing, so they count
+as the same parameter. Where both use the same parameter (Yumdoor's `keywords_or` for search text, say), or an
+exact value and a range of the same field (`timescooked` and `rating` win over their `_gte`/`_lte`, checked on
+2.6.15), it sends its own and keeps only the recipes whose ids the saved search finds on its own. It does the same
+if the saved search has `include_children: false`, which would change Yumdoor's food and keyword parameters too.
+Loading those ids takes one request per 100 recipes the saved search finds (sorted by `created_at`, as names can
+tie). When Yumdoor's parameters are much broader than the saved search, most pages filtered that way come back
+empty. The union of a book's entries and its filter needs separate searches: the universal search runs each of its
+searches (name, foods, keywords) once more per selected book and merges them.
 
 Writing a book with a nested `filter` object (`POST`/`PATCH /api/recipe-book/`) **updates that CustomFilter**
 with the fields given (`WritableNestedModelSerializer`): send the whole filter, or its `search` is overwritten.

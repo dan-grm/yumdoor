@@ -205,7 +205,7 @@ void main() {
             if (request.uri.path.endsWith('/recipe-book/5/')) {
               return jsonResponse(book(search));
             }
-            if (request.uri.queryParameters['page_size'] == '100') {
+            if (request.uri.queryParameters['sort_order'] == 'created_at') {
               return jsonResponse({
                 'count': all.length,
                 'next': null,
@@ -293,7 +293,7 @@ void main() {
             return jsonResponse(book('{"keywords_or":[1]}'));
           }
           final params = request.uri.queryParameters;
-          if (params['page_size'] == '100') {
+          if (params['sort_order'] == 'created_at') {
             final page = int.parse(params['page']!);
             return jsonResponse({
               'count': 250,
@@ -316,7 +316,7 @@ void main() {
         expect(
           [
             for (final r in adapter.requests)
-              if (r.uri.queryParameters['page_size'] == '100')
+              if (r.uri.queryParameters['sort_order'] == 'created_at')
                 r.uri.queryParameters['page'],
           ]..sort(),
           ['1', '2', '3'],
@@ -411,7 +411,7 @@ void main() {
           if (request.uri.path.endsWith('/recipe-book/5/')) {
             return jsonResponse(book('{"keywords_or":[1]}'));
           }
-          if (request.uri.queryParameters['page_size'] == '100') {
+          if (request.uri.queryParameters['sort_order'] == 'created_at') {
             return ids.future;
           }
           return jsonResponse(recipeList);
@@ -439,7 +439,9 @@ void main() {
         expect(
           [
             for (final r in adapter.requests)
-              if (r.uri.queryParameters['page_size'] != '25') r.uri.path,
+              if (r.uri.path.endsWith('/recipe-book/5/') ||
+                  r.uri.queryParameters['sort_order'] == 'created_at')
+                r.uri.path,
           ],
           ['/tandoor/api/recipe-book/5/', '/tandoor/api/recipe/'],
         );
