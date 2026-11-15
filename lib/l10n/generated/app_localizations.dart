@@ -476,10 +476,10 @@ abstract class AppLocalizations {
   /// **'Weiter zu Schritt {number}'**
   String cookingNext(int number);
 
-  /// Button on the last step; returns to the recipe.
+  /// Button on the last step; opens the screen to rate the recipe and log it as cooked.
   ///
   /// In de, this message translates to:
-  /// **'Fertig'**
+  /// **'Fertig gekocht'**
   String get cookingDone;
 
   /// Cooking mode for a recipe without steps.
@@ -955,6 +955,78 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Offline lässt sich nicht zählen, wie oft du ein Rezept gekocht hast. Gezeigt werden alle schon gekochten.'**
   String get searchOfflineTimesNote;
+
+  /// Heading of the screen after cooking, where the user rates the recipe.
+  ///
+  /// In de, this message translates to:
+  /// **'Guten Appetit!'**
+  String get cookLogTitle;
+
+  /// Below the heading: the recipe name and the cooked servings, e.g. "Ofenkarotten mit Feta · 4 Portionen".
+  ///
+  /// In de, this message translates to:
+  /// **'{recipe} · {servings}'**
+  String cookLogSubtitle(String recipe, String servings);
+
+  /// Tooltip of the close button on the cook log screen.
+  ///
+  /// In de, this message translates to:
+  /// **'Schließen, ohne zu speichern'**
+  String get cookLogClose;
+
+  /// Card title above the rating stars.
+  ///
+  /// In de, this message translates to:
+  /// **'Wie war\'s?'**
+  String get cookLogRatingQuestion;
+
+  /// Screen-reader label of one rating star button.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Stern} other{{count} Sterne}}'**
+  String cookLogRatingStar(int count);
+
+  /// Label of the comment field.
+  ///
+  /// In de, this message translates to:
+  /// **'Kommentar (optional)'**
+  String get cookLogComment;
+
+  /// Note below the card: every member of the space can read cook log entries.
+  ///
+  /// In de, this message translates to:
+  /// **'Für alle in diesem Tandoor-Space sichtbar'**
+  String get cookLogVisibility;
+
+  /// Saves the rating and comment to the cook log.
+  ///
+  /// In de, this message translates to:
+  /// **'Speichern'**
+  String get cookLogSave;
+
+  /// Returns to the recipe without saving.
+  ///
+  /// In de, this message translates to:
+  /// **'Überspringen'**
+  String get cookLogSkip;
+
+  /// Snackbar after saving a cook log entry.
+  ///
+  /// In de, this message translates to:
+  /// **'Im Kochprotokoll gespeichert'**
+  String get cookLogSaved;
+
+  /// Shown when saving the cook log entry failed; the reason is one of the error messages.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht gespeichert. {reason}'**
+  String cookLogFailed(String reason);
+
+  /// Button on the recipe screen that opens the cook log screen to rate the recipe.
+  ///
+  /// In de, this message translates to:
+  /// **'Als gekocht eintragen'**
+  String get recipeCooked;
 }
 
 class _AppLocalizationsDelegate

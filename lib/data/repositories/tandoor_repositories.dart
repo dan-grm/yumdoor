@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:tandoor_api/tandoor_api.dart' as api;
 
+import '../../domain/repositories/cook_log_repository.dart';
 import '../../domain/repositories/food_repository.dart';
 import '../../domain/repositories/keyword_repository.dart';
 import '../../domain/repositories/recipe_repository.dart';
@@ -8,6 +9,7 @@ import '../api/image_downloader.dart';
 import '../api/tandoor_dio.dart';
 import '../cache/caching_recipe_repository.dart';
 import '../cache/recipe_cache.dart';
+import 'tandoor_cook_log_repository.dart';
 import 'tandoor_food_repository.dart';
 import 'tandoor_keyword_repository.dart';
 import 'tandoor_recipe_repository.dart';
@@ -35,36 +37,45 @@ class TandoorRepositories {
     // An empty interceptor list keeps the generated auth interceptors out;
     // the Dio already has ours.
     final client = api.TandoorApi(dio: dio, interceptors: const []);
+    final apiClient = client.getApiApi();
+    final cookLogs = TandoorCookLogRepository(apiClient);
+    final remoteRecipes = TandoorRecipeRepository(
+      apiClient,
+      lastCooked: cookLogs.lastCooked,
+    );
+    final images = cache == null ? null : ImageDownloader();
     return TandoorRepositories._(
       dio,
-      client.getApiApi(),
-      cache,
-      cache == null ? null : ImageDownloader(),
+      images,
+      recipes: switch (cache) {
+        final cache? => CachingRecipeRepository(
+          remoteRecipes,
+          cache,
+          downloadImage: images?.download,
+        ),
+        null => remoteRecipes,
+      },
+      foods: TandoorFoodRepository(apiClient),
+      keywords: TandoorKeywordRepository(apiClient),
+      cookLogs: cookLogs,
     );
   }
 
   TandoorRepositories._(
     this._dio,
-    api.ApiApi client,
-    RecipeCache? cache,
-    ImageDownloader? images,
-  ) : _images = images,
-      recipes = switch (cache) {
-        final cache? => CachingRecipeRepository(
-          TandoorRecipeRepository(client),
-          cache,
-          downloadImage: images?.download,
-        ),
-        null => TandoorRecipeRepository(client),
-      },
-      foods = TandoorFoodRepository(client),
-      keywords = TandoorKeywordRepository(client);
+    this._images, {
+    required this.recipes,
+    required this.foods,
+    required this.keywords,
+    required this.cookLogs,
+  });
 
   final Dio _dio;
   final ImageDownloader? _images;
   final RecipeRepository recipes;
   final FoodRepository foods;
   final KeywordRepository keywords;
+  final CookLogRepository cookLogs;
 
   /// Cancels open requests and frees the connection pool.
   void close() {

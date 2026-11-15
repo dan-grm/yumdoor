@@ -1,0 +1,65 @@
+{
+  "count": 32,
+  "next": "http://localhost:8080/api/cook-log/?page=2&page_size=3",
+  "previous": null,
+  "timestamp": "2026-11-14T23:33:22.963770+00:00",
+  "results": [
+    {
+      "id": 1,
+      "recipe": 21,
+      "servings": 2,
+      "rating": 4,
+      "comment": null,
+      "created_by": {
+        "id": 2,
+        "username": "anna",
+        "first_name": "Anna",
+        "last_name": "",
+        "display_name": "Anna ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-09-21T22:09:00+02:00",
+      "updated_at": "2026-11-14T23:36:54.866778+01:00"
+    },
+    {
+      "id": 2,
+      "recipe": 13,
+      "servings": 1,
+      "rating": 4,
+      "comment": null,
+      "created_by": {
+        "id": 3,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-09-19T20:20:00+02:00",
+      "updated_at": "2026-11-14T23:36:54.885387+01:00"
+    },
+    {
+      "id": 3,
+      "recipe": 25,
+      "servings": 2,
+      "rating": 2,
+      "comment": "Sehr lecker, gerne wieder!",
+      "created_by": {
+        "id": 2,
+        "username": "anna",
+        "first_name": "Anna",
+        "last_name": "",
+        "display_name": "Anna ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-10-10T21:20:00+02:00",
+      "updated_at": "2026-11-14T23:36:54.903080+01:00"
+    }
+  ]
+}

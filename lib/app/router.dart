@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../design/token_gallery.dart';
 import '../domain/models/session.dart';
 import '../features/auth/login_screen.dart';
+import '../features/cook_log/cook_log_screen.dart';
 import '../features/cooking/cooking_screen.dart';
 import '../features/recipe/recipe_screen.dart';
 import '../features/search/search_location.dart';
@@ -49,12 +50,14 @@ GoRouter router(Ref ref) {
             path: 'cook',
             builder: (context, state) => CookingScreen(
               recipeId: int.parse(state.pathParameters['id']!),
-              servings: switch (int.tryParse(
-                state.uri.queryParameters['servings'] ?? '',
-              )) {
-                final servings? when servings >= 1 => servings,
-                _ => null,
-              },
+              servings: _servings(state),
+            ),
+          ),
+          GoRoute(
+            path: 'cooked',
+            builder: (context, state) => CookLogScreen(
+              recipeId: int.parse(state.pathParameters['id']!),
+              servings: _servings(state),
             ),
           ),
         ],
@@ -72,6 +75,13 @@ GoRouter router(Ref ref) {
   });
   return router;
 }
+
+/// The `?servings=` chosen on the recipe screen, `null` if missing or invalid.
+int? _servings(GoRouterState state) =>
+    switch (int.tryParse(state.uri.queryParameters['servings'] ?? '')) {
+      final servings? when servings >= 1 => servings,
+      _ => null,
+    };
 
 /// Shown while the stored session is read at start.
 const loadingPath = '/loading';

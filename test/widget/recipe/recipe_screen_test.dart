@@ -41,6 +41,10 @@ void main() {
         path: '/recipe/:id/cook',
         builder: (context, state) => Text('cook ${state.uri}'),
       ),
+      GoRoute(
+        path: '/recipe/:id/cooked',
+        builder: (context, state) => Text('cooked ${state.uri}'),
+      ),
     ],
   );
 
@@ -124,6 +128,18 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('cook /recipe/7/cook?servings=3'), findsOneWidget);
+  });
+
+  testWidgets('"Als gekocht eintragen" opens the cook log with the servings', (
+    tester,
+  ) async {
+    await pumpRecipe(tester, ofenkarotten.id);
+
+    await tapTooltip(tester, 'Mehr Portionen');
+    await tester.tap(find.text('Als gekocht eintragen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('cooked /recipe/7/cooked?servings=3'), findsOneWidget);
   });
 
   testWidgets('plan, shop and edit are visible but disabled', (tester) async {

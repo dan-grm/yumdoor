@@ -339,6 +339,53 @@ final class KeywordRepositoryProvider
 
 String _$keywordRepositoryHash() => r'a633677536f5557907df87100c1a693fdb7ab388';
 
+@ProviderFor(cookLogRepository)
+final cookLogRepositoryProvider = CookLogRepositoryProvider._();
+
+final class CookLogRepositoryProvider
+    extends
+        $FunctionalProvider<
+          CookLogRepository,
+          CookLogRepository,
+          CookLogRepository
+        >
+    with $Provider<CookLogRepository> {
+  CookLogRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'cookLogRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$cookLogRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<CookLogRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  CookLogRepository create(Ref ref) {
+    return cookLogRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(CookLogRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<CookLogRepository>(value),
+    );
+  }
+}
+
+String _$cookLogRepositoryHash() => r'4e01e62ad29f61ec7df5384d170d59bf17f1707b';
+
 @ProviderFor(_cacheDatabase)
 final _cacheDatabaseProvider = _CacheDatabaseProvider._();
 

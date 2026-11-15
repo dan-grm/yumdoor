@@ -116,8 +116,8 @@ foods the recipe contains.
 
 **Times cooked:** `timescooked_lte` adds `.exclude(favorite=0)` (`managers.py:179`), so it never returns recipes
 cooked 0 times; "never cooked" is `timescooked=0` (exact, which also wins over `_gte`/`_lte`). Overviews carry no cook
-count, so the offline cache can only separate cooked (`lastCooked` set) from never cooked; "at least n times" offline
-shows every recipe cooked at least once.
+count, so the offline cache can only separate cooked (`lastCooked` set, filled in from the cook log when a recipe is
+opened) from never cooked; "at least n times" offline shows every recipe cooked at least once.
 
 **Mismatch with our assumption:** `rating`, `lastcooked` and `timescooked` are computed **only from the requesting
 user's own cook logs** (`managers.py:51-75`), not the household's or the space's. "Highly rated" in search means
@@ -160,11 +160,21 @@ in the request are ignored.
 
 ## Cook log (ratings, comments, feed)
 
-- `CookLog` fields: `recipe`, `servings` (integer), `rating` (integer, nullable), `comment` (text, nullable),
-  `created_by`, `created_at` (settable, defaults to now) (`cookbook/models.py:1492`).
+- `CookLog` fields: `recipe`, `servings` (integer, nullable), `rating` (integer, nullable), `comment` (text,
+  nullable), `created_by`, `created_at` (settable, defaults to now) (`cookbook/models.py:1492`).
+  `POST /api/cook-log/` with `{recipe, servings, rating?, comment?}` creates an entry for the caller (201).
+- **`rating` is not validated:** the server stores any integer (`6` and `0` are accepted). Yumdoor only sends 1–5
+  (`NewCookLog`).
 - `GET /api/cook-log/` returns the **whole space**, readable by every member; only the owner or an admin may
-  edit or delete. The only filter is `recipe`. Ordering is by **id ascending** with no ordering parameter, so a
-  newest-first feed reads `count` and then fetches pages from the end. `page_size` max 200.
+  edit or delete (others get 403). The only filter is `recipe`. Ordering is by **id ascending** with no ordering
+  parameter, so a newest-first feed reads `count` and then fetches pages from the end. `page_size` max 200.
+- **`last_cooked` on recipes is always `null`** in 2.6.15, in the list and the detail: the queryset annotates
+  `lastcooked` (`managers.py:60`), but `RecipeSerializer` reads `last_cooked`. The `cookedon_*` filters and the
+  `lastcooked` sort order work. Yumdoor reads the recipe's cook log instead (`GET /api/cook-log/?recipe=<id>`,
+  newest pages first, at most 300 entries back) and takes the caller's newest `created_at`; search results
+  have no last-cooked date. `rating` on recipes works (the caller's own average).
+- There is no "current user" endpoint. `GET /api/user-preference/` returns only the caller's own preferences
+  (`views/api.py:795`), each with the `user`, for every user.
 - The legacy `Comment` model has no API in v2. Comments live in `CookLog.comment`, as assumed.
 - **Mismatch with the mockups:** CookLog has **no image field**. Screen 08 ("Fertig gekocht") shows a photo; that
   is not possible in 2.6.15 without a workaround, so Yumdoor drops the photo (see the roadmap, M2).

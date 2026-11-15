@@ -69,6 +69,18 @@ void main() {
       expect(await cache.get(7), _karotten);
     });
 
+    test('keeps the stored last cooked date when none came', () async {
+      // The cook log couldn't be read this time.
+      await fetch(8);
+      remote.recipes[8] = _suppe.copyWith(lastCooked: null, rating: 4);
+
+      await fetch(8);
+
+      final stored = await cache.get(8);
+      expect(stored?.lastCooked, _suppe.lastCooked);
+      expect(stored?.rating, 4);
+    });
+
     test('falls back to the stored copy when offline', () async {
       await fetch(7);
       remote.failure = const OfflineFailure();

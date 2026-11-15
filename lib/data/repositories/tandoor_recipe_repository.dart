@@ -2,19 +2,26 @@ import 'package:built_collection/built_collection.dart';
 import 'package:tandoor_api/tandoor_api.dart' as api;
 
 import '../../core/cancellation.dart';
+import '../../core/failures.dart';
 import '../../domain/models/recipe.dart';
 import '../../domain/models/recipe_query.dart';
 import '../../domain/models/recipe_summary.dart';
 import '../../domain/models/result_page.dart';
+import '../../domain/repositories/cook_log_repository.dart';
 import '../../domain/repositories/recipe_repository.dart';
 import '../api/api_failures.dart';
 import '../mappers/mapping.dart';
 import '../mappers/recipe_mapper.dart';
 
 class TandoorRecipeRepository implements RecipeRepository {
-  TandoorRecipeRepository(this._api);
+  TandoorRecipeRepository(this._api, {this.lastCooked});
 
   final api.ApiApi _api;
+
+  /// When the current user last cooked a recipe. Tandoor 2.6.15 sends
+  /// `last_cooked: null` on every recipe, so [fetchRecipe] asks this instead
+  /// (see [CookLogRepository.lastCooked]).
+  final Future<DateTime?> Function(int recipeId)? lastCooked;
 
   @override
   Future<ResultPage<RecipeSummary>> search(
@@ -59,8 +66,23 @@ class TandoorRecipeRepository implements RecipeRepository {
   });
 
   @override
-  Future<Recipe> fetchRecipe(int id) => guardRequest(() async {
-    final response = await _api.apiRecipeRetrieve(id: id);
-    return requireBody(response.data).toDomain();
-  });
+  Future<Recipe> fetchRecipe(int id) async {
+    // In parallel with the recipe. It's a detail: if it fails, the recipe
+    // is shown without it.
+    final cooked = _lastCooked(id);
+    final recipe = await guardRequest(() async {
+      final response = await _api.apiRecipeRetrieve(id: id);
+      return requireBody(response.data).toDomain();
+    });
+    if (recipe.lastCooked != null) return recipe;
+    return recipe.copyWith(lastCooked: await cooked);
+  }
+
+  Future<DateTime?> _lastCooked(int id) async {
+    try {
+      return await lastCooked?.call(id);
+    } on Failure {
+      return null;
+    }
+  }
 }

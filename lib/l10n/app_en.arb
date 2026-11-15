@@ -63,7 +63,7 @@
   "cookingForServings": "for {servings}",
   "cookingPrevious": "Back to step {number}",
   "cookingNext": "Next: step {number}",
-  "cookingDone": "Done",
+  "cookingDone": "Done cooking",
   "cookingNoSteps": "This recipe has no steps.",
   "cookingScreenOn": "Screen stays on",
   "cookingScreenOff": "Keep screen on",
@@ -142,5 +142,17 @@
   "searchTimesOften": "Often cooked (5 times or more)",
   "searchTimesNeverFilter": "Never cooked by you",
   "searchTimesMinFilter": "Cooked by you {count}+ times",
-  "searchOfflineTimesNote": "Offline, how often you cooked a recipe isn't known. Showing every recipe you've cooked."
+  "searchOfflineTimesNote": "Offline, how often you cooked a recipe isn't known. Showing every recipe you've cooked.",
+  "cookLogTitle": "Enjoy your meal!",
+  "cookLogSubtitle": "{recipe} · {servings}",
+  "cookLogClose": "Close without saving",
+  "cookLogRatingQuestion": "How was it?",
+  "cookLogRatingStar": "{count, plural, =1{1 star} other{{count} stars}}",
+  "cookLogComment": "Comment (optional)",
+  "cookLogVisibility": "Visible to everyone in this Tandoor space",
+  "cookLogSave": "Save",
+  "cookLogSkip": "Skip",
+  "cookLogSaved": "Saved to the cook log",
+  "cookLogFailed": "Not saved. {reason}",
+  "recipeCooked": "Log as cooked"
 }

@@ -22,6 +22,7 @@ import '../common/failure_view.dart';
 import '../common/layout.dart';
 import '../common/markdown_text.dart';
 import '../common/step_text.dart';
+import '../cook_log/cook_log_screen.dart';
 import '../recipe/ingredient_lines.dart';
 import '../recipe/recipe_providers.dart';
 import 'cooking_providers.dart';
@@ -85,15 +86,26 @@ class _CookingScreenState extends ConsumerState<CookingScreen> {
       ? unawaited(_wakeLock.release())
       : unawaited(_keepScreenOn());
 
-  /// "Fertig": the ticked-off ingredients are forgotten.
-  void _finish() {
+  int _servingsOf(Recipe recipe) =>
+      widget.servings ?? math.max(recipe.servings, 1);
+
+  /// "Fertig gekocht": the ticked-off ingredients and timers are forgotten,
+  /// and the cook log screen takes this screen's place.
+  void _finish(int servings) {
     ref
         .read(cookingProgressControllerProvider(widget.recipeId).notifier)
         .forget();
     ref
         .read(cookingTimersControllerProvider(widget.recipeId).notifier)
         .forget();
-    _leave();
+    final location = cookLogLocation(widget.recipeId, servings);
+    // Opened directly, there's nothing below to replace; `go` puts the
+    // recipe below it.
+    if (context.canPop()) {
+      context.pushReplacement(location);
+    } else {
+      context.go(location);
+    }
   }
 
   void _leave() => context.canPop()
@@ -121,13 +133,13 @@ class _CookingScreenState extends ConsumerState<CookingScreen> {
           child: switch (recipe) {
             AsyncData(:final value) => _CookingView(
               recipe: value,
-              servings: widget.servings ?? math.max(value.servings, 1),
+              servings: _servingsOf(value),
               closeButton: closeButton,
               wakeLockButton: _WakeLockButton(
                 status: _wakeLockStatus,
                 onToggle: _toggleWakeLock,
               ),
-              onDone: _finish,
+              onDone: () => _finish(_servingsOf(value)),
             ),
             AsyncError(:final error) => Column(
               crossAxisAlignment: CrossAxisAlignment.start,

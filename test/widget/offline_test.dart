@@ -67,14 +67,19 @@ void main() {
       expect(find.text(_banner), findsOneWidget);
       expect(find.text('Ofenkarotten mit Feta'), findsOneWidget);
       // Visible, disabled, and each one says why.
-      for (final label in ['Planen', 'Einkaufen', 'Bearbeiten']) {
+      for (final label in [
+        'Als gekocht eintragen',
+        'Planen',
+        'Einkaufen',
+        'Bearbeiten',
+      ]) {
         final button = find.ancestor(
           of: find.text(label),
           matching: find.byType(TextButton),
         );
         expect(tester.widget<TextButton>(button).onPressed, isNull);
       }
-      expect(find.byTooltip(_writeDisabled), findsNWidgets(3));
+      expect(find.byTooltip(_writeDisabled), findsNWidgets(4));
       expect(find.text(_writeDisabled), findsOneWidget);
       expect(find.textContaining('kommen bald'), findsNothing);
 
