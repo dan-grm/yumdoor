@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../platform/connectivity/connectivity_service.dart';
 import '../platform/csrf/csrf_token_source.dart';
+import '../platform/image_picker/image_picker_service.dart';
 import '../platform/link_opener/link_opener.dart';
 import '../platform/local_store/local_store.dart';
 import '../platform/timers/timer_alert_service.dart';
@@ -43,6 +44,13 @@ ConnectivityService connectivityService(Ref ref) {
 
 @Riverpod(keepAlive: true)
 LinkOpener linkOpener(Ref ref) => LinkOpener();
+
+@Riverpod(keepAlive: true)
+ImagePickerService imagePickerService(Ref ref) {
+  final service = ImagePickerService();
+  ref.onDispose(service.dispose);
+  return service;
+}
 
 @Riverpod(keepAlive: true)
 LocalStore localStore(Ref ref) => LocalStore();

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/platform/connectivity/connectivity_service.dart';
+import 'package:yumdoor/platform/image_picker/image_picker_service.dart';
 import 'package:yumdoor/platform/link_opener/link_opener.dart';
 import 'package:yumdoor/platform/local_store/local_store.dart';
 import 'package:yumdoor/platform/timers/timer_alert_service.dart';
@@ -182,5 +183,42 @@ void alertChannelsContract(AlertChannels Function() create) {
 
   test('closing notifications without any is fine', () async {
     await create().closeNotifications();
+  });
+}
+
+/// Without a user: picking needs a gesture, so only the capabilities and the
+/// drop target's lifecycle are checked.
+void imagePickerContract(ImagePickerService Function() create) {
+  test('reports its capabilities without throwing', () {
+    final picker = create();
+    addTearDown(picker.dispose);
+
+    expect(picker.canUseCamera, isA<bool>());
+    expect(picker.supportsDrop, isA<bool>());
+  });
+
+  test(
+    'drops emit nothing on their own and can be listened to again',
+    () async {
+      final picker = create();
+      addTearDown(picker.dispose);
+      final events = <ImageDropEvent>[];
+
+      var subscription = picker.drops.listen(events.add);
+      await pumpEventQueue();
+      await subscription.cancel();
+      subscription = picker.drops.listen(events.add);
+      await pumpEventQueue();
+      await subscription.cancel();
+
+      expect(events, isEmpty);
+    },
+  );
+
+  test('dispose while listening for drops is fine', () async {
+    final picker = create();
+    picker.drops.listen((_) {});
+    await pumpEventQueue();
+    picker.dispose();
   });
 }

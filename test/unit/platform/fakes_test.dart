@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/app/platform_providers.dart';
+import 'package:yumdoor/platform/image_picker/image_picker_service.dart';
 import 'package:yumdoor/platform/wake_lock/wake_lock_service.dart';
 
 import '../../fakes/fake_alert_channels.dart';
 import '../../fakes/fake_connectivity_service.dart';
+import '../../fakes/fake_image_picker_service.dart';
 import '../../fakes/fake_link_opener.dart';
 import '../../fakes/in_memory_local_store.dart';
 import '../../fakes/fake_wake_lock_service.dart';
@@ -75,8 +77,56 @@ void main() {
     });
   });
 
+  group('FakeImagePickerService', () {
+    imagePickerContract(FakeImagePickerService.new);
+
+    test('returns the next pick and records the source', () async {
+      final picker = FakeImagePickerService(
+        nextPick: checkImage(name: 'a.png', bytes: pngBytes),
+      );
+
+      expect(await picker.pickFromCamera(), isA<PickedImage>());
+      picker.nextPick = null;
+      expect(await picker.pickFile(), isNull);
+      expect(picker.picks, ['camera', 'file']);
+    });
+
+    test('delivers drops only while listened to', () async {
+      final picker = FakeImagePickerService();
+      final events = <ImageDropEvent>[];
+
+      picker.drop('ignored.png', pngBytes);
+      final subscription = picker.drops.listen(events.add);
+      expect(picker.isDropTarget, isTrue);
+      picker
+        ..hover(isOver: true)
+        ..drop('a.png', pngBytes);
+      await subscription.cancel();
+
+      expect(picker.isDropTarget, isFalse);
+      expect(events, [
+        isA<ImageDragHover>().having((e) => e.isOver, 'isOver', isTrue),
+        isA<ImageDragHover>().having((e) => e.isOver, 'isOver', isFalse),
+        isA<ImageDropped>().having((e) => e.result.name, 'name', 'a.png'),
+      ]);
+    });
+  });
+
+  group('native ImagePickerService', () {
+    imagePickerContract(ImagePickerService.new);
+
+    test('offers nothing and picks nothing', () async {
+      final picker = ImagePickerService();
+      expect(picker.canUseCamera, isFalse);
+      expect(picker.supportsDrop, isFalse);
+      expect(await picker.pickFromCamera(), isNull);
+      expect(await picker.pickFile(), isNull);
+    });
+  });
+
   test('providers can be overridden with the fakes', () {
     final wakeLock = FakeWakeLockService();
+    final imagePicker = FakeImagePickerService();
     final container = ProviderContainer(
       overrides: [
         tokenStoreProvider.overrideWithValue(InMemoryTokenStore()),
@@ -84,12 +134,14 @@ void main() {
         connectivityServiceProvider.overrideWithValue(
           FakeConnectivityService(isOnline: false),
         ),
+        imagePickerServiceProvider.overrideWithValue(imagePicker),
       ],
     );
     addTearDown(container.dispose);
 
     expect(container.read(wakeLockServiceProvider), same(wakeLock));
     expect(container.read(connectivityServiceProvider).isOnline, isFalse);
+    expect(container.read(imagePickerServiceProvider), same(imagePicker));
   });
 
   test('the native stubs are what the VM gets by default', () async {
@@ -99,5 +151,8 @@ void main() {
     final wakeLock = container.read(wakeLockServiceProvider);
     expect(await wakeLock.acquire(), WakeLockStatus.unsupported);
     expect(container.read(connectivityServiceProvider).isOnline, isTrue);
+    final imagePicker = container.read(imagePickerServiceProvider);
+    expect(imagePicker.supportsDrop, isFalse);
+    expect(await imagePicker.pickFile(), isNull);
   });
 }
