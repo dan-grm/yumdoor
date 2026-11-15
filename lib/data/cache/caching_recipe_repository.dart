@@ -60,7 +60,10 @@ class CachingRecipeRepository implements RecipeRepository {
     } on OfflineFailure {
       // Offline results come as one page; a later page can't fall back.
       if (page != 1) rethrow;
-      final recipes = await _cache.all();
+      // Which books a recipe is in isn't stored; nothing is known to match.
+      final recipes = query.bookIds.isEmpty
+          ? await _cache.all()
+          : const <Recipe>[];
       if (cancel?.isCancelled ?? false) throw const CancelledFailure();
       final text = TextMatcher(query.text);
       final items = [
@@ -140,8 +143,6 @@ bool _matches(Recipe recipe, RecipeQuery query, TextMatcher text) {
     final missing = foods.where((f) => !f.onHand && !f.ignoreShopping);
     if (missing.length > max) return false;
   }
-  // Which books a recipe is in isn't stored; nothing is known to match.
-  if (query.bookIds.isNotEmpty) return false;
   return true;
 }
 

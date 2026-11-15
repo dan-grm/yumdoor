@@ -550,7 +550,7 @@
   },
   "pickerEmpty": "Nichts gefunden",
   "@pickerEmpty": {
-    "description": "Empty state of the ingredient and keyword pickers."
+    "description": "Empty state of the ingredient, keyword and creator pickers."
   },
   "markdownLinkTitle": "Link öffnen?",
   "@markdownLinkTitle": {

@@ -7,7 +7,7 @@ import '../mappers/book_mapper.dart';
 import '../mappers/mapping.dart';
 
 /// Books per request; the most Tandoor's default pagination allows.
-const _pageSize = 100;
+const _pageSize = 200;
 
 class TandoorBookRepository implements BookRepository {
   TandoorBookRepository(this._api);

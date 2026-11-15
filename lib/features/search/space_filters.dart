@@ -64,7 +64,7 @@ List<Widget> spaceFilterChips(
           title: l10n.searchBookTitle,
           hint: l10n.searchBookHint,
           // Chosen books aren't offered again.
-          empty: query.bookIds.isEmpty
+          empty: (ref) => (ref.read(recipeBooksProvider).value ?? []).isEmpty
               ? l10n.searchBookEmpty
               : l10n.searchBookAllChosen,
           options: (ref) => ref
@@ -97,6 +97,7 @@ List<Widget> spaceFilterChips(
           final id = await showLoadingOptionSheet<int>(
             context,
             title: l10n.searchCreatorTitle,
+            empty: (_) => l10n.pickerEmpty,
             options: (ref) => ref
                 .watch(spaceUsersProvider)
                 .whenData(

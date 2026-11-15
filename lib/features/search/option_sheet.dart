@@ -23,14 +23,14 @@ Future<T?> showOptionSheet<T>(
 
 /// Like [showOptionSheet] for options that are loaded: [options] watches
 /// them, [retry] loads them again after an error, and [empty] says why there
-/// are none.
+/// are none once they have loaded.
 Future<T?> showLoadingOptionSheet<T>(
   BuildContext context, {
   required String title,
   String? hint,
   required AsyncValue<List<SheetOption<T>>> Function(WidgetRef ref) options,
   void Function(WidgetRef ref)? retry,
-  String? empty,
+  String Function(WidgetRef ref)? empty,
 }) {
   final t = context.tokens;
   return showModalBottomSheet<T>(
@@ -63,13 +63,13 @@ class _OptionSheet<T> extends ConsumerWidget {
   final String? hint;
   final AsyncValue<List<SheetOption<T>>> Function(WidgetRef ref) options;
   final void Function(WidgetRef ref)? retry;
-  final String? empty;
+  final String Function(WidgetRef ref)? empty;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
     final hint = this.hint;
-    final empty = this.empty;
+    final empty = this.empty?.call(ref);
     return SafeArea(
       child: SingleChildScrollView(
         padding: EdgeInsets.fromLTRB(t.space5, 0, t.space5, t.space4),

@@ -463,7 +463,8 @@ void main() {
 
   testWidgets('the book sheet says when there are no books', (tester) async {
     books = FakeBookRepository();
-    await pumpSearch(tester);
+    // A link with a book that isn't (any longer) the user's.
+    await pumpSearch(tester, location: '/search?book=4');
 
     await tapTooltip(tester, 'Nach Kochbuch filtern');
     await tester.pumpAndSettle();

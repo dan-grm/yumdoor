@@ -62,6 +62,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// Shows [query] with the text as typed, replacing the current history
   /// entry so typing doesn't fill the browser history.
   void _show(RecipeQuery query) {
+    // A filter sheet may answer after the screen has gone.
+    if (!mounted) return;
     _debounce?.cancel();
     final location = searchLocation(query.copyWith(text: _text.text.trim()));
     Router.neglect(context, () => context.go(location));

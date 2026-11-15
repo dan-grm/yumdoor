@@ -680,7 +680,7 @@ abstract class AppLocalizations {
   /// **'Untergeordnete Zutaten zählen mit.'**
   String get pickerFoodNote;
 
-  /// Empty state of the ingredient and keyword pickers.
+  /// Empty state of the ingredient, keyword and creator pickers.
   ///
   /// In de, this message translates to:
   /// **'Nichts gefunden'**
