@@ -2,10 +2,16 @@ import 'dart:async';
 
 import 'package:yumdoor/core/cancellation.dart';
 import 'package:yumdoor/core/failures.dart';
+import 'package:yumdoor/domain/models/food.dart';
+import 'package:yumdoor/domain/models/ingredient.dart';
+import 'package:yumdoor/domain/models/keyword.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
+import 'package:yumdoor/domain/models/recipe_draft.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
+import 'package:yumdoor/domain/models/recipe_step.dart';
 import 'package:yumdoor/domain/models/recipe_summary.dart';
 import 'package:yumdoor/domain/models/result_page.dart';
+import 'package:yumdoor/domain/models/unit.dart';
 import 'package:yumdoor/domain/repositories/recipe_repository.dart';
 import 'package:yumdoor/domain/services/recipe_order.dart';
 
@@ -64,6 +70,74 @@ class FakeRecipeRepository implements RecipeRepository {
     fetchCount++;
     if (failure case final failure?) throw failure;
     return recipes[id] ?? (throw const NotFoundFailure());
+  }
+
+  /// The drafts saved, with the recipe id (`null` for a new one), in order.
+  final saves = <({int? id, RecipeDraft draft})>[];
+
+  @override
+  Future<Recipe> createRecipe(RecipeDraft draft) async {
+    saves.add((id: null, draft: draft));
+    if (failure case final failure?) throw failure;
+    final id = recipes.keys.fold(0, (a, b) => a > b ? a : b) + 1;
+    return recipes[id] = _fromDraft(id, draft);
+  }
+
+  @override
+  Future<Recipe> updateRecipe(int id, RecipeDraft draft) async {
+    saves.add((id: id, draft: draft));
+    if (failure case final failure?) throw failure;
+    final recipe = recipes[id] ?? (throw const NotFoundFailure());
+    return recipes[id] = _fromDraft(id, draft, recipe);
+  }
+
+  /// [draft] as saved over [recipe], with new ids for new steps and
+  /// ingredients and for new foods, units and keywords.
+  Recipe _fromDraft(int id, RecipeDraft draft, [Recipe? recipe]) {
+    var nextId = 100000 + saves.length * 1000;
+    int idOf(int? id) => id ?? nextId++;
+    return (recipe ?? Recipe(id: id, name: draft.name)).copyWith(
+      name: draft.name,
+      description: draft.description,
+      servings: draft.servings,
+      servingsText: draft.servingsText,
+      workingTime: draft.workingTime,
+      waitingTime: draft.waitingTime,
+      keywords: [
+        for (final k in draft.keywords) Keyword(id: idOf(k.id), name: k.name),
+      ],
+      sourceUrl: draft.sourceUrl,
+      steps: [
+        for (final (order, step) in draft.steps.indexed)
+          RecipeStep(
+            id: idOf(step.id),
+            name: step.name,
+            instruction: step.instruction,
+            time: step.time,
+            order: order,
+            ingredients: [
+              for (final (order, i) in step.ingredients.indexed)
+                Ingredient(
+                  id: idOf(i.id),
+                  food: switch (i.food) {
+                    final f? => Food(id: idOf(f.id), name: f.name),
+                    null => null,
+                  },
+                  unit: switch (i.unit) {
+                    final u? => Unit(id: idOf(u.id), name: u.name),
+                    null => null,
+                  },
+                  amount: i.amount,
+                  noAmount: i.noAmount,
+                  isHeader: i.isHeader,
+                  note: i.note,
+                  originalText: i.originalText,
+                  order: order,
+                ),
+            ],
+          ),
+      ],
+    );
   }
 
   @override

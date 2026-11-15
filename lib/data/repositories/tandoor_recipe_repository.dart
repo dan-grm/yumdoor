@@ -8,6 +8,7 @@ import 'package:tandoor_api/tandoor_api.dart' as api;
 import '../../core/cancellation.dart';
 import '../../core/failures.dart';
 import '../../domain/models/recipe.dart';
+import '../../domain/models/recipe_draft.dart';
 import '../../domain/models/recipe_query.dart';
 import '../../domain/models/recipe_summary.dart';
 import '../../domain/models/result_page.dart';
@@ -16,6 +17,7 @@ import '../../domain/repositories/recipe_repository.dart';
 import '../api/api_failures.dart';
 import '../api/extra_query_interceptor.dart';
 import '../mappers/mapping.dart';
+import '../mappers/recipe_draft_mapper.dart';
 import '../mappers/recipe_mapper.dart';
 import '../mappers/recipe_sort_mapper.dart';
 
@@ -300,6 +302,29 @@ class TandoorRecipeRepository implements RecipeRepository {
     final cooked = _lastCooked(id);
     final recipe = await guardRequest(() async {
       final response = await _api.apiRecipeRetrieve(id: id);
+      return requireBody(response.data).toDomain();
+    });
+    if (recipe.lastCooked != null) return recipe;
+    return recipe.copyWith(lastCooked: await cooked);
+  }
+
+  @override
+  Future<Recipe> createRecipe(RecipeDraft draft) => guardRequest(() async {
+    final response = await _api.apiRecipeCreate(recipe: draft.toApiRecipe());
+    return requireBody(response.data).toDomain();
+  });
+
+  @override
+  Future<Recipe> updateRecipe(int id, RecipeDraft draft) async {
+    final cooked = _lastCooked(id);
+    // A PATCH, so the fields a draft doesn't hold stay as they are
+    // (docs/TANDOOR_API.md#recipe-writes). The response is the recipe as
+    // saved, like a fetch.
+    final recipe = await guardRequest(() async {
+      final response = await _api.apiRecipePartialUpdate(
+        id: id,
+        patchedRecipe: draft.toPatchedRecipe(),
+      );
       return requireBody(response.data).toDomain();
     });
     if (recipe.lastCooked != null) return recipe;

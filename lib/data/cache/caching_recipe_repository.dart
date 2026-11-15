@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import '../../core/cancellation.dart';
 import '../../core/failures.dart';
 import '../../domain/models/recipe.dart';
+import '../../domain/models/recipe_draft.dart';
 import '../../domain/models/recipe_query.dart';
 import '../../domain/models/recipe_sort.dart';
 import '../../domain/models/recipe_summary.dart';
@@ -85,6 +86,29 @@ class CachingRecipeRepository implements RecipeRepository {
         fromCache: true,
       );
     }
+  }
+
+  /// Saves go to the server only; offline they fail with [OfflineFailure]
+  /// (offline is read-only). The saved recipe is stored before they return.
+  @override
+  Future<Recipe> createRecipe(RecipeDraft draft) async {
+    final recipe = await _remote.createRecipe(draft);
+    await _ignoreErrors(_store(recipe));
+    return recipe;
+  }
+
+  @override
+  Future<Recipe> updateRecipe(int id, RecipeDraft draft) async {
+    final Recipe recipe;
+    try {
+      recipe = await _remote.updateRecipe(id, draft);
+    } on NotFoundFailure {
+      // Deleted, or no longer shared with the user.
+      await _ignoreErrors(_cache.remove(id));
+      rethrow;
+    }
+    await _ignoreErrors(_store(recipe));
+    return recipe;
   }
 
   /// Views are only recorded online; offline there is nothing to record
