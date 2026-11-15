@@ -38,6 +38,35 @@ void main() {
     ]);
   });
 
+  test('an exact extra query parameter clashes with a range', () async {
+    final adapter = FakeHttpAdapter((_) => jsonResponse({}));
+    final dio = createTandoorDio(serverUrl)..httpClientAdapter = adapter;
+
+    final response = await dio.get<Object?>(
+      '/api/recipe/',
+      queryParameters: {'timescooked': '0', 'rating_gte': '4'},
+      options: Options(
+        extra: {
+          ExtraQueryInterceptor.paramsKey: <String, Object>{
+            'timescooked_gte': '3',
+            'rating': '2',
+            'cookedon_gte': '2026-01-01',
+          },
+        },
+      ),
+    );
+
+    expect(adapter.requests.single.uri.queryParameters, {
+      'timescooked': '0',
+      'rating_gte': '4',
+      'cookedon_gte': '2026-01-01',
+    });
+    expect(response.requestOptions.extra[ExtraQueryInterceptor.skippedKey], [
+      'timescooked_gte',
+      'rating',
+    ]);
+  });
+
   group('CSRF token', () {
     test('goes with unsafe requests only', () async {
       final adapter = FakeHttpAdapter((_) => jsonResponse({}));

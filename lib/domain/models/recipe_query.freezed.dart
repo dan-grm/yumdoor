@@ -37,11 +37,11 @@ mixin _$RecipeQuery {
 /// restriction.
 ///
 /// `RecipeRepository.search` only finds the recipes added to a book; the
-/// `UniversalSearch` also finds those a dynamic book's saved search finds
-/// (`RecipeBook.isDynamic`), with [savedSearchOfBook].
+/// `UniversalSearch` also finds those a dynamic book's saved search
+/// finds, with [savedSearchOfBook].
  Set<int> get bookIds;/// The recipe is found by the saved search of this (dynamic) book,
-/// whether or not it was added to it. Set by the `UniversalSearch`, not
-/// part of a search link.
+/// whether or not it was added to it. Nothing matches if the book has no
+/// saved search. Set by the `UniversalSearch`, not part of a search link.
  int? get savedSearchOfBook;/// The user who created the recipe.
  int? get createdBy;/// The order the user chose, `null` for the default ([effectiveSort]).
 /// Doesn't narrow the search.
@@ -320,15 +320,15 @@ class _RecipeQuery extends RecipeQuery {
 /// restriction.
 ///
 /// `RecipeRepository.search` only finds the recipes added to a book; the
-/// `UniversalSearch` also finds those a dynamic book's saved search finds
-/// (`RecipeBook.isDynamic`), with [savedSearchOfBook].
+/// `UniversalSearch` also finds those a dynamic book's saved search
+/// finds, with [savedSearchOfBook].
  final  Set<int> _bookIds;
 /// The recipe is in at least one of these books. Empty means no
 /// restriction.
 ///
 /// `RecipeRepository.search` only finds the recipes added to a book; the
-/// `UniversalSearch` also finds those a dynamic book's saved search finds
-/// (`RecipeBook.isDynamic`), with [savedSearchOfBook].
+/// `UniversalSearch` also finds those a dynamic book's saved search
+/// finds, with [savedSearchOfBook].
 @override@JsonKey() Set<int> get bookIds {
   if (_bookIds is EqualUnmodifiableSetView) return _bookIds;
   // ignore: implicit_dynamic_type
@@ -336,8 +336,8 @@ class _RecipeQuery extends RecipeQuery {
 }
 
 /// The recipe is found by the saved search of this (dynamic) book,
-/// whether or not it was added to it. Set by the `UniversalSearch`, not
-/// part of a search link.
+/// whether or not it was added to it. Nothing matches if the book has no
+/// saved search. Set by the `UniversalSearch`, not part of a search link.
 @override final  int? savedSearchOfBook;
 /// The user who created the recipe.
 @override final  int? createdBy;

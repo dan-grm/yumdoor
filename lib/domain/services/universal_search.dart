@@ -5,13 +5,11 @@ import '../../core/cancellation.dart';
 import '../../core/failures.dart';
 import '../models/food.dart';
 import '../models/keyword.dart';
-import '../models/recipe_book.dart';
 import '../models/recipe_match.dart';
 import '../models/recipe_query.dart';
 import '../models/recipe_sort.dart';
 import '../models/recipe_summary.dart';
 import '../models/result_page.dart';
-import '../repositories/book_repository.dart';
 import '../repositories/food_repository.dart';
 import '../repositories/keyword_repository.dart';
 import '../repositories/recipe_repository.dart';
@@ -41,26 +39,22 @@ import 'text_match.dart';
 ///   relevance: name matches in that order first, then food matches, then
 ///   keyword matches.
 ///
-/// A dynamic book ([RecipeBook.isDynamic]) among the query's books holds the
-/// recipes added to it and those its saved search finds. Tandoor can't
-/// search for both at once, so each of those searches also runs once per
-/// dynamic book with its saved search ([RecipeQuery.savedSearchOfBook]),
-/// right after the one for the recipes added to the books.
+/// A dynamic book holds the recipes added to it and those its saved search
+/// finds. Tandoor can't search for both at once, so with books in the query
+/// each of those searches also runs once per book with the book's saved
+/// search ([RecipeQuery.savedSearchOfBook]; nothing for a book without
+/// one), right after the one for the recipes added to the books.
 class UniversalSearch {
   const UniversalSearch({
     required this.recipes,
     required this.foods,
     required this.keywords,
-    required this.books,
     this.candidateLimit = 50,
   });
 
   final RecipeRepository recipes;
   final FoodRepository foods;
   final KeywordRepository keywords;
-
-  /// To know which of the query's books are dynamic.
-  final BookRepository books;
 
   /// How many matching foods and keywords are searched for at most.
   final int candidateLimit;
@@ -78,13 +72,13 @@ enum _Kind { name, foods, keywords }
 
 /// One of the searches that are merged.
 class _Source {
-  _Source(this.kind, [this.dynamicBook]);
+  _Source(this.kind, [this.savedSearchOfBook]);
 
   final _Kind kind;
 
-  /// The dynamic book whose saved search this source runs instead of the
-  /// query's books; `null` for the recipes added to them.
-  final int? dynamicBook;
+  /// The book whose saved search this source runs instead of the query's
+  /// books; `null` for the recipes added to them.
+  final int? savedSearchOfBook;
   var nextPage = 1;
   var exhausted = false;
 
@@ -99,7 +93,14 @@ class RecipeSearch {
     : _text = query.text.trim(),
       _matcher = TextMatcher(query.text),
       _sorted = recipeOrder(query.effectiveSort) != null,
-      _order = recipeOrder(query.effectiveSort) ?? _sourceOrder;
+      _order = recipeOrder(query.effectiveSort) ?? _sourceOrder {
+    _sources = [
+      for (final kind in _text.isEmpty ? [_Kind.name] : _Kind.values) ...[
+        _Source(kind),
+        for (final book in query.bookIds) _Source(kind, book),
+      ],
+    ];
+  }
 
   final UniversalSearch _search;
   final RecipeQuery query;
@@ -117,11 +118,9 @@ class RecipeSearch {
   final bool _sorted;
 
   /// The searches in their order: by kind (name, foods, keywords), each
-  /// first for the recipes added to the query's books, then for each
-  /// dynamic book's saved search. Known once [_start] found the dynamic
-  /// books.
-  List<_Source> get _sources => _sourceList!;
-  List<_Source>? _sourceList;
+  /// first for the recipes added to the query's books, then for each book's
+  /// saved search.
+  late final List<_Source> _sources;
 
   /// Recipes already returned, so none is returned twice.
   final _seen = <int>{};
@@ -205,16 +204,6 @@ class RecipeSearch {
   /// Loads the first page of every source at once, so the total is known,
   /// and returns the food and keyword sources that failed.
   Future<Map<_Source, Failure>> _start() async {
-    if (_sourceList == null) {
-      final books = await _dynamicBooks();
-      _checkCancelled();
-      _sourceList = [
-        for (final kind in _text.isEmpty ? [_Kind.name] : _Kind.values) ...[
-          _Source(kind),
-          for (final book in books) _Source(kind, book),
-        ],
-      ];
-    }
     final failures = await Future.wait([
       for (final source in _sources)
         // After a failed first call, only what failed is loaded again.
@@ -257,22 +246,6 @@ class RecipeSearch {
     return {for (final (i, failure) in failures.indexed) _sources[i]: ?failure};
   }
 
-  /// The ids of the query's books that are dynamic, in the user's order.
-  Future<List<int>> _dynamicBooks() async {
-    if (query.bookIds.isEmpty) return const [];
-    final List<RecipeBook> books;
-    try {
-      books = await _search.books.books();
-    } on OfflineFailure {
-      // The offline cache doesn't know what is in a book anyway.
-      return const [];
-    }
-    return [
-      for (final book in books)
-        if (book.isDynamic && query.bookIds.contains(book.id)) book.id,
-    ];
-  }
-
   Future<Failure?> _tryAdvance(_Source source) async {
     try {
       await _advance(source);
@@ -284,7 +257,7 @@ class RecipeSearch {
 
   /// Loads the next page of [source].
   Future<void> _advance(_Source source) async {
-    final query = await _queryFor({source.kind}, source.dynamicBook);
+    final query = await _queryFor({source.kind}, source.savedSearchOfBook);
     if (query == null) {
       source
         ..count = 0
@@ -326,14 +299,17 @@ class RecipeSearch {
 
   /// The query for the recipes that every one of [kinds] matches, or `null`
   /// if no recipe can match (no food or keyword matches the text). With
-  /// [dynamicBook], for those its saved search finds instead of those added
-  /// to the query's books.
-  Future<RecipeQuery?> _queryFor(Set<_Kind> kinds, [int? dynamicBook]) async {
-    final query = dynamicBook == null
+  /// [savedSearchOfBook], for those the book's saved search finds instead of
+  /// those added to the query's books.
+  Future<RecipeQuery?> _queryFor(
+    Set<_Kind> kinds, [
+    int? savedSearchOfBook,
+  ]) async {
+    final query = savedSearchOfBook == null
         ? this.query
         : this.query.copyWith(
             bookIds: const {},
-            savedSearchOfBook: dynamicBook,
+            savedSearchOfBook: savedSearchOfBook,
           );
     if (_text.isEmpty) return query;
     var result = query.copyWith(text: '');
@@ -411,8 +387,10 @@ class RecipeSearch {
     if (_sources.any((s) => s.count == null)) return estimate;
     if (counted.length < 2) return estimate;
     // Overlaps between a book's recipes and those of a saved search can't be
-    // counted without loading them.
-    if (_sources.any((s) => s.dynamicBook != null)) return estimate;
+    // counted without loading them. A book without one finds nothing.
+    if (_sources.any((s) => s.savedSearchOfBook != null && s.count! > 0)) {
+      return estimate;
+    }
 
     // Inclusion–exclusion: |A ∪ B ∪ C| = Σ|A| − Σ|A ∩ B| + |A ∩ B ∩ C|.
     final subsets = <Set<_Kind>>[

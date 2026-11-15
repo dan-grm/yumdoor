@@ -64,27 +64,6 @@ void main() {
     );
   });
 
-  test('marks a book with a saved search as dynamic', () {
-    final json =
-        (tandoorFixture('recipe_book_list.json')! as Map)['results'].single
-            as Map<String, dynamic>;
-    final book = api.standardSerializers.deserializeWith(
-      api.RecipeBook.serializer,
-      {
-        ...json,
-        'filter': {
-          'id': 3,
-          'name': 'Vegetarisch',
-          'search': '{"keywords_or":[1],"version":"2"}',
-          'shared': <Object>[],
-          'created_by': 2,
-        },
-      },
-    )!;
-
-    expect(book.toDomain().isDynamic, isTrue);
-  });
-
   test('maps the server settings', () {
     final settings = api.standardSerializers.deserializeWith(
       api.ServerSettings.serializer,

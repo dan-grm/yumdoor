@@ -145,7 +145,6 @@ void main() {
       recipes: anna.recipes,
       foods: anna.foods,
       keywords: anna.keywords,
-      books: anna.books,
     );
 
     Future<Set<String>> found(RecipeQuery query) async {

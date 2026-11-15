@@ -5,7 +5,6 @@ import 'package:yumdoor/domain/models/food.dart';
 import 'package:yumdoor/domain/models/ingredient.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
-import 'package:yumdoor/domain/models/recipe_book.dart';
 import 'package:yumdoor/domain/models/recipe_match.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
 import 'package:yumdoor/domain/models/recipe_sort.dart';
@@ -15,7 +14,6 @@ import 'package:yumdoor/domain/models/result_page.dart';
 import 'package:yumdoor/domain/repositories/food_repository.dart';
 import 'package:yumdoor/domain/services/universal_search.dart';
 
-import '../../fakes/fake_book_user_repositories.dart';
 import '../../fakes/fake_food_keyword_repositories.dart';
 import '../../fakes/fake_recipe_repository.dart';
 
@@ -50,14 +48,9 @@ void main() {
   late FakeRecipeRepository recipes;
   late FakeFoodRepository foods;
   late FakeKeywordRepository keywords;
-  late FakeBookRepository books;
 
-  UniversalSearch search() => UniversalSearch(
-    recipes: recipes,
-    foods: foods,
-    keywords: keywords,
-    books: books,
-  );
+  UniversalSearch search() =>
+      UniversalSearch(recipes: recipes, foods: foods, keywords: keywords);
 
   /// Every page of [query], as recipe ids per page.
   Future<List<List<int>>> allPages(
@@ -74,7 +67,6 @@ void main() {
   }
 
   setUp(() {
-    books = FakeBookRepository();
     foods = FakeFoodRepository(const [karotte, kartoffel, zwiebel]);
     keywords = FakeKeywordRepository(const [
       vegetarisch,
@@ -443,7 +435,6 @@ void main() {
         recipes: recipes,
         foods: _AllFoods(const [kartoffel, karotte, zwiebel]),
         keywords: keywords,
-        books: books,
       ).start(const RecipeQuery(text: 'karotte'), pageSize: 25).next();
 
       final anyFoods = recipes.searches
@@ -464,7 +455,6 @@ void main() {
         recipes: recipes,
         foods: _AllFoods(const [Food(id: 9, name: 'Püree')]),
         keywords: keywords,
-        books: books,
       ).start(const RecipeQuery(text: 'Puree')).next();
 
       expect(page.items.single.foods.single.name, 'Püree');
@@ -506,7 +496,6 @@ void main() {
         recipes: _MatchAll(cached),
         foods: foods,
         keywords: keywords,
-        books: books,
       ).start(const RecipeQuery(text: 'Karotte')).next();
 
       expect(page.items.map((m) => m.recipe.id), [2, 3, 1]);
@@ -527,7 +516,6 @@ void main() {
                 recipes: _MatchAll(cached),
                 foods: foods,
                 keywords: keywords,
-                books: books,
               )
               .start(
                 const RecipeQuery(text: 'Karotte', sort: RecipeSort.rating),
@@ -540,19 +528,20 @@ void main() {
 
   group('dynamic books', () {
     setUp(() {
-      books = FakeBookRepository(const [
-        RecipeBook(id: 7, name: 'Vegetarisch', isDynamic: true),
-        RecipeBook(id: 8, name: 'Festtage'),
-      ]);
       recipes
         ..bookEntries = {
           7: {6},
           8: {2},
         }
+        // Book 8 has no saved search.
         ..savedSearches = {
           7: {3, 5},
         };
     });
+
+    List<int> ids(ResultPage<RecipeMatch> page) => [
+      for (final match in page.items) match.recipe.id,
+    ];
 
     test('find what their saved search finds and what was added', () async {
       final pages = await allPages(const RecipeQuery(bookIds: {7}));
@@ -570,16 +559,15 @@ void main() {
       );
     });
 
-    test('add a search per dynamic book only', () async {
+    test('a book without a saved search adds nothing', () async {
       final pages = await allPages(const RecipeQuery(bookIds: {8}));
 
       expect(pages, [
         [2],
       ]);
-      expect(recipes.searches.single.query.bookIds, {8});
     });
 
-    test('with text, every source runs per dynamic book', () async {
+    test('with text, every source runs per book', () async {
       recipes
         ..bookEntries = {
           7: {1},
@@ -609,26 +597,38 @@ void main() {
           .start(const RecipeQuery(bookIds: {7}), pageSize: 25)
           .next();
 
-      expect(page.items.map((m) => m.recipe.id), [3, 6]);
+      expect(ids(page), [3, 6]);
       expect(page.totalCount, 2);
     });
 
-    test('offline, only the recipes added are asked for', () async {
-      books.failure = const OfflineFailure();
+    test('a failing saved search is tried again on the next call', () async {
+      recipes
+        ..failure = const ServerFailure(statusCode: 500)
+        ..failWhen = (query) => query.savedSearchOfBook != null;
+      final results = search().start(
+        const RecipeQuery(bookIds: {7}),
+        pageSize: 25,
+      );
 
-      await search().start(const RecipeQuery(bookIds: {7})).next();
+      final first = await results.next();
+      recipes.failure = null;
+      final second = await results.next();
 
-      expect(recipes.searches.single.query.savedSearchOfBook, isNull);
+      expect(ids(first), [6]);
+      expect(first.hasMore, isTrue);
+      expect(ids(second), [3, 5]);
+      expect(second.hasMore, isFalse);
     });
 
-    test('a failing book list fails the search', () async {
-      books.failure = const ServerFailure(statusCode: 500);
+    test('offline, only the recipes added count', () async {
+      recipes.fromCache = true;
 
-      await expectLater(
-        search().start(const RecipeQuery(bookIds: {7})).next(),
-        throwsA(isA<ServerFailure>()),
-      );
-      expect(recipes.searches, isEmpty);
+      final page = await search()
+          .start(const RecipeQuery(bookIds: {7}), pageSize: 25)
+          .next();
+
+      expect(ids(page), [6]);
+      expect(page.fromCache, isTrue);
     });
   });
 

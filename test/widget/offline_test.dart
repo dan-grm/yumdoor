@@ -9,7 +9,6 @@ import 'package:yumdoor/features/recipe/recipe_screen.dart';
 import 'package:yumdoor/features/search/search_location.dart';
 import 'package:yumdoor/features/search/search_screen.dart';
 
-import '../fakes/fake_book_user_repositories.dart';
 import '../fakes/fake_connectivity_service.dart';
 import '../fakes/fake_food_keyword_repositories.dart';
 import '../fakes/fake_offline_cache.dart';
@@ -44,7 +43,6 @@ void main() {
       recipeRepositoryProvider.overrideWithValue(recipes),
       foodRepositoryProvider.overrideWithValue(FakeFoodRepository()),
       keywordRepositoryProvider.overrideWithValue(FakeKeywordRepository()),
-      bookRepositoryProvider.overrideWithValue(FakeBookRepository()),
     ],
     routes: [
       GoRoute(

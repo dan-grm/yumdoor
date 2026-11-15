@@ -298,6 +298,31 @@ void main() {
         expect([for (final r in page.items) r.id], [72]);
       });
 
+      test('is not checked by itself for the default child matching', () async {
+        final adapter = tandoor('{"foods_or":[3],"include_children":true}');
+
+        final page = await TandoorRecipeRepository(client(adapter))
+            .search(const RecipeQuery(savedSearchOfBook: 5, foodIds: {9}));
+
+        expect(recipeSearches(adapter), hasLength(1));
+        expect(page.items, hasLength(3));
+      });
+
+      test('is checked by itself without the interceptor', () async {
+        final adapter = tandoor('{"keywords_or":[1]}', all: [67]);
+        // A Dio that doesn't send the saved search.
+        final bare = api.TandoorApi(
+          dio: Dio(BaseOptions(baseUrl: serverUrl.toString()))
+            ..httpClientAdapter = adapter,
+          interceptors: const [],
+        ).getApiApi();
+
+        final page = await TandoorRecipeRepository(bare)
+            .search(const RecipeQuery(savedSearchOfBook: 5));
+
+        expect([for (final r in page.items) r.id], [67]);
+      });
+
       test(
         'finds nothing for a book without one, or without the book',
         () async {

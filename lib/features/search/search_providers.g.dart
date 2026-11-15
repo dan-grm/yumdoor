@@ -53,7 +53,7 @@ final class UniversalSearchProvider
   }
 }
 
-String _$universalSearchHash() => r'3a3868faa23d9086534e4135f8289b30178eeab3';
+String _$universalSearchHash() => r'a2d438cc021fe299c9d6b22cccd377e2b507a66f';
 
 /// Results for [query], one page at a time.
 ///

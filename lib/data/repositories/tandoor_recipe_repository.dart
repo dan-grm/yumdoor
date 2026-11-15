@@ -63,7 +63,9 @@ class TandoorRecipeRepository implements RecipeRepository {
       final body = requireBody(response.data);
       final skipped =
           response.requestOptions.extra[ExtraQueryInterceptor.skippedKey];
-      if (!saved.needsIds && (skipped is! List || skipped.isEmpty)) {
+      // Without the interceptor's answer, nothing of the saved search was
+      // sent.
+      if (!saved.needsIds && skipped is List && skipped.isEmpty) {
         return _resultPage(body);
       }
       // A parameter both send can only hold one value: this request left out
@@ -310,8 +312,8 @@ class _SavedSearch {
   late final Map<String, Object> mergeable = {...all}..remove(_global);
 
   /// Whether the results of a request with [mergeable] have to be checked
-  /// against [ids].
-  bool get needsIds => all.containsKey(_global);
+  /// against [ids]: unless [_global] is Tandoor's default, `true`.
+  bool get needsIds => all.containsKey(_global) && all[_global] != 'true';
 
   Future<Set<int>>? _ids;
 

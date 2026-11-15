@@ -50,13 +50,13 @@ abstract class RecipeQuery with _$RecipeQuery {
     /// restriction.
     ///
     /// `RecipeRepository.search` only finds the recipes added to a book; the
-    /// `UniversalSearch` also finds those a dynamic book's saved search finds
-    /// (`RecipeBook.isDynamic`), with [savedSearchOfBook].
+    /// `UniversalSearch` also finds those a dynamic book's saved search
+    /// finds, with [savedSearchOfBook].
     @Default({}) Set<int> bookIds,
 
     /// The recipe is found by the saved search of this (dynamic) book,
-    /// whether or not it was added to it. Set by the `UniversalSearch`, not
-    /// part of a search link.
+    /// whether or not it was added to it. Nothing matches if the book has no
+    /// saved search. Set by the `UniversalSearch`, not part of a search link.
     int? savedSearchOfBook,
 
     /// The user who created the recipe.
