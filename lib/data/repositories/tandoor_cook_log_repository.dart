@@ -19,7 +19,7 @@ class TandoorCookLogRepository implements CookLogRepository {
   final api.ApiApi _api;
 
   /// The current user's id, read once.
-  int? _userId;
+  Future<int>? _userId;
 
   @override
   Future<CookLog> create(NewCookLog entry) => guardRequest(() async {
@@ -37,7 +37,6 @@ class TandoorCookLogRepository implements CookLogRepository {
   /// the newest pages are searched for the current user's.
   @override
   Future<DateTime?> lastCooked(int recipeId) => guardRequest(() async {
-    final userId = await _currentUserId();
     Future<api.PaginatedCookLogList> page(int number) async => requireBody(
       (await _api.apiCookLogList(
         recipe: recipeId,
@@ -46,7 +45,11 @@ class TandoorCookLogRepository implements CookLogRepository {
       )).data,
     );
 
+    // Most recipes have fewer entries than one page, so page 1 usually
+    // answers it. The user is looked up meanwhile.
+    final user = _currentUserId();
     final first = await page(1);
+    final userId = await user;
     final lastPage = (first.count / _pageSize).ceil();
     for (var number = lastPage; number >= 1; number--) {
       if (lastPage - number >= _maxPages) break;
@@ -62,12 +65,21 @@ class TandoorCookLogRepository implements CookLogRepository {
     return null;
   });
 
+  /// Shared by concurrent calls, and asked again after a failure. Its
+  /// errors count as handled, so a failing page can be thrown first.
+  Future<int> _currentUserId() {
+    if (_userId case final id?) return id;
+    final id = _userId = _readUserId();
+    id.then<void>((_) {}, onError: (Object _) => _userId = null).ignore();
+    id.ignore();
+    return id;
+  }
+
   // `/api/user-preference/` lists only the caller's own preferences, for
   // every user; there is no "current user" endpoint.
-  Future<int> _currentUserId() async {
-    if (_userId case final id?) return id;
+  Future<int> _readUserId() async {
     final response = await _api.apiUserPreferenceList();
     final user = requireBody(response.data).firstOrNull?.user;
-    return _userId = requireId(user?.id, 'User');
+    return requireId(user?.id, 'User');
   }
 }

@@ -77,6 +77,12 @@ class CachingRecipeRepository implements RecipeRepository {
   }
 
   Future<void> _store(Recipe recipe) async {
+    // A missing date usually means the cook log couldn't be read (see
+    // TandoorRecipeRepository.lastCooked); keep the one stored before.
+    if (recipe.lastCooked == null) {
+      final stored = (await _cache.get(recipe.id))?.lastCooked;
+      if (stored != null) recipe = recipe.copyWith(lastCooked: stored);
+    }
     await _cache.put(recipe);
     final url = recipe.image;
     final download = downloadImage;

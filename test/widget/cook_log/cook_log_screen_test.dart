@@ -201,10 +201,35 @@ void main() {
     await tester.tap(find.text('Speichern'));
     await tester.pump();
     expect(saveButton(tester).onPressed, isNull);
+    // Leaving now would race with the return after saving.
+    final skip = tester.widget<TextButton>(
+      find.ancestor(
+        of: find.text('Überspringen'),
+        matching: find.byType(TextButton),
+      ),
+    );
+    expect(skip.onPressed, isNull);
+    await tester.tap(find.byTooltip('Schließen, ohne zu speichern'));
+    await tester.pump();
+    expect(find.byType(CookLogScreen), findsOneWidget);
 
     gate.complete();
     await tester.pumpAndSettle();
     expect(cookLogs.entries, hasLength(1));
+    expect(find.byType(RecipeScreen), findsOneWidget);
+  });
+
+  testWidgets('the recipe stays if reloading it after saving fails', (
+    tester,
+  ) async {
+    await pumpCookLog(tester);
+    recipes.failure = const ServerFailure(statusCode: 502);
+
+    await tap(tester, find.text('Speichern'));
+
+    expect(cookLogs.entries, hasLength(1));
+    expect(find.text('Ofenkarotten mit Feta'), findsOneWidget);
+    expect(find.text('Nochmal versuchen'), findsNothing);
   });
 
   testWidgets('offline, saving is disabled with an explanation', (

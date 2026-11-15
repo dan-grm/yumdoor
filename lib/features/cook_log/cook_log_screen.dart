@@ -38,11 +38,7 @@ class CookLogScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
     final recipe = ref.watch(recipeProvider(recipeId));
-    final closeButton = RoundIconButton(
-      icon: Icons.close_rounded,
-      label: context.l10n.cookLogClose,
-      onPressed: () => _leave(context, recipeId),
-    );
+    final closeButton = _CloseButton(recipeId: recipeId);
 
     return Scaffold(
       body: SafeArea(
@@ -52,7 +48,6 @@ class CookLogScreen extends ConsumerWidget {
             AsyncData(:final value) => _CookLogView(
               recipe: value,
               servings: servings ?? math.max(value.servings, 1),
-              closeButton: closeButton,
             ),
             AsyncError(:final error) => Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,16 +80,25 @@ String cookLogLocation(int recipeId, int servings) => Uri(
 void _leave(BuildContext context, int recipeId) =>
     context.canPop() ? context.pop() : context.go('/recipe/$recipeId');
 
+class _CloseButton extends StatelessWidget {
+  const _CloseButton({required this.recipeId, this.enabled = true});
+
+  final int recipeId;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) => RoundIconButton(
+    icon: Icons.close_rounded,
+    label: context.l10n.cookLogClose,
+    onPressed: enabled ? () => _leave(context, recipeId) : null,
+  );
+}
+
 class _CookLogView extends ConsumerStatefulWidget {
-  const _CookLogView({
-    required this.recipe,
-    required this.servings,
-    required this.closeButton,
-  });
+  const _CookLogView({required this.recipe, required this.servings});
 
   final Recipe recipe;
   final int servings;
-  final Widget closeButton;
 
   @override
   ConsumerState<_CookLogView> createState() => _CookLogViewState();
@@ -144,10 +148,12 @@ class _CookLogViewState extends ConsumerState<_CookLogView> {
       }
       return;
     }
+    messenger.showSnackBar(SnackBar(content: Text(saved)));
+    // Leaving is blocked while saving, but logging out isn't.
+    if (!mounted) return;
     // The recipe screen below shows the new rating and last cooked date.
     ref.invalidate(recipeProvider(recipeId));
-    messenger.showSnackBar(SnackBar(content: Text(saved)));
-    if (mounted) _leave(context, recipeId);
+    _leave(context, recipeId);
   }
 
   @override
@@ -158,89 +164,93 @@ class _CookLogViewState extends ConsumerState<_CookLogView> {
     final offline = ref.watch(isOfflineProvider);
     final failure = _failure;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          height: t.sizeButton,
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: widget.closeButton,
+    // Leaving while saving would race with the return after it.
+    return PopScope(
+      canPop: !_saving,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: t.sizeButton,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: _CloseButton(recipeId: recipe.id, enabled: !_saving),
+            ),
           ),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.only(top: t.space2),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: t.sizeWide),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _Heading(
-                      recipe: recipe.name,
-                      servings: servingsLabel(
-                        context,
-                        widget.servings,
-                        recipe.servingsText,
+          Expanded(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.only(top: t.space2),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: t.sizeWide),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _Heading(
+                        recipe: recipe.name,
+                        servings: servingsLabel(
+                          context,
+                          widget.servings,
+                          recipe.servingsText,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: t.space6),
-                    _RatingCard(
-                      rating: _rating,
-                      onRate: _saving ? null : _rate,
-                      comment: _comment,
-                      enabled: !_saving,
-                    ),
-                    SizedBox(height: t.space3),
-                    _Note(
-                      icon: Icons.group_outlined,
-                      text: l10n.cookLogVisibility,
-                    ),
-                    if (offline) ...[
-                      SizedBox(height: t.space2),
+                      SizedBox(height: t.space6),
+                      _RatingCard(
+                        rating: _rating,
+                        onRate: _saving ? null : _rate,
+                        comment: _comment,
+                        enabled: !_saving,
+                      ),
+                      SizedBox(height: t.space3),
                       _Note(
-                        icon: Icons.cloud_off_outlined,
-                        text: l10n.offlineWriteDisabled,
+                        icon: Icons.group_outlined,
+                        text: l10n.cookLogVisibility,
                       ),
+                      if (offline) ...[
+                        SizedBox(height: t.space2),
+                        _Note(
+                          icon: Icons.cloud_off_outlined,
+                          text: l10n.offlineWriteDisabled,
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        if (failure != null) ...[
+          if (failure != null) ...[
+            SizedBox(height: t.space3),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                l10n.cookLogFailed(failureMessage(context, failure)),
+                style: t.body.copyWith(color: t.danger),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
           SizedBox(height: t.space3),
-          Semantics(
-            liveRegion: true,
-            child: Text(
-              l10n.cookLogFailed(failureMessage(context, failure)),
-              style: t.body.copyWith(color: t.danger),
-              textAlign: TextAlign.center,
+          OfflineDisabled(
+            builder: (context, enabled) => PillButton(
+              label: l10n.cookLogSave,
+              onPressed: enabled && !_saving ? _save : null,
+            ),
+          ),
+          SizedBox(height: t.space1),
+          SizedBox(
+            height: t.sizeTouch,
+            child: TextButton(
+              onPressed: _saving ? null : () => _leave(context, recipe.id),
+              style: TextButton.styleFrom(
+                foregroundColor: t.inkMuted,
+                textStyle: t.label,
+              ),
+              child: Text(l10n.cookLogSkip),
             ),
           ),
         ],
-        SizedBox(height: t.space3),
-        OfflineDisabled(
-          builder: (context, enabled) => PillButton(
-            label: l10n.cookLogSave,
-            onPressed: enabled && !_saving ? _save : null,
-          ),
-        ),
-        SizedBox(height: t.space1),
-        SizedBox(
-          height: t.sizeTouch,
-          child: TextButton(
-            onPressed: () => _leave(context, recipe.id),
-            style: TextButton.styleFrom(
-              foregroundColor: t.inkMuted,
-              textStyle: t.label,
-            ),
-            child: Text(l10n.cookLogSkip),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

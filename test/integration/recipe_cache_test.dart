@@ -54,7 +54,9 @@ void main() {
     final offline = connect(_unreachable, reachable: reachable);
 
     expect(await offline.recipes.fetchRecipe(id), recipe);
-    expect(reachable, [false]);
+    // The recipe and its cook log (for last cooked) are requested together.
+    expect(reachable, isNotEmpty);
+    expect(reachable, everyElement(isFalse));
   });
 
   test('offline search finds opened recipes by name', () async {

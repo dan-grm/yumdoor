@@ -38,8 +38,10 @@ class RecipeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final recipe = ref.watch(recipeProvider(recipeId));
     return Scaffold(
+      // While it reloads (after a cook log entry was saved) the recipe
+      // stays, and so do the chosen servings; a failed reload keeps it too.
       body: switch (recipe) {
-        AsyncData(:final value) => _RecipeView(recipe: value),
+        AsyncValue(value: final value?) => _RecipeView(recipe: value),
         AsyncError(:final error) => SafeArea(
           child: Stack(
             children: [
