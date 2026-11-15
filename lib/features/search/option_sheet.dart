@@ -108,7 +108,7 @@ class _OptionSheet<T> extends ConsumerWidget {
               AsyncData(value: final choices) => [
                 for (final (label, value) in choices)
                   Semantics(
-                    selected: selected != null && value == selected,
+                    selected: selected == null ? null : value == selected,
                     child: InkWell(
                       onTap: () => Navigator.of(context).pop(value),
                       borderRadius: BorderRadius.circular(t.radiusM),

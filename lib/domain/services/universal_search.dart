@@ -128,18 +128,21 @@ class RecipeSearch {
     final items = <RecipeMatch>[];
     while (items.length < pageSize) {
       // Which recipe comes next is only known once every source has its
-      // next one loaded.
-      for (final source in _sources) {
-        while (source.buffer.isEmpty &&
-            !source.exhausted &&
-            !failed.containsKey(source)) {
-          try {
-            await _advance(source);
-          } on Failure catch (failure) {
-            _checkCancelled();
-            failed[source] = failure;
-          }
+      // next one loaded; those that ran out load their next page at once.
+      final empty = [
+        for (final source in _sources)
+          if (source.buffer.isEmpty &&
+              !source.exhausted &&
+              !failed.containsKey(source))
+            source,
+      ];
+      if (empty.isNotEmpty) {
+        final failures = await Future.wait(empty.map(_tryAdvance));
+        _checkCancelled();
+        for (final (i, failure) in failures.indexed) {
+          if (failure != null) failed[empty[i]] = failure;
         }
+        continue;
       }
       _Source? first;
       for (final source in _sources) {
@@ -372,7 +375,9 @@ class RecipeSearch {
     final query = await _queryFor(kinds);
     if (query == null) return 0;
     final page = await _search.recipes.search(
-      query,
+      // Only the count matters; sorting would make the server work for
+      // nothing.
+      query.copyWith(sort: null),
       pageSize: 1,
       cancel: _cancel,
     );

@@ -344,6 +344,24 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('keeps an order chosen on purpose, also the default', (
+    tester,
+  ) async {
+    final router = await pumpSearch(tester);
+
+    await tester.tap(find.text('Sortiert: nach Name'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Name (A–Z)'));
+    await tester.pumpAndSettle();
+    expect(location(router), '/search?sort=name');
+
+    await tester.enterText(searchField(), 'Feta');
+    await tester.pump(searchDebounce);
+    await tester.pumpAndSettle();
+    expect(location(router), '/search?q=Feta&sort=name');
+    expect(find.text('Sortiert: nach Name'), findsOneWidget);
+  });
+
   testWidgets('offers relevance with text, the default there', (tester) async {
     final router = await pumpSearch(tester, location: '/search?q=Feta');
 

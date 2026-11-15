@@ -188,7 +188,7 @@ void main() {
         [1, 6, 3, 2, 4],
       ]);
       expect(
-        recipes.searches.map((s) => s.query.sort),
+        recipes.searches.where((s) => s.pageSize > 1).map((s) => s.query.sort),
         everyElement(RecipeSort.rating),
       );
     });
@@ -204,6 +204,10 @@ void main() {
         [3, 6],
         [2],
       ]);
+      // The overlaps are counted unsorted.
+      final counts = recipes.searches.where((s) => s.pageSize == 1);
+      expect(counts, isNotEmpty);
+      expect(counts.map((s) => s.query.sort), everyElement(isNull));
     });
 
     test('by newest merges by id, newest first', () async {

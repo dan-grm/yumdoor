@@ -40,6 +40,9 @@ class FakeRecipeRepository implements RecipeRepository {
   /// every match on one page.
   bool fromCache = false;
   int fetchCount = 0;
+
+  /// The recipes [recordView] was called for, in order.
+  final views = <int>[];
   final searches = <SearchCall>[];
 
   /// While set, searches wait for it before answering.
@@ -50,6 +53,12 @@ class FakeRecipeRepository implements RecipeRepository {
     fetchCount++;
     if (failure case final failure?) throw failure;
     return recipes[id] ?? (throw const NotFoundFailure());
+  }
+
+  @override
+  Future<void> recordView(int id) async {
+    views.add(id);
+    if (failure case final failure?) throw failure;
   }
 
   @override

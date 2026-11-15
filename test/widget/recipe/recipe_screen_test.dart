@@ -74,6 +74,8 @@ void main() {
     // Grouped by step, titled with the step's name or number.
     expect(find.text('SCHRITT 2'), findsOneWidget);
     expect(find.text('SCHRITT 3 · ANRICHTEN'), findsOneWidget);
+    // For the "recently viewed" search order.
+    expect(repository.views, [ofenkarotten.id]);
   });
 
   testWidgets('the servings picker rescales the ingredients', (tester) async {

@@ -189,6 +189,19 @@ void main() {
       expect(recipe.name, 'Apfelkuchen vom Blech');
     });
 
+    test('records a view of a recipe', () async {
+      final adapter = FakeHttpAdapter(
+        (_) => jsonResponse({'id': 1, 'recipe': 58}, status: 201),
+      );
+
+      await TandoorRecipeRepository(client(adapter)).recordView(58);
+
+      final request = adapter.requests.single;
+      expect(request.method, 'POST');
+      expect(request.uri.path, '/tandoor/api/view-log/');
+      expect(request.data, {'recipe': 58});
+    });
+
     test('throws NotFoundFailure for a missing recipe', () {
       final adapter = FakeHttpAdapter(
         (_) => jsonResponse({

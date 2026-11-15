@@ -62,6 +62,18 @@ void main() {
     expect(rated, [...rated]..sort((a, b) => b.compareTo(a)));
   });
 
+  test('recently viewed first after opening a recipe', () async {
+    final recipes = await all(const RecipeQuery(sort: RecipeSort.name));
+    final viewed = recipes.last;
+
+    await anna.recipes.recordView(viewed.id);
+
+    final sorted = await all(
+      const RecipeQuery(sort: RecipeSort.recentlyViewed),
+    );
+    expect(sorted.first.id, viewed.id);
+  });
+
   test('the universal search merges by rating', () async {
     final search = UniversalSearch(
       recipes: anna.recipes,

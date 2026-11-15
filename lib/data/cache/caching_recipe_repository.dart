@@ -83,6 +83,11 @@ class CachingRecipeRepository implements RecipeRepository {
     }
   }
 
+  /// Views are only recorded online; offline there is nothing to record
+  /// them in (offline is read-only).
+  @override
+  Future<void> recordView(int id) => _remote.recordView(id);
+
   Future<void> _store(Recipe recipe) async {
     // A missing date usually means the cook log couldn't be read (see
     // TandoorRecipeRepository.lastCooked); keep the one stored before.
@@ -101,13 +106,12 @@ class CachingRecipeRepository implements RecipeRepository {
   }
 }
 
-/// Sorts [items], which come most recently opened first, in the order the
-/// user chose ([RecipeQuery.sort]), as close to the server as the stored data
-/// allows. Without a choice, by relevance (there is no score offline; the
-/// universal search puts name matches first) and by recently viewed (opened
-/// in Yumdoor) they stay as they are; equal ones too.
+/// Sorts [items], which come most recently opened first, in the order of
+/// [query] ([RecipeQuery.effectiveSort]), as close to the server as the
+/// stored data allows. By relevance (there is no score offline; the universal
+/// search puts name matches first) and by recently viewed (opened in
+/// Yumdoor) they stay as they are; equal ones too.
 void _sort(List<RecipeSummary> items, RecipeQuery query) {
-  if (query.sort == null) return;
   if (query.effectiveSort == RecipeSort.random) {
     items.shuffle(Random());
     return;

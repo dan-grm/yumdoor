@@ -126,7 +126,9 @@ overview's `rating` (otherwise it can be `null`); `lastcooked` and `lastviewed` 
 allowed key), so Yumdoor can't sort by how often a recipe was cooked. There is no tie-breaker, so recipes with the
 same key can move between pages. `random=true` (or `sort_order=random`) orders by `?` **on every request**: pages
 overlap and some recipes never show; the universal search drops the repeats. Views are recorded only by
-`POST /api/view-log/ {recipe}`, which Tandoor's web UI sends when a recipe is opened; Yumdoor doesn't yet.
+`POST /api/view-log/ {recipe}`, which Tandoor's web UI sends when a recipe is opened, and so does Yumdoor when it
+loads a recipe. Tandoor keeps at most one view per recipe and user every 5 minutes (`ViewLogSerializer.create`), and
+`GET /api/view-log/` lists only the caller's own.
 
 **Times cooked:** `timescooked_lte` adds `.exclude(favorite=0)` (`managers.py:179`), so it never returns recipes
 cooked 0 times; "never cooked" is `timescooked=0` (exact, which also wins over `_gte`/`_lte`). Overviews carry no cook

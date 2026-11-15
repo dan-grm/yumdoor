@@ -452,7 +452,10 @@ class _SortButton extends StatelessWidget {
             (l10n.searchSortOption(sort.name), sort),
       ],
     );
-    if (sort != null && sort != current) onChange(query.copyWith(sort: sort));
+    // Kept even when it is the default now, so it stays when the text changes.
+    if (sort != null && sort != query.sort) {
+      onChange(query.copyWith(sort: sort));
+    }
   }
 
   @override

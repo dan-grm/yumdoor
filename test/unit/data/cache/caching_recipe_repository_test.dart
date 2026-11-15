@@ -171,13 +171,13 @@ void main() {
         remote.failure = const OfflineFailure();
       });
 
-      test('lists stored recipes, most recently opened first', () async {
+      test('lists stored recipes by name', () async {
         final page = await repository.search(const RecipeQuery());
 
         expect(page.fromCache, isTrue);
         expect(page.hasMore, isFalse);
         expect(page.totalCount, 2);
-        expect(page.items, [_karotten.summary, _suppe.summary]);
+        expect(page.items, [_suppe.summary, _karotten.summary]);
       });
 
       test('matches the text against names, ignoring case', () async {

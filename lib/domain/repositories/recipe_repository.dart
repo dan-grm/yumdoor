@@ -19,4 +19,8 @@ abstract interface class RecipeRepository {
   /// The recipe with its steps. Throws [NotFoundFailure] if it doesn't exist
   /// or the user can't see it.
   Future<Recipe> fetchRecipe(int id);
+
+  /// Notes that the current user opened the recipe, for the "recently
+  /// viewed" order. Only the user sees their views.
+  Future<void> recordView(int id);
 }

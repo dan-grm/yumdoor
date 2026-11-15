@@ -93,6 +93,13 @@ class TandoorRecipeRepository implements RecipeRepository {
     return recipe.copyWith(lastCooked: await cooked);
   }
 
+  @override
+  Future<void> recordView(int id) => guardRequest(() async {
+    // Tandoor keeps one view per recipe and user every 5 minutes, so opening
+    // a recipe again soon after doesn't add one (docs/TANDOOR_API.md).
+    await _api.apiViewLogCreate(viewLog: api.ViewLog((b) => b..recipe = id));
+  });
+
   Future<DateTime?> _lastCooked(int id) async {
     try {
       return await lastCooked?.call(id);
