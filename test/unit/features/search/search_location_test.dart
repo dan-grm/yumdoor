@@ -30,6 +30,39 @@ void main() {
     expect(parse(location), query);
   });
 
+  test('round-trips the cookable, book and creator filters', () {
+    const query = RecipeQuery(
+      maxMissingFoods: 1,
+      bookIds: {4, 7},
+      createdBy: 2,
+    );
+
+    final location = searchLocation(query);
+
+    expect(location, '/search?missing=1&book=4&book=7&created_by=2');
+    expect(parse(location), query);
+    expect(
+      searchLocation(const RecipeQuery(maxMissingFoods: 0)),
+      '/search?missing=0',
+    );
+    expect(parse('/search?missing=0'), const RecipeQuery(maxMissingFoods: 0));
+    for (final query in [
+      const RecipeQuery(maxMissingFoods: 0),
+      const RecipeQuery(bookIds: {4}),
+      const RecipeQuery(createdBy: 2),
+    ]) {
+      expect(query.isEmpty, isFalse);
+    }
+  });
+
+  test('drops cookable, book and creator values that do not parse', () {
+    expect(
+      parse('/search?missing=2&book=0&book=x&created_by=-1'),
+      const RecipeQuery(),
+    );
+    expect(parse('/search?missing=-1&created_by=anna'), const RecipeQuery());
+  });
+
   test('round-trips the times cooked', () {
     const often = RecipeQuery(minTimesCooked: 5);
     const never = RecipeQuery(neverCooked: true);

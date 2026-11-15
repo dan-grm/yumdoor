@@ -53,6 +53,11 @@ class TandoorRecipeRepository implements RecipeRepository {
       // is the exact count (docs/TANDOOR_API.md).
       timescooked: query.neverCooked ? 0 : null,
       timescookedGte: query.neverCooked ? null : query.minTimesCooked,
+      // An int on Tandoor, although the schema says boolean
+      // (docs/TANDOOR_API.md).
+      makenow: query.maxMissingFoods,
+      booksOr: query.bookIds.isEmpty ? null : BuiltList.of(query.bookIds),
+      createdby: query.createdBy,
       page: page,
       pageSize: pageSize,
       cancelToken: cancelTokenFor(cancel),

@@ -6,11 +6,15 @@ import 'package:tandoor_api/tandoor_api.dart' as api;
 import 'package:yumdoor/core/cancellation.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/data/api/tandoor_dio.dart';
+import 'package:yumdoor/data/repositories/tandoor_book_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_food_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_keyword_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_recipe_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_server_repository.dart';
+import 'package:yumdoor/data/repositories/tandoor_user_repository.dart';
+import 'package:yumdoor/domain/models/recipe_book.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
+import 'package:yumdoor/domain/models/user_ref.dart';
 
 import '../../../fakes/fake_http_adapter.dart';
 import '../../../fixtures/tandoor_fixtures.dart';
@@ -94,6 +98,29 @@ void main() {
       // `timescooked_lte=0` would match nothing on Tandoor.
       expect(never['timescooked'], '0');
       expect(never.containsKey('timescooked_lte'), isFalse);
+    });
+
+    test('maps the cookable, book and creator filters', () async {
+      final adapter = FakeHttpAdapter(
+        (_) => jsonResponse(tandoorFixture('recipe_list.json')),
+      );
+      final repository = TandoorRecipeRepository(client(adapter));
+
+      await repository.search(
+        const RecipeQuery(maxMissingFoods: 0, bookIds: {4, 7}, createdBy: 2),
+      );
+      await repository.search(const RecipeQuery(maxMissingFoods: 1));
+
+      final [now, oneMissing] = [
+        for (final r in adapter.requests) r.uri.queryParametersAll,
+      ];
+      // An int, although the schema says boolean (docs/TANDOOR_API.md).
+      expect(now['makenow'], ['0']);
+      expect(now['books_or'], ['4', '7']);
+      expect(now['createdby'], ['2']);
+      expect(oneMissing['makenow'], ['1']);
+      expect(oneMissing.containsKey('books_or'), isFalse);
+      expect(oneMissing.containsKey('createdby'), isFalse);
     });
 
     test('cancels the request with its CancelSignal', () async {
@@ -202,6 +229,53 @@ void main() {
 
     expect(adapter.requests.single.uri.path, '/tandoor/api/keyword/45/');
     expect(keyword.name, 'Suppe');
+  });
+
+  test('TandoorBookRepository reads every page of books', () async {
+    final book =
+        (tandoorFixture('recipe_book_list.json')! as Map)['results'].single
+            as Map<String, dynamic>;
+    final adapter = FakeHttpAdapter(
+      (request) => jsonResponse({
+        'count': 2,
+        'next': request.uri.queryParameters['page'] == '1'
+            ? '$serverUrl/api/recipe-book/?page=2'
+            : null,
+        'previous': null,
+        'results': [
+          if (request.uri.queryParameters['page'] == '1')
+            book
+          else
+            {...book, 'id': 9, 'name': "Ben's baking"},
+        ],
+      }),
+    );
+
+    final books = await TandoorBookRepository(client(adapter)).books();
+
+    expect(books, const [
+      RecipeBook(id: 1, name: 'Unsere Lieblingsrezepte'),
+      RecipeBook(id: 9, name: "Ben's baking"),
+    ]);
+    expect(
+      [for (final r in adapter.requests) r.uri.path],
+      ['/tandoor/api/recipe-book/', '/tandoor/api/recipe-book/'],
+    );
+  });
+
+  test('TandoorUserRepository lists the space members', () async {
+    final adapter = FakeHttpAdapter(
+      (_) => jsonResponse(tandoorFixture('user_list.json')),
+    );
+
+    final users = await TandoorUserRepository(client(adapter)).users();
+
+    expect(adapter.requests.single.uri.path, '/tandoor/api/user/');
+    expect(users, const [
+      UserRef(id: 1, name: 'Admin'),
+      UserRef(id: 2, name: 'Anna'),
+      UserRef(id: 3, name: 'Ben'),
+    ]);
   });
 
   group('TandoorServerRepository', () {

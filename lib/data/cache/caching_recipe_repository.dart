@@ -130,6 +130,17 @@ bool _matches(Recipe recipe, RecipeQuery query, TextMatcher text) {
   // exact, "at least n times" can only tell cooked from not cooked.
   if (query.neverCooked && recipe.lastCooked != null) return false;
   if (query.minTimesCooked != null && recipe.lastCooked == null) return false;
+  if (query.createdBy case final user? when recipe.createdBy?.id != user) {
+    return false;
+  }
+  // On hand as of when the recipe was stored, and without the substitutes
+  // Tandoor also counts.
+  if (query.maxMissingFoods case final max?) {
+    final missing = foods.where((f) => !f.onHand && !f.ignoreShopping);
+    if (missing.length > max) return false;
+  }
+  // Which books a recipe is in isn't stored; nothing is known to match.
+  if (query.bookIds.isNotEmpty) return false;
   return true;
 }
 

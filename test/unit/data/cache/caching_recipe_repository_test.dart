@@ -10,6 +10,7 @@ import 'package:yumdoor/data/cache/recipe_cache.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
+import 'package:yumdoor/domain/models/user_ref.dart';
 
 import '../../../fakes/fake_recipe_repository.dart';
 import '../../../fixtures/recipes.dart';
@@ -23,6 +24,7 @@ final _suppe = ofenkarotten.copyWith(
   steps: const [],
   rating: 3,
   lastCooked: DateTime(2026, 9, 1, 18),
+  createdBy: const UserRef(id: 2, name: 'Anna'),
 );
 
 void main() {
@@ -241,6 +243,20 @@ void main() {
         expect(await ids(const RecipeQuery(neverCooked: true)), [7]);
         // Counts aren't cached: at least cooked once.
         expect(await ids(const RecipeQuery(minTimesCooked: 5)), [8]);
+      });
+
+      test('applies the cookable and creator filters, not books', () async {
+        Future<List<int>> ids(RecipeQuery query) async => [
+          for (final r in (await repository.search(query)).items) r.id,
+        ];
+
+        // The soup has no ingredients; none of the carrots' foods is on hand.
+        expect(await ids(const RecipeQuery(maxMissingFoods: 0)), [8]);
+        expect(await ids(const RecipeQuery(maxMissingFoods: 1)), [8]);
+        expect(await ids(const RecipeQuery(createdBy: 2)), [8]);
+        expect(await ids(const RecipeQuery(createdBy: 3)), isEmpty);
+        // Book entries aren't cached.
+        expect(await ids(const RecipeQuery(bookIds: {1})), isEmpty);
       });
 
       test('has no later pages', () async {

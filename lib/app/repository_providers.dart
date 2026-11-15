@@ -9,12 +9,14 @@ import '../data/repositories/tandoor_auth_repository.dart';
 import '../data/repositories/tandoor_repositories.dart';
 import '../data/repositories/tandoor_server_repository.dart';
 import '../domain/repositories/auth_repository.dart';
+import '../domain/repositories/book_repository.dart';
 import '../domain/repositories/cook_log_repository.dart';
 import '../domain/repositories/food_repository.dart';
 import '../domain/repositories/keyword_repository.dart';
 import '../domain/repositories/offline_cache.dart';
 import '../domain/repositories/recipe_repository.dart';
 import '../domain/repositories/server_repository.dart';
+import '../domain/repositories/user_repository.dart';
 import 'offline.dart';
 import 'platform_providers.dart';
 import 'session.dart';
@@ -79,6 +81,14 @@ KeywordRepository keywordRepository(Ref ref) =>
 @Riverpod(keepAlive: true)
 CookLogRepository cookLogRepository(Ref ref) =>
     ref.watch(_tandoorRepositoriesProvider).cookLogs;
+
+@Riverpod(keepAlive: true)
+BookRepository bookRepository(Ref ref) =>
+    ref.watch(_tandoorRepositoriesProvider).books;
+
+@Riverpod(keepAlive: true)
+UserRepository userRepository(Ref ref) =>
+    ref.watch(_tandoorRepositoriesProvider).users;
 
 @Riverpod(keepAlive: true)
 CacheDatabase _cacheDatabase(Ref ref) {

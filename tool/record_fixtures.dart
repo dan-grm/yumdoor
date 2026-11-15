@@ -64,6 +64,10 @@ Future<void> main() async {
       // The space's oldest entries, by Anna and Ben, with and without a
       // rating and a comment.
       'cook_log_list.json': '/api/cook-log/?page_size=3',
+      // Anna's own book, shared with Ben.
+      'recipe_book_list.json': '/api/recipe-book/',
+      // Not paginated; `display_name` with a trailing space.
+      'user_list.json': '/api/user/',
     };
 
     for (final MapEntry(key: file, value: path) in fixtures.entries) {
