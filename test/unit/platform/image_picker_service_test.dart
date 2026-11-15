@@ -3,11 +3,13 @@ import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/platform/image_picker/image_picker_service.dart';
 
+import '../../fakes/fake_image_picker_service.dart';
+
 Uint8List bytes(List<int> head, [int length = 32]) =>
     Uint8List(length)..setRange(0, head.length, head);
 
 final jpeg = bytes(const [0xFF, 0xD8, 0xFF, 0xE0]);
-final png = bytes(const [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+final png = pngBytes;
 final webp = bytes([...'RIFF'.codeUnits, 0, 0, 0, 0, ...'WEBPVP8 '.codeUnits]);
 final gif = bytes('GIF89a'.codeUnits);
 
@@ -106,10 +108,16 @@ void main() {
     });
   });
 
-  test('every accepted type has an extension', () {
-    for (final type in acceptedImageTypes) {
-      final image = PickedImage(name: 'x', bytes: png, mimeType: type);
-      expect(image.fileName, isNot(contains('null')), reason: type);
-    }
+  test('the file picker lists the types the content check accepts', () {
+    expect(acceptedImageTypes, [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+    ]);
+    expect(
+      [jpeg, png, webp, gif].map(sniffImageType),
+      orderedEquals(acceptedImageTypes),
+    );
   });
 }

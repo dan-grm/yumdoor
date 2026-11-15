@@ -44,16 +44,22 @@ class FakeImagePickerService implements ImagePickerService {
     return nextPick;
   }
 
+  bool _hovering = false;
+
+  /// Files dragged over the window ([isOver]) or out of it. Like the real
+  /// service, only changes are reported.
   void hover({required bool isOver}) {
-    if (isDropTarget) _drops.add(ImageDragHover(isOver: isOver));
+    if (!isDropTarget || isOver == _hovering) return;
+    _hovering = isOver;
+    _drops.add(ImageDragHover(isOver: isOver));
   }
 
-  /// Drops a file called [name] with [bytes], checked like a real one.
+  /// Drops a file called [name] with [bytes], checked like a real one. Ends a
+  /// hover first.
   void drop(String name, Uint8List bytes) {
     if (!isDropTarget) return;
-    _drops
-      ..add(const ImageDragHover(isOver: false))
-      ..add(ImageDropped(checkImage(name: name, bytes: bytes)));
+    hover(isOver: false);
+    _drops.add(ImageDropped(checkImage(name: name, bytes: bytes)));
   }
 
   @override

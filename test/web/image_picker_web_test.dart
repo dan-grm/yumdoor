@@ -9,6 +9,7 @@ import 'package:web/web.dart' as web;
 import 'package:yumdoor/platform/image_picker/image_picker_service.dart';
 import 'package:yumdoor/platform/image_picker/image_picker_service_web.dart';
 
+import '../fakes/fake_image_picker_service.dart' show pngBytes;
 import '../platform/contracts.dart';
 
 // The web ImagePickerService in a real browser:
@@ -16,7 +17,7 @@ import '../platform/contracts.dart';
 // The browser opens no picker for a click without a user gesture, so the tests
 // play the user by setting the input's files and firing its events.
 
-const _png = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 13];
+final _png = pngBytes;
 
 web.File _file(String name, List<int> bytes, {String type = ''}) => web.File(
   [Uint8List.fromList(bytes).toJS].toJS,
@@ -113,6 +114,16 @@ void main() {
       expect(await second, isA<PickedImage>());
     });
 
+    test('a new pick leaves one whose file is being read alone', () async {
+      final first = picker.pickFile();
+      _choose([_file('a.png', _png)]);
+      final second = picker.pickFile();
+
+      expect(await first, isA<PickedImage>());
+      _input()!.dispatchEvent(web.Event('cancel'));
+      expect(await second, isNull);
+    });
+
     test('rejects a non-image whatever its name and type say', () async {
       final pick = picker.pickFile();
       _choose([_file('fake.png', 'not a png'.codeUnits, type: 'image/png')]);
@@ -194,6 +205,35 @@ void main() {
         await pumpEventQueue();
 
         expect(events.map((e) => (e as ImageDragHover).isOver), [true, false]);
+      });
+
+      test('ends a hover whose dragleave was lost', () async {
+        final events = <ImageDropEvent>[];
+        final subscription = picker.drops.listen(events.add);
+        addTearDown(subscription.cancel);
+        final transfer = _transfer([_file('a.png', _png)]);
+
+        web.document.body!.dispatchEvent(_drag('dragenter', transfer));
+        web.document.body!.dispatchEvent(_drag('dragover', transfer));
+        await Future<void>.delayed(
+          PlatformImagePickerService.hoverTimeout * 1.5,
+        );
+
+        expect(events.map((e) => (e as ImageDragHover).isOver), [true, false]);
+      });
+
+      test('a drop read after its listener left is not delivered', () async {
+        var subscription = picker.drops.listen((_) {});
+        web.document.body!.dispatchEvent(
+          _drag('drop', _transfer([_file('a.png', _png)])),
+        );
+        await subscription.cancel();
+        final events = <ImageDropEvent>[];
+        subscription = picker.drops.listen(events.add);
+        addTearDown(subscription.cancel);
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+
+        expect(events, isEmpty);
       });
 
       test('delivers a rejected drop', () async {

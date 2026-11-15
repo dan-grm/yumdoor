@@ -64,7 +64,8 @@ final class PickedImage extends ImagePickResult {
     final trimmed = name.trim();
     final dot = trimmed.lastIndexOf('.');
     final stem = dot >= 0 ? trimmed.substring(0, dot) : trimmed;
-    return '${stem.isEmpty ? 'image' : stem}.${_extensions[mimeType]}';
+    final extension = _extensions[mimeType] ?? mimeType.split('/').last;
+    return '${stem.isEmpty ? 'image' : stem}.$extension';
   }
 }
 
@@ -113,13 +114,9 @@ final class ImageDropped extends ImageDropEvent {
 const maxImageBytes = 20 * 1024 * 1024;
 
 /// The image types accepted, as a file picker should list them.
-const acceptedImageTypes = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-];
+final acceptedImageTypes = List<String>.unmodifiable(_extensions.keys);
 
+/// Every accepted type with its file extension.
 const _extensions = {
   'image/jpeg': 'jpg',
   'image/png': 'png',

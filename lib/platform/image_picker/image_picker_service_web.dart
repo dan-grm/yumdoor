@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
 
 import 'package:web/web.dart' as web;
 
@@ -18,18 +19,29 @@ class PlatformImagePickerService implements ImagePickerService {
   /// The attribute on the file input, so tests can find it.
   static const inputMarker = 'data-yumdoor-image-picker';
 
+  /// How long after the last `dragover` the files count as gone. Browsers
+  /// fire `dragover` every 50–350 ms while files are over the window; this
+  /// ends a hover whose `dragleave` was lost.
+  static const hoverTimeout = Duration(milliseconds: 500);
+
   late final StreamController<ImageDropEvent> _drops;
   final _dropListeners = <StreamSubscription<web.Event>>[];
+  // Counts listen phases, so a drop read while its listener left isn't
+  // delivered to the next one.
+  int _dropGeneration = 0;
   // dragenter and dragleave fire for every element the pointer crosses; the
   // files have left the window when they balance out.
   int _dragDepth = 0;
+  bool _hovering = false;
+  Timer? _hoverTimer;
   _PendingPick? _pending;
 
   @override
-  bool get canUseCamera => web.window.matchMedia('(pointer: coarse)').matches;
+  bool get canUseCamera =>
+      web.window.matchMedia('(any-pointer: coarse)').matches;
 
   @override
-  bool get supportsDrop => web.window.matchMedia('(pointer: fine)').matches;
+  bool get supportsDrop => web.window.matchMedia('(any-pointer: fine)').matches;
 
   @override
   Stream<ImageDropEvent> get drops => _drops.stream;
@@ -41,9 +53,9 @@ class PlatformImagePickerService implements ImagePickerService {
   Future<ImagePickResult?> pickFile() => _pick(camera: false);
 
   Future<ImagePickResult?> _pick({required bool camera}) {
-    // Browsers without the `cancel` event (before Chrome 113, Safari 16.4)
-    // leave a cancelled pick open; the next pick ends it.
-    _pending?.finish(null);
+    // A pick still open without a choice was abandoned (or cancelled where the
+    // `cancel` event is missing); one whose file is being read completes.
+    if (_pending case final pending? when !pending.chosen) pending.finish(null);
 
     final input = (web.document.createElement('input') as web.HTMLInputElement)
       ..type = 'file'
@@ -60,11 +72,24 @@ class PlatformImagePickerService implements ImagePickerService {
     pending.subscriptions.addAll([
       web.EventStreamProviders.changeEvent.forTarget(input).listen((_) async {
         final file = input.files?.item(0);
-        pending.finish(file == null ? null : await _read(file));
+        if (file == null) {
+          pending.finish(null);
+          return;
+        }
+        pending.chosen = true;
+        pending.finish(await _read(file));
       }),
       web.EventStreamProviders.cancelEvent
           .forTarget(input)
           .listen((_) => pending.finish(null)),
+      // Without the `cancel` event (before Chrome 113 and Safari 16.4), the
+      // window getting focus back with no `change` soon after means cancel.
+      if (!(input as JSObject).has('oncancel'))
+        web.EventStreamProviders.focusEvent.forTarget(web.window).listen((_) {
+          Timer(const Duration(seconds: 1), () {
+            if (!pending.chosen) pending.finish(null);
+          });
+        }),
     ]);
     input.click();
     return pending.completer.future.whenComplete(() {
@@ -73,21 +98,24 @@ class PlatformImagePickerService implements ImagePickerService {
   }
 
   void _listenForDrops() {
+    final generation = ++_dropGeneration;
     final window = web.window;
     _dropListeners.addAll([
       web.EventStreamProviders.dragEnterEvent.forTarget(window).listen((event) {
         if (!_hasFiles(event)) return;
-        if (_dragDepth++ == 0) _drops.add(const ImageDragHover(isOver: true));
+        _dragDepth++;
+        _hover();
       }),
       web.EventStreamProviders.dragOverEvent.forTarget(window).listen((event) {
         if (!_hasFiles(event)) return;
         // Cancelling dragover is what makes the window a drop target.
         event.preventDefault();
         (event as web.DragEvent).dataTransfer?.dropEffect = 'copy';
+        _hover();
       }),
       web.EventStreamProviders.dragLeaveEvent.forTarget(window).listen((event) {
         if (!_hasFiles(event) || _dragDepth == 0) return;
-        if (--_dragDepth == 0) _drops.add(const ImageDragHover(isOver: false));
+        if (--_dragDepth == 0) _endHover();
       }),
       web.EventStreamProviders.dropEvent.forTarget(window).listen((
         event,
@@ -95,26 +123,45 @@ class PlatformImagePickerService implements ImagePickerService {
         if (!_hasFiles(event)) return;
         // Keeps the browser from opening the file in place of the app.
         event.preventDefault();
-        if (_dragDepth > 0) {
-          _dragDepth = 0;
-          _drops.add(const ImageDragHover(isOver: false));
-        }
+        _endHover();
         final file = (event as web.DragEvent).dataTransfer?.files.item(0);
         if (file == null) return;
         final result = await _read(file);
-        if (!_drops.isClosed && _drops.hasListener) {
+        if (generation == _dropGeneration && _drops.hasListener) {
           _drops.add(ImageDropped(result));
         }
       }),
     ]);
   }
 
+  void _hover() {
+    _hoverTimer?.cancel();
+    _hoverTimer = Timer(hoverTimeout, _endHover);
+    if (_hovering) return;
+    _hovering = true;
+    _drops.add(const ImageDragHover(isOver: true));
+  }
+
+  void _endHover() {
+    _dragDepth = 0;
+    _hoverTimer?.cancel();
+    _hoverTimer = null;
+    if (!_hovering) return;
+    _hovering = false;
+    if (!_drops.isClosed) _drops.add(const ImageDragHover(isOver: false));
+  }
+
   void _stopListeningForDrops() {
+    // Invalidates drops still being read.
+    _dropGeneration++;
     for (final listener in _dropListeners) {
       unawaited(listener.cancel());
     }
     _dropListeners.clear();
     _dragDepth = 0;
+    _hovering = false;
+    _hoverTimer?.cancel();
+    _hoverTimer = null;
   }
 
   static bool _hasFiles(web.Event event) {
@@ -150,6 +197,9 @@ class _PendingPick {
   final web.HTMLInputElement input;
   final completer = Completer<ImagePickResult?>();
   final subscriptions = <StreamSubscription<web.Event>>[];
+
+  /// The user chose a file, which is being read.
+  bool chosen = false;
 
   void finish(ImagePickResult? result) {
     if (completer.isCompleted) return;
