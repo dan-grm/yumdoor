@@ -304,6 +304,7 @@ class TandoorClient {
   Future<Object?> post(String path, Object body) => _send('POST', path, body);
   Future<Object?> put(String path, Object body) => _send('PUT', path, body);
   Future<Object?> patch(String path, Object body) => _send('PATCH', path, body);
+  Future<Object?> delete(String path) => _send('DELETE', path);
 
   Future<Object?> _send(String method, String path, [Object? body]) async {
     final request = await _http.openUrl(method, baseUrl.resolve(path));
