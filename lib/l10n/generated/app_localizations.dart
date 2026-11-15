@@ -1247,7 +1247,7 @@ abstract class AppLocalizations {
   /// Text of the dialog that confirms deleting a saved search.
   ///
   /// In de, this message translates to:
-  /// **'Die Suche wird auch in Tandoor gelöscht, für alle, mit denen sie geteilt ist. Rezepte bleiben erhalten.'**
+  /// **'Die Suche wird auch in Tandoor gelöscht, für alle, mit denen sie geteilt ist. Ein Kochbuch mit dieser Suche zeigt danach nur noch seine fest hinzugefügten Rezepte. Rezepte bleiben erhalten.'**
   String get searchSavedDeleteText;
 
   /// Confirm button of the delete dialog.

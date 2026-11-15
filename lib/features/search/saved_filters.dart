@@ -55,8 +55,12 @@ class SavedFilterRow extends ConsumerWidget {
       ...all.where((f) => isSavedFilterApplied(f, query)),
       ...all.where((f) => !isSavedFilterApplied(f, query)),
     ];
-    // A saved search the chips can't show can't be saved inside another.
-    final canSave = !query.isEmpty && query.savedFilter == null;
+    // A saved search the chips can't show can't be saved inside another,
+    // nor one that is saved already.
+    final canSave =
+        !query.isEmpty &&
+        query.savedFilter == null &&
+        !all.any((f) => isSavedFilterApplied(f, query));
     if (filters.isEmpty && !canSave) return const SizedBox.shrink();
     return Padding(
       padding: EdgeInsets.only(top: t.space1),
@@ -70,11 +74,12 @@ class SavedFilterRow extends ConsumerWidget {
               ChoiceFilterChip(
                 label: filter.name,
                 selected: isSavedFilterApplied(filter, query),
-                onSelected: () => onChange(
-                  isSavedFilterApplied(filter, query)
-                      ? const RecipeQuery()
-                      : filter.search,
-                ),
+                onSelected: () => onChange(switch (filter.query) {
+                  _ when !isSavedFilterApplied(filter, query) => filter.search,
+                  // Only the saved search goes; what was added to it stays.
+                  null => query.copyWith(savedFilter: null),
+                  _ => const RecipeQuery(),
+                }),
               ),
             if (canSave)
               OfflineDisabled(
@@ -103,6 +108,8 @@ class SavedFilterRow extends ConsumerWidget {
     // returns.
     final container = ProviderScope.containerOf(context, listen: false);
     final query = current?.call() ?? this.query;
+    // The text was cleared since; nothing left to save.
+    if (query.isEmpty) return;
     final name = await _askName(
       context,
       title: l10n.searchSavedSave,

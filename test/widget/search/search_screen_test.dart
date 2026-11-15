@@ -847,6 +847,27 @@ void main() {
       );
     });
 
+    testWidgets('turning one off keeps what was added to it', (tester) async {
+      final router = await pumpSearch(
+        tester,
+        location: '/search?q=Reis&keyword=2&saved=2',
+      );
+
+      await tapChip(tester, 'Selten gekocht');
+
+      expect(location(router), '/search?q=Reis&keyword=2');
+    });
+
+    testWidgets('offers no saving of a search saved already', (tester) async {
+      await pumpSearch(tester, location: '/search?keyword=1');
+
+      expect(
+        tester.getSemantics(chip('Schnell & vegetarisch')),
+        isSemantics(isSelected: true),
+      );
+      expect(find.byTooltip('Suche speichern'), findsNothing);
+    });
+
     testWidgets('saves text typed moments ago', (tester) async {
       await pumpSearch(tester, location: '/search?keyword=2');
 

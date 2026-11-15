@@ -55,6 +55,17 @@ void main() {
       );
     });
 
+    test('reads "keywords" only without "keywords_or", as Tandoor', () {
+      expect(
+        savedSearchQuery('{"keywords":[1],"keywords_or":[2]}'),
+        const RecipeQuery(keywordIds: {2}),
+      );
+      expect(
+        savedSearchQuery('{"foods":[1,2],"foods_or":[3]}'),
+        const RecipeQuery(foodIds: {3}),
+      );
+    });
+
     test('takes a date and time as the local day', () {
       final midnight = DateTime(2026, 11, 1).toUtc().toIso8601String();
       expect(

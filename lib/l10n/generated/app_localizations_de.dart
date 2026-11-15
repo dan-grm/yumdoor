@@ -778,7 +778,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get searchSavedDeleteText =>
-      'Die Suche wird auch in Tandoor gelöscht, für alle, mit denen sie geteilt ist. Rezepte bleiben erhalten.';
+      'Die Suche wird auch in Tandoor gelöscht, für alle, mit denen sie geteilt ist. Ein Kochbuch mit dieser Suche zeigt danach nur noch seine fest hinzugefügten Rezepte. Rezepte bleiben erhalten.';
 
   @override
   String get searchSavedDelete => 'Löschen';

@@ -1077,7 +1077,7 @@
       }
     }
   },
-  "searchSavedDeleteText": "Die Suche wird auch in Tandoor gelöscht, für alle, mit denen sie geteilt ist. Rezepte bleiben erhalten.",
+  "searchSavedDeleteText": "Die Suche wird auch in Tandoor gelöscht, für alle, mit denen sie geteilt ist. Ein Kochbuch mit dieser Suche zeigt danach nur noch seine fest hinzugefügten Rezepte. Rezepte bleiben erhalten.",
   "@searchSavedDeleteText": {
     "description": "Text of the dialog that confirms deleting a saved search."
   },

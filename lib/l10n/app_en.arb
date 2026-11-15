@@ -191,7 +191,7 @@
   "searchSavedRenameLabel": "Rename {name}",
   "searchSavedDeleteLabel": "Delete {name}",
   "searchSavedDeleteTitle": "Delete “{name}”?",
-  "searchSavedDeleteText": "The search is deleted in Tandoor too, for everyone it is shared with. No recipes are deleted.",
+  "searchSavedDeleteText": "The search is deleted in Tandoor too, for everyone it is shared with. A cookbook using this search then shows only the recipes added to it. No recipes are deleted.",
   "searchSavedDelete": "Delete",
   "searchSavedFilter": "Saved: {name}",
   "searchOfflineSavedNote": "This saved search can't be applied offline."

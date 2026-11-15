@@ -34,8 +34,13 @@ RecipeQuery? savedSearchQuery(String json) {
     return null;
   }
   if (decoded is! Map<String, dynamic>) return null;
+  // Tandoor reads `keywords` only without `keywords_or`, and so on.
+  final params = {...decoded};
+  for (final alias in ['keywords', 'foods', 'books']) {
+    if (!_isEmpty(params['${alias}_or'])) params.remove(alias);
+  }
   var query = const RecipeQuery();
-  for (final MapEntry(:key, :value) in decoded.entries) {
+  for (final MapEntry(:key, :value) in params.entries) {
     if (_isEmpty(value)) continue;
     final next = _apply(query, key, value as Object);
     if (next == null) return null;
