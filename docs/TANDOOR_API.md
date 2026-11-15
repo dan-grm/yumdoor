@@ -241,6 +241,50 @@ in the request are ignored.
 - Same for `MealPlan.note_markdown`: use `note`, not the HTML.
 - Images: `PUT /api/recipe/{id}/image/` (multipart `image`, or `image_url`).
 
+## Recipe writes
+
+`POST /api/recipe/` creates a recipe, `PATCH /api/recipe/{id}/` changes one, both with steps, ingredients, foods,
+units and keywords nested in the body. `RecipeSerializer` and the nested serializers are drf-writable-nested
+(0.7.2) `WritableNestedModelSerializer`s (`cookbook/serializer.py:48`, `:1054`, `:1193`). Verified on 2.6.15:
+
+- **Required:** `name` and `steps` on create (`steps` may be one empty step, not missing). A new step needs
+  `ingredients` (may be `[]`); a new ingredient needs `food`, `unit` (both may be `null`) and `amount`. A PATCH
+  needs nothing; fields it leaves out keep their value.
+- **Nested lists are matched by `id`.** An item with an `id` updates that step, ingredient or keyword; one
+  without is created. Items left out of a list that is sent are **removed from the recipe but not deleted**: steps
+  and ingredients are many-to-many, so drf-writable-nested only removes the link (`mixins.py:298`). They stay in the
+  database as orphans; the API no longer finds them (404). A list that isn't sent at all is left alone.
+- **Partial all the way down.** On a PATCH, nested items that have an `id` are updated partially too
+  (`mixins.py:85`), so a step sent as `{id, name, instruction, time, order, ingredients}` keeps its
+  `step_recipe` (sub-recipe), `file`, `show_as_header` and `show_ingredients_table`. New items are created with
+  model defaults: `show_as_header` and `show_ingredients_table` `true`, `time` and `order` `0`, `note` `null`.
+- **`order`** is stored as sent and nothing renumbers it. Steps and ingredients come back sorted by
+  `['order', 'pk']` (`cookbook/models.py:955`, `:986`), so a save sends every item's position as its `order`.
+- **`original_text`** is kept only when an ingredient is created; an update drops it (`serializer.py:1009`).
+- **Foods, units and keywords are get-or-create by name** when sent without an `id`: keywords by name
+  (`serializer.py:725`; on the PostgreSQL setup `{"name": "backen"}` found "Backen"), units by name or plural name ignoring case (`:747`), foods by name or plural name
+  ignoring case (`:922`; `{"name": "karotte"}` finds "Karotte"). **With an `id` they are updated**: the
+  name sent renames the food, unit or keyword everywhere it is used, so send the current name. A unit with an `id`
+  but no `name` is a 500 (`UnitSerializer.update` reads `name`).
+- **What a PATCH keeps when left out:** `nutrition`, `properties`, `private`, `shared`, `internal`,
+  `show_ingredient_overview`, `image` and so on. An empty `source_url` (`""`) clears it; `null` fields are
+  left out by the generated client.
+- **`internal`** defaults to `false` through the API; Tandoor's own editor sets it to `true` on recipes it
+  creates (`vue3/src/components/model_editors/RecipeEditor.vue`), and Yumdoor does the same.
+- The PATCH response is the saved recipe in the same shape as `GET /api/recipe/{id}/`, so no second request is
+  needed. `food_properties` is `{}` in the create response.
+- A private recipe (`private: true`) is invisible to other users of the space (403 by id, absent from searches)
+  unless they are in `shared`. The integration tests rely on that to keep their recipes out of other tests.
+
+**What Yumdoor sends** (`lib/data/mappers/recipe_draft_mapper.dart`): on update a PATCH with `name`,
+`description`, `servings`, `servings_text`, `working_time`, `waiting_time`, `source_url`, `keywords` and `steps`;
+each step with `id` (if saved), `name`, `instruction`, `time`, `order` and `ingredients`; each ingredient with
+`id` (if saved), `food` and `unit` as `{id?, name}`, `amount`, `no_amount`, `is_header`, `note`, `order` and
+`original_text` (and `checked: false`, a default of the generated client; read-only on the server).
+Everything else of the recipe, its steps and its ingredients is left out and so survives a save.
+On create the same without step and ingredient ids (a draft made from another recipe would otherwise share its
+steps and ingredients) plus `internal: true`.
+
 ## Cook log (ratings, comments, feed)
 
 - `CookLog` fields: `recipe`, `servings` (integer, nullable), `rating` (integer, nullable), `comment` (text,

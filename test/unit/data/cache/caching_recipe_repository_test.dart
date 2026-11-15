@@ -9,6 +9,7 @@ import 'package:yumdoor/data/cache/caching_recipe_repository.dart';
 import 'package:yumdoor/data/cache/recipe_cache.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
+import 'package:yumdoor/domain/models/recipe_draft.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
 import 'package:yumdoor/domain/models/recipe_sort.dart';
 import 'package:yumdoor/domain/models/user_ref.dart';
@@ -295,6 +296,71 @@ void main() {
           throwsA(isA<CancelledFailure>()),
         );
       });
+    });
+  });
+
+  group('saves', () {
+    test('an update stores the recipe as saved', () async {
+      await fetch(7);
+      final draft = RecipeDraft.fromRecipe(_karotten).copyWith(name: 'Neu');
+
+      final saved = await repository.updateRecipe(7, draft);
+
+      expect(saved.name, 'Neu');
+      // Before the save returns, not in the background.
+      expect(await cache.get(7), saved);
+    });
+
+    test('an update keeps the stored last cooked date', () async {
+      await fetch(8);
+      // The cook log can't be read during the save.
+      remote.recipes[8] = _suppe.copyWith(lastCooked: null);
+      final draft = RecipeDraft.fromRecipe(_suppe).copyWith(name: 'Neu');
+
+      final saved = await repository.updateRecipe(8, draft);
+
+      expect(saved.lastCooked, _suppe.lastCooked);
+      expect(await cache.get(8), saved);
+    });
+
+    test('a new recipe is stored', () async {
+      final saved = await repository.createRecipe(
+        const RecipeDraft(name: 'Brot'),
+      );
+
+      expect(await cache.get(saved.id), saved);
+    });
+
+    test('fail offline and are not queued', () async {
+      await fetch(7);
+      remote.failure = const OfflineFailure();
+      final draft = RecipeDraft.fromRecipe(_karotten).copyWith(name: 'Neu');
+
+      await expectLater(
+        repository.updateRecipe(7, draft),
+        throwsA(isA<OfflineFailure>()),
+      );
+      await expectLater(
+        repository.createRecipe(draft),
+        throwsA(isA<OfflineFailure>()),
+      );
+
+      expect((await cache.get(7))?.name, 'Ofenkarotten mit Feta');
+      remote.failure = null;
+      // Nothing was kept to be sent later.
+      expect(remote.recipes.length, 2);
+    });
+
+    test('an update of a deleted recipe removes it from the cache', () async {
+      await fetch(7);
+      remote.recipes.remove(7);
+
+      await expectLater(
+        repository.updateRecipe(7, RecipeDraft.fromRecipe(_karotten)),
+        throwsA(isA<NotFoundFailure>()),
+      );
+
+      expect(await cache.get(7), isNull);
     });
   });
 }

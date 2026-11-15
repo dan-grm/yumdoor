@@ -18,8 +18,9 @@ mixin _$Recipe {
 
  int get id; String get name; String get description; Uri? get image; List<Keyword> get keywords;/// The servings the ingredient amounts are for.
  int get servings;/// What a serving is ("Stück", "Gläser"), empty if not set.
- String get servingsText; Duration get workingTime; Duration get waitingTime; List<RecipeStep> get steps;/// Where the recipe was imported from, if anywhere.
- Uri? get sourceUrl;/// The current user's average rating from their own cook log, 0 to 5.
+ String get servingsText; Duration get workingTime; Duration get waitingTime; List<RecipeStep> get steps;/// Where the recipe was imported from, if anywhere: usually a URL, but
+/// Tandoor stores any text, so it is kept as written.
+ String? get sourceUrl;/// The current user's average rating from their own cook log, 0 to 5.
  double? get rating;/// When the current user last cooked it.
  DateTime? get lastCooked; UserRef? get createdBy; DateTime? get updatedAt;
 /// Create a copy of Recipe
@@ -59,7 +60,7 @@ abstract mixin class $RecipeCopyWith<$Res>  {
   factory $RecipeCopyWith(Recipe value, $Res Function(Recipe) _then) = _$RecipeCopyWithImpl;
 @useResult
 $Res call({
- int id, String name, String description, Uri? image, List<Keyword> keywords, int servings, String servingsText, Duration workingTime, Duration waitingTime, List<RecipeStep> steps, Uri? sourceUrl, double? rating, DateTime? lastCooked, UserRef? createdBy, DateTime? updatedAt
+ int id, String name, String description, Uri? image, List<Keyword> keywords, int servings, String servingsText, Duration workingTime, Duration waitingTime, List<RecipeStep> steps, String? sourceUrl, double? rating, DateTime? lastCooked, UserRef? createdBy, DateTime? updatedAt
 });
 
 
@@ -89,7 +90,7 @@ as String,workingTime: null == workingTime ? _self.workingTime : workingTime // 
 as Duration,waitingTime: null == waitingTime ? _self.waitingTime : waitingTime // ignore: cast_nullable_to_non_nullable
 as Duration,steps: null == steps ? _self.steps : steps // ignore: cast_nullable_to_non_nullable
 as List<RecipeStep>,sourceUrl: freezed == sourceUrl ? _self.sourceUrl : sourceUrl // ignore: cast_nullable_to_non_nullable
-as Uri?,rating: freezed == rating ? _self.rating : rating // ignore: cast_nullable_to_non_nullable
+as String?,rating: freezed == rating ? _self.rating : rating // ignore: cast_nullable_to_non_nullable
 as double?,lastCooked: freezed == lastCooked ? _self.lastCooked : lastCooked // ignore: cast_nullable_to_non_nullable
 as DateTime?,createdBy: freezed == createdBy ? _self.createdBy : createdBy // ignore: cast_nullable_to_non_nullable
 as UserRef?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
@@ -190,7 +191,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  String description,  Uri? image,  List<Keyword> keywords,  int servings,  String servingsText,  Duration workingTime,  Duration waitingTime,  List<RecipeStep> steps,  Uri? sourceUrl,  double? rating,  DateTime? lastCooked,  UserRef? createdBy,  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  String description,  Uri? image,  List<Keyword> keywords,  int servings,  String servingsText,  Duration workingTime,  Duration waitingTime,  List<RecipeStep> steps,  String? sourceUrl,  double? rating,  DateTime? lastCooked,  UserRef? createdBy,  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Recipe() when $default != null:
 return $default(_that.id,_that.name,_that.description,_that.image,_that.keywords,_that.servings,_that.servingsText,_that.workingTime,_that.waitingTime,_that.steps,_that.sourceUrl,_that.rating,_that.lastCooked,_that.createdBy,_that.updatedAt);case _:
@@ -211,7 +212,7 @@ return $default(_that.id,_that.name,_that.description,_that.image,_that.keywords
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  String description,  Uri? image,  List<Keyword> keywords,  int servings,  String servingsText,  Duration workingTime,  Duration waitingTime,  List<RecipeStep> steps,  Uri? sourceUrl,  double? rating,  DateTime? lastCooked,  UserRef? createdBy,  DateTime? updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  String description,  Uri? image,  List<Keyword> keywords,  int servings,  String servingsText,  Duration workingTime,  Duration waitingTime,  List<RecipeStep> steps,  String? sourceUrl,  double? rating,  DateTime? lastCooked,  UserRef? createdBy,  DateTime? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _Recipe():
 return $default(_that.id,_that.name,_that.description,_that.image,_that.keywords,_that.servings,_that.servingsText,_that.workingTime,_that.waitingTime,_that.steps,_that.sourceUrl,_that.rating,_that.lastCooked,_that.createdBy,_that.updatedAt);case _:
@@ -231,7 +232,7 @@ return $default(_that.id,_that.name,_that.description,_that.image,_that.keywords
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  String description,  Uri? image,  List<Keyword> keywords,  int servings,  String servingsText,  Duration workingTime,  Duration waitingTime,  List<RecipeStep> steps,  Uri? sourceUrl,  double? rating,  DateTime? lastCooked,  UserRef? createdBy,  DateTime? updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  String description,  Uri? image,  List<Keyword> keywords,  int servings,  String servingsText,  Duration workingTime,  Duration waitingTime,  List<RecipeStep> steps,  String? sourceUrl,  double? rating,  DateTime? lastCooked,  UserRef? createdBy,  DateTime? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Recipe() when $default != null:
 return $default(_that.id,_that.name,_that.description,_that.image,_that.keywords,_that.servings,_that.servingsText,_that.workingTime,_that.waitingTime,_that.steps,_that.sourceUrl,_that.rating,_that.lastCooked,_that.createdBy,_that.updatedAt);case _:
@@ -273,8 +274,9 @@ class _Recipe extends Recipe {
   return EqualUnmodifiableListView(_steps);
 }
 
-/// Where the recipe was imported from, if anywhere.
-@override final  Uri? sourceUrl;
+/// Where the recipe was imported from, if anywhere: usually a URL, but
+/// Tandoor stores any text, so it is kept as written.
+@override final  String? sourceUrl;
 /// The current user's average rating from their own cook log, 0 to 5.
 @override final  double? rating;
 /// When the current user last cooked it.
@@ -317,7 +319,7 @@ abstract mixin class _$RecipeCopyWith<$Res> implements $RecipeCopyWith<$Res> {
   factory _$RecipeCopyWith(_Recipe value, $Res Function(_Recipe) _then) = __$RecipeCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name, String description, Uri? image, List<Keyword> keywords, int servings, String servingsText, Duration workingTime, Duration waitingTime, List<RecipeStep> steps, Uri? sourceUrl, double? rating, DateTime? lastCooked, UserRef? createdBy, DateTime? updatedAt
+ int id, String name, String description, Uri? image, List<Keyword> keywords, int servings, String servingsText, Duration workingTime, Duration waitingTime, List<RecipeStep> steps, String? sourceUrl, double? rating, DateTime? lastCooked, UserRef? createdBy, DateTime? updatedAt
 });
 
 
@@ -347,7 +349,7 @@ as String,workingTime: null == workingTime ? _self.workingTime : workingTime // 
 as Duration,waitingTime: null == waitingTime ? _self.waitingTime : waitingTime // ignore: cast_nullable_to_non_nullable
 as Duration,steps: null == steps ? _self._steps : steps // ignore: cast_nullable_to_non_nullable
 as List<RecipeStep>,sourceUrl: freezed == sourceUrl ? _self.sourceUrl : sourceUrl // ignore: cast_nullable_to_non_nullable
-as Uri?,rating: freezed == rating ? _self.rating : rating // ignore: cast_nullable_to_non_nullable
+as String?,rating: freezed == rating ? _self.rating : rating // ignore: cast_nullable_to_non_nullable
 as double?,lastCooked: freezed == lastCooked ? _self.lastCooked : lastCooked // ignore: cast_nullable_to_non_nullable
 as DateTime?,createdBy: freezed == createdBy ? _self.createdBy : createdBy // ignore: cast_nullable_to_non_nullable
 as UserRef?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable

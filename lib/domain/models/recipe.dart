@@ -28,8 +28,9 @@ abstract class Recipe with _$Recipe {
     @Default(Duration.zero) Duration waitingTime,
     @Default([]) List<RecipeStep> steps,
 
-    /// Where the recipe was imported from, if anywhere.
-    Uri? sourceUrl,
+    /// Where the recipe was imported from, if anywhere: usually a URL, but
+    /// Tandoor stores any text, so it is kept as written.
+    String? sourceUrl,
 
     /// The current user's average rating from their own cook log, 0 to 5.
     double? rating,
