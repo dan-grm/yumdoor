@@ -878,5 +878,77 @@
   "recipeCooked": "Als gekocht eintragen",
   "@recipeCooked": {
     "description": "Button on the recipe screen that opens the cook log screen to rate the recipe."
+  },
+  "searchAddCookable": "Kochbar",
+  "@searchAddCookable": {
+    "description": "Add chip for the filter on what is on hand at home."
+  },
+  "searchCookableTitle": "Nach Vorrat filtern",
+  "@searchCookableTitle": {
+    "description": "Title of the cookable filter sheet; also the accessible label of its add chip."
+  },
+  "searchCookableHint": "Zählt, was jemand in deinem Haushalt vorrätig hat, und Ersatzzutaten.",
+  "@searchCookableHint": {
+    "description": "Under the title of the cookable filter sheet."
+  },
+  "searchCookableNow": "Jetzt kochbar",
+  "@searchCookableNow": {
+    "description": "Choice in the cookable filter sheet and label of its selected chip: every ingredient is on hand."
+  },
+  "searchCookableOneMissing": "Höchstens 1 Zutat fehlt",
+  "@searchCookableOneMissing": {
+    "description": "Choice in the cookable filter sheet and label of its selected chip."
+  },
+  "searchAddBook": "Buch",
+  "@searchAddBook": {
+    "description": "Add chip for the cookbook filter."
+  },
+  "searchBookTitle": "Nach Kochbuch filtern",
+  "@searchBookTitle": {
+    "description": "Title of the cookbook filter sheet; also the accessible label of its add chip."
+  },
+  "searchBookHint": "Mehrere Bücher: Rezepte aus einem davon. Ein Buch mit gespeicherter Suche zählt nur die fest hinzugefügten Rezepte.",
+  "@searchBookHint": {
+    "description": "Under the title of the cookbook filter sheet."
+  },
+  "searchBookEmpty": "Du hast noch keine Kochbücher.",
+  "@searchBookEmpty": {
+    "description": "Cookbook filter sheet when the user has no books."
+  },
+  "searchBookFilter": "Buch: {book}",
+  "@searchBookFilter": {
+    "description": "Label of a selected cookbook filter chip.",
+    "placeholders": {
+      "book": {
+        "type": "String",
+        "example": "Unsere Lieblingsrezepte"
+      }
+    }
+  },
+  "searchAddCreator": "Erstellt von",
+  "@searchAddCreator": {
+    "description": "Add chip for the filter on who created a recipe."
+  },
+  "searchCreatorTitle": "Nach Ersteller filtern",
+  "@searchCreatorTitle": {
+    "description": "Title of the created-by filter sheet; also the accessible label of its add chip."
+  },
+  "searchCreatorFilter": "Erstellt von {name}",
+  "@searchCreatorFilter": {
+    "description": "Label of the selected created-by filter chip.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Anna"
+      }
+    }
+  },
+  "searchOfflineCookableNote": "Offline zählt der Vorrat vom letzten Öffnen eines Rezepts, ohne Ersatzzutaten.",
+  "@searchOfflineCookableNote": {
+    "description": "Shown above offline results when the cookable filter is set."
+  },
+  "searchOfflineBookNote": "Offline ist nicht bekannt, welche Rezepte in einem Buch stehen.",
+  "@searchOfflineBookNote": {
+    "description": "Shown with offline results when the cookbook filter is set."
   }
 }

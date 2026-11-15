@@ -5,7 +5,8 @@ const searchPath = '/search';
 
 // Query parameters, so a search survives reload and can be shared:
 // `/search?q=suppe&food=12&food=40&keyword=3&rating=4&cooked_before=2026-09-01`,
-// `never=1` and `times_min=5` for the times cooked.
+// `never=1` and `times_min=5` for the times cooked, `missing=0` for cookable
+// now (`1`: one food missing), `book=4&book=7` and `created_by=2`.
 const _text = 'q';
 const _food = 'food';
 const _keyword = 'keyword';
@@ -13,6 +14,13 @@ const _minRating = 'rating';
 const _lastCookedBefore = 'cooked_before';
 const _neverCooked = 'never';
 const _minTimesCooked = 'times_min';
+const _maxMissingFoods = 'missing';
+const _book = 'book';
+const _createdBy = 'created_by';
+
+/// The most missing foods a link may ask for; the search screen offers 0
+/// and 1.
+const _maxMissingLimit = 1;
 
 /// The location of the search screen showing [query].
 String searchLocation(RecipeQuery query) {
@@ -30,6 +38,11 @@ String searchLocation(RecipeQuery query) {
       _neverCooked: ['1']
     else if (query.minTimesCooked case final times?)
       _minTimesCooked: ['$times'],
+    if (query.maxMissingFoods case final missing?)
+      _maxMissingFoods: ['$missing'],
+    if (query.bookIds.isNotEmpty)
+      _book: [for (final id in query.bookIds) '$id'],
+    if (query.createdBy case final user?) _createdBy: ['$user'],
   };
   return Uri(
     path: searchPath,
@@ -61,6 +74,18 @@ RecipeQuery searchQueryFromUri(Uri uri) {
             final times? when times >= 1 => times,
             _ => null,
           },
+    maxMissingFoods: switch (int.tryParse(
+      params[_maxMissingFoods]?.first ?? '',
+    )) {
+      final missing? when missing >= 0 && missing <= _maxMissingLimit =>
+        missing,
+      _ => null,
+    },
+    bookIds: ids(_book),
+    createdBy: switch (int.tryParse(params[_createdBy]?.first ?? '')) {
+      final user? when user > 0 => user,
+      _ => null,
+    },
   );
 }
 

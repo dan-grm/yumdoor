@@ -622,4 +622,57 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get recipeCooked => 'Als gekocht eintragen';
+
+  @override
+  String get searchAddCookable => 'Kochbar';
+
+  @override
+  String get searchCookableTitle => 'Nach Vorrat filtern';
+
+  @override
+  String get searchCookableHint =>
+      'Zählt, was jemand in deinem Haushalt vorrätig hat, und Ersatzzutaten.';
+
+  @override
+  String get searchCookableNow => 'Jetzt kochbar';
+
+  @override
+  String get searchCookableOneMissing => 'Höchstens 1 Zutat fehlt';
+
+  @override
+  String get searchAddBook => 'Buch';
+
+  @override
+  String get searchBookTitle => 'Nach Kochbuch filtern';
+
+  @override
+  String get searchBookHint =>
+      'Mehrere Bücher: Rezepte aus einem davon. Ein Buch mit gespeicherter Suche zählt nur die fest hinzugefügten Rezepte.';
+
+  @override
+  String get searchBookEmpty => 'Du hast noch keine Kochbücher.';
+
+  @override
+  String searchBookFilter(String book) {
+    return 'Buch: $book';
+  }
+
+  @override
+  String get searchAddCreator => 'Erstellt von';
+
+  @override
+  String get searchCreatorTitle => 'Nach Ersteller filtern';
+
+  @override
+  String searchCreatorFilter(String name) {
+    return 'Erstellt von $name';
+  }
+
+  @override
+  String get searchOfflineCookableNote =>
+      'Offline zählt der Vorrat vom letzten Öffnen eines Rezepts, ohne Ersatzzutaten.';
+
+  @override
+  String get searchOfflineBookNote =>
+      'Offline ist nicht bekannt, welche Rezepte in einem Buch stehen.';
 }

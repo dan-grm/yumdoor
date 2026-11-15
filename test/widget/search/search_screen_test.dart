@@ -10,11 +10,14 @@ import 'package:yumdoor/domain/models/food.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
 import 'package:yumdoor/domain/models/ingredient.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
+import 'package:yumdoor/domain/models/recipe_book.dart';
 import 'package:yumdoor/domain/models/recipe_step.dart';
+import 'package:yumdoor/domain/models/user_ref.dart';
 import 'package:yumdoor/features/search/search_location.dart';
 import 'package:yumdoor/features/search/search_providers.dart';
 import 'package:yumdoor/features/search/search_screen.dart';
 
+import '../../fakes/fake_book_user_repositories.dart';
 import '../../fakes/fake_food_keyword_repositories.dart';
 import '../../fakes/fake_recipe_repository.dart';
 import '../../fixtures/recipes.dart';
@@ -34,9 +37,22 @@ void main() {
     Keyword(id: 2, name: 'Ofen'),
   ]);
 
+  late FakeBookRepository books;
+  late FakeUserRepository users;
+
   setUpAll(loadBundledFonts);
 
-  setUp(() => recipes = FakeRecipeRepository([ofenkarotten, longNames]));
+  setUp(() {
+    recipes = FakeRecipeRepository([ofenkarotten, longNames]);
+    books = FakeBookRepository(const [
+      RecipeBook(id: 4, name: 'Unsere Lieblingsrezepte'),
+      RecipeBook(id: 7, name: 'Backen'),
+    ]);
+    users = FakeUserRepository(const [
+      UserRef(id: 1, name: 'Admin'),
+      UserRef(id: 2, name: 'Anna'),
+    ]);
+  });
 
   Future<GoRouter> pumpSearch(
     WidgetTester tester, {
@@ -53,6 +69,8 @@ void main() {
       keywordRepositoryProvider.overrideWithValue(
         keywordRepository ?? keywords,
       ),
+      bookRepositoryProvider.overrideWithValue(books),
+      userRepositoryProvider.overrideWithValue(users),
     ],
     routes: [
       GoRoute(
@@ -333,7 +351,10 @@ void main() {
     expect(location(router), startsWith('/search?cooked_before='));
     expect(find.textContaining('Von dir zuletzt gekocht bis'), findsOneWidget);
 
-    await tester.tap(find.textContaining('Von dir zuletzt gekocht bis'));
+    final chip = find.textContaining('Von dir zuletzt gekocht bis');
+    await tester.ensureVisible(chip);
+    await tester.pumpAndSettle();
+    await tester.tap(chip);
     await tester.pumpAndSettle();
     expect(location(router), '/search');
     expect(recipes.searches.last.query.lastCookedBefore, isNull);
@@ -372,6 +393,142 @@ void main() {
 
     expect(
       find.textContaining('Offline lässt sich nicht zählen'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('adds and removes the cookable filters', (tester) async {
+    final router = await pumpSearch(tester);
+
+    await tapTooltip(tester, 'Nach Vorrat filtern');
+    await tester.pumpAndSettle();
+    expect(find.textContaining('in deinem Haushalt vorrätig'), findsOneWidget);
+    await tester.tap(find.text('Jetzt kochbar'));
+    await tester.pumpAndSettle();
+    expect(location(router), '/search?missing=0');
+    expect(recipes.searches.last.query.maxMissingFoods, 0);
+
+    await tapTooltip(tester, 'Jetzt kochbar entfernen');
+    await tester.pumpAndSettle();
+    expect(location(router), '/search');
+    expect(recipes.searches.last.query.maxMissingFoods, isNull);
+
+    await tapTooltip(tester, 'Nach Vorrat filtern');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Höchstens 1 Zutat fehlt'));
+    await tester.pumpAndSettle();
+    expect(location(router), '/search?missing=1');
+    expect(recipes.searches.last.query.maxMissingFoods, 1);
+
+    await tapTooltip(tester, 'Höchstens 1 Zutat fehlt entfernen');
+    await tester.pumpAndSettle();
+    expect(location(router), '/search');
+  });
+
+  testWidgets('adds books, leaving out those already chosen', (tester) async {
+    final router = await pumpSearch(tester);
+
+    await pickFilter(tester, 'Nach Kochbuch filtern', 'Backen');
+    expect(location(router), '/search?book=7');
+    expect(recipes.searches.last.query.bookIds, {7});
+    expect(find.text('Buch: Backen'), findsOneWidget);
+
+    await tapTooltip(tester, 'Nach Kochbuch filtern');
+    await tester.pumpAndSettle();
+    final sheet = find.byType(BottomSheet);
+    expect(
+      find.descendant(of: sheet, matching: find.text('Backen')),
+      findsNothing,
+    );
+    await tester.tap(
+      find.descendant(
+        of: sheet,
+        matching: find.text('Unsere Lieblingsrezepte'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(location(router), '/search?book=7&book=4');
+    expect(recipes.searches.last.query.bookIds, {4, 7});
+
+    await tapTooltip(tester, 'Buch: Backen entfernen');
+    await tester.pumpAndSettle();
+    expect(location(router), '/search?book=4');
+  });
+
+  testWidgets('the book sheet says when there are no books', (tester) async {
+    books = FakeBookRepository();
+    await pumpSearch(tester);
+
+    await tapTooltip(tester, 'Nach Kochbuch filtern');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Du hast noch keine Kochbücher.'), findsOneWidget);
+  });
+
+  testWidgets('the book sheet offers to retry a failed load', (tester) async {
+    books.failure = const OfflineFailure();
+    await pumpSearch(tester);
+
+    await tapTooltip(tester, 'Nach Kochbuch filtern');
+    await tester.pumpAndSettle();
+    books.failure = null;
+    await tester.tap(find.text('Nochmal versuchen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Backen'), findsOneWidget);
+  });
+
+  testWidgets('adds and removes the creator filter', (tester) async {
+    final router = await pumpSearch(tester);
+
+    await pickFilter(tester, 'Nach Ersteller filtern', 'Anna');
+    expect(location(router), '/search?created_by=2');
+    expect(recipes.searches.last.query.createdBy, 2);
+    expect(find.text('Erstellt von Anna'), findsOneWidget);
+    // One creator at a time.
+    expect(find.byTooltip('Nach Ersteller filtern'), findsNothing);
+
+    await tapTooltip(tester, 'Erstellt von Anna entfernen');
+    await tester.pumpAndSettle();
+    expect(location(router), '/search');
+    expect(find.byTooltip('Nach Ersteller filtern'), findsOneWidget);
+  });
+
+  testWidgets('restores book and creator chips from the URL', (tester) async {
+    await pumpSearch(
+      tester,
+      location: '/search?missing=1&book=4&book=99&created_by=2',
+    );
+
+    expect(find.text('Höchstens 1 Zutat fehlt'), findsOneWidget);
+    expect(find.text('Buch: Unsere Lieblingsrezepte'), findsOneWidget);
+    // Book 99 doesn't exist (any more), or isn't shared with the user.
+    expect(find.text('Unbekannter Filter'), findsOneWidget);
+    expect(find.text('Erstellt von Anna'), findsOneWidget);
+    expect(nameSearches().single.query.bookIds, {4, 99});
+    // Filters that are set come before the "+" chips.
+    expect(
+      tester.getTopLeft(find.text('Erstellt von Anna')).dx,
+      lessThan(tester.getTopLeft(find.byTooltip('Zutat hinzufügen')).dx),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('explains the offline cookable and book filters', (tester) async {
+    recipes.fromCache = true;
+    await pumpSearch(tester, location: '/search?missing=0');
+    expect(
+      find.textContaining('Offline zählt der Vorrat vom letzten Öffnen'),
+      findsOneWidget,
+    );
+
+    recipes = FakeRecipeRepository(const [])..fromCache = true;
+    await pumpSearch(tester, location: '/search?book=4');
+    expect(
+      find.text(
+        'Offline ist nicht bekannt, welche Rezepte in einem Buch stehen.',
+      ),
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);
@@ -512,6 +669,43 @@ void main() {
           matchesGoldenFile('../goldens/search_reasons_$name.png'),
         );
       });
+
+      testWidgets(
+        'cookable, book and creator filters in $name',
+        tags: goldenTags,
+        (tester) async {
+          books = FakeBookRepository(const [
+            RecipeBook(id: 4, name: 'Unsere Lieblingsrezepte'),
+            RecipeBook(id: 7, name: 'Backen'),
+            RecipeBook(id: 8, name: 'Schnelle Feierabendküche'),
+          ]);
+          await pumpSearch(
+            tester,
+            location: '/search?missing=1&book=4&created_by=2',
+            theme: theme,
+          );
+          await tapTooltip(tester, 'Nach Kochbuch filtern');
+          await tester.pumpAndSettle();
+          // Back to the start of the chip row, where the set filters are.
+          tester
+              .state<ScrollableState>(
+                find
+                    .ancestor(
+                      of: find.text('Erstellt von Anna'),
+                      matching: find.byType(Scrollable),
+                    )
+                    .first,
+              )
+              .position
+              .jumpTo(0);
+          await tester.pumpAndSettle();
+
+          await expectLater(
+            find.byType(MaterialApp),
+            matchesGoldenFile('../goldens/search_space_filters_$name.png'),
+          );
+        },
+      );
     }
   });
 }
