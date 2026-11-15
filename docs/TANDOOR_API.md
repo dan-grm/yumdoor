@@ -121,6 +121,21 @@ cooked 0 times; "never cooked" is `timescooked=0` (exact, which also wins over `
 count, so the offline cache can only separate cooked (`lastCooked` set, filled in from the cook log when a recipe is
 opened) from never cooked; "at least n times" offline shows every recipe cooked at least once.
 
+**Cookable (`makenow`):** a recipe matches if at most `makenow` of its distinct foods are missing
+(`RecipeQuerySet.cookable`, `managers.py:377`). A food counts as there if anyone in the user's household has it on
+hand (or it is in a household inventory), if a substitute is on hand, through `substitute_children`/
+`substitute_siblings`, or if it is `ignore_shopping` (and not itself a recipe). A user without a space membership
+gets no results. Checked on 2.6.15 with `makenow=0` and `makenow=1`. Offline, Yumdoor counts the `food_onhand`
+flags stored with each recipe and ignores substitutes.
+
+**Books (`books_or`):** matches recipes added to any of the books (`RecipeBookEntry`, `managers.py:243`).
+A dynamic book's saved filter (`RecipeBook.filter`) is **not** applied, so it only finds the recipes added to it by
+hand. `GET /api/recipe-book/` lists only books the user created or that are shared with them (paginated).
+Book entries aren't stored offline, so an offline book filter finds nothing.
+
+**Creator (`createdby`):** one user id, exact. `GET /api/user/` lists every user of the space, **not paginated**
+(a plain array).
+
 **Mismatch with our assumption:** `rating`, `lastcooked` and `timescooked` are computed **only from the requesting
 user's own cook logs** (`managers.py:51-75`), not the household's or the space's. "Highly rated" in search means
 "rated highly by me". Recommendations that need other people's ratings or cooking history read `/api/cook-log/`
