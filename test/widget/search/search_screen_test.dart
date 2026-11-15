@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/design/design.dart';
@@ -18,6 +19,7 @@ import 'package:yumdoor/features/search/search_providers.dart';
 import 'package:yumdoor/features/search/search_screen.dart';
 
 import '../../fakes/fake_book_user_repositories.dart';
+import '../../fakes/fake_connectivity_service.dart';
 import '../../fakes/fake_food_keyword_repositories.dart';
 import '../../fakes/fake_recipe_repository.dart';
 import '../../fixtures/recipes.dart';
@@ -59,6 +61,7 @@ void main() {
     String location = searchPath,
     ThemeData? theme,
     FakeKeywordRepository? keywordRepository,
+    FakeConnectivityService? connectivity,
   }) => pumpRoutes(
     tester,
     location: location,
@@ -71,6 +74,8 @@ void main() {
       ),
       bookRepositoryProvider.overrideWithValue(books),
       userRepositoryProvider.overrideWithValue(users),
+      if (connectivity != null)
+        connectivityServiceProvider.overrideWithValue(connectivity),
     ],
     routes: [
       GoRoute(
@@ -479,6 +484,38 @@ void main() {
     expect(find.text('Backen'), findsOneWidget);
   });
 
+  testWidgets('says when every book is chosen already', (tester) async {
+    await pumpSearch(tester, location: '/search?book=4&book=7');
+
+    await tapTooltip(tester, 'Nach Kochbuch filtern');
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Alle deine Bücher sind schon ausgewählt.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('names book and creator chips once back online', (tester) async {
+    final connectivity = FakeConnectivityService(isOnline: false);
+    books.failure = const OfflineFailure();
+    users.failure = const OfflineFailure();
+    await pumpSearch(
+      tester,
+      location: '/search?book=4&created_by=2',
+      connectivity: connectivity,
+    );
+    expect(find.text('Unbekannter Filter'), findsNWidgets(2));
+
+    books.failure = null;
+    users.failure = null;
+    connectivity.isOnline = true;
+    await tester.pumpAndSettle();
+
+    expect(find.text('Buch: Unsere Lieblingsrezepte'), findsOneWidget);
+    expect(find.text('Erstellt von Anna'), findsOneWidget);
+  });
+
   testWidgets('adds and removes the creator filter', (tester) async {
     final router = await pumpSearch(tester);
 
@@ -524,7 +561,11 @@ void main() {
     );
 
     recipes = FakeRecipeRepository(const [])..fromCache = true;
-    await pumpSearch(tester, location: '/search?book=4');
+    await pumpSearch(tester, location: '/search?book=4&missing=0');
+    expect(
+      find.textContaining('Offline zählt der Vorrat vom letzten Öffnen'),
+      findsOneWidget,
+    );
     expect(
       find.text(
         'Offline ist nicht bekannt, welche Rezepte in einem Buch stehen.',

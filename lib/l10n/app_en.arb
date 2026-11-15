@@ -169,5 +169,6 @@
   "searchCreatorTitle": "Filter by creator",
   "searchCreatorFilter": "Created by {name}",
   "searchOfflineCookableNote": "Offline, what was on hand when a recipe was last opened counts, without substitutes.",
-  "searchOfflineBookNote": "Offline, which recipes are in a book isn't known."
+  "searchOfflineBookNote": "Offline, which recipes are in a book isn't known.",
+  "searchBookAllChosen": "All your books are chosen already."
 }

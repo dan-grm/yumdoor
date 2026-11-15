@@ -950,5 +950,9 @@
   "searchOfflineBookNote": "Offline ist nicht bekannt, welche Rezepte in einem Buch stehen.",
   "@searchOfflineBookNote": {
     "description": "Shown with offline results when the cookbook filter is set."
+  },
+  "searchBookAllChosen": "Alle deine Bücher sind schon ausgewählt.",
+  "@searchBookAllChosen": {
+    "description": "Cookbook filter sheet when every book is already a filter."
   }
 }

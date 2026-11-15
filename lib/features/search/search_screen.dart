@@ -294,7 +294,7 @@ class _Results extends ConsumerWidget {
       AsyncData(:final value) when value.items.isEmpty => _Empty(
         filtered: !query.isEmpty,
         fromCache: value.fromCache,
-        bookFilter: query.bookIds.isNotEmpty,
+        query: query,
       ),
       AsyncData(:final value) => _ResultList(
         query: query,
@@ -458,7 +458,7 @@ class _Empty extends StatelessWidget {
   const _Empty({
     required this.filtered,
     required this.fromCache,
-    required this.bookFilter,
+    required this.query,
   });
 
   /// Whether text or filters narrowed the search.
@@ -467,8 +467,9 @@ class _Empty extends StatelessWidget {
   /// Whether only the offline cache was searched.
   final bool fromCache;
 
-  /// Whether a book filter is set, which the offline cache can't apply.
-  final bool bookFilter;
+  /// For the notes on filters the offline cache can't apply like the
+  /// server.
+  final RecipeQuery query;
 
   @override
   Widget build(BuildContext context) {
@@ -497,13 +498,22 @@ class _Empty extends StatelessWidget {
             ),
             if (fromCache) ...[
               SizedBox(height: t.space2),
-              Text(
-                bookFilter
-                    ? l10n.searchOfflineBookNote
-                    : l10n.searchOfflineResults,
-                textAlign: TextAlign.center,
-                style: t.body.copyWith(color: t.inkMuted),
-              ),
+              for (final note in [
+                if (query.bookIds.isNotEmpty)
+                  l10n.searchOfflineBookNote
+                else
+                  l10n.searchOfflineResults,
+                if (query.maxMissingFoods != null)
+                  l10n.searchOfflineCookableNote,
+              ])
+                Padding(
+                  padding: EdgeInsets.only(bottom: t.space1),
+                  child: Text(
+                    note,
+                    textAlign: TextAlign.center,
+                    style: t.body.copyWith(color: t.inkMuted),
+                  ),
+                ),
             ] else if (filtered) ...[
               SizedBox(height: t.space2),
               Text(

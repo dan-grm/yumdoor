@@ -668,4 +668,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get searchOfflineBookNote =>
       'Offline, which recipes are in a book isn\'t known.';
+
+  @override
+  String get searchBookAllChosen => 'All your books are chosen already.';
 }

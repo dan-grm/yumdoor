@@ -134,7 +134,8 @@ bool _matches(Recipe recipe, RecipeQuery query, TextMatcher text) {
     return false;
   }
   // On hand as of when the recipe was stored, and without the substitutes
-  // Tandoor also counts.
+  // Tandoor also counts. Tandoor doesn't skip an ignore-shopping food that is
+  // itself a recipe, which the cache can't tell.
   if (query.maxMissingFoods case final max?) {
     final missing = foods.where((f) => !f.onHand && !f.ignoreShopping);
     if (missing.length > max) return false;

@@ -1117,6 +1117,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Offline ist nicht bekannt, welche Rezepte in einem Buch stehen.'**
   String get searchOfflineBookNote;
+
+  /// Cookbook filter sheet when every book is already a filter.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle deine Bücher sind schon ausgewählt.'**
+  String get searchBookAllChosen;
 }
 
 class _AppLocalizationsDelegate

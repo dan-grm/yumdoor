@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 
 import '../../design/components/filter_chips.dart';
 import '../../domain/models/recipe_query.dart';
@@ -47,8 +48,10 @@ List<Widget> spaceFilterChips(
         },
       ),
     for (final id in query.bookIds)
-      _BookChip(
-        id: id,
+      _LookupChip(
+        items: recipeBooksProvider,
+        matches: (book) => book.id == id,
+        label: (book) => l10n.searchBookFilter(book.name),
         onRemove: () =>
             onChange(query.copyWith(bookIds: {...query.bookIds}..remove(id))),
       ),
@@ -60,7 +63,10 @@ List<Widget> spaceFilterChips(
           context,
           title: l10n.searchBookTitle,
           hint: l10n.searchBookHint,
-          empty: l10n.searchBookEmpty,
+          // Chosen books aren't offered again.
+          empty: query.bookIds.isEmpty
+              ? l10n.searchBookEmpty
+              : l10n.searchBookAllChosen,
           options: (ref) => ref
               .watch(recipeBooksProvider)
               .whenData(
@@ -77,8 +83,10 @@ List<Widget> spaceFilterChips(
       },
     ),
     if (query.createdBy case final id?)
-      _CreatorChip(
-        id: id,
+      _LookupChip(
+        items: spaceUsersProvider,
+        matches: (user) => user.id == id,
+        label: (user) => l10n.searchCreatorFilter(_name(l10n, user)),
         onRemove: () => onChange(query.copyWith(createdBy: null)),
       )
     else
@@ -121,50 +129,32 @@ class _Chip extends StatelessWidget {
   );
 }
 
-class _BookChip extends ConsumerWidget {
-  const _BookChip({required this.id, required this.onRemove});
+/// A selected filter on an item of a loaded list, labelled once the list
+/// has loaded; "Unbekannter Filter" if the item isn't in it (any more).
+class _LookupChip<T> extends ConsumerWidget {
+  const _LookupChip({
+    required this.items,
+    required this.matches,
+    required this.label,
+    required this.onRemove,
+  });
 
-  final int id;
+  final ProviderListenable<AsyncValue<List<T>>> items;
+  final bool Function(T item) matches;
+  final String Function(T item) label;
   final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final label = switch (ref.watch(recipeBooksProvider)) {
-      AsyncData(:final value) => switch ([
-        for (final book in value)
-          if (book.id == id) book,
-      ]) {
-        [final book] => l10n.searchBookFilter(book.name),
-        _ => l10n.searchFilterUnknown,
+    final text = switch (ref.watch(items)) {
+      AsyncData(:final value) => switch (value.where(matches).firstOrNull) {
+        final item? => label(item),
+        null => l10n.searchFilterUnknown,
       },
       AsyncError() => l10n.searchFilterUnknown,
       _ => l10n.searchFilterLoading,
     };
-    return _Chip(label: label, onRemove: onRemove);
-  }
-}
-
-class _CreatorChip extends ConsumerWidget {
-  const _CreatorChip({required this.id, required this.onRemove});
-
-  final int id;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final label = switch (ref.watch(spaceUsersProvider)) {
-      AsyncData(:final value) => switch ([
-        for (final user in value)
-          if (user.id == id) user,
-      ]) {
-        [final user] => l10n.searchCreatorFilter(_name(l10n, user)),
-        _ => l10n.searchFilterUnknown,
-      },
-      AsyncError() => l10n.searchFilterUnknown,
-      _ => l10n.searchFilterLoading,
-    };
-    return _Chip(label: label, onRemove: onRemove);
+    return _Chip(label: text, onRemove: onRemove);
   }
 }
