@@ -93,13 +93,13 @@ Paginated: `page`, `page_size` (default 25, max 100). List items use `RecipeOver
 | Text | `query` (search mode and fields come from the user's `SearchPreference`; fuzzy/trigram only on Postgres) |
 | Food ("contains carrots") | `foods`/`foods_or`, `foods_and`, `foods_or_not`, `foods_and_not` (ids, repeat param). `include_children` (default true) includes child foods of the food tree. |
 | Keyword | `keywords`/`keywords_or`, `keywords_and`, `keywords_or_not`, `keywords_and_not` |
-| Book | `books`/`books_or`, `books_and`, … |
+| Book | `books`/`books_or`, `books_and`, … (only recipes added by hand, see below) |
 | Rating | `rating` (exact; `0` = unrated), `rating_gte`, `rating_lte` |
 | Last cooked | `cookedon_gte`, `cookedon_lte` (dates) |
 | Times cooked | `timescooked`, `timescooked_gte`, `timescooked_lte` |
 | Created / updated / viewed | `createdon*`, `updatedon*`, `viewedon_gte/lte`, `createdby` |
 | Cookable from on-hand foods | `makenow` (true, or an int = number of allowed missing foods) |
-| Saved filter | `filter` (CustomFilter id) |
+| Saved filter | `filter` (CustomFilter id). **Replaces every other parameter**, paging aside (see below) |
 | Sort | `sort_order`: one of `score, name, lastcooked, rating, created_at, lastviewed` (prefix `-` for descending), or `random=true`. **Not** `times_cooked` (see below) |
 
 **Text search only matches recipe names by default.** A new user's `SearchPreference` is `plain` with `icontains`,
@@ -144,8 +144,26 @@ flags stored with each recipe and ignores substitutes.
 
 **Books (`books_or`):** matches recipes added to any of the books (`RecipeBookEntry`, `managers.py:243`).
 A dynamic book's saved filter (`RecipeBook.filter`) is **not** applied, so it only finds the recipes added to it by
-hand. `GET /api/recipe-book/` lists only books the user created or that are shared with them (paginated).
-Book entries aren't stored offline, so an offline book filter finds nothing.
+hand (checked on 2.6.15). Tandoor's own book page shows both: the entries, then every recipe the filter finds
+(`vue3/src/pages/BookViewPage.vue`). A dynamic book that has no entries finds nothing with `books_or`
+(issue #71). `GET /api/recipe-book/` lists only books the user created or that are shared with them (paginated),
+each with its `filter` (`id`, `name`, `search`) or `null`. Book entries aren't stored offline, so an offline book
+filter finds nothing.
+
+**Saved filters (`filter=<id>`)** replace the request's parameters with the filter's `search`, a JSON object of
+search parameters (`{"keywords_or": [3], "version": "2"}`, `_resolve_params` in
+`cookbook/helper/recipe_search.py`). Every other parameter except `page`/`page_size` is ignored: `filter=1&query=x`
+returns the same as `filter=1` (checked on 2.6.15). It is ignored if the user can't see the filter (not the
+creator, not shared with them, not on a book shared with them). So Yumdoor never sends `filter` for a dynamic
+book. It sends the decoded `search` parameters next to its own, without the ones that only order or pin
+(`sort_order`, `random`, `new`, `num_recent`, `version`). Where both use the same parameter (Yumdoor's
+`keywords_or` for search text, say), it sends its own and keeps only the recipes whose ids the saved search finds
+on its own. It does the same if the saved search has `include_children`, which would change Yumdoor's food and
+keyword parameters too. The union of a book's entries and its filter takes one request each; the universal search
+merges them.
+
+Writing a book with a nested `filter` object (`POST`/`PATCH /api/recipe-book/`) **updates that CustomFilter**
+with the fields given (`WritableNestedModelSerializer`): send the whole filter, or its `search` is overwritten.
 
 **Creator (`createdby`):** one user id, exact. `GET /api/user/` lists every user of the space, **not paginated**
 (a plain array).
@@ -273,7 +291,8 @@ amounts across recipes; merging per food and unit for display is our job. "Add t
 ## Recipe books
 
 `/api/recipe-book/` (name, description, `shared` users, `filter` → a saved search that makes the book dynamic),
-`/api/recipe-book-entry/?book=&recipe=`. Search can also filter by `books`.
+`/api/recipe-book-entry/?book=&recipe=`. Search can also filter by `books`, which leaves out what a dynamic book's
+filter finds (see [Recipe search](#recipe-search)).
 
 ## Other useful endpoints
 
