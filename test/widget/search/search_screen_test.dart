@@ -13,7 +13,9 @@ import 'package:yumdoor/domain/models/ingredient.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
 import 'package:yumdoor/domain/models/recipe_book.dart';
 import 'package:yumdoor/domain/models/recipe_sort.dart';
+import 'package:yumdoor/domain/models/recipe_query.dart';
 import 'package:yumdoor/domain/models/recipe_step.dart';
+import 'package:yumdoor/domain/models/saved_filter.dart';
 import 'package:yumdoor/domain/models/user_ref.dart';
 import 'package:yumdoor/features/search/search_location.dart';
 import 'package:yumdoor/features/search/search_providers.dart';
@@ -23,6 +25,7 @@ import '../../fakes/fake_book_user_repositories.dart';
 import '../../fakes/fake_connectivity_service.dart';
 import '../../fakes/fake_food_keyword_repositories.dart';
 import '../../fakes/fake_recipe_repository.dart';
+import '../../fakes/fake_saved_filter_repository.dart';
 import '../../fixtures/recipes.dart';
 import '../fonts.dart';
 import '../golden.dart';
@@ -42,6 +45,7 @@ void main() {
 
   late FakeBookRepository books;
   late FakeUserRepository users;
+  late FakeSavedFilterRepository savedFilters;
 
   setUpAll(loadBundledFonts);
 
@@ -55,6 +59,7 @@ void main() {
       UserRef(id: 1, name: 'Admin'),
       UserRef(id: 2, name: 'Anna'),
     ]);
+    savedFilters = FakeSavedFilterRepository();
   });
 
   Future<GoRouter> pumpSearch(
@@ -75,6 +80,7 @@ void main() {
       ),
       bookRepositoryProvider.overrideWithValue(books),
       userRepositoryProvider.overrideWithValue(users),
+      savedFilterRepositoryProvider.overrideWithValue(savedFilters),
       if (connectivity != null)
         connectivityServiceProvider.overrideWithValue(connectivity),
     ],
@@ -740,6 +746,208 @@ void main() {
     expect(find.text('recipe /recipe/7'), findsOneWidget);
   });
 
+  group('saved searches', () {
+    const quick = SavedFilter(
+      id: 1,
+      name: 'Schnell & vegetarisch',
+      query: RecipeQuery(keywordIds: {1}),
+    );
+    const rare = SavedFilter(id: 2, name: 'Selten gekocht');
+    const shared = SavedFilter(
+      id: 3,
+      name: 'Bens Kuchen',
+      query: RecipeQuery(text: 'Kuchen'),
+      own: false,
+    );
+
+    setUp(() {
+      savedFilters = FakeSavedFilterRepository([quick, rare, shared]);
+    });
+
+    Finder chip(String label) => find.bySemanticsLabel(label);
+
+    Future<void> tapChip(WidgetTester tester, String label) async {
+      final finder = find.text(label).last;
+      await tester.ensureVisible(finder);
+      await tester.pumpAndSettle();
+      await tester.tap(finder);
+      await tester.pumpAndSettle();
+    }
+
+    Finder inDialog(Finder finder) =>
+        find.descendant(of: find.byType(AlertDialog), matching: finder);
+
+    testWidgets('applies one as chips and clears it again', (tester) async {
+      final router = await pumpSearch(tester, location: '/search?q=Feta');
+      expect(chip('Schnell & vegetarisch'), findsOneWidget);
+
+      await tapChip(tester, 'Schnell & vegetarisch');
+      // Replaces the search, text included.
+      expect(location(router), '/search?keyword=1');
+      expect(find.text('Vegetarisch'), findsWidgets);
+      expect(
+        tester.getSemantics(chip('Schnell & vegetarisch')),
+        isSemantics(isSelected: true),
+      );
+
+      await tapChip(tester, 'Schnell & vegetarisch');
+      expect(location(router), '/search');
+    });
+
+    testWidgets('applies one the chips can\'t show as one chip', (
+      tester,
+    ) async {
+      recipes.savedFilters = {
+        2: {ofenkarotten.id},
+      };
+      final router = await pumpSearch(tester);
+
+      await tapChip(tester, 'Selten gekocht');
+
+      expect(location(router), '/search?saved=2');
+      expect(find.text('Gespeichert: Selten gekocht'), findsOneWidget);
+      expect(recipes.searches.last.query.savedFilter, 2);
+      expect(find.text(ofenkarotten.name), findsOneWidget);
+      expect(find.text(longNames.name), findsNothing);
+      // It can't be saved inside another saved search.
+      expect(find.byTooltip('Suche speichern'), findsNothing);
+
+      await tapTooltip(tester, 'Gespeichert: Selten gekocht entfernen');
+      await tester.pumpAndSettle();
+      expect(location(router), '/search');
+    });
+
+    testWidgets('saves the current search under a name', (tester) async {
+      await pumpSearch(tester, location: '/search?q=Feta&keyword=2');
+
+      await tapTooltip(tester, 'Suche speichern');
+      await tester.pumpAndSettle();
+      // An empty name isn't saved.
+      await tester.tap(inDialog(find.text('Speichern')));
+      await tester.pumpAndSettle();
+      expect(find.text('Gib einen Namen ein.'), findsOneWidget);
+
+      await tester.enterText(
+        inDialog(find.byType(TextField)),
+        ' Feta im Ofen ',
+      );
+      await tester.tap(inDialog(find.text('Speichern')));
+      await tester.pumpAndSettle();
+
+      expect(
+        savedFilters.created.single,
+        const RecipeQuery(text: 'Feta', keywordIds: {2}),
+      );
+      expect(find.text('„Feta im Ofen“ gespeichert'), findsOneWidget);
+      // The new one is listed, and is the search shown.
+      expect(
+        tester.getSemantics(chip('Feta im Ofen')),
+        isSemantics(isSelected: true),
+      );
+    });
+
+    testWidgets('offers no saving without a search', (tester) async {
+      savedFilters = FakeSavedFilterRepository();
+      await pumpSearch(tester);
+
+      expect(find.byTooltip('Suche speichern'), findsNothing);
+      expect(find.text('Verwalten'), findsNothing);
+    });
+
+    testWidgets('says why saving failed', (tester) async {
+      await pumpSearch(tester, location: '/search?q=Feta');
+      savedFilters.failure = const ServerFailure();
+
+      await tapTooltip(tester, 'Suche speichern');
+      await tester.pumpAndSettle();
+      await tester.enterText(inDialog(find.byType(TextField)), 'Feta');
+      await tester.tap(inDialog(find.text('Speichern')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Das hat nicht geklappt.'), findsOneWidget);
+    });
+
+    testWidgets('renames and deletes own ones, not shared ones', (
+      tester,
+    ) async {
+      await pumpSearch(tester);
+      await tapChip(tester, 'Verwalten');
+
+      expect(find.text('Mit dir geteilt'), findsOneWidget);
+      expect(find.byTooltip('Bens Kuchen umbenennen'), findsNothing);
+      expect(find.byTooltip('Bens Kuchen löschen'), findsNothing);
+
+      await tester.tap(find.byTooltip('Selten gekocht umbenennen'));
+      await tester.pumpAndSettle();
+      await tester.enterText(inDialog(find.byType(TextField)), 'Kaum gekocht');
+      await tester.tap(inDialog(find.text('Speichern')));
+      await tester.pumpAndSettle();
+      expect(savedFilters.list.map((f) => f.name), contains('Kaum gekocht'));
+      expect(
+        find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.text('Kaum gekocht'),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.byTooltip('Schnell & vegetarisch löschen'));
+      await tester.pumpAndSettle();
+      expect(find.text('„Schnell & vegetarisch“ löschen?'), findsOneWidget);
+      await tester.tap(inDialog(find.text('Abbrechen')));
+      await tester.pumpAndSettle();
+      expect(savedFilters.list, hasLength(3));
+
+      await tester.tap(find.byTooltip('Schnell & vegetarisch löschen'));
+      await tester.pumpAndSettle();
+      await tester.tap(inDialog(find.text('Löschen')));
+      await tester.pumpAndSettle();
+      expect(savedFilters.list.map((f) => f.id), isNot(contains(1)));
+      expect(find.text('Schnell & vegetarisch'), findsNothing);
+    });
+
+    testWidgets('offline, applies stored ones but changes nothing', (
+      tester,
+    ) async {
+      recipes.fromCache = true;
+      final router = await pumpSearch(
+        tester,
+        location: '/search?q=Feta',
+        connectivity: FakeConnectivityService(isOnline: false),
+      );
+
+      await tapTooltip(tester, 'Suche speichern');
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(
+        find.text(
+          'Offline kannst du nichts ändern. Sobald du wieder verbunden bist, geht es weiter.',
+        ),
+        findsOneWidget,
+      );
+
+      await tapChip(tester, 'Verwalten');
+      final rename = tester.widget<IconButton>(
+        find.ancestor(
+          of: find.byIcon(Icons.edit_outlined).first,
+          matching: find.byType(IconButton),
+        ),
+      );
+      expect(rename.onPressed, isNull);
+      Navigator.of(tester.element(find.byType(BottomSheet))).pop();
+      await tester.pumpAndSettle();
+
+      await tapChip(tester, 'Selten gekocht');
+      expect(location(router), '/search?saved=2');
+      expect(
+        find.text(
+          'Offline lässt sich diese gespeicherte Suche nicht anwenden.',
+        ),
+        findsOneWidget,
+      );
+    });
+  });
+
   group('goldens', skip: goldenSkip, () {
     for (final (name, theme) in [('light', lightTheme), ('dark', darkTheme)]) {
       testWidgets('match reasons in $name', tags: goldenTags, (tester) async {
@@ -814,6 +1022,41 @@ void main() {
           );
         },
       );
+
+      testWidgets('saved searches in $name', tags: goldenTags, (tester) async {
+        savedFilters = FakeSavedFilterRepository(const [
+          SavedFilter(
+            id: 1,
+            name: 'Schnell & vegetarisch',
+            query: RecipeQuery(keywordIds: {1}),
+          ),
+          SavedFilter(id: 2, name: 'Selten gekocht'),
+          SavedFilter(
+            id: 3,
+            name: 'Bens Kuchen',
+            query: RecipeQuery(text: 'Kuchen'),
+            own: false,
+          ),
+        ]);
+        recipes.savedFilters = {2: recipes.recipes.keys.toSet()};
+        await pumpSearch(tester, location: '/search?saved=2', theme: theme);
+
+        await expectLater(
+          find.byType(MaterialApp),
+          matchesGoldenFile('../goldens/search_saved_$name.png'),
+        );
+
+        await tester.ensureVisible(find.text('Verwalten'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Verwalten'));
+        await tester.pumpAndSettle();
+        expect(find.text('Gespeicherte Suchen'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await expectLater(
+          find.byType(MaterialApp),
+          matchesGoldenFile('../goldens/search_saved_manage_$name.png'),
+        );
+      });
 
       testWidgets('sort sheet in $name', tags: goldenTags, (tester) async {
         await pumpSearch(

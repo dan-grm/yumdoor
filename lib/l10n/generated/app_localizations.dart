@@ -1147,6 +1147,126 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{sort, select, relevance{Passend zur Suche} name{Name (A–Z)} lastCooked{Zuletzt gekocht} rating{Beste Bewertung} newest{Neueste zuerst} recentlyViewed{Zuletzt angesehen} random{Zufällig} other{Passend zur Suche}}'**
   String searchSortOption(String sort);
+
+  /// Chip after the saved searches that saves the current search; also the title of its dialog.
+  ///
+  /// In de, this message translates to:
+  /// **'Suche speichern'**
+  String get searchSavedSave;
+
+  /// Explanation in the save-search dialog.
+  ///
+  /// In de, this message translates to:
+  /// **'Text und Filter werden unter diesem Namen in Tandoor gespeichert.'**
+  String get searchSavedSaveHint;
+
+  /// Label of the name field when saving or renaming a search.
+  ///
+  /// In de, this message translates to:
+  /// **'Name'**
+  String get searchSavedName;
+
+  /// Error under an empty name field.
+  ///
+  /// In de, this message translates to:
+  /// **'Gib einen Namen ein.'**
+  String get searchSavedNameEmpty;
+
+  /// Confirm button of the save-search and rename dialogs.
+  ///
+  /// In de, this message translates to:
+  /// **'Speichern'**
+  String get searchSavedConfirm;
+
+  /// Message after a search was saved.
+  ///
+  /// In de, this message translates to:
+  /// **'„{name}“ gespeichert'**
+  String searchSavedSaved(String name);
+
+  /// Message when saving, renaming or deleting a saved search failed; reason is an error message.
+  ///
+  /// In de, this message translates to:
+  /// **'Das hat nicht geklappt. {reason}'**
+  String searchSavedFailed(String reason);
+
+  /// Button at the end of the saved searches that opens the list to rename and delete them.
+  ///
+  /// In de, this message translates to:
+  /// **'Verwalten'**
+  String get searchSavedManage;
+
+  /// Title of the sheet that lists the saved searches.
+  ///
+  /// In de, this message translates to:
+  /// **'Gespeicherte Suchen'**
+  String get searchSavedManageTitle;
+
+  /// Explanation under the title of the saved searches sheet.
+  ///
+  /// In de, this message translates to:
+  /// **'Umbenennen und löschen kannst du deine eigenen; geteilte nur verwenden.'**
+  String get searchSavedManageHint;
+
+  /// Saved searches sheet without any.
+  ///
+  /// In de, this message translates to:
+  /// **'Du hast noch keine Suche gespeichert.'**
+  String get searchSavedNone;
+
+  /// Under a saved search someone else created.
+  ///
+  /// In de, this message translates to:
+  /// **'Mit dir geteilt'**
+  String get searchSavedShared;
+
+  /// Title of the rename dialog.
+  ///
+  /// In de, this message translates to:
+  /// **'Suche umbenennen'**
+  String get searchSavedRenameTitle;
+
+  /// Accessible label of the rename button of a saved search.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} umbenennen'**
+  String searchSavedRenameLabel(String name);
+
+  /// Accessible label of the delete button of a saved search.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} löschen'**
+  String searchSavedDeleteLabel(String name);
+
+  /// Title of the dialog that confirms deleting a saved search.
+  ///
+  /// In de, this message translates to:
+  /// **'„{name}“ löschen?'**
+  String searchSavedDeleteTitle(String name);
+
+  /// Text of the dialog that confirms deleting a saved search.
+  ///
+  /// In de, this message translates to:
+  /// **'Die Suche wird auch in Tandoor gelöscht, für alle, mit denen sie geteilt ist. Rezepte bleiben erhalten.'**
+  String get searchSavedDeleteText;
+
+  /// Confirm button of the delete dialog.
+  ///
+  /// In de, this message translates to:
+  /// **'Löschen'**
+  String get searchSavedDelete;
+
+  /// Label of the filter chip of a saved search that the other chips can't show.
+  ///
+  /// In de, this message translates to:
+  /// **'Gespeichert: {name}'**
+  String searchSavedFilter(String name);
+
+  /// Shown with offline results when a saved search the chips can't show is applied.
+  ///
+  /// In de, this message translates to:
+  /// **'Offline lässt sich diese gespeicherte Suche nicht anwenden.'**
+  String get searchOfflineSavedNote;
 }
 
 class _AppLocalizationsDelegate

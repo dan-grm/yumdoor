@@ -708,4 +708,80 @@ class AppLocalizationsEn extends AppLocalizations {
     });
     return '$_temp0';
   }
+
+  @override
+  String get searchSavedSave => 'Save search';
+
+  @override
+  String get searchSavedSaveHint =>
+      'The text and filters are saved under this name in Tandoor.';
+
+  @override
+  String get searchSavedName => 'Name';
+
+  @override
+  String get searchSavedNameEmpty => 'Enter a name.';
+
+  @override
+  String get searchSavedConfirm => 'Save';
+
+  @override
+  String searchSavedSaved(String name) {
+    return 'Saved “$name”';
+  }
+
+  @override
+  String searchSavedFailed(String reason) {
+    return 'That didn\'t work. $reason';
+  }
+
+  @override
+  String get searchSavedManage => 'Manage';
+
+  @override
+  String get searchSavedManageTitle => 'Saved searches';
+
+  @override
+  String get searchSavedManageHint =>
+      'You can rename and delete your own; shared ones can only be used.';
+
+  @override
+  String get searchSavedNone => 'You haven\'t saved a search yet.';
+
+  @override
+  String get searchSavedShared => 'Shared with you';
+
+  @override
+  String get searchSavedRenameTitle => 'Rename search';
+
+  @override
+  String searchSavedRenameLabel(String name) {
+    return 'Rename $name';
+  }
+
+  @override
+  String searchSavedDeleteLabel(String name) {
+    return 'Delete $name';
+  }
+
+  @override
+  String searchSavedDeleteTitle(String name) {
+    return 'Delete “$name”?';
+  }
+
+  @override
+  String get searchSavedDeleteText =>
+      'The search is deleted in Tandoor too, for everyone it is shared with. No recipes are deleted.';
+
+  @override
+  String get searchSavedDelete => 'Delete';
+
+  @override
+  String searchSavedFilter(String name) {
+    return 'Saved: $name';
+  }
+
+  @override
+  String get searchOfflineSavedNote =>
+      'This saved search can\'t be applied offline.';
 }

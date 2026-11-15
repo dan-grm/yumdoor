@@ -9,6 +9,7 @@ import '../../domain/models/keyword.dart';
 import '../../domain/models/recipe_book.dart';
 import '../../domain/models/recipe_match.dart';
 import '../../domain/models/recipe_query.dart';
+import '../../domain/models/saved_filter.dart';
 import '../../domain/models/user_ref.dart';
 import '../../domain/services/universal_search.dart';
 
@@ -177,6 +178,23 @@ Future<List<RecipeBook>> recipeBooks(Ref ref) =>
 @Riverpod(retry: _noRetry)
 Future<List<UserRef>> spaceUsers(Ref ref) =>
     _reloadOnline(ref, ref.watch(userRepositoryProvider).users());
+
+/// The user's saved searches and those shared with them, by name. Offline,
+/// the list as last loaded.
+@Riverpod(retry: _noRetry)
+Future<List<SavedFilter>> savedFilters(Ref ref) async {
+  final filters = await _reloadOnline(
+    ref,
+    ref.watch(savedFilterRepositoryProvider).savedFilters(),
+  );
+  // From the offline cache: the server's list replaces it once it answers.
+  if (ref.read(isOfflineProvider)) {
+    ref.listen(isOfflineProvider, (_, offline) {
+      if (!offline) ref.invalidateSelf();
+    });
+  }
+  return filters;
+}
 
 /// [request], loaded again once the server can be reached if it failed
 /// because it couldn't, so chips opened offline get their names back.
