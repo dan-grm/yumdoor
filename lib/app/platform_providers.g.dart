@@ -274,6 +274,54 @@ final class LinkOpenerProvider
 
 String _$linkOpenerHash() => r'efd9c315d7fb7cc807c1bd63702ed7ca7b37b862';
 
+@ProviderFor(imagePickerService)
+final imagePickerServiceProvider = ImagePickerServiceProvider._();
+
+final class ImagePickerServiceProvider
+    extends
+        $FunctionalProvider<
+          ImagePickerService,
+          ImagePickerService,
+          ImagePickerService
+        >
+    with $Provider<ImagePickerService> {
+  ImagePickerServiceProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'imagePickerServiceProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$imagePickerServiceHash();
+
+  @$internal
+  @override
+  $ProviderElement<ImagePickerService> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ImagePickerService create(Ref ref) {
+    return imagePickerService(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ImagePickerService value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ImagePickerService>(value),
+    );
+  }
+}
+
+String _$imagePickerServiceHash() =>
+    r'a47c0836f38a5cdd70a2cd4d912cb6b5cc7f2ad9';
+
 @ProviderFor(localStore)
 final localStoreProvider = LocalStoreProvider._();
 

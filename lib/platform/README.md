@@ -1,7 +1,7 @@
 # platform
 
 Platform services behind interfaces (`wake_lock/`, `timers/`, `token_store/`, `connectivity/`, `csrf/`,
-`link_opener/`, `local_store/`), with web and native implementations chosen by conditional imports. The only place `dart:html`, `package:web` or `dart:io` may
+`link_opener/`, `local_store/`, `image_picker/`), with web and native implementations chosen by conditional imports. The only place `dart:html`, `package:web` or `dart:io` may
 appear. May import `core` only.
 
 - Each service's interface file picks the implementation:

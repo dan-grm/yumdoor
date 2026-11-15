@@ -218,6 +218,7 @@ Each service is an abstract class in `lib/platform/<name>/` with implementations
 | `ConnectivityService` | `navigator.onLine` + request failures | `connectivity_plus` + request failures |
 | `LinkOpener` | A temporary `<a target="_blank" rel="noopener noreferrer">`, clicked | `url_launcher` (system browser) |
 | `LocalStore` | `localStorage`, keys prefixed `yumdoor.state.` (the token store uses `yumdoor.` too); small non-sensitive state such as ticked-off ingredients | `shared_preferences` |
+| `ImagePickerService` | A hidden `<input type="file">` (with `capture="environment"` for the camera, offered on touch devices); the window is a drop target (`dragover`/`drop`) while the editor listens. Files are checked by content (JPEG, PNG, WebP, GIF) and size (`maxImageBytes`) before the UI sees them; rejections are typed. | `image_picker` + `desktop_drop` |
 
 ## Domain services
 
