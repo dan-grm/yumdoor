@@ -1,11 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tandoor_api/tandoor_api.dart' as api;
+import 'package:yumdoor/data/mappers/book_mapper.dart';
 import 'package:yumdoor/data/mappers/food_mapper.dart';
 import 'package:yumdoor/data/mappers/keyword_mapper.dart';
 import 'package:yumdoor/data/mappers/mapping.dart';
 import 'package:yumdoor/data/mappers/server_mapper.dart';
 import 'package:yumdoor/data/mappers/user_mapper.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
+import 'package:yumdoor/domain/models/recipe_book.dart';
 import 'package:yumdoor/domain/models/server_info.dart';
 import 'package:yumdoor/domain/models/unit.dart';
 
@@ -47,6 +49,18 @@ void main() {
     expect(
       page.results.single.toDomain(),
       const Keyword(id: 45, name: 'Suppe'),
+    );
+  });
+
+  test('maps a recipe book', () {
+    final page = api.standardSerializers.deserializeWith(
+      api.PaginatedRecipeBookList.serializer,
+      tandoorFixture('recipe_book_list.json'),
+    )!;
+
+    expect(
+      page.results.single.toDomain(),
+      const RecipeBook(id: 1, name: 'Unsere Lieblingsrezepte'),
     );
   });
 

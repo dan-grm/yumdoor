@@ -38,6 +38,18 @@ abstract class RecipeQuery with _$RecipeQuery {
 
     /// The current user cooked it at least this many times, 1 or more.
     int? minTimesCooked,
+
+    /// At most this many of its foods are missing at home, 0 or more: `0` is
+    /// "cookable now". Tandoor counts what anyone in the household has on
+    /// hand, and substitutes.
+    int? maxMissingFoods,
+
+    /// The recipe is in at least one of these books. Empty means no
+    /// restriction.
+    @Default({}) Set<int> bookIds,
+
+    /// The user who created the recipe.
+    int? createdBy,
   }) = _RecipeQuery;
 
   const RecipeQuery._();
@@ -52,5 +64,8 @@ abstract class RecipeQuery with _$RecipeQuery {
       minRating == null &&
       lastCookedBefore == null &&
       !neverCooked &&
-      minTimesCooked == null;
+      minTimesCooked == null &&
+      maxMissingFoods == null &&
+      bookIds.isEmpty &&
+      createdBy == null;
 }

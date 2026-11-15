@@ -1,18 +1,22 @@
 import 'package:dio/dio.dart';
 import 'package:tandoor_api/tandoor_api.dart' as api;
 
+import '../../domain/repositories/book_repository.dart';
 import '../../domain/repositories/cook_log_repository.dart';
 import '../../domain/repositories/food_repository.dart';
 import '../../domain/repositories/keyword_repository.dart';
 import '../../domain/repositories/recipe_repository.dart';
+import '../../domain/repositories/user_repository.dart';
 import '../api/image_downloader.dart';
 import '../api/tandoor_dio.dart';
 import '../cache/caching_recipe_repository.dart';
 import '../cache/recipe_cache.dart';
+import 'tandoor_book_repository.dart';
 import 'tandoor_cook_log_repository.dart';
 import 'tandoor_food_repository.dart';
 import 'tandoor_keyword_repository.dart';
 import 'tandoor_recipe_repository.dart';
+import 'tandoor_user_repository.dart';
 
 /// The repositories for one logged-in [TandoorConnection], sharing one [Dio].
 ///
@@ -58,6 +62,8 @@ class TandoorRepositories {
       foods: TandoorFoodRepository(apiClient),
       keywords: TandoorKeywordRepository(apiClient),
       cookLogs: cookLogs,
+      books: TandoorBookRepository(apiClient),
+      users: TandoorUserRepository(apiClient),
     );
   }
 
@@ -68,6 +74,8 @@ class TandoorRepositories {
     required this.foods,
     required this.keywords,
     required this.cookLogs,
+    required this.books,
+    required this.users,
   });
 
   final Dio _dio;
@@ -76,6 +84,8 @@ class TandoorRepositories {
   final FoodRepository foods;
   final KeywordRepository keywords;
   final CookLogRepository cookLogs;
+  final BookRepository books;
+  final UserRepository users;
 
   /// Cancels open requests and frees the connection pool.
   void close() {

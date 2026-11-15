@@ -680,7 +680,7 @@ abstract class AppLocalizations {
   /// **'Untergeordnete Zutaten zählen mit.'**
   String get pickerFoodNote;
 
-  /// Empty state of the ingredient and keyword pickers.
+  /// Empty state of the ingredient, keyword and creator pickers.
   ///
   /// In de, this message translates to:
   /// **'Nichts gefunden'**
@@ -1027,6 +1027,102 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Als gekocht eintragen'**
   String get recipeCooked;
+
+  /// Add chip for the filter on what is on hand at home.
+  ///
+  /// In de, this message translates to:
+  /// **'Kochbar'**
+  String get searchAddCookable;
+
+  /// Title of the cookable filter sheet; also the accessible label of its add chip.
+  ///
+  /// In de, this message translates to:
+  /// **'Nach Vorrat filtern'**
+  String get searchCookableTitle;
+
+  /// Under the title of the cookable filter sheet.
+  ///
+  /// In de, this message translates to:
+  /// **'Zählt, was jemand in deinem Haushalt vorrätig hat, und Ersatzzutaten.'**
+  String get searchCookableHint;
+
+  /// Choice in the cookable filter sheet and label of its selected chip: every ingredient is on hand.
+  ///
+  /// In de, this message translates to:
+  /// **'Jetzt kochbar'**
+  String get searchCookableNow;
+
+  /// Choice in the cookable filter sheet and label of its selected chip.
+  ///
+  /// In de, this message translates to:
+  /// **'Höchstens 1 Zutat fehlt'**
+  String get searchCookableOneMissing;
+
+  /// Add chip for the cookbook filter.
+  ///
+  /// In de, this message translates to:
+  /// **'Buch'**
+  String get searchAddBook;
+
+  /// Title of the cookbook filter sheet; also the accessible label of its add chip.
+  ///
+  /// In de, this message translates to:
+  /// **'Nach Kochbuch filtern'**
+  String get searchBookTitle;
+
+  /// Under the title of the cookbook filter sheet.
+  ///
+  /// In de, this message translates to:
+  /// **'Mehrere Bücher: Rezepte aus einem davon. Ein Buch mit gespeicherter Suche zählt nur die fest hinzugefügten Rezepte.'**
+  String get searchBookHint;
+
+  /// Cookbook filter sheet when the user has no books.
+  ///
+  /// In de, this message translates to:
+  /// **'Du hast noch keine Kochbücher.'**
+  String get searchBookEmpty;
+
+  /// Label of a selected cookbook filter chip.
+  ///
+  /// In de, this message translates to:
+  /// **'Buch: {book}'**
+  String searchBookFilter(String book);
+
+  /// Add chip for the filter on who created a recipe.
+  ///
+  /// In de, this message translates to:
+  /// **'Erstellt von'**
+  String get searchAddCreator;
+
+  /// Title of the created-by filter sheet; also the accessible label of its add chip.
+  ///
+  /// In de, this message translates to:
+  /// **'Nach Ersteller filtern'**
+  String get searchCreatorTitle;
+
+  /// Label of the selected created-by filter chip.
+  ///
+  /// In de, this message translates to:
+  /// **'Erstellt von {name}'**
+  String searchCreatorFilter(String name);
+
+  /// Shown above offline results when the cookable filter is set.
+  ///
+  /// In de, this message translates to:
+  /// **'Offline zählt der Vorrat vom letzten Öffnen eines Rezepts, ohne Ersatzzutaten.'**
+  String get searchOfflineCookableNote;
+
+  /// Shown with offline results when the cookbook filter is set.
+  ///
+  /// In de, this message translates to:
+  /// **'Offline ist nicht bekannt, welche Rezepte in einem Buch stehen.'**
+  String get searchOfflineBookNote;
+
+  /// Cookbook filter sheet when every book is already a filter.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle deine Bücher sind schon ausgewählt.'**
+  String get searchBookAllChosen;
 }
 
 class _AppLocalizationsDelegate

@@ -386,6 +386,88 @@ final class CookLogRepositoryProvider
 
 String _$cookLogRepositoryHash() => r'4e01e62ad29f61ec7df5384d170d59bf17f1707b';
 
+@ProviderFor(bookRepository)
+final bookRepositoryProvider = BookRepositoryProvider._();
+
+final class BookRepositoryProvider
+    extends $FunctionalProvider<BookRepository, BookRepository, BookRepository>
+    with $Provider<BookRepository> {
+  BookRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'bookRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$bookRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<BookRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  BookRepository create(Ref ref) {
+    return bookRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(BookRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<BookRepository>(value),
+    );
+  }
+}
+
+String _$bookRepositoryHash() => r'c8eef99eb931daf756fa80a528d6dd4da4278668';
+
+@ProviderFor(userRepository)
+final userRepositoryProvider = UserRepositoryProvider._();
+
+final class UserRepositoryProvider
+    extends $FunctionalProvider<UserRepository, UserRepository, UserRepository>
+    with $Provider<UserRepository> {
+  UserRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'userRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$userRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<UserRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  UserRepository create(Ref ref) {
+    return userRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UserRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UserRepository>(value),
+    );
+  }
+}
+
+String _$userRepositoryHash() => r'6ce7e0a54c2658b663434db9aaa512b7d0cebb79';
+
 @ProviderFor(_cacheDatabase)
 final _cacheDatabaseProvider = _CacheDatabaseProvider._();
 

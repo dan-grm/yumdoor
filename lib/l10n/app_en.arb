@@ -154,5 +154,21 @@
   "cookLogSkip": "Skip",
   "cookLogSaved": "Saved to the cook log",
   "cookLogFailed": "Not saved. {reason}",
-  "recipeCooked": "Log as cooked"
+  "recipeCooked": "Log as cooked",
+  "searchAddCookable": "Cookable",
+  "searchCookableTitle": "Filter by what you have",
+  "searchCookableHint": "Counts what anyone in your household has on hand, and substitutes.",
+  "searchCookableNow": "Cookable now",
+  "searchCookableOneMissing": "At most 1 ingredient missing",
+  "searchAddBook": "Book",
+  "searchBookTitle": "Filter by cookbook",
+  "searchBookHint": "Several books: recipes from any of them. A book with a saved search counts only the recipes added to it.",
+  "searchBookEmpty": "You don't have any cookbooks yet.",
+  "searchBookFilter": "Book: {book}",
+  "searchAddCreator": "Created by",
+  "searchCreatorTitle": "Filter by creator",
+  "searchCreatorFilter": "Created by {name}",
+  "searchOfflineCookableNote": "Offline, what was on hand when a recipe was last opened counts, without substitutes.",
+  "searchOfflineBookNote": "Offline, which recipes are in a book isn't known.",
+  "searchBookAllChosen": "All your books are chosen already."
 }

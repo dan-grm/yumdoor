@@ -491,3 +491,91 @@ final class KeywordSuggestionsFamily extends $Family
   @override
   String toString() => r'keywordSuggestionsProvider';
 }
+
+/// The user's recipe books, for the book filter and its chips.
+
+@ProviderFor(recipeBooks)
+final recipeBooksProvider = RecipeBooksProvider._();
+
+/// The user's recipe books, for the book filter and its chips.
+
+final class RecipeBooksProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<RecipeBook>>,
+          List<RecipeBook>,
+          FutureOr<List<RecipeBook>>
+        >
+    with $FutureModifier<List<RecipeBook>>, $FutureProvider<List<RecipeBook>> {
+  /// The user's recipe books, for the book filter and its chips.
+  RecipeBooksProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: _noRetry,
+        name: r'recipeBooksProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$recipeBooksHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<RecipeBook>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<RecipeBook>> create(Ref ref) {
+    return recipeBooks(ref);
+  }
+}
+
+String _$recipeBooksHash() => r'2d799b151b49ba6c19f8746204f301125cfe4618';
+
+/// The members of the space, for the created-by filter and its chip.
+
+@ProviderFor(spaceUsers)
+final spaceUsersProvider = SpaceUsersProvider._();
+
+/// The members of the space, for the created-by filter and its chip.
+
+final class SpaceUsersProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<UserRef>>,
+          List<UserRef>,
+          FutureOr<List<UserRef>>
+        >
+    with $FutureModifier<List<UserRef>>, $FutureProvider<List<UserRef>> {
+  /// The members of the space, for the created-by filter and its chip.
+  SpaceUsersProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: _noRetry,
+        name: r'spaceUsersProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$spaceUsersHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<UserRef>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<UserRef>> create(Ref ref) {
+    return spaceUsers(ref);
+  }
+}
+
+String _$spaceUsersHash() => r'd2a862ad6eb063268cf9da61eedb562be3ddd187';

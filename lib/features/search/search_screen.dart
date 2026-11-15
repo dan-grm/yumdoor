@@ -21,6 +21,7 @@ import 'filter_picker_sheet.dart';
 import 'history_filters.dart';
 import 'search_location.dart';
 import 'search_providers.dart';
+import 'space_filters.dart';
 
 /// Recipe search with food and keyword filter chips (mockup `03-suche`).
 ///
@@ -61,6 +62,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   /// Shows [query] with the text as typed, replacing the current history
   /// entry so typing doesn't fill the browser history.
   void _show(RecipeQuery query) {
+    // A filter sheet may answer after the screen has gone.
+    if (!mounted) return;
     _debounce?.cancel();
     final location = searchLocation(query.copyWith(text: _text.text.trim()));
     Router.neglect(context, () => context.go(location));
@@ -142,7 +145,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               padding: EdgeInsets.symmetric(horizontal: t.space5),
               child: Row(
                 spacing: t.space2,
-                children: [
+                children: _selectedFirst([
                   for (final id in query.foodIds)
                     _FoodChip(
                       id: id,
@@ -170,7 +173,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     onPressed: () => _addFilter(FilterKind.keyword),
                   ),
                   ...historyFilterChips(context, query: query, onChange: _show),
-                ],
+                  ...spaceFilterChips(context, query: query, onChange: _show),
+                ]),
               ),
             ),
             Expanded(child: _Results(query: query)),
@@ -180,6 +184,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 }
+
+/// The filters that are set before the "+" chips, so they show without
+/// scrolling the row.
+List<Widget> _selectedFirst(List<Widget> chips) => [
+  ...chips.where((chip) => chip is! AddFilterChip),
+  ...chips.whereType<AddFilterChip>(),
+];
 
 /// "enthält Karotten": the plural if the food has one.
 String _foodLabel(BuildContext context, Food food) =>
@@ -285,6 +296,7 @@ class _Results extends ConsumerWidget {
       AsyncData(:final value) when value.items.isEmpty => _Empty(
         filtered: !query.isEmpty,
         fromCache: value.fromCache,
+        query: query,
       ),
       AsyncData(:final value) => _ResultList(
         query: query,
@@ -345,6 +357,13 @@ class _ResultList extends ConsumerWidget {
                     if ((query.minTimesCooked ?? 0) > 1) ...[
                       Text(
                         l10n.searchOfflineTimesNote,
+                        style: t.caption.copyWith(color: t.inkMuted),
+                      ),
+                      SizedBox(height: t.space1),
+                    ],
+                    if (query.maxMissingFoods != null) ...[
+                      Text(
+                        l10n.searchOfflineCookableNote,
                         style: t.caption.copyWith(color: t.inkMuted),
                       ),
                       SizedBox(height: t.space1),
@@ -438,13 +457,21 @@ class _LoadMoreState extends State<_LoadMore> {
 }
 
 class _Empty extends StatelessWidget {
-  const _Empty({required this.filtered, required this.fromCache});
+  const _Empty({
+    required this.filtered,
+    required this.fromCache,
+    required this.query,
+  });
 
   /// Whether text or filters narrowed the search.
   final bool filtered;
 
   /// Whether only the offline cache was searched.
   final bool fromCache;
+
+  /// For the notes on filters the offline cache can't apply like the
+  /// server.
+  final RecipeQuery query;
 
   @override
   Widget build(BuildContext context) {
@@ -473,11 +500,22 @@ class _Empty extends StatelessWidget {
             ),
             if (fromCache) ...[
               SizedBox(height: t.space2),
-              Text(
-                l10n.searchOfflineResults,
-                textAlign: TextAlign.center,
-                style: t.body.copyWith(color: t.inkMuted),
-              ),
+              for (final note in [
+                if (query.bookIds.isNotEmpty)
+                  l10n.searchOfflineBookNote
+                else
+                  l10n.searchOfflineResults,
+                if (query.maxMissingFoods != null)
+                  l10n.searchOfflineCookableNote,
+              ])
+                Padding(
+                  padding: EdgeInsets.only(bottom: t.space1),
+                  child: Text(
+                    note,
+                    textAlign: TextAlign.center,
+                    style: t.body.copyWith(color: t.inkMuted),
+                  ),
+                ),
             ] else if (filtered) ...[
               SizedBox(height: t.space2),
               Text(

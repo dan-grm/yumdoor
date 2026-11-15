@@ -6,8 +6,10 @@ import '../../core/cancellation.dart';
 import '../../core/failures.dart';
 import '../../domain/models/food.dart';
 import '../../domain/models/keyword.dart';
+import '../../domain/models/recipe_book.dart';
 import '../../domain/models/recipe_match.dart';
 import '../../domain/models/recipe_query.dart';
+import '../../domain/models/user_ref.dart';
 import '../../domain/services/universal_search.dart';
 
 part 'search_providers.g.dart';
@@ -164,6 +166,29 @@ Future<List<Keyword>> keywordSuggestions(Ref ref, String query) {
   return ref
       .watch(keywordRepositoryProvider)
       .autocomplete(query, limit: _suggestionLimit, cancel: cancel);
+}
+
+/// The user's recipe books, for the book filter and its chips.
+@Riverpod(retry: _noRetry)
+Future<List<RecipeBook>> recipeBooks(Ref ref) =>
+    _reloadOnline(ref, ref.watch(bookRepositoryProvider).books());
+
+/// The members of the space, for the created-by filter and its chip.
+@Riverpod(retry: _noRetry)
+Future<List<UserRef>> spaceUsers(Ref ref) =>
+    _reloadOnline(ref, ref.watch(userRepositoryProvider).users());
+
+/// [request], loaded again once the server can be reached if it failed
+/// because it couldn't, so chips opened offline get their names back.
+Future<T> _reloadOnline<T>(Ref ref, Future<T> request) async {
+  try {
+    return await request;
+  } on OfflineFailure {
+    ref.listen(isOfflineProvider, (_, offline) {
+      if (!offline) ref.invalidateSelf();
+    });
+    rethrow;
+  }
 }
 
 Duration? _noRetry(int retryCount, Object error) => null;

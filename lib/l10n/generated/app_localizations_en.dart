@@ -615,4 +615,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipeCooked => 'Log as cooked';
+
+  @override
+  String get searchAddCookable => 'Cookable';
+
+  @override
+  String get searchCookableTitle => 'Filter by what you have';
+
+  @override
+  String get searchCookableHint =>
+      'Counts what anyone in your household has on hand, and substitutes.';
+
+  @override
+  String get searchCookableNow => 'Cookable now';
+
+  @override
+  String get searchCookableOneMissing => 'At most 1 ingredient missing';
+
+  @override
+  String get searchAddBook => 'Book';
+
+  @override
+  String get searchBookTitle => 'Filter by cookbook';
+
+  @override
+  String get searchBookHint =>
+      'Several books: recipes from any of them. A book with a saved search counts only the recipes added to it.';
+
+  @override
+  String get searchBookEmpty => 'You don\'t have any cookbooks yet.';
+
+  @override
+  String searchBookFilter(String book) {
+    return 'Book: $book';
+  }
+
+  @override
+  String get searchAddCreator => 'Created by';
+
+  @override
+  String get searchCreatorTitle => 'Filter by creator';
+
+  @override
+  String searchCreatorFilter(String name) {
+    return 'Created by $name';
+  }
+
+  @override
+  String get searchOfflineCookableNote =>
+      'Offline, what was on hand when a recipe was last opened counts, without substitutes.';
+
+  @override
+  String get searchOfflineBookNote =>
+      'Offline, which recipes are in a book isn\'t known.';
+
+  @override
+  String get searchBookAllChosen => 'All your books are chosen already.';
 }

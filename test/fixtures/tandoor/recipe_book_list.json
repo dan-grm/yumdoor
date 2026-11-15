@@ -1,0 +1,37 @@
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "timestamp": "2026-11-15T10:43:00.096824+00:00",
+  "results": [
+    {
+      "id": 1,
+      "name": "Unsere Lieblingsrezepte",
+      "description": "Was bei uns immer wieder auf den Tisch kommt.",
+      "shared": [
+        {
+          "id": 3,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      ],
+      "created_by": {
+        "id": 2,
+        "username": "anna",
+        "first_name": "Anna",
+        "last_name": "",
+        "display_name": "Anna ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "filter": null,
+      "order": 0
+    }
+  ]
+}

@@ -60,7 +60,10 @@ class CachingRecipeRepository implements RecipeRepository {
     } on OfflineFailure {
       // Offline results come as one page; a later page can't fall back.
       if (page != 1) rethrow;
-      final recipes = await _cache.all();
+      // Which books a recipe is in isn't stored; nothing is known to match.
+      final recipes = query.bookIds.isEmpty
+          ? await _cache.all()
+          : const <Recipe>[];
       if (cancel?.isCancelled ?? false) throw const CancelledFailure();
       final text = TextMatcher(query.text);
       final items = [
@@ -130,6 +133,16 @@ bool _matches(Recipe recipe, RecipeQuery query, TextMatcher text) {
   // exact, "at least n times" can only tell cooked from not cooked.
   if (query.neverCooked && recipe.lastCooked != null) return false;
   if (query.minTimesCooked != null && recipe.lastCooked == null) return false;
+  if (query.createdBy case final user? when recipe.createdBy?.id != user) {
+    return false;
+  }
+  // On hand as of when the recipe was stored, and without the substitutes
+  // Tandoor also counts. Tandoor doesn't skip an ignore-shopping food that is
+  // itself a recipe, which the cache can't tell.
+  if (query.maxMissingFoods case final max?) {
+    final missing = foods.where((f) => !f.onHand && !f.ignoreShopping);
+    if (missing.length > max) return false;
+  }
   return true;
 }
 
