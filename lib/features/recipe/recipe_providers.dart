@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../app/offline.dart';
 import '../../app/repository_providers.dart';
 import '../../core/failures.dart';
 import '../../domain/models/recipe.dart';
@@ -18,7 +19,10 @@ part 'recipe_providers.g.dart';
 Future<Recipe> recipe(Ref ref, int id) async {
   final repository = ref.watch(recipeRepositoryProvider);
   final recipe = await repository.fetchRecipe(id);
-  unawaited(_ignoreFailure(repository.recordView(id)));
+  // Offline is read-only; a view then simply isn't recorded.
+  if (!ref.read(isOfflineProvider)) {
+    unawaited(_ignoreFailure(repository.recordView(id)));
+  }
   return recipe;
 }
 

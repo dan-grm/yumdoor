@@ -210,6 +210,28 @@ void main() {
       expect(counts.map((s) => s.query.sort), everyElement(isNull));
     });
 
+    test('a failing source ends the page where it failed', () async {
+      final results = search().start(
+        const RecipeQuery(text: 'Karotte', sort: RecipeSort.name),
+        pageSize: 2,
+      );
+      List<int> ids(ResultPage<RecipeMatch> page) => [
+        for (final m in page.items) m.recipe.id,
+      ];
+
+      expect(ids(await results.next()), [1, 4]);
+      recipes
+        ..failure = const ServerFailure()
+        ..failWhen = (query) => query.anyFoodIds.isNotEmpty;
+      // The food search's second page may hold a recipe before
+      // Karottenkuchen, so the page stops before it.
+      final second = await results.next();
+      expect(ids(second), [3]);
+      expect(second.hasMore, isTrue);
+      recipes.failure = null;
+      expect(ids(await results.next()), [6, 2]);
+    });
+
     test('by newest merges by id, newest first', () async {
       final pages = await allPages(
         const RecipeQuery(text: 'Karotte', sort: RecipeSort.newest),

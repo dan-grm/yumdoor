@@ -21,15 +21,15 @@ const _book = 'book';
 const _createdBy = 'created_by';
 const _sort = 'sort';
 
-/// The values of the sort parameter.
-const _sortNames = {
-  RecipeSort.relevance: 'relevance',
-  RecipeSort.name: 'name',
-  RecipeSort.lastCooked: 'last_cooked',
-  RecipeSort.rating: 'rating',
-  RecipeSort.newest: 'newest',
-  RecipeSort.recentlyViewed: 'viewed',
-  RecipeSort.random: 'random',
+/// The value of the sort parameter for [sort].
+String _sortName(RecipeSort sort) => switch (sort) {
+  RecipeSort.relevance => 'relevance',
+  RecipeSort.name => 'name',
+  RecipeSort.lastCooked => 'last_cooked',
+  RecipeSort.rating => 'rating',
+  RecipeSort.newest => 'newest',
+  RecipeSort.recentlyViewed => 'viewed',
+  RecipeSort.random => 'random',
 };
 
 /// The most missing foods a link may ask for; the search screen offers 0
@@ -57,7 +57,7 @@ String searchLocation(RecipeQuery query) {
     if (query.bookIds.isNotEmpty)
       _book: [for (final id in query.bookIds) '$id'],
     if (query.createdBy case final user?) _createdBy: ['$user'],
-    if (query.sort case final sort?) _sort: [_sortNames[sort]!],
+    if (query.sort case final sort?) _sort: [_sortName(sort)],
   };
   return Uri(
     path: searchPath,
@@ -101,14 +101,9 @@ RecipeQuery searchQueryFromUri(Uri uri) {
       final user? when user > 0 => user,
       _ => null,
     },
-    sort: switch (params[_sort]?.first) {
-      final name? =>
-        _sortNames.entries
-            .where((entry) => entry.value == name)
-            .firstOrNull
-            ?.key,
-      null => null,
-    },
+    sort: RecipeSort.values
+        .where((sort) => _sortName(sort) == params[_sort]?.first)
+        .firstOrNull,
   );
 }
 

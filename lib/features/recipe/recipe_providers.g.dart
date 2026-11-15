@@ -74,7 +74,7 @@ final class RecipeProvider
   }
 }
 
-String _$recipeHash() => r'c8053dc4f434fc61ca605bc108ba98a67c4351b7';
+String _$recipeHash() => r'bdef7038158a564d60a9ea0face3e121c600b657';
 
 /// The recipe with its steps, shared by the recipe screen and cooking mode.
 /// Loading it records a view for the "recently viewed" search order, like
