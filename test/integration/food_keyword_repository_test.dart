@@ -1,6 +1,7 @@
 @Tags(['integration'])
 library;
 
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/data/api/tandoor_dio.dart';
 import 'package:yumdoor/data/repositories/tandoor_repositories.dart';
@@ -64,6 +65,84 @@ void main() {
         await repositories.keywords.autocomplete('', limit: 2),
         hasLength(2),
       );
+    });
+  });
+
+  group('UnitRepository', () {
+    test('completes a unit name', () async {
+      final units = await repositories.units.autocomplete('E');
+
+      expect(units.map((u) => u.name), contains('EL'));
+      expect(units.map((u) => u.name), isNot(contains('g')));
+    });
+
+    test('returns at most limit units', () async {
+      expect(await repositories.units.autocomplete('', limit: 3), hasLength(3));
+    });
+  });
+
+  group('create', () {
+    // Unique per run, so a run that was cut short doesn't get in the way.
+    final tag = 'Yumdoor-Test ${DateTime.now().microsecondsSinceEpoch}';
+
+    /// What a test created, as API paths to delete afterwards.
+    final created = <String>[];
+    late Dio dio;
+
+    setUp(() {
+      dio = createTandoorDio(tandoor.baseUrl, token: tandoor.token('anna'));
+    });
+    tearDown(() async {
+      for (final path in created) {
+        await dio.delete<void>(path);
+      }
+      created.clear();
+      dio.close();
+    });
+
+    test('creates a food, unit and keyword that autocomplete finds', () async {
+      final food = await repositories.foods.create(' $tag Food ');
+      created.add('/api/food/${food.id}/');
+      final unit = await repositories.units.create('$tag Unit');
+      created.add('/api/unit/${unit.id}/');
+      final keyword = await repositories.keywords.create('$tag Keyword');
+      created.add('/api/keyword/${keyword.id}/');
+
+      expect(food.name, '$tag Food');
+      expect(unit.name, '$tag Unit');
+      expect(keyword.name, '$tag Keyword');
+      expect(await repositories.foods.autocomplete('$tag Fo'), [food]);
+      expect(await repositories.units.autocomplete('$tag Un'), [unit]);
+      expect(await repositories.keywords.autocomplete('$tag Key'), [keyword]);
+    });
+
+    test('returns a new name again when it exists in another case', () async {
+      final food = await repositories.foods.create('$tag Food');
+      created.add('/api/food/${food.id}/');
+      final unit = await repositories.units.create('$tag Unit');
+      created.add('/api/unit/${unit.id}/');
+      final keyword = await repositories.keywords.create('$tag Keyword');
+      created.add('/api/keyword/${keyword.id}/');
+
+      final upper = tag.toUpperCase();
+      expect(await repositories.foods.create('$upper FOOD'), food);
+      expect(await repositories.units.create('$upper UNIT'), unit);
+      expect(await repositories.keywords.create('$upper KEYWORD'), keyword);
+    });
+
+    test('returns seeded ones by name in another case', () async {
+      final karotte = (await repositories.foods.autocomplete('Karotte'))
+          .singleWhere((f) => f.name == 'Karotte');
+      final el = (await repositories.units.autocomplete('EL'))
+          .singleWhere((u) => u.name == 'EL');
+      final suppe = (await repositories.keywords.autocomplete('Suppe'))
+          .singleWhere((k) => k.name == 'Suppe');
+
+      expect(await repositories.foods.create('karotte'), karotte);
+      // Foods and units also match the plural name.
+      expect(await repositories.foods.create('KAROTTEN'), karotte);
+      expect(await repositories.units.create('el'), el);
+      expect(await repositories.keywords.create('SUPPE'), suppe);
     });
   });
 }

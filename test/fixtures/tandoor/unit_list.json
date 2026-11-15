@@ -1,0 +1,48 @@
+{
+  "count": 6,
+  "next": "http://localhost:8080/api/unit/?page=2&page_size=5&query=l",
+  "previous": null,
+  "timestamp": "2026-11-15T23:31:43.591233+00:00",
+  "results": [
+    {
+      "id": 31,
+      "name": "l",
+      "plural_name": "l",
+      "description": null,
+      "base_unit": null,
+      "open_data_slug": null
+    },
+    {
+      "id": 38,
+      "name": "clove",
+      "plural_name": "clove",
+      "description": null,
+      "base_unit": null,
+      "open_data_slug": null
+    },
+    {
+      "id": 22,
+      "name": "EL",
+      "plural_name": "EL",
+      "description": null,
+      "base_unit": null,
+      "open_data_slug": null
+    },
+    {
+      "id": 23,
+      "name": "ml",
+      "plural_name": "ml",
+      "description": null,
+      "base_unit": null,
+      "open_data_slug": null
+    },
+    {
+      "id": 25,
+      "name": "TL",
+      "plural_name": "TL",
+      "description": null,
+      "base_unit": null,
+      "open_data_slug": null
+    }
+  ]
+}

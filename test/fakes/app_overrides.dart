@@ -38,6 +38,7 @@ List<Override> appOverrides({
   FakeRecipeRepository? recipes,
   FakeFoodRepository? foods,
   FakeKeywordRepository? keywords,
+  FakeUnitRepository? units,
   FakeCookLogRepository? cookLogs,
   FakeBookRepository? books,
   FakeUserRepository? users,
@@ -58,6 +59,7 @@ List<Override> appOverrides({
   keywordRepositoryProvider.overrideWithValue(
     keywords ?? FakeKeywordRepository(),
   ),
+  unitRepositoryProvider.overrideWithValue(units ?? FakeUnitRepository()),
   cookLogRepositoryProvider.overrideWithValue(
     cookLogs ?? FakeCookLogRepository(),
   ),

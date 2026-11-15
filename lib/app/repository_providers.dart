@@ -18,6 +18,7 @@ import '../domain/repositories/offline_cache.dart';
 import '../domain/repositories/recipe_repository.dart';
 import '../domain/repositories/saved_filter_repository.dart';
 import '../domain/repositories/server_repository.dart';
+import '../domain/repositories/unit_repository.dart';
 import '../domain/repositories/user_repository.dart';
 import 'offline.dart';
 import 'platform_providers.dart';
@@ -80,6 +81,10 @@ FoodRepository foodRepository(Ref ref) =>
 @Riverpod(keepAlive: true)
 KeywordRepository keywordRepository(Ref ref) =>
     ref.watch(_tandoorRepositoriesProvider).keywords;
+
+@Riverpod(keepAlive: true)
+UnitRepository unitRepository(Ref ref) =>
+    ref.watch(_tandoorRepositoriesProvider).units;
 
 @Riverpod(keepAlive: true)
 CookLogRepository cookLogRepository(Ref ref) =>

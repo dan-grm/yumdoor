@@ -14,4 +14,9 @@ abstract interface class FoodRepository {
 
   /// Throws [NotFoundFailure] if the food doesn't exist.
   Future<Food> fetchFood(int id);
+
+  /// Creates a food called [name] (trimmed). If a food with that name or
+  /// plural name already exists (ignoring case), returns it unchanged instead.
+  /// Throws an [ArgumentError] if [name] is blank.
+  Future<Food> create(String name);
 }

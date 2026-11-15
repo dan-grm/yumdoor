@@ -33,4 +33,15 @@ class TandoorFoodRepository implements FoodRepository {
     final response = await _api.apiFoodRetrieve(id: id);
     return requireBody(response.data).toDomain();
   });
+
+  @override
+  Future<Food> create(String name) {
+    final trimmed = requireName(name);
+    return guardRequest(() async {
+      final response = await _api.apiFoodCreate(
+        food: api.Food((b) => b..name = trimmed),
+      );
+      return requireBody(response.data).toDomain();
+    });
+  }
 }

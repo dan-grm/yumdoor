@@ -1,5 +1,6 @@
 import '../models/food.dart';
 import '../models/keyword.dart';
+import '../models/unit.dart';
 
 /// Matches names against a search text, ignoring case and accents ("Püree"
 /// matches "puree"), roughly like Tandoor's `icontains` with `unaccent`.
@@ -19,6 +20,11 @@ class TextMatcher {
       (food.pluralName != null && contains(food.pluralName!));
 
   bool keyword(Keyword keyword) => contains(keyword.name);
+
+  /// The unit's name or plural name contains the text.
+  bool unit(Unit unit) =>
+      contains(unit.name) ||
+      (unit.pluralName != null && contains(unit.pluralName!));
 }
 
 /// [text] in lower case without accents: "Crème Brûlée" → "creme brulee".

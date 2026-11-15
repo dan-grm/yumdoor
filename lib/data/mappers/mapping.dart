@@ -17,6 +17,15 @@ String? optionalText(String? value) =>
 /// Tandoor stores durations as whole minutes.
 Duration minutes(int? value) => Duration(minutes: value ?? 0);
 
+/// [name] trimmed, for a food, unit or keyword to create. Throws an
+/// [ArgumentError] (a programming error, not a [FormatException]) if it is
+/// blank.
+String requireName(String name) {
+  final trimmed = name.trim();
+  if (trimmed.isEmpty) throw ArgumentError.value(name, 'name', 'is blank');
+  return trimmed;
+}
+
 /// The generated client returns `null` data for an empty response body.
 T requireBody<T>(T? body) =>
     body ?? (throw const FormatException('Empty response'));

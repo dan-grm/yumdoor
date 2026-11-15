@@ -61,6 +61,7 @@ Future<void> main() async {
           '/api/recipe/${await recipeId('Karottensuppe mit Ingwer')}/',
       'food_list.json': '/api/food/?query=Karotte&page_size=5',
       'keyword_list.json': '/api/keyword/?query=Suppe&page_size=5',
+      'unit_list.json': '/api/unit/?query=l&page_size=5',
       // The space's oldest entries, by Anna and Ben, with and without a
       // rating and a comment.
       'cook_log_list.json': '/api/cook-log/?page_size=3',

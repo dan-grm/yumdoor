@@ -7,6 +7,7 @@ import '../../domain/repositories/food_repository.dart';
 import '../../domain/repositories/keyword_repository.dart';
 import '../../domain/repositories/recipe_repository.dart';
 import '../../domain/repositories/saved_filter_repository.dart';
+import '../../domain/repositories/unit_repository.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../api/image_downloader.dart';
 import '../api/tandoor_dio.dart';
@@ -21,6 +22,7 @@ import 'tandoor_keyword_repository.dart';
 import 'current_user.dart';
 import 'tandoor_recipe_repository.dart';
 import 'tandoor_saved_filter_repository.dart';
+import 'tandoor_unit_repository.dart';
 import 'tandoor_user_repository.dart';
 
 /// The repositories for one logged-in [TandoorConnection], sharing one [Dio].
@@ -75,6 +77,7 @@ class TandoorRepositories {
       },
       foods: TandoorFoodRepository(apiClient),
       keywords: TandoorKeywordRepository(apiClient),
+      units: TandoorUnitRepository(apiClient),
       cookLogs: cookLogs,
       books: TandoorBookRepository(apiClient),
       users: TandoorUserRepository(apiClient),
@@ -91,6 +94,7 @@ class TandoorRepositories {
     required this.recipes,
     required this.foods,
     required this.keywords,
+    required this.units,
     required this.cookLogs,
     required this.books,
     required this.users,
@@ -102,6 +106,7 @@ class TandoorRepositories {
   final RecipeRepository recipes;
   final FoodRepository foods;
   final KeywordRepository keywords;
+  final UnitRepository units;
   final CookLogRepository cookLogs;
   final BookRepository books;
   final UserRepository users;

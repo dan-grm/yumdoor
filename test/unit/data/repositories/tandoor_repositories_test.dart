@@ -11,10 +11,12 @@ import 'package:yumdoor/data/repositories/tandoor_food_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_keyword_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_recipe_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_server_repository.dart';
+import 'package:yumdoor/data/repositories/tandoor_unit_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_user_repository.dart';
 import 'package:yumdoor/domain/models/recipe_book.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
 import 'package:yumdoor/domain/models/recipe_sort.dart';
+import 'package:yumdoor/domain/models/unit.dart';
 import 'package:yumdoor/domain/models/user_ref.dart';
 
 import '../../../fakes/fake_http_adapter.dart';
@@ -540,6 +542,128 @@ void main() {
 
     expect(adapter.requests.single.uri.path, '/tandoor/api/keyword/45/');
     expect(keyword.name, 'Suppe');
+  });
+
+  group('TandoorUnitRepository.autocomplete', () {
+    test('asks for at most limit units matching the text', () async {
+      final adapter = FakeHttpAdapter(
+        (_) => jsonResponse(tandoorFixture('unit_list.json')),
+      );
+
+      final units = await TandoorUnitRepository(client(adapter))
+          .autocomplete(' l ', limit: 5);
+
+      final request = adapter.requests.single;
+      expect(request.uri.path, '/tandoor/api/unit/');
+      expect(request.uri.queryParameters['query'], 'l');
+      expect(request.uri.queryParameters['page_size'], '5');
+      expect(units.map((u) => u.name), ['l', 'clove', 'EL', 'ml', 'TL']);
+      expect(units.first.pluralName, 'l');
+    });
+
+    test('leaves out fuzzy suggestions that don\'t contain the text', () async {
+      final fixture = tandoorFixture('unit_list.json')! as Map<String, Object?>;
+      final adapter = FakeHttpAdapter(
+        (_) => jsonResponse({
+          ...fixture,
+          'results': [
+            {'id': 1, 'name': 'Bund', 'plural_name': 'Bunde'},
+            {'id': 2, 'name': 'Prise', 'plural_name': 'Prisen'},
+            {'id': 3, 'name': 'Stück', 'plural_name': 'Stücke'},
+          ],
+        }),
+      );
+
+      final units = await TandoorUnitRepository(client(adapter))
+          .autocomplete('stucke');
+
+      expect(units.map((u) => u.id), [3]);
+    });
+
+    test('maps failures', () async {
+      final adapter = FakeHttpAdapter((_) => jsonResponse({}, status: 403));
+
+      expect(
+        TandoorUnitRepository(client(adapter)).autocomplete('g'),
+        throwsA(isA<UnauthorizedFailure>()),
+      );
+    });
+  });
+
+  group('create', () {
+    // Tandoor answers 201 with the new or the existing object.
+    FakeHttpAdapter created(Object? body) =>
+        FakeHttpAdapter((_) => jsonResponse(body, status: 201));
+
+    test('TandoorFoodRepository posts the trimmed name', () async {
+      final adapter = created(firstResult('food_list.json'));
+
+      final food = await TandoorFoodRepository(client(adapter))
+          .create('  karotte ');
+
+      final request = adapter.requests.single;
+      expect(request.method, 'POST');
+      expect(request.uri.path, '/tandoor/api/food/');
+      expect(request.data, {'name': 'karotte'});
+      expect(food.name, 'Karotte');
+      expect(food.pluralName, 'Karotten');
+    });
+
+    test('TandoorUnitRepository posts the trimmed name', () async {
+      final adapter = created(
+        (tandoorFixture('unit_list.json')! as Map)['results'][2],
+      );
+
+      final unit = await TandoorUnitRepository(client(adapter)).create(' el');
+
+      final request = adapter.requests.single;
+      expect(request.method, 'POST');
+      expect(request.uri.path, '/tandoor/api/unit/');
+      expect(request.data, {'name': 'el'});
+      expect(unit, const Unit(id: 22, name: 'EL', pluralName: 'EL'));
+    });
+
+    test('TandoorKeywordRepository posts the trimmed name', () async {
+      final adapter = created(firstResult('keyword_list.json'));
+
+      final keyword = await TandoorKeywordRepository(client(adapter))
+          .create('suppe ');
+
+      final request = adapter.requests.single;
+      expect(request.method, 'POST');
+      expect(request.uri.path, '/tandoor/api/keyword/');
+      expect(request.data, {'name': 'suppe'});
+      expect(keyword.name, 'Suppe');
+    });
+
+    test('rejects a blank name without a request', () {
+      final adapter = created(null);
+      final api = client(adapter);
+
+      expect(
+        () => TandoorFoodRepository(api).create('  '),
+        throwsArgumentError,
+      );
+      expect(() => TandoorUnitRepository(api).create(''), throwsArgumentError);
+      expect(
+        () => TandoorKeywordRepository(api).create('\n'),
+        throwsArgumentError,
+      );
+      expect(adapter.requests, isEmpty);
+    });
+
+    test('maps a rejected name to a ServerFailure', () async {
+      final adapter = FakeHttpAdapter(
+        (_) => jsonResponse({
+          'name': ['Ensure this field has no more than 64 characters.'],
+        }, status: 400),
+      );
+
+      await expectLater(
+        TandoorKeywordRepository(client(adapter)).create('x' * 65),
+        throwsA(isA<ServerFailure>()),
+      );
+    });
   });
 
   test('TandoorBookRepository reads every page of books', () async {
