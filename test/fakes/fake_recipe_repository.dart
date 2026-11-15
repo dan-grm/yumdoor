@@ -7,6 +7,7 @@ import 'package:yumdoor/domain/models/recipe_query.dart';
 import 'package:yumdoor/domain/models/recipe_summary.dart';
 import 'package:yumdoor/domain/models/result_page.dart';
 import 'package:yumdoor/domain/repositories/recipe_repository.dart';
+import 'package:yumdoor/domain/services/recipe_order.dart';
 
 /// A [RecipeRepository.search] call, as the fake received it.
 typedef SearchCall = ({
@@ -21,7 +22,9 @@ typedef SearchCall = ({
 ///
 /// Search matches the text against names, foods against the ingredients
 /// (without child foods) and keywords against the recipe's keywords, in the
-/// order of [recipes]. Like Tandoor, every part of the query must match.
+/// order of [recipes], or in the query's order if it has a [RecipeQuery.sort]
+/// that summaries can be compared by (equal ones in the order of [recipes]).
+/// Like Tandoor, every part of the query must match.
 class FakeRecipeRepository implements RecipeRepository {
   FakeRecipeRepository(Iterable<Recipe> recipes)
     : recipes = {for (final r in recipes) r.id: r};
@@ -69,6 +72,15 @@ class FakeRecipeRepository implements RecipeRepository {
     }
 
     final matches = recipes.values.where((r) => _matches(r, query)).toList();
+    if (query.sort != null) {
+      if (recipeOrder(query.effectiveSort) case final order?) {
+        final position = {for (final (i, r) in matches.indexed) r.id: i};
+        matches.sort((a, b) {
+          final result = order(_summary(a), _summary(b));
+          return result != 0 ? result : position[a.id]! - position[b.id]!;
+        });
+      }
+    }
     if (fromCache) {
       if (page > 1) throw const OfflineFailure();
       return ResultPage(

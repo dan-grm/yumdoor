@@ -1,5 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'recipe_sort.dart';
+
 part 'recipe_query.freezed.dart';
 
 /// A recipe search. All parts must match.
@@ -50,9 +52,21 @@ abstract class RecipeQuery with _$RecipeQuery {
 
     /// The user who created the recipe.
     int? createdBy,
+
+    /// The order the user chose, `null` for the default ([effectiveSort]).
+    /// Doesn't narrow the search.
+    RecipeSort? sort,
   }) = _RecipeQuery;
 
   const RecipeQuery._();
+
+  /// The order of the results: [sort], by default relevance when there is
+  /// text and name otherwise. Relevance without text is by name.
+  RecipeSort get effectiveSort => switch (sort) {
+    null || RecipeSort.relevance when text.trim().isEmpty => RecipeSort.name,
+    null => RecipeSort.relevance,
+    final sort => sort,
+  };
 
   /// Whether anything narrows the search; an empty query lists all recipes.
   bool get isEmpty =>

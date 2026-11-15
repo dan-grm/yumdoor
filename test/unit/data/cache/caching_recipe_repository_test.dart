@@ -10,6 +10,7 @@ import 'package:yumdoor/data/cache/recipe_cache.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
+import 'package:yumdoor/domain/models/recipe_sort.dart';
 import 'package:yumdoor/domain/models/user_ref.dart';
 
 import '../../../fakes/fake_recipe_repository.dart';
@@ -257,6 +258,24 @@ void main() {
         expect(await ids(const RecipeQuery(createdBy: 3)), isEmpty);
         // Book entries aren't cached.
         expect(await ids(const RecipeQuery(bookIds: {1})), isEmpty);
+      });
+
+      test('sorts in the chosen order as far as the cache can', () async {
+        Future<List<int>> ids(RecipeSort sort) async => [
+          for (final r in (await repository.search(
+            RecipeQuery(sort: sort),
+          )).items)
+            r.id,
+        ];
+
+        expect(await ids(RecipeSort.name), [8, 7]);
+        expect(await ids(RecipeSort.rating), [7, 8]);
+        // Only Kürbissuppe was cooked.
+        expect(await ids(RecipeSort.lastCooked), [8, 7]);
+        expect(await ids(RecipeSort.newest), [8, 7]);
+        // Opened in Yumdoor: most recently opened first.
+        expect(await ids(RecipeSort.recentlyViewed), [7, 8]);
+        expect(await ids(RecipeSort.random), unorderedEquals([7, 8]));
       });
 
       test('has no later pages', () async {

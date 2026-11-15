@@ -100,7 +100,7 @@ Paginated: `page`, `page_size` (default 25, max 100). List items use `RecipeOver
 | Created / updated / viewed | `createdon*`, `updatedon*`, `viewedon_gte/lte`, `createdby` |
 | Cookable from on-hand foods | `makenow` (true, or an int = number of allowed missing foods) |
 | Saved filter | `filter` (CustomFilter id) |
-| Sort | `sort_order`: `score, name, lastcooked, rating, times_cooked, created_at, lastviewed` (prefix `-` for descending), or `random=true` |
+| Sort | `sort_order`: one of `score, name, lastcooked, rating, created_at, lastviewed` (prefix `-` for descending), or `random=true`. **Not** `times_cooked` (see below) |
 
 **Text search only matches recipe names by default.** A new user's `SearchPreference` is `plain` with `icontains`,
 `trigram` and `unaccent` on `name` only and no fulltext fields (checked on a fresh 2.6.15). `query=Karotte` does not
@@ -110,11 +110,23 @@ find a recipe that only has carrots as an ingredient; "contains carrots" needs t
 that match both, and `foods_and` with `foods_or` (or `keywords_and` with `keywords_or`) means "all of these and at
 least one of those". One request cannot mean "name **or** ingredient **or** keyword", so the universal search
 (`lib/domain/services/universal_search.dart`) runs three: `query=<text>`, `foods_or=<foods matching the text>` and
-`keywords_or=<keywords matching the text>`, each with the user's other filters, and merges them page by page (name
-matches first, each recipe once). The total is counted with inclusion–exclusion (`page_size=1` requests for the
+`keywords_or=<keywords matching the text>`, each with the user's other filters, and merges them page by page, each recipe
+once: by name, rating or newest (the id) in that order over all three, otherwise name matches first. The total is counted with inclusion–exclusion (`page_size=1` requests for the
 overlaps) when the results don't fit on the first pages. `foods_or` and `keywords_or` include child foods and
 keywords (`include_children`), and a `RecipeOverview` has no ingredients, so a food match can't tell which of the
 foods the recipe contains.
+
+**Sort order** (`cookbook/helper/recipe_search.py`, `_build_sort_order`; checked on 2.6.15): `sort_order` takes a
+**single** key; a second key or an unknown one (also a comma list) is a 500. Without `sort_order` the order is
+`-score, name` when the search preference scores text (trigram or full text), else `name`; `score` is dropped
+without a text search. `name` is `Lower(name)`. `rating`, `lastcooked` and `lastviewed` sort nulls last in both
+directions and, like the filters, count only the caller's own cook logs and views. Sorting by `rating` fills in the
+overview's `rating` (otherwise it can be `null`); `lastcooked` and `lastviewed` are not in the response.
+**`times_cooked` and `-times_cooked` are a 500** (`FieldError`: the annotation is called `favorite`, which isn't an
+allowed key), so Yumdoor can't sort by how often a recipe was cooked. There is no tie-breaker, so recipes with the
+same key can move between pages. `random=true` (or `sort_order=random`) orders by `?` **on every request**: pages
+overlap and some recipes never show; the universal search drops the repeats. Views are recorded only by
+`POST /api/view-log/ {recipe}`, which Tandoor's web UI sends when a recipe is opened; Yumdoor doesn't yet.
 
 **Times cooked:** `timescooked_lte` adds `.exclude(favorite=0)` (`managers.py:179`), so it never returns recipes
 cooked 0 times; "never cooked" is `timescooked=0` (exact, which also wins over `_gte`/`_lte`). Overviews carry no cook

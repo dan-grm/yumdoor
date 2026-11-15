@@ -14,6 +14,7 @@ import 'package:yumdoor/data/repositories/tandoor_server_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_user_repository.dart';
 import 'package:yumdoor/domain/models/recipe_book.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
+import 'package:yumdoor/domain/models/recipe_sort.dart';
 import 'package:yumdoor/domain/models/user_ref.dart';
 
 import '../../../fakes/fake_http_adapter.dart';
@@ -121,6 +122,32 @@ void main() {
       expect(oneMissing['makenow'], ['1']);
       expect(oneMissing.containsKey('books_or'), isFalse);
       expect(oneMissing.containsKey('createdby'), isFalse);
+    });
+
+    test('sends the chosen sort order', () async {
+      final adapter = FakeHttpAdapter(
+        (_) => jsonResponse(tandoorFixture('recipe_list.json')),
+      );
+      final repository = TandoorRecipeRepository(client(adapter));
+
+      await repository.search(const RecipeQuery(sort: RecipeSort.rating));
+      await repository.search(const RecipeQuery(sort: RecipeSort.random));
+      await repository.search(
+        const RecipeQuery(text: 'Suppe', sort: RecipeSort.relevance),
+      );
+      await repository.search(const RecipeQuery(text: 'Suppe'));
+
+      final [rating, random, relevance, byDefault] = [
+        for (final r in adapter.requests) r.uri.queryParameters,
+      ];
+      expect(rating['sort_order'], '-rating');
+      expect(rating.containsKey('random'), isFalse);
+      expect(random['random'], 'true');
+      expect(random.containsKey('sort_order'), isFalse);
+      for (final params in [relevance, byDefault]) {
+        expect(params.containsKey('sort_order'), isFalse);
+        expect(params.containsKey('random'), isFalse);
+      }
     });
 
     test('cancels the request with its CancelSignal', () async {

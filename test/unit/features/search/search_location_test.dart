@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
+import 'package:yumdoor/domain/models/recipe_sort.dart';
 import 'package:yumdoor/features/search/search_location.dart';
 
 void main() {
@@ -55,6 +56,25 @@ void main() {
     }
   });
 
+  test('round-trips every sort order', () {
+    for (final sort in RecipeSort.values) {
+      final query = RecipeQuery(text: 'Suppe', sort: sort);
+
+      expect(parse(searchLocation(query)), query, reason: '$sort');
+      // It doesn't narrow the search.
+      expect(RecipeQuery(sort: sort).isEmpty, isTrue);
+    }
+    expect(
+      searchLocation(const RecipeQuery(sort: RecipeSort.lastCooked)),
+      '/search?sort=last_cooked',
+    );
+  });
+
+  test('leaves out the default order and drops an unknown one', () {
+    expect(searchLocation(const RecipeQuery(text: 'Suppe')), '/search?q=Suppe');
+    expect(parse('/search?sort=times_cooked'), const RecipeQuery());
+  });
+
   test('drops cookable, book and creator values that do not parse', () {
     expect(
       parse('/search?missing=2&book=0&book=x&created_by=-1'),
@@ -102,6 +122,6 @@ void main() {
   });
 
   test('ignores unknown parameters', () {
-    expect(parse('/search?sort=name&q=Brot'), const RecipeQuery(text: 'Brot'));
+    expect(parse('/search?view=grid&q=Brot'), const RecipeQuery(text: 'Brot'));
   });
 }
