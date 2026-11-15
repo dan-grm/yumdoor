@@ -50,6 +50,8 @@ void main() {
           ExtraQueryInterceptor.paramsKey: <String, Object>{
             'timescooked_gte': '3',
             'rating': '2',
+            // A lower and an upper bound both apply.
+            'rating_lte': '5',
             'cookedon_gte': '2026-01-01',
           },
         },
@@ -59,6 +61,7 @@ void main() {
     expect(adapter.requests.single.uri.queryParameters, {
       'timescooked': '0',
       'rating_gte': '4',
+      'rating_lte': '5',
       'cookedon_gte': '2026-01-01',
     });
     expect(response.requestOptions.extra[ExtraQueryInterceptor.skippedKey], [

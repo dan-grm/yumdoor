@@ -162,7 +162,10 @@ book. It reads the book's filter (`GET /api/recipe-book/<id>/`, reused for a min
 (Yumdoor's `keywords_or` for search text, say), or an exact value and a range of the same field (`timescooked`
 and `rating` win over their `_gte`/`_lte`, checked on 2.6.15), it sends its own and keeps only the recipes whose
 ids the saved search finds on its own. It does the same if the saved search has `include_children: false`,
-which would change Yumdoor's food and keyword parameters too. The union of a book's entries and its filter takes one request each; the universal search
+which would change Yumdoor's food and keyword parameters too. Loading those ids takes one request per 100 recipes
+the saved search finds (reused for a minute), and when Yumdoor's parameters are much broader than the saved
+search, most pages filtered that way come back empty. The union of a book's entries and its filter needs separate
+searches; the universal search runs each of its searches (name, foods, keywords) once more per selected book and
 merges them.
 
 Writing a book with a nested `filter` object (`POST`/`PATCH /api/recipe-book/`) **updates that CustomFilter**

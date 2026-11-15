@@ -6,8 +6,8 @@ import 'package:dio/dio.dart';
 /// gets those parameters, except the ones that clash with its own: the
 /// request's own win. A parameter clashes with one of the same name and,
 /// as Tandoor lets an exact value win over a range (`timescooked` over
-/// `timescooked_gte`), with one that differs only by a `_gte` or `_lte`
-/// suffix. The names left out go into the same `extra` under [skippedKey]
+/// `timescooked_gte`), an exact one with its `_gte` and `_lte`; a `_gte`
+/// and an `_lte` both apply. The names left out go into the same `extra` under [skippedKey]
 /// (a `List<String>`), so the caller can read them from
 /// `response.requestOptions.extra`.
 class ExtraQueryInterceptor extends Interceptor {
@@ -20,10 +20,10 @@ class ExtraQueryInterceptor extends Interceptor {
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     if (options.extra[paramsKey] case final Map<String, Object> params) {
       final query = {...options.queryParameters};
-      final own = {for (final name in query.keys) _family(name)};
+      final own = query.keys.toSet();
       final skipped = <String>[];
       for (final MapEntry(:key, :value) in params.entries) {
-        if (own.contains(_family(key))) {
+        if (_clashes(key, own)) {
           skipped.add(key);
         } else {
           query[key] = value;
@@ -36,7 +36,14 @@ class ExtraQueryInterceptor extends Interceptor {
     handler.next(options);
   }
 
-  /// [name] without a range suffix.
-  static String _family(String name) =>
-      name.replaceFirst(RegExp(r'_(gte|lte)$'), '');
+  static final _range = RegExp(r'_(gte|lte)$');
+
+  /// Whether [name] clashes with one of [own].
+  static bool _clashes(String name, Set<String> own) {
+    if (own.contains(name)) return true;
+    if (_range.hasMatch(name)) {
+      return own.contains(name.replaceFirst(_range, ''));
+    }
+    return own.contains('${name}_gte') || own.contains('${name}_lte');
+  }
 }

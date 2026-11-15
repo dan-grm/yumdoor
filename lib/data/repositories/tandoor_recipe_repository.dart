@@ -144,17 +144,35 @@ class TandoorRecipeRepository implements RecipeRepository {
   /// one search: others may be waiting for it.
   Future<Set<int>> _savedSearchIds(_SavedSearch saved) =>
       guardRequest(() async {
-        final ids = <int>{};
-        for (var page = 1; ; page++) {
-          final response = await _api.apiRecipeList(
-            page: page,
-            pageSize: _idPageSize,
-            extra: {ExtraQueryInterceptor.paramsKey: saved.all},
-          );
-          final body = requireBody(response.data);
-          ids.addAll([for (final recipe in body.results) ?recipe.id]);
-          if (body.next == null) return ids;
+        Future<api.PaginatedRecipeOverviewList?> load(int page) async {
+          try {
+            final response = await _api.apiRecipeList(
+              page: page,
+              pageSize: _idPageSize,
+              extra: {ExtraQueryInterceptor.paramsKey: saved.all},
+            );
+            return requireBody<api.PaginatedRecipeOverviewList>(response.data);
+          } on DioException catch (e) {
+            // Recipes were deleted since the first page.
+            if (page > 1 && e.response?.statusCode == 404) return null;
+            rethrow;
+          }
         }
+
+        final first = (await load(1))!;
+        final ids = {for (final recipe in first.results) ?recipe.id};
+        final pages = (first.count / _idPageSize).ceil();
+        // The other pages a few at a time, to spare the server.
+        for (var page = 2; page <= pages; page += _idParallelPages) {
+          final bodies = await Future.wait([
+            for (var p = page; p < page + _idParallelPages && p <= pages; p++)
+              load(p),
+          ]);
+          for (final body in bodies.nonNulls) {
+            ids.addAll([for (final recipe in body.results) ?recipe.id]);
+          }
+        }
+        return ids;
       });
 
   Future<Response<api.PaginatedRecipeOverviewList>> _list(
@@ -245,6 +263,9 @@ class TandoorRecipeRepository implements RecipeRepository {
 /// most Tandoor allows for recipes.
 const _idPageSize = 100;
 
+/// How many of those requests run at once.
+const _idParallelPages = 4;
+
 /// How long a dynamic book's saved search, and what it finds, is reused.
 const _savedSearchLifetime = Duration(minutes: 1);
 
@@ -269,7 +290,8 @@ class _SavedSearch {
     if (decoded is! Map) return null;
     final params = <String, Object>{};
     for (final MapEntry(:key, :value) in decoded.entries) {
-      if (key is! String) return null;
+      // JSON keys are strings.
+      key as String;
       if (_ignored.contains(key) || _isEmpty(value)) continue;
       final param = _queryValue(value);
       if (param == null) return null;
@@ -320,7 +342,8 @@ class _SavedSearch {
   /// The ids of every recipe the saved search finds, loaded with [load] the
   /// first time.
   Future<Set<int>> ids(Future<Set<int>> Function() load) {
-    final ids = _ids ??= load();
+    if (_ids case final ids?) return ids;
+    final ids = _ids = load();
     // A failed load is tried again next time.
     ids.catchError((Object _) {
       if (identical(_ids, ids)) _ids = null;
@@ -334,11 +357,23 @@ class _SavedSearch {
       value == null || value == '' || (value is List && value.isEmpty);
 
   /// [value] as a query parameter, `null` for what Tandoor can't use
-  /// either (objects).
-  static Object? _queryValue(Object? value) => switch (value) {
-    bool() || num() || String() => '$value',
-    List() when value.every((i) => i is bool || i is num || i is String) =>
-      ListParam<String>([for (final i in value) '$i'], ListFormat.multi),
-    _ => null,
-  };
+  /// either. Tandoor's search page saves some lists as objects (units, as
+  /// `[{"id": 3, "name": "g", …}]`); their ids are what it means.
+  static Object? _queryValue(Object? value) {
+    String? item(Object? item) => switch (item) {
+      bool() || num() || String() => '$item',
+      {'id': final num id} => '$id',
+      _ => null,
+    };
+    return switch (value) {
+      List() => switch ([for (final i in value) item(i)]) {
+        final items when !items.contains(null) => ListParam<String>(
+          items.cast(),
+          ListFormat.multi,
+        ),
+        _ => null,
+      },
+      _ => item(value),
+    };
+  }
 }
