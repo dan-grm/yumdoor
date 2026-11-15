@@ -124,6 +124,19 @@ void main() {
       expect(await second, isNull);
     });
 
+    test('a rejected drop meanwhile does not replace a picked image', () async {
+      final subscription = picker.drops.listen((_) {});
+      addTearDown(subscription.cancel);
+
+      final pick = picker.pickFile();
+      _choose([_file('a.png', _png)]);
+      web.document.body!.dispatchEvent(
+        _drag('drop', _transfer([_file('notes.txt', 'text'.codeUnits)])),
+      );
+
+      expect(await pick, isA<PickedImage>());
+    });
+
     test('rejects a non-image whatever its name and type say', () async {
       final pick = picker.pickFile();
       _choose([_file('fake.png', 'not a png'.codeUnits, type: 'image/png')]);

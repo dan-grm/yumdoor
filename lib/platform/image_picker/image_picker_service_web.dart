@@ -43,10 +43,14 @@ class PlatformImagePickerService implements ImagePickerService {
   int _delivered = 0;
 
   @override
-  bool get canUseCamera => web.window.matchMedia('(pointer: coarse)').matches;
+  late final bool canUseCamera = web.window
+      .matchMedia('(pointer: coarse)')
+      .matches;
 
   @override
-  bool get supportsDrop => web.window.matchMedia('(any-pointer: fine)').matches;
+  late final bool supportsDrop = web.window
+      .matchMedia('(any-pointer: fine)')
+      .matches;
 
   @override
   Stream<ImageDropEvent> get drops => _drops.stream;
@@ -86,7 +90,7 @@ class PlatformImagePickerService implements ImagePickerService {
         }
         pending.chosen = true;
         final result = await _read(file);
-        pending.finish(_isNewest(number) ? result : null);
+        pending.finish(_isCurrent(number, result) ? result : null);
       }),
       // Not fired before Chrome 113 and Safari 16.4; there the next pick
       // ends a cancelled one. Guessing a cancel from the window regaining
@@ -136,29 +140,29 @@ class PlatformImagePickerService implements ImagePickerService {
         final result = file == null
             ? const RejectedImage(name: '', reason: ImageRejection.unreadable)
             : await _read(file);
-        if (generation == _dropGeneration && _isNewest(number)) {
+        if (generation == _dropGeneration && _isCurrent(number, result)) {
           _drops.add(ImageDropped(result));
         }
       }),
     ]);
   }
 
-  /// Whether the pick or drop [number] is newer than any delivered so far;
-  /// if so, it is delivered.
-  bool _isNewest(int number) {
+  /// Whether the [result] of pick or drop [number] still counts: no newer
+  /// image was delivered meanwhile. A rejection doesn't replace an image.
+  bool _isCurrent(int number, ImagePickResult result) {
     if (number < _delivered) return false;
-    _delivered = number;
+    if (result is PickedImage) _delivered = number;
     return true;
   }
 
-  /// The first file the browser calls an image, else the first file (to be
-  /// rejected with a reason).
+  /// The first file of an accepted type, else of any image type, else the
+  /// first file (to be rejected with a reason). The browser's type comes from
+  /// the name; the content is checked after reading.
   static web.File? _firstImage(web.FileList files) {
-    for (var i = 0; i < files.length; i++) {
-      final file = files.item(i)!;
-      if (file.type.startsWith('image/')) return file;
-    }
-    return files.item(0);
+    final all = [for (var i = 0; i < files.length; i++) files.item(i)!];
+    return all.where((f) => acceptedImageTypes.contains(f.type)).firstOrNull ??
+        all.where((f) => f.type.startsWith('image/')).firstOrNull ??
+        all.firstOrNull;
   }
 
   void _hover() {

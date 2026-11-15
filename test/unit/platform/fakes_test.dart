@@ -151,5 +151,8 @@ void main() {
     final wakeLock = container.read(wakeLockServiceProvider);
     expect(await wakeLock.acquire(), WakeLockStatus.unsupported);
     expect(container.read(connectivityServiceProvider).isOnline, isTrue);
+    final imagePicker = container.read(imagePickerServiceProvider);
+    expect(imagePicker.supportsDrop, isFalse);
+    expect(await imagePicker.pickFile(), isNull);
   });
 }
