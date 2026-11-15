@@ -29,9 +29,10 @@ class TandoorRecipeRepository implements RecipeRepository {
   /// (see [CookLogRepository.lastCooked]).
   final Future<DateTime?> Function(int recipeId)? lastCooked;
 
-  /// The saved searches of dynamic books by book id, loaded again with every
-  /// first page so the later pages of a search use the same one.
-  final _savedSearches = <int, Future<_SavedSearch?>>{};
+  /// The saved searches of dynamic books by book id, shared by the searches
+  /// and pages that need one within [_savedSearchLifetime].
+  final _savedSearches =
+      <int, ({DateTime loaded, Future<_SavedSearch?> search})>{};
 
   @override
   Future<ResultPage<RecipeSummary>> search(
@@ -47,7 +48,7 @@ class TandoorRecipeRepository implements RecipeRepository {
         return _resultPage(requireBody(response.data));
       });
     }
-    final saved = await _savedSearch(book, refresh: page == 1);
+    final saved = await _whileWanted(_savedSearch(book), cancel);
     if (saved == null) {
       return const ResultPage(items: [], totalCount: 0, hasMore: false);
     }
@@ -67,7 +68,10 @@ class TandoorRecipeRepository implements RecipeRepository {
       }
       // A parameter both send can only hold one value: this request left out
       // the saved search's, so keep what the whole saved search finds.
-      final ids = await saved.ids(() => _savedSearchIds(saved, cancel));
+      final ids = await _whileWanted(
+        saved.ids(() => _savedSearchIds(saved)),
+        cancel,
+      );
       final items = [
         for (final recipe in body.results)
           if (ids.contains(recipe.id)) recipe.toDomain(),
@@ -90,22 +94,35 @@ class TandoorRecipeRepository implements RecipeRepository {
         hasMore: body.next != null,
       );
 
-  /// The saved search of [bookId], `null` if it has none (any more) or
-  /// isn't there (any more).
-  Future<_SavedSearch?> _savedSearch(int bookId, {required bool refresh}) {
-    if (!refresh) {
-      if (_savedSearches[bookId] case final saved?) return saved;
-    }
+  /// The saved search of [bookId], `null` if it has none (any more), can't
+  /// be read or the book isn't there (any more).
+  Future<_SavedSearch?> _savedSearch(int bookId) {
+    final now = DateTime.now();
+    _savedSearches.removeWhere(
+      (_, entry) => now.difference(entry.loaded) > _savedSearchLifetime,
+    );
+    if (_savedSearches[bookId] case final entry?) return entry.search;
     final load = _loadSavedSearch(bookId);
-    _savedSearches[bookId] = load;
+    _savedSearches[bookId] = (loaded: now, search: load);
     // A failed load isn't kept; the caller gets the failure from [load].
     load.catchError((Object _) {
-      if (identical(_savedSearches[bookId], load)) {
+      if (identical(_savedSearches[bookId]?.search, load)) {
         _savedSearches.remove(bookId);
       }
       return null;
     });
     return load;
+  }
+
+  /// [shared], which other searches may wait for too, or [CancelledFailure]
+  /// as soon as [cancel] fires; [shared] itself goes on.
+  Future<T> _whileWanted<T>(Future<T> shared, CancelSignal? cancel) {
+    if (cancel == null) return shared;
+    if (cancel.isCancelled) return Future.error(const CancelledFailure());
+    return Future.any([
+      shared,
+      cancel.whenCancelled.then<T>((_) => throw const CancelledFailure()),
+    ]);
   }
 
   Future<_SavedSearch?> _loadSavedSearch(int bookId) async {
@@ -121,15 +138,15 @@ class TandoorRecipeRepository implements RecipeRepository {
     }
   }
 
-  /// The ids of every recipe [saved] finds, by itself.
-  Future<Set<int>> _savedSearchIds(_SavedSearch saved, CancelSignal? cancel) =>
+  /// The ids of every recipe [saved] finds, by itself. Not cancelled with
+  /// one search: others may be waiting for it.
+  Future<Set<int>> _savedSearchIds(_SavedSearch saved) =>
       guardRequest(() async {
         final ids = <int>{};
         for (var page = 1; ; page++) {
           final response = await _api.apiRecipeList(
             page: page,
             pageSize: _idPageSize,
-            cancelToken: cancelTokenFor(cancel),
             extra: {ExtraQueryInterceptor.paramsKey: saved.all},
           );
           final body = requireBody(response.data);
@@ -222,8 +239,12 @@ class TandoorRecipeRepository implements RecipeRepository {
   }
 }
 
-/// Recipes per request when loading every recipe a saved search finds.
-const _idPageSize = 200;
+/// Recipes per request when loading every recipe a saved search finds; the
+/// most Tandoor allows for recipes.
+const _idPageSize = 100;
+
+/// How long a dynamic book's saved search, and what it finds, is reused.
+const _savedSearchLifetime = Duration(minutes: 1);
 
 /// The saved search of a dynamic book (a Tandoor `CustomFilter`): the search
 /// parameters Tandoor stored as JSON, as query parameters.
@@ -233,9 +254,9 @@ const _idPageSize = 200;
 class _SavedSearch {
   _SavedSearch(this.all);
 
-  /// The saved search as JSON, `null` if it can't be read. Only the
-  /// parameters that narrow the search are kept: its order, its page and
-  /// what it pins to the top don't apply.
+  /// The saved search as JSON, `null` if it can't be read, which Tandoor
+  /// couldn't either. Only the parameters that narrow the search are kept:
+  /// its order, its page and what it pins to the top don't apply.
   static _SavedSearch? parse(String json) {
     final Object? decoded;
     try {
@@ -244,11 +265,28 @@ class _SavedSearch {
       return null;
     }
     if (decoded is! Map) return null;
-    return _SavedSearch({
-      for (final MapEntry(:key, :value) in decoded.entries)
-        if (key is String && !_ignored.contains(key)) key: ?_queryValue(value),
-    });
+    final params = <String, Object>{};
+    for (final MapEntry(:key, :value) in decoded.entries) {
+      if (key is! String) return null;
+      if (_ignored.contains(key) || _isEmpty(value)) continue;
+      final param = _queryValue(value);
+      if (param == null) return null;
+      params[key] = param;
+    }
+    // Tandoor reads `keywords` only without `keywords_or`; one name for each
+    // lets a clash with ours be seen.
+    for (final MapEntry(key: alias, value: name) in _aliases.entries) {
+      final value = params.remove(alias);
+      if (value != null) params.putIfAbsent(name, () => value);
+    }
+    return _SavedSearch(params);
   }
+
+  static const _aliases = {
+    'keywords': 'keywords_or',
+    'foods': 'foods_or',
+    'books': 'books_or',
+  };
 
   static const _ignored = {
     'sort_order',
@@ -289,15 +327,16 @@ class _SavedSearch {
     return ids;
   }
 
-  /// [value] as a query parameter, `null` for nothing (or what Tandoor
-  /// couldn't use either).
+  /// Whether Tandoor treats [value] as not given.
+  static bool _isEmpty(Object? value) =>
+      value == null || value == '' || (value is List && value.isEmpty);
+
+  /// [value] as a query parameter, `null` for what Tandoor can't use
+  /// either (objects).
   static Object? _queryValue(Object? value) => switch (value) {
-    bool() || num() => '$value',
-    String() when value.isNotEmpty => value,
-    List() when value.isNotEmpty => ListParam<String>([
-      for (final item in value)
-        if (item is bool || item is num || item is String) '$item',
-    ], ListFormat.multi),
+    bool() || num() || String() => '$value',
+    List() when value.every((i) => i is bool || i is num || i is String) =>
+      ListParam<String>([for (final i in value) '$i'], ListFormat.multi),
     _ => null,
   };
 }

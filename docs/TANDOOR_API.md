@@ -156,8 +156,9 @@ search parameters (`{"keywords_or": [3], "version": "2"}`, `_resolve_params` in
 returns the same as `filter=1` (checked on 2.6.15). It is ignored if the user can't see the filter (not the
 creator, not shared with them, not on a book shared with them). So Yumdoor never sends `filter` for a dynamic
 book. It sends the decoded `search` parameters next to its own, without the ones that only order or pin
-(`sort_order`, `random`, `new`, `num_recent`, `version`). Where both use the same parameter (Yumdoor's
-`keywords_or` for search text, say), it sends its own and keeps only the recipes whose ids the saved search finds
+(`sort_order`, `random`, `new`, `num_recent`, `version`). `keywords`, `foods` and `books` are read only when
+`keywords_or` (and so on) is missing, so they count as the same parameter. Where both use the same parameter
+(Yumdoor's `keywords_or` for search text, say), it sends its own and keeps only the recipes whose ids the saved search finds
 on its own. It does the same if the saved search has `include_children`, which would change Yumdoor's food and
 keyword parameters too. The union of a book's entries and its filter takes one request each; the universal search
 merges them.

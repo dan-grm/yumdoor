@@ -199,13 +199,13 @@ void main() {
       };
 
       /// Answers the book with [search] and every recipe search with the
-      /// fixture, or with [all] when the request asks for 200 at once.
+      /// fixture, or with [all] when the request asks for 100 at once.
       FakeHttpAdapter tandoor(String? search, {List<int> all = const []}) =>
           FakeHttpAdapter((request) {
             if (request.uri.path.endsWith('/recipe-book/5/')) {
               return jsonResponse(book(search));
             }
-            if (request.uri.queryParameters['page_size'] == '200') {
+            if (request.uri.queryParameters['page_size'] == '100') {
               return jsonResponse({
                 'count': all.length,
                 'next': null,
@@ -305,8 +305,10 @@ void main() {
           final gone = FakeHttpAdapter(
             (_) => jsonResponse({'detail': 'Not found.'}, status: 404),
           );
+          // Objects, which Tandoor can't use either.
+          final unreadable = tandoor('{"keywords_or":[{"id":1}]}');
 
-          for (final adapter in [none, gone]) {
+          for (final adapter in [none, gone, unreadable]) {
             final page = await TandoorRecipeRepository(client(adapter))
                 .search(const RecipeQuery(savedSearchOfBook: 5));
 
@@ -316,6 +318,66 @@ void main() {
           }
         },
       );
+
+      test('sees a clash under the name Tandoor reads first', () async {
+        // `keywords` counts only without `keywords_or`.
+        final adapter = tandoor(
+          '{"keywords":[1],"foods":[2],"foods_or":[3]}',
+          all: [58],
+        );
+
+        final page = await TandoorRecipeRepository(
+          client(adapter),
+        ).search(const RecipeQuery(savedSearchOfBook: 5, anyKeywordIds: {4}));
+
+        final [ours, all] = recipeSearches(adapter);
+        expect(ours['keywords_or'], ['4']);
+        expect(ours['foods_or'], ['3']);
+        expect(ours.keys, isNot(contains('keywords')));
+        expect(ours.keys, isNot(contains('foods')));
+        expect(all['keywords_or'], ['1']);
+        expect([for (final r in page.items) r.id], [58]);
+      });
+
+      test('a cancelled search stops waiting for shared ids', () async {
+        final ids = Completer<ResponseBody>();
+        final adapter = FakeHttpAdapter((request) {
+          if (request.uri.path.endsWith('/recipe-book/5/')) {
+            return jsonResponse(book('{"keywords_or":[1]}'));
+          }
+          if (request.uri.queryParameters['page_size'] == '100') {
+            return ids.future;
+          }
+          return jsonResponse(recipeList);
+        });
+        final repository = TandoorRecipeRepository(client(adapter));
+        const query = RecipeQuery(savedSearchOfBook: 5, anyKeywordIds: {4});
+        final cancel = CancelSignal();
+
+        final cancelled = repository.search(query, cancel: cancel);
+        final other = repository.search(query);
+        await pumpEventQueue();
+        cancel.cancel();
+
+        await expectLater(cancelled, throwsA(isA<CancelledFailure>()));
+        ids.complete(
+          jsonResponse({
+            'count': 1,
+            'next': null,
+            'previous': null,
+            'results': [overviews.first],
+          }),
+        );
+        expect([for (final r in (await other).items) r.id], [58]);
+        // One load of the book and the ids for both.
+        expect(
+          [
+            for (final r in adapter.requests)
+              if (r.uri.queryParameters['page_size'] != '25') r.uri.path,
+          ],
+          ['/tandoor/api/recipe-book/5/', '/tandoor/api/recipe/'],
+        );
+      });
     });
 
     test('fetches a recipe', () async {
