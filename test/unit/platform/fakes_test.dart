@@ -126,6 +126,7 @@ void main() {
 
   test('providers can be overridden with the fakes', () {
     final wakeLock = FakeWakeLockService();
+    final imagePicker = FakeImagePickerService();
     final container = ProviderContainer(
       overrides: [
         tokenStoreProvider.overrideWithValue(InMemoryTokenStore()),
@@ -133,12 +134,14 @@ void main() {
         connectivityServiceProvider.overrideWithValue(
           FakeConnectivityService(isOnline: false),
         ),
+        imagePickerServiceProvider.overrideWithValue(imagePicker),
       ],
     );
     addTearDown(container.dispose);
 
     expect(container.read(wakeLockServiceProvider), same(wakeLock));
     expect(container.read(connectivityServiceProvider).isOnline, isFalse);
+    expect(container.read(imagePickerServiceProvider), same(imagePicker));
   });
 
   test('the native stubs are what the VM gets by default', () async {

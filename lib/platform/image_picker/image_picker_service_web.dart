@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
 
 import 'package:web/web.dart' as web;
 
@@ -20,9 +19,9 @@ class PlatformImagePickerService implements ImagePickerService {
   static const inputMarker = 'data-yumdoor-image-picker';
 
   /// How long after the last `dragover` the files count as gone. Browsers
-  /// fire `dragover` every 50–350 ms while files are over the window; this
-  /// ends a hover whose `dragleave` was lost.
-  static const hoverTimeout = Duration(milliseconds: 500);
+  /// fire `dragover` at least every 350 ms (±200 ms) while files are over the
+  /// window; this ends a hover whose `dragleave` was lost.
+  static const hoverTimeout = Duration(seconds: 1);
 
   late final StreamController<ImageDropEvent> _drops;
   final _dropListeners = <StreamSubscription<web.Event>>[];
@@ -34,11 +33,11 @@ class PlatformImagePickerService implements ImagePickerService {
   int _dragDepth = 0;
   bool _hovering = false;
   Timer? _hoverTimer;
-  _PendingPick? _pending;
+  // Every pick not yet answered; the last one is the newest.
+  final _pending = <_PendingPick>[];
 
   @override
-  bool get canUseCamera =>
-      web.window.matchMedia('(any-pointer: coarse)').matches;
+  bool get canUseCamera => web.window.matchMedia('(pointer: coarse)').matches;
 
   @override
   bool get supportsDrop => web.window.matchMedia('(any-pointer: fine)').matches;
@@ -55,7 +54,9 @@ class PlatformImagePickerService implements ImagePickerService {
   Future<ImagePickResult?> _pick({required bool camera}) {
     // A pick still open without a choice was abandoned (or cancelled where the
     // `cancel` event is missing); one whose file is being read completes.
-    if (_pending case final pending? when !pending.chosen) pending.finish(null);
+    for (final pending in [..._pending]) {
+      if (!pending.chosen) pending.finish(null);
+    }
 
     final input = (web.document.createElement('input') as web.HTMLInputElement)
       ..type = 'file'
@@ -68,7 +69,7 @@ class PlatformImagePickerService implements ImagePickerService {
     web.document.body!.append(input);
 
     final pending = _PendingPick(input);
-    _pending = pending;
+    _pending.add(pending);
     pending.subscriptions.addAll([
       web.EventStreamProviders.changeEvent.forTarget(input).listen((_) async {
         final file = input.files?.item(0);
@@ -79,22 +80,17 @@ class PlatformImagePickerService implements ImagePickerService {
         pending.chosen = true;
         pending.finish(await _read(file));
       }),
+      // Not fired before Chrome 113 and Safari 16.4; there the next pick
+      // ends a cancelled one. Guessing a cancel from the window regaining
+      // focus would lose files whose `change` comes late.
       web.EventStreamProviders.cancelEvent
           .forTarget(input)
           .listen((_) => pending.finish(null)),
-      // Without the `cancel` event (before Chrome 113 and Safari 16.4), the
-      // window getting focus back with no `change` soon after means cancel.
-      if (!(input as JSObject).has('oncancel'))
-        web.EventStreamProviders.focusEvent.forTarget(web.window).listen((_) {
-          Timer(const Duration(seconds: 1), () {
-            if (!pending.chosen) pending.finish(null);
-          });
-        }),
     ]);
     input.click();
-    return pending.completer.future.whenComplete(() {
-      if (identical(_pending, pending)) _pending = null;
-    });
+    return pending.completer.future.whenComplete(
+      () => _pending.remove(pending),
+    );
   }
 
   void _listenForDrops() {
@@ -143,12 +139,18 @@ class PlatformImagePickerService implements ImagePickerService {
   }
 
   void _endHover() {
+    final wasHovering = _hovering;
+    _resetHover();
+    if (wasHovering && _drops.hasListener) {
+      _drops.add(const ImageDragHover(isOver: false));
+    }
+  }
+
+  void _resetHover() {
     _dragDepth = 0;
+    _hovering = false;
     _hoverTimer?.cancel();
     _hoverTimer = null;
-    if (!_hovering) return;
-    _hovering = false;
-    if (!_drops.isClosed) _drops.add(const ImageDragHover(isOver: false));
   }
 
   void _stopListeningForDrops() {
@@ -158,10 +160,7 @@ class PlatformImagePickerService implements ImagePickerService {
       unawaited(listener.cancel());
     }
     _dropListeners.clear();
-    _dragDepth = 0;
-    _hovering = false;
-    _hoverTimer?.cancel();
-    _hoverTimer = null;
+    _resetHover();
   }
 
   static bool _hasFiles(web.Event event) {
@@ -185,7 +184,9 @@ class PlatformImagePickerService implements ImagePickerService {
 
   @override
   void dispose() {
-    _pending?.finish(null);
+    for (final pending in [..._pending]) {
+      pending.finish(null);
+    }
     _stopListeningForDrops();
     unawaited(_drops.close());
   }

@@ -23,6 +23,10 @@ abstract interface class ImagePickerService {
   /// Opens the camera (where the platform has none, its image picker).
   /// `null` when the user cancels. Call it directly from a tap handler:
   /// browsers only open pickers in response to a user gesture.
+  ///
+  /// Browsers without the `cancel` event (before Chrome 113 and Safari 16.4)
+  /// don't report a cancel; the future then completes with `null` at the
+  /// next pick. Don't block the UI while a pick is open.
   Future<ImagePickResult?> pickFromCamera();
 
   /// Opens a file picker for images. `null` when the user cancels. Call it
@@ -64,8 +68,7 @@ final class PickedImage extends ImagePickResult {
     final trimmed = name.trim();
     final dot = trimmed.lastIndexOf('.');
     final stem = dot >= 0 ? trimmed.substring(0, dot) : trimmed;
-    final extension = _extensions[mimeType] ?? mimeType.split('/').last;
-    return '${stem.isEmpty ? 'image' : stem}.$extension';
+    return '${stem.isEmpty ? 'image' : stem}.${_extensions[mimeType]!}';
   }
 }
 
