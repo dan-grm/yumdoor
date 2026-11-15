@@ -29,9 +29,7 @@ _Recipe _$RecipeFromJson(Map<String, dynamic> json) => _Recipe(
           ?.map((e) => RecipeStep.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
-  sourceUrl: json['sourceUrl'] == null
-      ? null
-      : Uri.parse(json['sourceUrl'] as String),
+  sourceUrl: json['sourceUrl'] as String?,
   rating: (json['rating'] as num?)?.toDouble(),
   lastCooked: json['lastCooked'] == null
       ? null
@@ -55,7 +53,7 @@ Map<String, dynamic> _$RecipeToJson(_Recipe instance) => <String, dynamic>{
   'workingTime': instance.workingTime.inMicroseconds,
   'waitingTime': instance.waitingTime.inMicroseconds,
   'steps': instance.steps.map((e) => e.toJson()).toList(),
-  'sourceUrl': instance.sourceUrl?.toString(),
+  'sourceUrl': instance.sourceUrl,
   'rating': instance.rating,
   'lastCooked': instance.lastCooked?.toIso8601String(),
   'createdBy': instance.createdBy?.toJson(),

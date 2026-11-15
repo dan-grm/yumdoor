@@ -17,7 +17,8 @@ T _$identity<T>(T value) => value;
 mixin _$RecipeDraft {
 
  String get name; String get description; int get servings; String get servingsText;/// Whole minutes; seconds are dropped on save.
- Duration get workingTime; Duration get waitingTime; List<NamedRef> get keywords; Uri? get sourceUrl; List<StepDraft> get steps;
+ Duration get workingTime; Duration get waitingTime; List<NamedRef> get keywords;/// See [Recipe.sourceUrl]; `null` for none.
+ String? get sourceUrl; List<StepDraft> get steps;
 /// Create a copy of RecipeDraft
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -55,7 +56,7 @@ abstract mixin class $RecipeDraftCopyWith<$Res>  {
   factory $RecipeDraftCopyWith(RecipeDraft value, $Res Function(RecipeDraft) _then) = _$RecipeDraftCopyWithImpl;
 @useResult
 $Res call({
- String name, String description, int servings, String servingsText, Duration workingTime, Duration waitingTime, List<NamedRef> keywords, Uri? sourceUrl, List<StepDraft> steps
+ String name, String description, int servings, String servingsText, Duration workingTime, Duration waitingTime, List<NamedRef> keywords, String? sourceUrl, List<StepDraft> steps
 });
 
 
@@ -82,7 +83,7 @@ as String,workingTime: null == workingTime ? _self.workingTime : workingTime // 
 as Duration,waitingTime: null == waitingTime ? _self.waitingTime : waitingTime // ignore: cast_nullable_to_non_nullable
 as Duration,keywords: null == keywords ? _self.keywords : keywords // ignore: cast_nullable_to_non_nullable
 as List<NamedRef>,sourceUrl: freezed == sourceUrl ? _self.sourceUrl : sourceUrl // ignore: cast_nullable_to_non_nullable
-as Uri?,steps: null == steps ? _self.steps : steps // ignore: cast_nullable_to_non_nullable
+as String?,steps: null == steps ? _self.steps : steps // ignore: cast_nullable_to_non_nullable
 as List<StepDraft>,
   ));
 }
@@ -168,7 +169,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String description,  int servings,  String servingsText,  Duration workingTime,  Duration waitingTime,  List<NamedRef> keywords,  Uri? sourceUrl,  List<StepDraft> steps)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String name,  String description,  int servings,  String servingsText,  Duration workingTime,  Duration waitingTime,  List<NamedRef> keywords,  String? sourceUrl,  List<StepDraft> steps)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RecipeDraft() when $default != null:
 return $default(_that.name,_that.description,_that.servings,_that.servingsText,_that.workingTime,_that.waitingTime,_that.keywords,_that.sourceUrl,_that.steps);case _:
@@ -189,7 +190,7 @@ return $default(_that.name,_that.description,_that.servings,_that.servingsText,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String description,  int servings,  String servingsText,  Duration workingTime,  Duration waitingTime,  List<NamedRef> keywords,  Uri? sourceUrl,  List<StepDraft> steps)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String name,  String description,  int servings,  String servingsText,  Duration workingTime,  Duration waitingTime,  List<NamedRef> keywords,  String? sourceUrl,  List<StepDraft> steps)  $default,) {final _that = this;
 switch (_that) {
 case _RecipeDraft():
 return $default(_that.name,_that.description,_that.servings,_that.servingsText,_that.workingTime,_that.waitingTime,_that.keywords,_that.sourceUrl,_that.steps);case _:
@@ -209,7 +210,7 @@ return $default(_that.name,_that.description,_that.servings,_that.servingsText,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String description,  int servings,  String servingsText,  Duration workingTime,  Duration waitingTime,  List<NamedRef> keywords,  Uri? sourceUrl,  List<StepDraft> steps)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String name,  String description,  int servings,  String servingsText,  Duration workingTime,  Duration waitingTime,  List<NamedRef> keywords,  String? sourceUrl,  List<StepDraft> steps)?  $default,) {final _that = this;
 switch (_that) {
 case _RecipeDraft() when $default != null:
 return $default(_that.name,_that.description,_that.servings,_that.servingsText,_that.workingTime,_that.waitingTime,_that.keywords,_that.sourceUrl,_that.steps);case _:
@@ -241,7 +242,8 @@ class _RecipeDraft extends RecipeDraft {
   return EqualUnmodifiableListView(_keywords);
 }
 
-@override final  Uri? sourceUrl;
+/// See [Recipe.sourceUrl]; `null` for none.
+@override final  String? sourceUrl;
  final  List<StepDraft> _steps;
 @override@JsonKey() List<StepDraft> get steps {
   if (_steps is EqualUnmodifiableListView) return _steps;
@@ -285,7 +287,7 @@ abstract mixin class _$RecipeDraftCopyWith<$Res> implements $RecipeDraftCopyWith
   factory _$RecipeDraftCopyWith(_RecipeDraft value, $Res Function(_RecipeDraft) _then) = __$RecipeDraftCopyWithImpl;
 @override @useResult
 $Res call({
- String name, String description, int servings, String servingsText, Duration workingTime, Duration waitingTime, List<NamedRef> keywords, Uri? sourceUrl, List<StepDraft> steps
+ String name, String description, int servings, String servingsText, Duration workingTime, Duration waitingTime, List<NamedRef> keywords, String? sourceUrl, List<StepDraft> steps
 });
 
 
@@ -312,7 +314,7 @@ as String,workingTime: null == workingTime ? _self.workingTime : workingTime // 
 as Duration,waitingTime: null == waitingTime ? _self.waitingTime : waitingTime // ignore: cast_nullable_to_non_nullable
 as Duration,keywords: null == keywords ? _self._keywords : keywords // ignore: cast_nullable_to_non_nullable
 as List<NamedRef>,sourceUrl: freezed == sourceUrl ? _self.sourceUrl : sourceUrl // ignore: cast_nullable_to_non_nullable
-as Uri?,steps: null == steps ? _self._steps : steps // ignore: cast_nullable_to_non_nullable
+as String?,steps: null == steps ? _self._steps : steps // ignore: cast_nullable_to_non_nullable
 as List<StepDraft>,
   ));
 }

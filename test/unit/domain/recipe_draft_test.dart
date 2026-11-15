@@ -15,7 +15,7 @@ void main() {
     test('takes the fields Yumdoor edits', () {
       final recipe = ofenkarotten.copyWith(
         servingsText: 'Portionen',
-        sourceUrl: Uri.parse('https://example.com/ofenkarotten'),
+        sourceUrl: 'https://example.com/ofenkarotten',
       );
 
       final draft = RecipeDraft.fromRecipe(recipe);
@@ -30,7 +30,7 @@ void main() {
         NamedRef(id: 1, name: 'Vegetarisch'),
         NamedRef(id: 2, name: 'Ofen'),
       ]);
-      expect(draft.sourceUrl, Uri.parse('https://example.com/ofenkarotten'));
+      expect(draft.sourceUrl, 'https://example.com/ofenkarotten');
       expect(draft.steps.map((s) => s.id), [1, 2, 3]);
     });
 
@@ -101,7 +101,7 @@ void main() {
 
   test('survives a JSON round trip, for local drafts', () {
     final draft = RecipeDraft.fromRecipe(ofenkarotten).copyWith(
-      sourceUrl: Uri.parse('https://example.com/a'),
+      sourceUrl: 'https://example.com/a',
       keywords: const [NamedRef(name: 'Neu')],
     );
 

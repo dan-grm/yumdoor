@@ -89,11 +89,13 @@ class CachingRecipeRepository implements RecipeRepository {
   }
 
   /// Saves go to the server only; offline they fail with [OfflineFailure]
-  /// (offline is read-only). The saved recipe is stored before they return.
+  /// (offline is read-only). The saved recipe is stored before they return;
+  /// its image, if it needs downloading, afterwards.
   @override
   Future<Recipe> createRecipe(RecipeDraft draft) async {
     final recipe = await _remote.createRecipe(draft);
-    await _ignoreErrors(_store(recipe));
+    await _ignoreErrors(_store(recipe, image: false));
+    unawaited(_ignoreErrors(_storeImage(recipe)));
     return recipe;
   }
 
@@ -107,7 +109,8 @@ class CachingRecipeRepository implements RecipeRepository {
       await _ignoreErrors(_cache.remove(id));
       rethrow;
     }
-    await _ignoreErrors(_store(recipe));
+    await _ignoreErrors(_store(recipe, image: false));
+    unawaited(_ignoreErrors(_storeImage(recipe)));
     return recipe;
   }
 
@@ -116,7 +119,8 @@ class CachingRecipeRepository implements RecipeRepository {
   @override
   Future<void> recordView(int id) => _remote.recordView(id);
 
-  Future<void> _store(Recipe recipe) async {
+  /// Stores [recipe], and its [image] unless that is `false`.
+  Future<void> _store(Recipe recipe, {bool image = true}) async {
     // A missing date usually means the cook log couldn't be read (see
     // TandoorRecipeRepository.lastCooked); keep the one stored before.
     if (recipe.lastCooked == null) {
@@ -124,6 +128,10 @@ class CachingRecipeRepository implements RecipeRepository {
       if (stored != null) recipe = recipe.copyWith(lastCooked: stored);
     }
     await _cache.put(recipe);
+    if (image) await _storeImage(recipe);
+  }
+
+  Future<void> _storeImage(Recipe recipe) async {
     final url = recipe.image;
     final download = downloadImage;
     if (download == null || url == null) return;

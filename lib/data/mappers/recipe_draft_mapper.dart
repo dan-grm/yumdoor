@@ -41,7 +41,7 @@ extension RecipeDraftMapper on RecipeDraft {
 
   // Empty, not left out: a PATCH leaves out what is `null`, which would keep
   // a URL that was removed.
-  String get _sourceUrl => sourceUrl?.toString() ?? '';
+  String get _sourceUrl => sourceUrl ?? '';
 
   List<api.Keyword> get _keywords => [
     for (final keyword in keywords)

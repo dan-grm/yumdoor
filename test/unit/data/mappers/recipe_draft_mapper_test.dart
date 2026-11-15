@@ -173,17 +173,17 @@ void main() {
       ]);
     });
 
-    test('sends the source URL and times in whole minutes', () {
-      final draft = RecipeDraft(
+    test('sends the source as written and times in whole minutes', () {
+      const draft = RecipeDraft(
         name: 'Neu',
-        workingTime: const Duration(minutes: 90, seconds: 30),
-        sourceUrl: Uri.parse('https://example.com/rezept?id=1'),
+        workingTime: Duration(minutes: 90, seconds: 30),
+        sourceUrl: 'Omas Kochbuch, S. 12',
       );
 
       final json = wire(draft.toPatchedRecipe());
 
       expect(json['working_time'], 90);
-      expect(json['source_url'], 'https://example.com/rezept?id=1');
+      expect(json['source_url'], 'Omas Kochbuch, S. 12');
     });
   });
 

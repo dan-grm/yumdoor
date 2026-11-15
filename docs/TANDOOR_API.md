@@ -280,7 +280,8 @@ units and keywords nested in the body. `RecipeSerializer` and the nested seriali
 `description`, `servings`, `servings_text`, `working_time`, `waiting_time`, `source_url`, `keywords` and `steps`;
 each step with `id` (if saved), `name`, `instruction`, `time`, `order` and `ingredients`; each ingredient with
 `id` (if saved), `food` and `unit` as `{id?, name}`, `amount`, `no_amount`, `is_header`, `note`, `order` and
-`original_text`. Everything else of the recipe, its steps and its ingredients is left out and so survives a save.
+`original_text` (and `checked: false`, a default of the generated client; read-only on the server).
+Everything else of the recipe, its steps and its ingredients is left out and so survives a save.
 On create the same plus `internal: true`.
 
 ## Cook log (ratings, comments, feed)

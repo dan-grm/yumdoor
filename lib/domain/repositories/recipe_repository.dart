@@ -32,6 +32,7 @@ abstract interface class RecipeRepository {
   /// [RecipeDraft] holds changes; the rest of the recipe stays as it is.
   /// Steps and ingredients missing from [draft] are removed, those without
   /// an id are added. Throws [NotFoundFailure] if the recipe doesn't exist
-  /// or the user can't see it.
+  /// or the user can't see it, [UnauthorizedFailure] if they may not change
+  /// it (Tandoor can't tell that apart from an invalid token).
   Future<Recipe> updateRecipe(int id, RecipeDraft draft);
 }

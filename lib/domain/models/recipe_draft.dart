@@ -33,7 +33,9 @@ abstract class RecipeDraft with _$RecipeDraft {
     @Default(Duration.zero) Duration workingTime,
     @Default(Duration.zero) Duration waitingTime,
     @Default([]) List<NamedRef> keywords,
-    Uri? sourceUrl,
+
+    /// See [Recipe.sourceUrl]; `null` for none.
+    String? sourceUrl,
     @Default([]) List<StepDraft> steps,
   }) = _RecipeDraft;
 

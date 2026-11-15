@@ -22,9 +22,7 @@ _RecipeDraft _$RecipeDraftFromJson(Map<String, dynamic> json) => _RecipeDraft(
           ?.map((e) => NamedRef.fromJson(e as Map<String, dynamic>))
           .toList() ??
       const [],
-  sourceUrl: json['sourceUrl'] == null
-      ? null
-      : Uri.parse(json['sourceUrl'] as String),
+  sourceUrl: json['sourceUrl'] as String?,
   steps:
       (json['steps'] as List<dynamic>?)
           ?.map((e) => StepDraft.fromJson(e as Map<String, dynamic>))
@@ -41,7 +39,7 @@ Map<String, dynamic> _$RecipeDraftToJson(_RecipeDraft instance) =>
       'workingTime': instance.workingTime.inMicroseconds,
       'waitingTime': instance.waitingTime.inMicroseconds,
       'keywords': instance.keywords.map((e) => e.toJson()).toList(),
-      'sourceUrl': instance.sourceUrl?.toString(),
+      'sourceUrl': instance.sourceUrl,
       'steps': instance.steps.map((e) => e.toJson()).toList(),
     };
 

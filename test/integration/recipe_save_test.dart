@@ -107,7 +107,7 @@ void main() {
       const NamedRef(name: 'Vegetarisch'),
       NamedRef(name: '$tag Ofen'),
     ],
-    sourceUrl: Uri.parse('https://example.com/ofenkarotten'),
+    sourceUrl: 'https://example.com/ofenkarotten',
     steps: [
       const StepDraft(
         name: 'Vorbereiten',

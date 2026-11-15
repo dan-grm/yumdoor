@@ -38,7 +38,7 @@ void main() {
   test('stores a recipe and reads it back unchanged', () async {
     final recipe = ofenkarotten.copyWith(
       image: Uri.parse('https://tandoor.example.com/media/k.jpg'),
-      sourceUrl: Uri.parse('https://example.com/karotten'),
+      sourceUrl: 'https://example.com/karotten',
       lastCooked: DateTime.utc(2026, 10, 1),
       updatedAt: DateTime.utc(2026, 9, 30, 8, 15),
     );
