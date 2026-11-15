@@ -36,4 +36,36 @@ void main() {
     expect(food['properties']['parent']['nullable'], isTrue);
     expect(food['properties']['supermarket_category']['nullable'], isTrue);
   });
+
+  test('makenow on the recipe search becomes an integer', () {
+    final schema = {
+      'paths': {
+        '/api/recipe/': {
+          'get': {
+            'parameters': [
+              {
+                'in': 'query',
+                'name': 'makenow',
+                'schema': {'type': 'boolean'},
+              },
+              {
+                'in': 'query',
+                'name': 'internal',
+                'schema': {'type': 'boolean'},
+              },
+            ],
+          },
+        },
+      },
+      'components': {'schemas': <String, dynamic>{}},
+    };
+
+    final [makenow, internal] =
+        (patchSchema(schema)['paths']
+                as Map)['/api/recipe/']['get']['parameters']
+            as List;
+
+    expect(makenow['schema'], {'type': 'integer', 'minimum': 0});
+    expect(internal['schema'], {'type': 'boolean'});
+  });
 }

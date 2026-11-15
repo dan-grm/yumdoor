@@ -20402,7 +20402,7 @@ class ApiApi {
   /// * [keywordsAndNot] - Keyword IDs, repeat for multiple. Exclude recipes with all of the keywords.
   /// * [keywordsOr] - Keyword IDs, repeat for multiple. Return recipes with any of the keywords
   /// * [keywordsOrNot] - Keyword IDs, repeat for multiple. Exclude recipes with any of the keywords.
-  /// * [makenow] - Filter recipes that can be made with OnHand food. [true/<b>false</b>]
+  /// * [makenow] - Recipes missing at most this many foods that are not on hand.
   /// * [new_] - Returns new results first in search results. [true/<b>false</b>]
   /// * [numRecent] - Returns the given number of recently viewed recipes before search results (if given)
   /// * [page] - A page number within the paginated result set.
@@ -20456,7 +20456,7 @@ class ApiApi {
     BuiltList<int>? keywordsAndNot,
     BuiltList<int>? keywordsOr,
     BuiltList<int>? keywordsOrNot,
-    bool? makenow,
+    int? makenow,
     bool? new_,
     int? numRecent,
     int? page,
@@ -20665,7 +20665,7 @@ class ApiApi {
         r'makenow': encodeQueryParameter(
           _serializers,
           makenow,
-          const FullType(bool),
+          const FullType(int),
         ),
       if (new_ != null)
         r'new': encodeQueryParameter(_serializers, new_, const FullType(bool)),

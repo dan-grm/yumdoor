@@ -106,16 +106,30 @@ Future<void> main(List<String> args) async {
   stdout.writeln('Generated packages/tandoor_api/lib/ for Tandoor $version.');
 }
 
-/// Makes every read-only property of [schema]'s components optional and
-/// nullable, in place, and returns [schema].
+/// Fixes what the schema gets wrong about Tandoor, in place, and returns
+/// [schema]. See docs/TANDOOR_API.md#schema.
 ///
+/// Every read-only property of the components becomes optional and nullable.
 /// drf-spectacular declares read-only fields required and non-null, but
 /// Tandoor sends null for many of them (`Food.parent` of a root food,
 /// `MealPlan.recipe_name` without a recipe) and leaves some out
 /// (`RecipeOverview.recent` without `num_recent`). Read-only fields only
 /// occur in responses, so this changes no request. The mappers in lib/data/
-/// decide what a missing value means. See docs/TANDOOR_API.md#schema.
+/// decide what a missing value means.
+///
+/// The recipe search's `makenow` becomes an integer: the schema says
+/// boolean, but Tandoor reads the number of foods that may be missing (`0`
+/// is cookable now, the same as `true`).
 Map<String, dynamic> patchSchema(Map<String, dynamic> schema) {
+  final paths = schema['paths'] as Map<String, dynamic>?;
+  final recipeList = paths?['/api/recipe/']?['get'] as Map<String, dynamic>?;
+  final parameters = recipeList?['parameters'] as List<dynamic>? ?? const [];
+  for (final parameter in parameters.cast<Map<String, dynamic>>()) {
+    if (parameter['name'] != 'makenow') continue;
+    parameter['schema'] = {'type': 'integer', 'minimum': 0};
+    parameter['description'] =
+        'Recipes missing at most this many foods that are not on hand.';
+  }
   final components = schema['components'] as Map<String, dynamic>;
   final schemas = components['schemas'] as Map<String, dynamic>;
   for (final component in schemas.values.cast<Map<String, dynamic>>()) {

@@ -25,8 +25,10 @@ every section and update this file in the same PR.
   takes the whole header value: `setApiKey('ApiKeyAuth', 'Bearer <token>')`.
 - Blank-able Django URL and email fields are `oneOf: [uri/email string, empty string]` (6 fields, e.g.
   `ConnectorConfig.url`, `InviteLink.email`). `dart-dio` with built_value wraps them in a `OneOf` class.
-- `makenow` on the recipe search is a boolean in the schema, although the server also accepts an int (number of
-  allowed missing foods). The generated client can only send `true`/`false`.
+- `makenow` on the recipe search is a boolean in the schema, but the server reads an int: the number of foods that
+  may be missing (`true` means `0`, `false` or anything else that isn't a number turns the filter off;
+  `RecipeSearchParams._parse_makenow`, checked on 2.6.15). `tool/generate_api.dart` patches it to an integer, so the
+  generated client sends `makenow=0` for "cookable now" and `makenow=1` for "one food missing".
 
 ## Authentication
 
