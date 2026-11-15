@@ -32,9 +32,15 @@ class PlatformImagePickerService implements ImagePickerService {
   // files have left the window when they balance out.
   int _dragDepth = 0;
   bool _hovering = false;
-  Timer? _hoverTimer;
-  // Every pick not yet answered; the last one is the newest.
+  final _sinceDragOver = Stopwatch();
+  Timer? _hoverCheck;
+  // Every pick not yet answered.
   final _pending = <_PendingPick>[];
+  // Picks and drops are numbered as they start. Files are read
+  // asynchronously, so a large one can finish after a newer, smaller one; it
+  // is dropped then, so the newest image wins.
+  int _started = 0;
+  int _delivered = 0;
 
   @override
   bool get canUseCamera => web.window.matchMedia('(pointer: coarse)').matches;
@@ -69,6 +75,7 @@ class PlatformImagePickerService implements ImagePickerService {
     web.document.body!.append(input);
 
     final pending = _PendingPick(input);
+    final number = ++_started;
     _pending.add(pending);
     pending.subscriptions.addAll([
       web.EventStreamProviders.changeEvent.forTarget(input).listen((_) async {
@@ -78,7 +85,8 @@ class PlatformImagePickerService implements ImagePickerService {
           return;
         }
         pending.chosen = true;
-        pending.finish(await _read(file));
+        final result = await _read(file);
+        pending.finish(_isNewest(number) ? result : null);
       }),
       // Not fired before Chrome 113 and Safari 16.4; there the next pick
       // ends a cancelled one. Guessing a cancel from the window regaining
@@ -120,19 +128,46 @@ class PlatformImagePickerService implements ImagePickerService {
         // Keeps the browser from opening the file in place of the app.
         event.preventDefault();
         _endHover();
-        final file = (event as web.DragEvent).dataTransfer?.files.item(0);
-        if (file == null) return;
-        final result = await _read(file);
-        if (generation == _dropGeneration && _drops.hasListener) {
+        final number = ++_started;
+        final files = (event as web.DragEvent).dataTransfer?.files;
+        final file = files == null ? null : _firstImage(files);
+        // A folder, or an image dragged from another tab that the browser
+        // offers without a file.
+        final result = file == null
+            ? const RejectedImage(name: '', reason: ImageRejection.unreadable)
+            : await _read(file);
+        if (generation == _dropGeneration && _isNewest(number)) {
           _drops.add(ImageDropped(result));
         }
       }),
     ]);
   }
 
+  /// Whether the pick or drop [number] is newer than any delivered so far;
+  /// if so, it is delivered.
+  bool _isNewest(int number) {
+    if (number < _delivered) return false;
+    _delivered = number;
+    return true;
+  }
+
+  /// The first file the browser calls an image, else the first file (to be
+  /// rejected with a reason).
+  static web.File? _firstImage(web.FileList files) {
+    for (var i = 0; i < files.length; i++) {
+      final file = files.item(i)!;
+      if (file.type.startsWith('image/')) return file;
+    }
+    return files.item(0);
+  }
+
   void _hover() {
-    _hoverTimer?.cancel();
-    _hoverTimer = Timer(hoverTimeout, _endHover);
+    _sinceDragOver
+      ..reset()
+      ..start();
+    _hoverCheck ??= Timer.periodic(hoverTimeout ~/ 4, (_) {
+      if (_sinceDragOver.elapsed > hoverTimeout) _endHover();
+    });
     if (_hovering) return;
     _hovering = true;
     _drops.add(const ImageDragHover(isOver: true));
@@ -141,7 +176,7 @@ class PlatformImagePickerService implements ImagePickerService {
   void _endHover() {
     final wasHovering = _hovering;
     _resetHover();
-    if (wasHovering && _drops.hasListener) {
+    if (wasHovering) {
       _drops.add(const ImageDragHover(isOver: false));
     }
   }
@@ -149,8 +184,8 @@ class PlatformImagePickerService implements ImagePickerService {
   void _resetHover() {
     _dragDepth = 0;
     _hovering = false;
-    _hoverTimer?.cancel();
-    _hoverTimer = null;
+    _hoverCheck?.cancel();
+    _hoverCheck = null;
   }
 
   void _stopListeningForDrops() {

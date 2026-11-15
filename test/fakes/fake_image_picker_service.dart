@@ -24,7 +24,10 @@ class FakeImagePickerService implements ImagePickerService {
   /// The picks made, `camera` or `file`.
   final picks = <String>[];
 
-  final _drops = StreamController<ImageDropEvent>.broadcast(sync: true);
+  late final _drops = StreamController<ImageDropEvent>.broadcast(
+    sync: true,
+    onCancel: () => _hovering = false,
+  );
 
   /// Whether something listens for drops, i.e. the window is a drop target.
   bool get isDropTarget => _drops.hasListener;

@@ -51,11 +51,15 @@ sealed class ImagePickResult {
 
 /// An accepted image.
 final class PickedImage extends ImagePickResult {
-  const PickedImage({
+  PickedImage({
     required String name,
     required this.bytes,
     required this.mimeType,
-  }) : super(name);
+  }) : assert(
+         _extensions.containsKey(mimeType),
+         'not one of acceptedImageTypes',
+       ),
+       super(name);
 
   final Uint8List bytes;
 

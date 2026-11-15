@@ -161,13 +161,13 @@ void main() {
     });
 
     group('drop target', () {
-      test('reports hovering and delivers the first dropped file', () async {
+      test('reports hovering and delivers the first dropped image', () async {
         final events = <ImageDropEvent>[];
         final subscription = picker.drops.listen(events.add);
         addTearDown(subscription.cancel);
         final transfer = _transfer([
-          _file('a.png', _png),
-          _file('b.txt', 'text'.codeUnits),
+          _file('notes.txt', 'text'.codeUnits, type: 'text/plain'),
+          _file('a.png', _png, type: 'image/png'),
         ]);
         final dropped = picker.drops.firstWhere((e) => e is ImageDropped);
 
