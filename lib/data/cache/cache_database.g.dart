@@ -614,11 +614,360 @@ class CachedImagesCompanion extends UpdateCompanion<CachedImageRow> {
   }
 }
 
+class $CachedSavedFiltersTable extends CachedSavedFilters
+    with TableInfo<$CachedSavedFiltersTable, CachedSavedFilterRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CachedSavedFiltersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _searchMeta = const VerificationMeta('search');
+  @override
+  late final GeneratedColumn<String> search = GeneratedColumn<String>(
+    'search',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _ownMeta = const VerificationMeta('own');
+  @override
+  late final GeneratedColumn<bool> own = GeneratedColumn<bool>(
+    'own',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("own" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, search, own, position];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cached_saved_filter';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CachedSavedFilterRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('search')) {
+      context.handle(
+        _searchMeta,
+        search.isAcceptableOrUnknown(data['search']!, _searchMeta),
+      );
+    }
+    if (data.containsKey('own')) {
+      context.handle(
+        _ownMeta,
+        own.isAcceptableOrUnknown(data['own']!, _ownMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ownMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CachedSavedFilterRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CachedSavedFilterRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      search: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}search'],
+      ),
+      own: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}own'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+    );
+  }
+
+  @override
+  $CachedSavedFiltersTable createAlias(String alias) {
+    return $CachedSavedFiltersTable(attachedDatabase, alias);
+  }
+}
+
+class CachedSavedFilterRow extends DataClass
+    implements Insertable<CachedSavedFilterRow> {
+  final int id;
+  final String name;
+
+  /// The search as the `search` JSON of a saved search, `null` for one the
+  /// filter chips can't show (`SavedFilter.query`).
+  final String? search;
+  final bool own;
+
+  /// The position in the list.
+  final int position;
+  const CachedSavedFilterRow({
+    required this.id,
+    required this.name,
+    this.search,
+    required this.own,
+    required this.position,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || search != null) {
+      map['search'] = Variable<String>(search);
+    }
+    map['own'] = Variable<bool>(own);
+    map['position'] = Variable<int>(position);
+    return map;
+  }
+
+  CachedSavedFiltersCompanion toCompanion(bool nullToAbsent) {
+    return CachedSavedFiltersCompanion(
+      id: Value(id),
+      name: Value(name),
+      search: search == null && nullToAbsent
+          ? const Value.absent()
+          : Value(search),
+      own: Value(own),
+      position: Value(position),
+    );
+  }
+
+  factory CachedSavedFilterRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CachedSavedFilterRow(
+      id: serializer.fromJson<int>(json['id']),
+      name: serializer.fromJson<String>(json['name']),
+      search: serializer.fromJson<String?>(json['search']),
+      own: serializer.fromJson<bool>(json['own']),
+      position: serializer.fromJson<int>(json['position']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'name': serializer.toJson<String>(name),
+      'search': serializer.toJson<String?>(search),
+      'own': serializer.toJson<bool>(own),
+      'position': serializer.toJson<int>(position),
+    };
+  }
+
+  CachedSavedFilterRow copyWith({
+    int? id,
+    String? name,
+    Value<String?> search = const Value.absent(),
+    bool? own,
+    int? position,
+  }) => CachedSavedFilterRow(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    search: search.present ? search.value : this.search,
+    own: own ?? this.own,
+    position: position ?? this.position,
+  );
+  CachedSavedFilterRow copyWithCompanion(CachedSavedFiltersCompanion data) {
+    return CachedSavedFilterRow(
+      id: data.id.present ? data.id.value : this.id,
+      name: data.name.present ? data.name.value : this.name,
+      search: data.search.present ? data.search.value : this.search,
+      own: data.own.present ? data.own.value : this.own,
+      position: data.position.present ? data.position.value : this.position,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedSavedFilterRow(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('search: $search, ')
+          ..write('own: $own, ')
+          ..write('position: $position')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, name, search, own, position);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CachedSavedFilterRow &&
+          other.id == this.id &&
+          other.name == this.name &&
+          other.search == this.search &&
+          other.own == this.own &&
+          other.position == this.position);
+}
+
+class CachedSavedFiltersCompanion
+    extends UpdateCompanion<CachedSavedFilterRow> {
+  final Value<int> id;
+  final Value<String> name;
+  final Value<String?> search;
+  final Value<bool> own;
+  final Value<int> position;
+  const CachedSavedFiltersCompanion({
+    this.id = const Value.absent(),
+    this.name = const Value.absent(),
+    this.search = const Value.absent(),
+    this.own = const Value.absent(),
+    this.position = const Value.absent(),
+  });
+  CachedSavedFiltersCompanion.insert({
+    this.id = const Value.absent(),
+    required String name,
+    this.search = const Value.absent(),
+    required bool own,
+    required int position,
+  }) : name = Value(name),
+       own = Value(own),
+       position = Value(position);
+  static Insertable<CachedSavedFilterRow> custom({
+    Expression<int>? id,
+    Expression<String>? name,
+    Expression<String>? search,
+    Expression<bool>? own,
+    Expression<int>? position,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (name != null) 'name': name,
+      if (search != null) 'search': search,
+      if (own != null) 'own': own,
+      if (position != null) 'position': position,
+    });
+  }
+
+  CachedSavedFiltersCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<String?>? search,
+    Value<bool>? own,
+    Value<int>? position,
+  }) {
+    return CachedSavedFiltersCompanion(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      search: search ?? this.search,
+      own: own ?? this.own,
+      position: position ?? this.position,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (search.present) {
+      map['search'] = Variable<String>(search.value);
+    }
+    if (own.present) {
+      map['own'] = Variable<bool>(own.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CachedSavedFiltersCompanion(')
+          ..write('id: $id, ')
+          ..write('name: $name, ')
+          ..write('search: $search, ')
+          ..write('own: $own, ')
+          ..write('position: $position')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$CacheDatabase extends GeneratedDatabase {
   _$CacheDatabase(QueryExecutor e) : super(e);
   $CacheDatabaseManager get managers => $CacheDatabaseManager(this);
   late final $CachedRecipesTable cachedRecipes = $CachedRecipesTable(this);
   late final $CachedImagesTable cachedImages = $CachedImagesTable(this);
+  late final $CachedSavedFiltersTable cachedSavedFilters =
+      $CachedSavedFiltersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -626,6 +975,7 @@ abstract class _$CacheDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     cachedRecipes,
     cachedImages,
+    cachedSavedFilters,
   ];
 }
 
@@ -1006,6 +1356,224 @@ typedef $$CachedImagesTableProcessedTableManager =
       CachedImageRow,
       PrefetchHooks Function()
     >;
+typedef $$CachedSavedFiltersTableCreateCompanionBuilder =
+    CachedSavedFiltersCompanion Function({
+      Value<int> id,
+      required String name,
+      Value<String?> search,
+      required bool own,
+      required int position,
+    });
+typedef $$CachedSavedFiltersTableUpdateCompanionBuilder =
+    CachedSavedFiltersCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String?> search,
+      Value<bool> own,
+      Value<int> position,
+    });
+
+class $$CachedSavedFiltersTableFilterComposer
+    extends Composer<_$CacheDatabase, $CachedSavedFiltersTable> {
+  $$CachedSavedFiltersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get search => $composableBuilder(
+    column: $table.search,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get own => $composableBuilder(
+    column: $table.own,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CachedSavedFiltersTableOrderingComposer
+    extends Composer<_$CacheDatabase, $CachedSavedFiltersTable> {
+  $$CachedSavedFiltersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get search => $composableBuilder(
+    column: $table.search,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get own => $composableBuilder(
+    column: $table.own,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CachedSavedFiltersTableAnnotationComposer
+    extends Composer<_$CacheDatabase, $CachedSavedFiltersTable> {
+  $$CachedSavedFiltersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get search =>
+      $composableBuilder(column: $table.search, builder: (column) => column);
+
+  GeneratedColumn<bool> get own =>
+      $composableBuilder(column: $table.own, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+}
+
+class $$CachedSavedFiltersTableTableManager
+    extends
+        RootTableManager<
+          _$CacheDatabase,
+          $CachedSavedFiltersTable,
+          CachedSavedFilterRow,
+          $$CachedSavedFiltersTableFilterComposer,
+          $$CachedSavedFiltersTableOrderingComposer,
+          $$CachedSavedFiltersTableAnnotationComposer,
+          $$CachedSavedFiltersTableCreateCompanionBuilder,
+          $$CachedSavedFiltersTableUpdateCompanionBuilder,
+          (
+            CachedSavedFilterRow,
+            BaseReferences<
+              _$CacheDatabase,
+              $CachedSavedFiltersTable,
+              CachedSavedFilterRow
+            >,
+          ),
+          CachedSavedFilterRow,
+          PrefetchHooks Function()
+        > {
+  $$CachedSavedFiltersTableTableManager(
+    _$CacheDatabase db,
+    $CachedSavedFiltersTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CachedSavedFiltersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CachedSavedFiltersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CachedSavedFiltersTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String?> search = const Value.absent(),
+                Value<bool> own = const Value.absent(),
+                Value<int> position = const Value.absent(),
+              }) => CachedSavedFiltersCompanion(
+                id: id,
+                name: name,
+                search: search,
+                own: own,
+                position: position,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                Value<String?> search = const Value.absent(),
+                required bool own,
+                required int position,
+              }) => CachedSavedFiltersCompanion.insert(
+                id: id,
+                name: name,
+                search: search,
+                own: own,
+                position: position,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CachedSavedFiltersTable, CachedSavedFilterRow>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$CacheDatabase,
+                    $CachedSavedFiltersTable,
+                    CachedSavedFilterRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CachedSavedFiltersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$CacheDatabase,
+      $CachedSavedFiltersTable,
+      CachedSavedFilterRow,
+      $$CachedSavedFiltersTableFilterComposer,
+      $$CachedSavedFiltersTableOrderingComposer,
+      $$CachedSavedFiltersTableAnnotationComposer,
+      $$CachedSavedFiltersTableCreateCompanionBuilder,
+      $$CachedSavedFiltersTableUpdateCompanionBuilder,
+      (
+        CachedSavedFilterRow,
+        BaseReferences<
+          _$CacheDatabase,
+          $CachedSavedFiltersTable,
+          CachedSavedFilterRow
+        >,
+      ),
+      CachedSavedFilterRow,
+      PrefetchHooks Function()
+    >;
 
 class $CacheDatabaseManager {
   final _$CacheDatabase _db;
@@ -1014,4 +1582,6 @@ class $CacheDatabaseManager {
       $$CachedRecipesTableTableManager(_db, _db.cachedRecipes);
   $$CachedImagesTableTableManager get cachedImages =>
       $$CachedImagesTableTableManager(_db, _db.cachedImages);
+  $$CachedSavedFiltersTableTableManager get cachedSavedFilters =>
+      $$CachedSavedFiltersTableTableManager(_db, _db.cachedSavedFilters);
 }

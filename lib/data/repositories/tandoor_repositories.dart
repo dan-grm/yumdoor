@@ -6,16 +6,21 @@ import '../../domain/repositories/cook_log_repository.dart';
 import '../../domain/repositories/food_repository.dart';
 import '../../domain/repositories/keyword_repository.dart';
 import '../../domain/repositories/recipe_repository.dart';
+import '../../domain/repositories/saved_filter_repository.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../api/image_downloader.dart';
 import '../api/tandoor_dio.dart';
 import '../cache/caching_recipe_repository.dart';
+import '../cache/caching_saved_filter_repository.dart';
 import '../cache/recipe_cache.dart';
+import '../cache/saved_filter_cache.dart';
 import 'tandoor_book_repository.dart';
 import 'tandoor_cook_log_repository.dart';
 import 'tandoor_food_repository.dart';
 import 'tandoor_keyword_repository.dart';
+import 'current_user.dart';
 import 'tandoor_recipe_repository.dart';
+import 'tandoor_saved_filter_repository.dart';
 import 'tandoor_user_repository.dart';
 
 /// The repositories for one logged-in [TandoorConnection], sharing one [Dio].
@@ -30,6 +35,7 @@ class TandoorRepositories {
     void Function()? onUnauthorized,
     void Function(bool reachable)? onReachable,
     RecipeCache? cache,
+    SavedFilterCache? savedFilterCache,
   }) {
     final dio = createTandoorDio(
       connection.serverUrl,
@@ -42,7 +48,15 @@ class TandoorRepositories {
     // the Dio already has ours.
     final client = api.TandoorApi(dio: dio, interceptors: const []);
     final apiClient = client.getApiApi();
-    final cookLogs = TandoorCookLogRepository(apiClient);
+    final currentUser = CurrentUser(apiClient);
+    final cookLogs = TandoorCookLogRepository(
+      apiClient,
+      currentUser: currentUser,
+    );
+    final savedFilters = TandoorSavedFilterRepository(
+      apiClient,
+      currentUser: currentUser,
+    );
     final remoteRecipes = TandoorRecipeRepository(
       apiClient,
       lastCooked: cookLogs.lastCooked,
@@ -64,6 +78,10 @@ class TandoorRepositories {
       cookLogs: cookLogs,
       books: TandoorBookRepository(apiClient),
       users: TandoorUserRepository(apiClient),
+      savedFilters: switch (savedFilterCache) {
+        final cache? => CachingSavedFilterRepository(savedFilters, cache),
+        null => savedFilters,
+      },
     );
   }
 
@@ -76,6 +94,7 @@ class TandoorRepositories {
     required this.cookLogs,
     required this.books,
     required this.users,
+    required this.savedFilters,
   });
 
   final Dio _dio;
@@ -86,6 +105,7 @@ class TandoorRepositories {
   final CookLogRepository cookLogs;
   final BookRepository books;
   final UserRepository users;
+  final SavedFilterRepository savedFilters;
 
   /// Cancels open requests and frees the connection pool.
   void close() {

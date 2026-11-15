@@ -167,6 +167,31 @@ tie). When Yumdoor's parameters are much broader than the saved search, most pag
 empty. The union of a book's entries and its filter needs separate searches: the universal search runs each of its
 searches (name, foods, keywords) once more per selected book and merges them.
 
+### Saved searches
+
+`/api/custom-filter/` (`CustomFilterViewSet`, `cookbook/views/api.py:2530`; checked on 2.6.15): `{id, name, search,
+shared, created_by}`, paginated. `search` is a JSON **string** of search parameters. The list holds the filters the
+user created or that are shared with them (`shared`, a list of users), dynamic books' filters included (they are
+the same model). The permission is `CustomIsOwner`: only the **creator** can retrieve, change or delete one by id;
+someone it is shared with gets **403** even for `GET /api/custom-filter/<id>/`, but can list it and search with it.
+So Yumdoor reads a filter's `search` from the list. `type` exists on the model but not in the serializer.
+
+Tandoor's search page (`vue3/src/pages/SearchPage.vue`) saves the parameters that differ from their defaults, in
+snake case, plus `"version": "2"`: `query`, `keywords`/`keywords_and`/…, `foods…`, `books…`, `units`,
+`rating`/`rating_gte`/`rating_lte`, `timescooked…`, `makenow` (`"true"`), `cookedon_gte`/`_lte` (a JSON date-time
+of local midnight, e.g. `2026-10-31T23:00:00.000Z`), `createdby`, `sort_order` (`random` is a sort order there),
+`include_children`. A filter without `version` is in the 1.x format, which the page converts on load. Yumdoor
+writes the same format, so its saved searches open in Tandoor: `query`, `foods_and`, `keywords_and`, `books`,
+`rating_gte`, `cookedon_lte` (`YYYY-MM-DD`), `timescooked: 0` or `timescooked_gte`, `makenow` (number of missing
+foods), `createdby`, `sort_order` (`-score` for relevance) and `version`. Yumdoor's search text matches ingredients
+and keywords too; saved, it is `query`, which Tandoor matches by name only.
+
+A saved search whose parameters all have a chip in Yumdoor is applied as chips (a single "any of" food or keyword
+counts as one chip). Otherwise it is applied the way a dynamic book's is: its parameters are sent next to Yumdoor's
+own (never as `filter=<id>`, which drops every other parameter), and where they clash, only the recipes the saved
+search finds on its own are kept (see above). Applying both a saved search and a dynamic book works the same way;
+the book's parameters go first.
+
 Writing a book with a nested `filter` object (`POST`/`PATCH /api/recipe-book/`) **updates that CustomFilter**
 with the fields given (`WritableNestedModelSerializer`): send the whole filter, or its `search` is overwritten.
 

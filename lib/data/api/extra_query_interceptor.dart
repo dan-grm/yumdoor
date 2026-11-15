@@ -23,7 +23,7 @@ class ExtraQueryInterceptor extends Interceptor {
       final own = query.keys.toSet();
       final skipped = <String>[];
       for (final MapEntry(:key, :value) in params.entries) {
-        if (_clashes(key, own)) {
+        if (clashes(key, own)) {
           skipped.add(key);
         } else {
           query[key] = value;
@@ -39,7 +39,7 @@ class ExtraQueryInterceptor extends Interceptor {
   static final _range = RegExp(r'_(gte|lte)$');
 
   /// Whether [name] clashes with one of [own].
-  static bool _clashes(String name, Set<String> own) {
+  static bool clashes(String name, Set<String> own) {
     if (own.contains(name)) return true;
     if (_range.hasMatch(name)) {
       return own.contains(name.replaceFirst(_range, ''));
