@@ -22,7 +22,9 @@ class SelectedFilterChip extends StatelessWidget {
 
   /// The accessible label and tooltip: "enthält Karotten entfernen".
   final String removeLabel;
-  final VoidCallback onRemove;
+
+  /// `null` disables the chip, e.g. while the form it is in is saved.
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {

@@ -17,8 +17,12 @@ import '../search/search_providers.dart';
 const _maxHeightFactor = 0.8;
 
 /// Lets the user find a keyword by name, or create one with the typed name,
-/// and returns it; `null` if the sheet was closed.
-Future<Keyword?> showKeywordPicker(BuildContext context) {
+/// and returns it; `null` if the sheet was closed. Keywords with an id in
+/// [exclude] are already on the recipe and not offered.
+Future<Keyword?> showKeywordPicker(
+  BuildContext context, {
+  required Set<int> exclude,
+}) {
   final t = context.tokens;
   return showModalBottomSheet<Keyword>(
     context: context,
@@ -28,12 +32,14 @@ Future<Keyword?> showKeywordPicker(BuildContext context) {
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(t.radiusL)),
     ),
-    builder: (context) => const _KeywordPickerSheet(),
+    builder: (context) => _KeywordPickerSheet(exclude: exclude),
   );
 }
 
 class _KeywordPickerSheet extends ConsumerStatefulWidget {
-  const _KeywordPickerSheet();
+  const _KeywordPickerSheet({required this.exclude});
+
+  final Set<int> exclude;
 
   @override
   ConsumerState<_KeywordPickerSheet> createState() =>
@@ -66,8 +72,13 @@ class _KeywordPickerSheetState extends ConsumerState<_KeywordPickerSheet> {
   }
 
   /// Creates the keyword [name], or finds it if it exists already, and
-  /// returns it.
+  /// returns it. If the field has changed since [name] was searched, only
+  /// searches for what it now says, so the row shows what would be created.
   Future<void> _create(String name) async {
+    if (_controller.text.trim() != name) {
+      _search(_controller.text);
+      return;
+    }
     setState(() {
       _creating = true;
       _createFailure = null;
@@ -89,14 +100,20 @@ class _KeywordPickerSheetState extends ConsumerState<_KeywordPickerSheet> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
-    final suggestions = ref.watch(keywordSuggestionsProvider(_query));
+    final found = ref.watch(keywordSuggestionsProvider(_query));
+    final suggestions = found.whenData(
+      (keywords) => [
+        for (final k in keywords)
+          if (!widget.exclude.contains(k.id)) k,
+      ],
+    );
     final createFailure = _createFailure;
     // Offered once the suggestions for the typed text are in and none of
     // them has that name; Tandoor finds names ignoring case.
     final canCreate =
         _query.isNotEmpty &&
-        !suggestions.isLoading &&
-        !(suggestions.value?.any(
+        !found.isLoading &&
+        !(found.value?.any(
               (k) => k.name.toLowerCase() == _query.toLowerCase(),
             ) ??
             false);

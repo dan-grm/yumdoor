@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../app/offline.dart';
 import '../../app/repository_providers.dart';
 import '../../core/failures.dart';
 import '../../domain/models/keyword.dart';
@@ -62,8 +63,9 @@ final class EditorState {
 /// The recipe editor's state: the single source for all its tabs.
 ///
 /// [recipeId] is the recipe to edit, `null` for a new one. Loading fetches
-/// the recipe fresh; failures are shown with a retry button instead of
-/// retrying on their own.
+/// the recipe fresh from the server and fails with [OfflineFailure] rather
+/// than edit a cached copy; failures are shown with a retry button instead
+/// of retrying on their own.
 ///
 /// Saving overwrites the recipe as it is on the server: the last save wins,
 /// without checking for changes made elsewhere meanwhile, like Tandoor's own
@@ -76,6 +78,9 @@ class RecipeEditor extends _$RecipeEditor {
     final recipe = await ref
         .read(recipeRepositoryProvider)
         .fetchRecipe(recipeId);
+    // Offline, the recipe comes from the offline cache and may be old;
+    // saving that copy later would undo newer changes on the server.
+    if (ref.read(isOfflineProvider)) throw const OfflineFailure();
     return EditorState(
       recipeId: recipeId,
       recipeName: recipe.name,
@@ -128,7 +133,9 @@ class RecipeEditor extends _$RecipeEditor {
         final id? => await repository.updateRecipe(id, draft),
         null => await repository.createRecipe(draft),
       };
-    } on Failure catch (failure) {
+    } on Object catch (error) {
+      // Anything else, too: a save stuck in `saving` would lock the editor.
+      final failure = error is Failure ? error : ServerFailure(cause: error);
       if (ref.mounted) {
         state = AsyncData(
           current._copyWith(saving: false, failure: () => failure),

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
@@ -10,19 +11,30 @@ import 'package:yumdoor/domain/models/recipe_draft.dart';
 import 'package:yumdoor/domain/services/recipe_draft_validation.dart';
 import 'package:yumdoor/features/editor/editor_controller.dart';
 
+import '../../../fakes/fake_connectivity_service.dart';
 import '../../../fakes/fake_recipe_repository.dart';
 import '../../../fixtures/recipes.dart';
 
 void main() {
   late FakeRecipeRepository recipes;
+  late FakeConnectivityService connectivity;
   late ProviderContainer container;
+
+  ProviderContainer containerWith(FakeRecipeRepository recipes) {
+    final container = ProviderContainer(
+      overrides: [
+        recipeRepositoryProvider.overrideWithValue(recipes),
+        connectivityServiceProvider.overrideWithValue(connectivity),
+      ],
+    );
+    addTearDown(container.dispose);
+    return container;
+  }
 
   setUp(() {
     recipes = FakeRecipeRepository([ofenkarotten]);
-    container = ProviderContainer(
-      overrides: [recipeRepositoryProvider.overrideWithValue(recipes)],
-    );
-    addTearDown(container.dispose);
+    connectivity = FakeConnectivityService();
+    container = containerWith(recipes);
   });
 
   Future<RecipeEditor> editor(int? recipeId) async {
@@ -59,6 +71,29 @@ void main() {
       container.read(provider.future),
       throwsA(isA<NotFoundFailure>()),
     );
+  });
+
+  test('offline, the cached copy is not edited', () async {
+    connectivity.isOnline = false;
+    final provider = recipeEditorProvider(7);
+    container.listen(provider, (_, _) {});
+
+    await expectLater(
+      container.read(provider.future),
+      throwsA(isA<OfflineFailure>()),
+    );
+  });
+
+  test('an unexpected error ends the save like a failure', () async {
+    container = containerWith(
+      _SlowRepository(recipes, Future.value(), StateError('kaputt')),
+    );
+    final controller = await editor(7);
+
+    expect(await controller.save(), isNull);
+
+    expect(state(7).saving, isFalse);
+    expect(state(7).failure, isA<ServerFailure>());
   });
 
   test('edits change the draft; keywords are added once', () async {
@@ -132,11 +167,7 @@ void main() {
 
   test('while saving, edits and a second save are ignored', () async {
     final gate = Completer<void>();
-    final slow = _SlowRepository(recipes, gate.future);
-    container = ProviderContainer(
-      overrides: [recipeRepositoryProvider.overrideWithValue(slow)],
-    );
-    addTearDown(container.dispose);
+    container = containerWith(_SlowRepository(recipes, gate.future));
     final controller = await editor(7);
 
     final first = controller.save();
@@ -151,12 +182,13 @@ void main() {
   });
 }
 
-/// Saves through [_inner] once [_gate] completes.
+/// Saves through [_inner] once [_gate] completes, or throws [_error].
 class _SlowRepository extends FakeRecipeRepository {
-  _SlowRepository(this._inner, this._gate) : super(const []);
+  _SlowRepository(this._inner, this._gate, [this._error]) : super(const []);
 
   final FakeRecipeRepository _inner;
   final Future<void> _gate;
+  final Error? _error;
 
   @override
   Future<Recipe> fetchRecipe(int id) => _inner.fetchRecipe(id);
@@ -164,6 +196,7 @@ class _SlowRepository extends FakeRecipeRepository {
   @override
   Future<Recipe> updateRecipe(int id, RecipeDraft draft) async {
     await _gate;
+    if (_error case final error?) throw error;
     return _inner.updateRecipe(id, draft);
   }
 }

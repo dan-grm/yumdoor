@@ -37,6 +37,10 @@ void main() {
     expect(validateDraft(RecipeDraft(name: ' ${'n' * 128} ')), isEmpty);
   });
 
+  test('lengths count characters like Tandoor: an emoji is one', () {
+    expect(validateDraft(RecipeDraft(name: '🥕' * 128)), isEmpty);
+  });
+
   test('servings must be at least 1', () {
     expect(validateDraft(const RecipeDraft(name: 'Suppe', servings: 0)), {
       DraftField.servings: DraftProblem.tooSmall,

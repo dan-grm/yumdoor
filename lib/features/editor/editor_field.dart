@@ -6,9 +6,9 @@ import '../../design/design.dart';
 /// Outline width of the editor's fields (mockup 09-rezept-bearbeiten).
 const _borderWidth = 2.0;
 
-/// Most digits a number field takes: minutes and servings stay far below
-/// what Tandoor stores.
-const _maxDigits = 4;
+/// Most digits a number field takes: enough for waiting times of months
+/// (pickles, liqueurs), far below what Tandoor stores.
+const _maxDigits = 6;
 
 /// A labelled text field of the recipe editor: the label above, the field
 /// with a `control-border` outline, and [error] below it in `danger`.

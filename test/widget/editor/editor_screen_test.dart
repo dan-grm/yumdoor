@@ -136,6 +136,13 @@ void main() {
     // Remove "Ofen", add an existing keyword and a new one.
     await tap(tester, find.byTooltip('Ofen entfernen'));
     await tap(tester, find.byTooltip('Stichwort hinzufügen'));
+    // Keywords the recipe has aren't offered again.
+    Finder inSheet(String text) => find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.text(text),
+    );
+    expect(inSheet('Schnell'), findsOneWidget);
+    expect(inSheet('Vegetarisch'), findsNothing);
     await typeInPicker(tester, 'Schn');
     // Only offered for a name that doesn't exist yet.
     expect(find.text('„Schn“ anlegen'), findsOneWidget);
@@ -261,9 +268,26 @@ void main() {
     );
   });
 
-  testWidgets('offline, saving is disabled and explained', (tester) async {
+  testWidgets('offline, the editor does not open a cached copy', (
+    tester,
+  ) async {
     connectivity.isOnline = false;
     await pumpEditor(tester);
+
+    expect(
+      find.text(
+        'Der Server ist gerade nicht erreichbar. Prüf deine Verbindung.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(EditorField), findsNothing);
+    expect(saveButton(tester).onPressed, isNull);
+  });
+
+  testWidgets('going offline disables saving and explains it', (tester) async {
+    await pumpEditor(tester);
+    connectivity.isOnline = false;
+    await tester.pumpAndSettle();
 
     expect(saveButton(tester).onPressed, isNull);
     expect(

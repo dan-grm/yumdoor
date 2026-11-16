@@ -285,6 +285,8 @@ class _Body extends ConsumerWidget {
                   icon: Icons.error_outline_rounded,
                   danger: true,
                   text: switch (failure) {
+                    // Tandoor answers 403 for an invalid token too, but then
+                    // the session ends and login takes over this screen.
                     UnauthorizedFailure() => l10n.editorForbidden,
                     _ => l10n.editorSaveFailed(
                       failureMessage(

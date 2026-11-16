@@ -31,8 +31,9 @@ const draftMaxLengths = {
 /// non-negative minutes.
 Map<DraftField, DraftProblem> validateDraft(RecipeDraft draft) {
   final problems = <DraftField, DraftProblem>{};
+  // Tandoor counts characters (code points), not UTF-16 units: an emoji is 1.
   void checkLength(DraftField field, String? text) {
-    if ((text?.length ?? 0) > draftMaxLengths[field]!) {
+    if ((text?.runes.length ?? 0) > draftMaxLengths[field]!) {
       problems[field] = DraftProblem.tooLong;
     }
   }

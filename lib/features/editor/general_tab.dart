@@ -69,8 +69,15 @@ class _GeneralTabState extends ConsumerState<GeneralTab> {
       _editor.edit(change);
 
   Future<void> _addKeyword() async {
-    final keyword = await showKeywordPicker(context);
-    if (keyword != null) _editor.addKeyword(keyword);
+    final draft = ref
+        .read(recipeEditorProvider(widget.recipeId))
+        .requireValue
+        .draft;
+    final keyword = await showKeywordPicker(
+      context,
+      exclude: {for (final k in draft.keywords) ?k.id},
+    );
+    if (keyword != null && mounted) _editor.addKeyword(keyword);
   }
 
   @override
@@ -234,7 +241,7 @@ class _Keywords extends StatelessWidget {
                 removeLabel: l10n.editorRemoveKeyword(keyword.name),
                 onRemove: switch (onRemove) {
                   final onRemove? => () => onRemove(index),
-                  null => () {},
+                  null => null,
                 },
               ),
             AddFilterChip(
