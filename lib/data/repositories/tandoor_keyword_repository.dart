@@ -36,7 +36,7 @@ class TandoorKeywordRepository implements KeywordRepository {
   });
 
   @override
-  Future<Keyword> create(String name) {
+  Future<Keyword> create(String name) async {
     final trimmed = requireName(name);
     return guardRequest(() async {
       final response = await _api.apiKeywordCreate(

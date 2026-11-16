@@ -17,6 +17,6 @@ abstract interface class FoodRepository {
 
   /// Creates a food called [name] (trimmed). If a food with that name or
   /// plural name already exists (ignoring case), returns it unchanged instead.
-  /// Throws an [ArgumentError] if [name] is blank.
+  /// Fails with an [ArgumentError] if [name] is blank.
   Future<Food> create(String name);
 }

@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/domain/models/food.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
-import 'package:yumdoor/domain/models/unit.dart';
 import 'package:yumdoor/domain/services/text_match.dart';
 
 void main() {
@@ -27,17 +26,6 @@ void main() {
       isTrue,
     );
     expect(matcher.keyword(const Keyword(id: 1, name: 'Karottenzeit')), isTrue);
-  });
-
-  test('matches units by name or plural', () {
-    final matcher = TextMatcher('löffel');
-
-    expect(matcher.unit(const Unit(id: 1, name: 'EL')), isFalse);
-    expect(
-      matcher.unit(const Unit(id: 1, name: 'EL', pluralName: 'Esslöffel')),
-      isTrue,
-    );
-    expect(matcher.unit(const Unit(id: 1, name: 'Teelöffel')), isTrue);
   });
 
   test('an empty text matches everything', () {

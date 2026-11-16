@@ -6,6 +6,7 @@ import 'package:yumdoor/domain/models/unit.dart';
 import 'package:yumdoor/domain/repositories/food_repository.dart';
 import 'package:yumdoor/domain/repositories/keyword_repository.dart';
 import 'package:yumdoor/domain/repositories/unit_repository.dart';
+import 'package:yumdoor/domain/services/text_match.dart';
 
 /// [FoodRepository] for tests: autocomplete matches names case-insensitively,
 /// [create] is get-or-create by name or plural name like Tandoor's. Set
@@ -38,8 +39,8 @@ class FakeFoodRepository implements FoodRepository {
 
   @override
   Future<Food> create(String name) async {
-    if (failure case final failure?) throw failure;
     final trimmed = _requireName(name);
+    if (failure case final failure?) throw failure;
     created.add(trimmed);
     return _getOrCreate<Food>(
       foods,
@@ -79,8 +80,8 @@ class FakeKeywordRepository implements KeywordRepository {
 
   @override
   Future<Keyword> create(String name) async {
-    if (failure case final failure?) throw failure;
     final trimmed = _requireName(name);
+    if (failure case final failure?) throw failure;
     created.add(trimmed);
     return _getOrCreate<Keyword>(
       keywords,
@@ -92,8 +93,8 @@ class FakeKeywordRepository implements KeywordRepository {
   }
 }
 
-/// [UnitRepository] for tests, like [FakeFoodRepository]; autocomplete also
-/// matches the plural name.
+/// [UnitRepository] for tests, like [FakeFoodRepository]; autocomplete
+/// ignores accents like the real one.
 class FakeUnitRepository implements UnitRepository {
   FakeUnitRepository([Iterable<Unit> units = const []]) : units = [...units];
 
@@ -112,22 +113,14 @@ class FakeUnitRepository implements UnitRepository {
   }) async {
     queries.add(query);
     if (failure case final failure?) throw failure;
-    final text = query.trim().toLowerCase();
-    return units
-        .where(
-          (u) => [
-            u.name,
-            ?u.pluralName,
-          ].any((name) => name.toLowerCase().contains(text)),
-        )
-        .take(limit)
-        .toList();
+    final matcher = TextMatcher(query);
+    return units.where((u) => matcher.contains(u.name)).take(limit).toList();
   }
 
   @override
   Future<Unit> create(String name) async {
-    if (failure case final failure?) throw failure;
     final trimmed = _requireName(name);
+    if (failure case final failure?) throw failure;
     created.add(trimmed);
     return _getOrCreate<Unit>(
       units,

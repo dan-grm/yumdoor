@@ -17,6 +17,6 @@ abstract interface class KeywordRepository {
 
   /// Creates a keyword called [name] (trimmed). If a keyword with that name
   /// already exists (ignoring case), returns it unchanged instead.
-  /// Throws an [ArgumentError] if [name] is blank.
+  /// Fails with an [ArgumentError] if [name] is blank.
   Future<Keyword> create(String name);
 }

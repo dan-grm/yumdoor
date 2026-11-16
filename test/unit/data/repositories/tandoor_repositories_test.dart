@@ -551,13 +551,14 @@ void main() {
       );
 
       final units = await TandoorUnitRepository(client(adapter))
-          .autocomplete(' l ', limit: 5);
+          .autocomplete(' l ', limit: 4);
 
       final request = adapter.requests.single;
       expect(request.uri.path, '/tandoor/api/unit/');
       expect(request.uri.queryParameters['query'], 'l');
-      expect(request.uri.queryParameters['page_size'], '5');
-      expect(units.map((u) => u.name), ['l', 'clove', 'EL', 'ml', 'TL']);
+      // Room for fuzzy suggestions that get left out.
+      expect(request.uri.queryParameters['page_size'], '12');
+      expect(units.map((u) => u.name), ['l', 'clove', 'EL', 'ml']);
       expect(units.first.pluralName, 'l');
     });
 
@@ -570,14 +571,28 @@ void main() {
             {'id': 1, 'name': 'Bund', 'plural_name': 'Bunde'},
             {'id': 2, 'name': 'Prise', 'plural_name': 'Prisen'},
             {'id': 3, 'name': 'Stück', 'plural_name': 'Stücke'},
+            // Only the plural contains the text; Tandoor doesn't search it.
+            {'id': 4, 'name': 'EL', 'plural_name': 'Stückchen'},
           ],
         }),
       );
 
       final units = await TandoorUnitRepository(client(adapter))
-          .autocomplete('stucke');
+          .autocomplete('stuck');
 
       expect(units.map((u) => u.id), [3]);
+    });
+
+    test('asks for exactly limit units without a text', () async {
+      final adapter = FakeHttpAdapter(
+        (_) => jsonResponse(tandoorFixture('unit_list.json')),
+      );
+
+      final units = await TandoorUnitRepository(client(adapter))
+          .autocomplete('', limit: 3);
+
+      expect(adapter.requests.single.uri.queryParameters['page_size'], '3');
+      expect(units, hasLength(3));
     });
 
     test('maps failures', () async {
@@ -636,17 +651,20 @@ void main() {
       expect(keyword.name, 'Suppe');
     });
 
-    test('rejects a blank name without a request', () {
+    test('fails a blank name without a request', () async {
       final adapter = created(null);
       final api = client(adapter);
 
-      expect(
-        () => TandoorFoodRepository(api).create('  '),
+      await expectLater(
+        TandoorFoodRepository(api).create('  '),
         throwsArgumentError,
       );
-      expect(() => TandoorUnitRepository(api).create(''), throwsArgumentError);
-      expect(
-        () => TandoorKeywordRepository(api).create('\n'),
+      await expectLater(
+        TandoorUnitRepository(api).create(''),
+        throwsArgumentError,
+      );
+      await expectLater(
+        TandoorKeywordRepository(api).create('\n'),
         throwsArgumentError,
       );
       expect(adapter.requests, isEmpty);

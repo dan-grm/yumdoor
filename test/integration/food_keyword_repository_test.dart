@@ -5,6 +5,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/data/api/tandoor_dio.dart';
 import 'package:yumdoor/data/repositories/tandoor_repositories.dart';
+import 'package:yumdoor/domain/models/food.dart';
+import 'package:yumdoor/domain/models/keyword.dart';
+import 'package:yumdoor/domain/models/unit.dart';
 
 import 'seeded_tandoor.dart';
 
@@ -86,27 +89,47 @@ void main() {
     final tag = 'Yumdoor-Test ${DateTime.now().microsecondsSinceEpoch}';
 
     /// What a test created, as API paths to delete afterwards.
-    final created = <String>[];
+    final created = <String>{};
     late Dio dio;
 
     setUp(() {
       dio = createTandoorDio(tandoor.baseUrl, token: tandoor.token('anna'));
     });
     tearDown(() async {
-      for (final path in created) {
-        await dio.delete<void>(path);
+      try {
+        for (final path in created) {
+          try {
+            await dio.delete<void>(path);
+          } on DioException catch (e) {
+            // Keep cleaning up; report what was left behind.
+            printOnFailure('Could not delete $path: $e');
+          }
+        }
+      } finally {
+        created.clear();
+        dio.close();
       }
-      created.clear();
-      dio.close();
     });
 
-    test('creates a food, unit and keyword that autocomplete finds', () async {
-      final food = await repositories.foods.create(' $tag Food ');
+    /// Creates `<prefix> Food`, `Unit` and `Keyword`, padded with [pad], and
+    /// deletes them after the test.
+    Future<(Food, Unit, Keyword)> createAll(
+      String prefix, {
+      String pad = '',
+    }) async {
+      final food = await repositories.foods.create('$pad$prefix Food$pad');
       created.add('/api/food/${food.id}/');
-      final unit = await repositories.units.create('$tag Unit');
+      final unit = await repositories.units.create('$pad$prefix Unit$pad');
       created.add('/api/unit/${unit.id}/');
-      final keyword = await repositories.keywords.create('$tag Keyword');
+      final keyword = await repositories.keywords.create(
+        '$pad$prefix Keyword$pad',
+      );
       created.add('/api/keyword/${keyword.id}/');
+      return (food, unit, keyword);
+    }
+
+    test('creates a food, unit and keyword that autocomplete finds', () async {
+      final (food, unit, keyword) = await createAll(tag, pad: ' ');
 
       expect(food.name, '$tag Food');
       expect(unit.name, '$tag Unit');
@@ -116,18 +139,17 @@ void main() {
       expect(await repositories.keywords.autocomplete('$tag Key'), [keyword]);
     });
 
-    test('returns a new name again when it exists in another case', () async {
-      final food = await repositories.foods.create('$tag Food');
-      created.add('/api/food/${food.id}/');
-      final unit = await repositories.units.create('$tag Unit');
-      created.add('/api/unit/${unit.id}/');
-      final keyword = await repositories.keywords.create('$tag Keyword');
-      created.add('/api/keyword/${keyword.id}/');
+    test('returns an existing name in another case', () async {
+      final (food, unit, keyword) = await createAll(tag);
 
-      final upper = tag.toUpperCase();
-      expect(await repositories.foods.create('$upper FOOD'), food);
-      expect(await repositories.units.create('$upper UNIT'), unit);
-      expect(await repositories.keywords.create('$upper KEYWORD'), keyword);
+      // Should one be created after all, the tear-down deletes it too.
+      final (foodAgain, unitAgain, keywordAgain) = await createAll(
+        tag.toUpperCase(),
+      );
+
+      expect(foodAgain, food);
+      expect(unitAgain, unit);
+      expect(keywordAgain, keyword);
     });
 
     test('returns seeded ones by name in another case', () async {
@@ -138,11 +160,25 @@ void main() {
       final suppe = (await repositories.keywords.autocomplete('Suppe'))
           .singleWhere((k) => k.name == 'Suppe');
 
-      expect(await repositories.foods.create('karotte'), karotte);
-      // Foods and units also match the plural name.
-      expect(await repositories.foods.create('KAROTTEN'), karotte);
-      expect(await repositories.units.create('el'), el);
-      expect(await repositories.keywords.create('SUPPE'), suppe);
+      /// Deletes [path] after the test unless it is the seeded [seededId].
+      void deleteIfNew(String path, int id, int seededId) {
+        if (id != seededId) created.add(path);
+      }
+
+      final food = await repositories.foods.create('karotte');
+      deleteIfNew('/api/food/${food.id}/', food.id, karotte.id);
+      // Foods also match the plural name.
+      final plural = await repositories.foods.create('KAROTTEN');
+      deleteIfNew('/api/food/${plural.id}/', plural.id, karotte.id);
+      final unit = await repositories.units.create('el');
+      deleteIfNew('/api/unit/${unit.id}/', unit.id, el.id);
+      final keyword = await repositories.keywords.create('SUPPE');
+      deleteIfNew('/api/keyword/${keyword.id}/', keyword.id, suppe.id);
+
+      expect(food, karotte);
+      expect(plural, karotte);
+      expect(unit, el);
+      expect(keyword, suppe);
     });
   });
 }

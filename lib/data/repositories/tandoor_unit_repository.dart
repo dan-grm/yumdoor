@@ -19,21 +19,25 @@ class TandoorUnitRepository implements UnitRepository {
     int limit = 10,
     CancelSignal? cancel,
   }) => guardRequest(() async {
+    final matcher = TextMatcher(query);
     final response = await _api.apiUnitList(
       query: query.trim(),
-      pageSize: limit,
+      // With a fuzzy search preference Tandoor doesn't filter, it only orders
+      // by similarity, so ask for more and keep those that contain the text.
+      pageSize: matcher.isEmpty ? limit : limit * _fuzzyHeadroom,
       cancelToken: cancelTokenFor(cancel),
     );
-    // With a fuzzy search preference Tandoor only orders by similarity.
-    final matcher = TextMatcher(query);
-    return [
-      for (final unit in requireBody(response.data).results)
-        if (unit.toDomain() case final unit when matcher.unit(unit)) unit,
-    ];
+    return requireBody(response.data).results
+        .map((dto) => dto.toDomain())
+        .where((unit) => matcher.contains(unit.name))
+        .take(limit)
+        .toList();
   });
 
+  static const _fuzzyHeadroom = 3;
+
   @override
-  Future<Unit> create(String name) {
+  Future<Unit> create(String name) async {
     final trimmed = requireName(name);
     return guardRequest(() async {
       final response = await _api.apiUnitCreate(

@@ -35,7 +35,7 @@ class TandoorFoodRepository implements FoodRepository {
   });
 
   @override
-  Future<Food> create(String name) {
+  Future<Food> create(String name) async {
     final trimmed = requireName(name);
     return guardRequest(() async {
       final response = await _api.apiFoodCreate(
