@@ -6,10 +6,11 @@ import 'food_mapper.dart';
 import 'mapping.dart';
 
 extension ParsedIngredientMapper on api.IngredientSimple {
-  /// The parser's result for [line]. Tandoor gets or creates the food and
+  /// The parser's result for [line], the text sent. Tandoor gets or creates the food and
   /// unit while parsing, so both come with an id.
   ParsedIngredient toParsed(String line) => ParsedIngredient(
-    originalText: originalText ?? line,
+    // The server trims it.
+    originalText: line,
     food: switch (food) {
       final food? => NamedRef(id: requireId(food.id, 'Food'), name: food.name),
       null => null,

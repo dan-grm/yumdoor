@@ -11,9 +11,9 @@ import '../mappers/mapping.dart';
 /// [IngredientParser] with `POST /api/ingredient-parser/post/`
 /// (docs/TANDOOR_API.md#ingredient-parser).
 ///
-/// Tandoor answers a line it can't parse with a 500 and can't be told apart
-/// from a server error that way, so a broken server also gives unparsed
-/// lines here. Saving the recipe then fails and shows the error.
+/// Tandoor answers a line it can't parse with a 500, like any server error.
+/// After the first 500 of a call, a request to another endpoint tells the
+/// two apart: if that fails too, the call throws its failure.
 class TandoorIngredientParser implements IngredientParser {
   TandoorIngredientParser(this._api);
 
@@ -38,7 +38,10 @@ class TandoorIngredientParser implements IngredientParser {
   }
 
   Future<T> _serially<T>(Future<T> Function() call) {
-    final result = _queue.then((_) => call());
+    final result = _queue.then((_) {
+      _serverChecked = false;
+      return call();
+    });
     _queue = result.then<void>((_) {}, onError: (_) {});
     return result;
   }
@@ -82,6 +85,7 @@ class TandoorIngredientParser implements IngredientParser {
       if (parsed != null) return parsed;
     } on ServerFailure catch (e) {
       if (!_isParserError(e)) rethrow;
+      await _checkServer();
     }
     if (lines.length == 1) return [ParsedIngredient.unparsed(lines.single)];
     final half = lines.length ~/ 2;
@@ -89,6 +93,18 @@ class TandoorIngredientParser implements IngredientParser {
       ...await _request(lines.sublist(0, half)),
       ...await _request(lines.sublist(half)),
     ];
+  }
+
+  /// Whether the server answered another request since the current call's
+  /// first 500. Calls run one at a time, so one flag is enough.
+  bool _serverChecked = false;
+
+  /// Throws a [Failure] if the server fails other requests too, so a 500
+  /// from the parser isn't about the line.
+  Future<void> _checkServer() async {
+    if (_serverChecked) return;
+    await guardRequest(_api.apiServerSettingsCurrentRetrieve);
+    _serverChecked = true;
   }
 
   /// Whether Tandoor's parser can get past the start of [line]: it strips

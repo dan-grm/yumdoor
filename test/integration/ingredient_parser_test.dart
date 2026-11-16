@@ -88,7 +88,9 @@ void main() {
     addTearDown(dio.close);
 
     final parsed = await repositories.ingredientParser.parse('2 EL $name');
-    addTearDown(() => dio.delete<void>('/api/food/${parsed.food!.id}/'));
+    if (parsed.food?.id case final id?) {
+      addTearDown(() => dio.delete<void>('/api/food/$id/'));
+    }
 
     expect(parsed.food?.name, name);
     expect(parsed.food?.id, isNotNull);

@@ -39,10 +39,17 @@ void main() {
       ((request.data as Map<String, dynamic>)['ingredients'] as List)
           .cast<String>();
 
+  /// The answer to the request that checks whether the server works.
+  ResponseBody settings(RequestOptions request) {
+    expect(request.uri.path, '/tandoor/api/server-settings/current/');
+    return jsonResponse(tandoorFixture('server_settings.json'));
+  }
+
   /// Answers like Tandoor's parser: each line from the recording, a 500 for
   /// a list that contains [unparseable].
   FakeHttpAdapter tandoor({String unparseable = 'etwas Liebe'}) =>
       FakeHttpAdapter((request) {
+        if (request.method == 'GET') return settings(request);
         final lines = sent(request);
         if (lines.contains(unparseable)) {
           return htmlResponse('<h1>Server Error (500)</h1>', status: 500);
@@ -89,10 +96,32 @@ void main() {
     });
 
     test('returns a line Tandoor fails on as unparsed', () async {
+      final adapter = tandoor();
+
       expect(
-        await parser(tandoor()).parse('etwas Liebe'),
+        await parser(adapter).parse('etwas Liebe'),
         ParsedIngredient.unparsed('etwas Liebe'),
       );
+      expect(adapter.requests.map((r) => r.method), ['POST', 'GET']);
+    });
+
+    test('throws when the server fails other requests too', () async {
+      final adapter = FakeHttpAdapter(
+        (_) => htmlResponse('<h1>Server Error (500)</h1>', status: 500),
+      );
+
+      await expectLater(
+        parser(adapter).parse('2 Eier'),
+        throwsA(
+          isA<ServerFailure>().having((f) => f.statusCode, 'status', 500),
+        ),
+      );
+      await expectLater(
+        parser(adapter).parseAll(['2 Eier', 'Salz, nach Geschmack']),
+        throwsA(isA<ServerFailure>()),
+      );
+      // One parser request and one check each.
+      expect(adapter.requests, hasLength(4));
     });
 
     test('returns a line Tandoor leaves out as unparsed', () async {
@@ -124,13 +153,11 @@ void main() {
     test('counts the length in code points, like Tandoor', () async {
       // 300 code points, 600 UTF-16 code units.
       final line = '🥕' * 300;
-      final adapter = FakeHttpAdapter(
-        (_) => htmlResponse('Server Error', status: 500),
-      );
+      final adapter = tandoor(unparseable: line);
 
       await parser(adapter).parse(line);
 
-      expect(adapter.requests, hasLength(1));
+      expect(adapter.requests, isNotEmpty);
     });
 
     test('throws a failure when the request fails', () async {
@@ -257,7 +284,13 @@ void main() {
         ParsedIngredient.unparsed('etwas Liebe'),
         oil,
       ]);
-      expect(adapter.requests.map(sent), [
+      // The server is checked once, after the first 500.
+      expect(adapter.requests.map((r) => r.method), [
+        'POST',
+        'GET',
+        ...List.filled(4, 'POST'),
+      ]);
+      expect(adapter.requests.where((r) => r.method == 'POST').map(sent), [
         ['Salz, nach Geschmack', '2 Eier', 'etwas Liebe', '2 tbsp olive oil'],
         ['Salz, nach Geschmack', '2 Eier'],
         ['etwas Liebe', '2 tbsp olive oil'],

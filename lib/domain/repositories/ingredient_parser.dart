@@ -18,7 +18,8 @@ abstract interface class IngredientParser {
   /// Parses one line. A blank line comes back unparsed, without a request.
   Future<ParsedIngredient> parse(String line);
 
-  /// Parses each line that isn't blank, in one request, for pasted text.
-  /// Returns one result per non-blank line of [lines], in their order.
+  /// Parses each line that isn't blank, for pasted text, in one request
+  /// unless Tandoor fails on a line. Returns one result per non-blank line of
+  /// [lines], in their order.
   Future<List<ParsedIngredient>> parseAll(Iterable<String> lines);
 }

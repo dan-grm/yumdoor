@@ -400,8 +400,9 @@ Verified on 2.6.15:
   only. A blank `ingredient` is a 400 (`"This field may not be blank."`).
 - **A line the parser can't handle is a 500** (HTML, not JSON), and in `ingredients` it fails the **whole
   list**. Seen with lines that are only symbols after stripping leading `,.-_=+#*|\/` (`-`, `,`), lines over 512
-  characters, and an empty food (`"1 g\t,\tSalz"`). Yumdoor skips the first two without a request and turns every
-  500 into a food-less line with the text as note; a list that fails is split in halves until the failing line is
+  characters, and an empty food (`"1 g\t,\tSalz"`). Yumdoor skips the first two without a request and turns a 500
+  into a food-less line with the text as note, once a request to `/api/server-settings/current/` shows that the
+  server itself works; a list that fails is split in halves until the failing line is
   found.
 - **Amounts:** decimal comma or point (`1,5`, `1.5`), vulgar fractions (`½`), `1/2`, `1 1/2`, `1 ½`, and an amount
   glued to the unit (`200g`). A range `2-3 Zwiebeln` gives amount `2` and the range as note. No amount: `0`
