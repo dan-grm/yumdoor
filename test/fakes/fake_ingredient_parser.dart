@@ -28,7 +28,6 @@ class FakeIngredientParser implements IngredientParser {
 
   @override
   Future<List<ParsedIngredient>> parseAll(Iterable<String> lines) async {
-    if (failure case final failure?) throw failure;
     return [
       for (final line in lines)
         if (line.trim().isNotEmpty) await parse(line),

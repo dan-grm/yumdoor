@@ -401,7 +401,8 @@ Verified on 2.6.15:
 - **A line the parser can't handle is a 500** (HTML, not JSON), and in `ingredients` it fails the **whole
   list**. Seen with lines that are only symbols after stripping leading `,.-_=+#*|\/` (`-`, `,`), lines over 512
   characters, and an empty food (`"1 g\t,\tSalz"`). Yumdoor skips the first two without a request and turns every
-  500 into a food-less line with the text as note; a list that fails is parsed line by line.
+  500 into a food-less line with the text as note; a list that fails is split in halves until the failing line is
+  found.
 - **Amounts:** decimal comma or point (`1,5`, `1.5`), vulgar fractions (`½`), `1/2`, `1 1/2`, `1 ½`, and an amount
   glued to the unit (`200g`). A range `2-3 Zwiebeln` gives amount `2` and the range as note. No amount: `0`
   (`Salz` → food "Salz", amount 0, no unit). The parser doesn't depend on the user's language.

@@ -67,7 +67,7 @@ void main() {
     );
   });
 
-  test('parses a list, line by line if Tandoor fails on one', () async {
+  test('parses a list, splitting it if Tandoor fails on a line', () async {
     final parsed = await repositories.ingredientParser.parseAll([
       '2 tbsp olive oil',
       '',

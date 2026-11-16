@@ -2,6 +2,7 @@ import 'package:tandoor_api/tandoor_api.dart' as api;
 
 import '../../domain/models/parsed_ingredient.dart';
 import '../../domain/models/recipe_draft.dart';
+import 'food_mapper.dart';
 import 'mapping.dart';
 
 extension ParsedIngredientMapper on api.IngredientSimple {
@@ -14,7 +15,7 @@ extension ParsedIngredientMapper on api.IngredientSimple {
       null => null,
     },
     unit: switch (unit) {
-      final unit? => NamedRef(id: requireId(unit.id, 'Unit'), name: unit.name),
+      final unit? => NamedRef.unit(unit.toDomain()),
       null => null,
     },
     amount: amount,

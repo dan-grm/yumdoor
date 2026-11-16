@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tandoor_api/tandoor_api.dart' as api;
@@ -32,26 +34,22 @@ void main() {
           .cast<Map<String, dynamic>>()
           .singleWhere((i) => i['original_text'] == line);
 
+  /// The lines of a request.
+  List<String> sent(RequestOptions request) =>
+      ((request.data as Map<String, dynamic>)['ingredients'] as List)
+          .cast<String>();
+
   /// Answers like Tandoor's parser: each line from the recording, a 500 for
-  /// a list or line that contains [unparseable].
+  /// a list that contains [unparseable].
   FakeHttpAdapter tandoor({String unparseable = 'etwas Liebe'}) =>
       FakeHttpAdapter((request) {
-        final body = request.data as Map<String, dynamic>;
-        final lines = [
-          ?body['ingredient'] as String?,
-          ...?(body['ingredients'] as List?)?.cast<String>(),
-        ];
+        final lines = sent(request);
         if (lines.contains(unparseable)) {
           return htmlResponse('<h1>Server Error (500)</h1>', status: 500);
         }
         return jsonResponse({
-          'ingredient': body.containsKey('ingredient')
-              ? recorded(body['ingredient'] as String)
-              : null,
-          'ingredients': [
-            for (final line in body['ingredients'] as List? ?? const [])
-              recorded(line as String),
-          ],
+          'ingredient': null,
+          'ingredients': [for (final line in lines) recorded(line)],
         });
       });
 
@@ -65,6 +63,16 @@ void main() {
     food: NamedRef(id: 110, name: 'Ei'),
     amount: 2,
   );
+  const oil = ParsedIngredient(
+    originalText: '2 tbsp olive oil',
+    food: NamedRef(id: 169, name: 'olive oil'),
+    unit: NamedRef(id: 36, name: 'tbsp'),
+    amount: 2,
+  );
+
+  final forbidden = FakeHttpAdapter(
+    (_) => jsonResponse({'detail': 'nope'}, status: 403),
+  );
 
   group('parse', () {
     test('posts the line to the parser', () async {
@@ -75,7 +83,9 @@ void main() {
       final request = adapter.requests.single;
       expect(request.method, 'POST');
       expect(request.uri.path, '/tandoor/api/ingredient-parser/post/');
-      expect(request.data, {'ingredient': 'Salz, nach Geschmack'});
+      expect(request.data, {
+        'ingredients': ['Salz, nach Geschmack'],
+      });
     });
 
     test('returns a line Tandoor fails on as unparsed', () async {
@@ -85,23 +95,8 @@ void main() {
       );
     });
 
-    test('returns a line Tandoor answers with a 400 as unparsed', () async {
-      final adapter = FakeHttpAdapter(
-        (_) => jsonResponse({
-          'error': true,
-          'msg': {
-            'ingredient': ['This field may not be blank.'],
-          },
-        }, status: 400),
-      );
-
-      expect(
-        await parser(adapter).parse(' x'),
-        ParsedIngredient.unparsed(' x'),
-      );
-    });
-
-    test('returns a line Tandoor finds blank as unparsed', () async {
+    test('returns a line Tandoor leaves out as unparsed', () async {
+      // `\u001c` is blank to Python's strip(), not to Dart's trim().
       final adapter = FakeHttpAdapter(
         (_) => jsonResponse({'ingredient': null, 'ingredients': <Object>[]}),
       );
@@ -126,10 +121,19 @@ void main() {
       expect(adapter.requests, isEmpty);
     });
 
-    test('throws a failure when the request fails', () async {
-      final forbidden = FakeHttpAdapter(
-        (_) => jsonResponse({'detail': 'nope'}, status: 403),
+    test('counts the length in code points, like Tandoor', () async {
+      // 300 code points, 600 UTF-16 code units.
+      final line = '🥕' * 300;
+      final adapter = FakeHttpAdapter(
+        (_) => htmlResponse('Server Error', status: 500),
       );
+
+      await parser(adapter).parse(line);
+
+      expect(adapter.requests, hasLength(1));
+    });
+
+    test('throws a failure when the request fails', () async {
       final unavailable = FakeHttpAdapter(
         (_) => htmlResponse('Bad Gateway', status: 502),
       );
@@ -138,6 +142,17 @@ void main() {
           requestOptions: request,
           reason: 'offline',
         ),
+      );
+      final noId = FakeHttpAdapter(
+        (_) => jsonResponse({
+          'ingredient': null,
+          'ingredients': [
+            {
+              ...recorded('2 Eier'),
+              'food': {'name': 'Ei'},
+            },
+          ],
+        }),
       );
 
       await expectLater(
@@ -152,6 +167,64 @@ void main() {
         parser(offline).parse('2 Eier'),
         throwsA(isA<OfflineFailure>()),
       );
+      await expectLater(
+        parser(noId).parse('2 Eier'),
+        throwsA(isA<ServerFailure>()),
+      );
+    });
+
+    test('sends one request at a time', () async {
+      final answers = <Completer<ResponseBody>>[];
+      final adapter = FakeHttpAdapter((_) {
+        final answer = Completer<ResponseBody>();
+        answers.add(answer);
+        return answer.future;
+      });
+      final ingredientParser = parser(adapter);
+
+      final first = ingredientParser.parse('2 Eier');
+      final second = ingredientParser.parseAll(['Salz, nach Geschmack']);
+      await pumpEventQueue();
+      expect(adapter.requests, hasLength(1));
+
+      answers.single.complete(
+        jsonResponse({
+          'ingredient': null,
+          'ingredients': [recorded('2 Eier')],
+        }),
+      );
+      expect(await first, eier);
+      await pumpEventQueue();
+      expect(adapter.requests, hasLength(2));
+
+      answers.last.complete(
+        jsonResponse({
+          'ingredient': null,
+          'ingredients': [recorded('Salz, nach Geschmack')],
+        }),
+      );
+      expect(await second, [salz]);
+    });
+
+    test('goes on after a call that failed', () async {
+      var fail = true;
+      final adapter = FakeHttpAdapter((request) {
+        if (fail) {
+          fail = false;
+          return jsonResponse({'detail': 'nope'}, status: 403);
+        }
+        return jsonResponse({
+          'ingredient': null,
+          'ingredients': [recorded('2 Eier')],
+        });
+      });
+      final ingredientParser = parser(adapter);
+
+      await expectLater(
+        ingredientParser.parse('2 Eier'),
+        throwsA(isA<UnauthorizedFailure>()),
+      );
+      expect(await ingredientParser.parse('2 Eier'), eier);
     });
   });
 
@@ -163,42 +236,47 @@ void main() {
           .parseAll(['Salz, nach Geschmack', '', '  ', '2 Eier', '-']);
 
       expect(parsed, [salz, eier, ParsedIngredient.unparsed('-')]);
-      expect(adapter.requests.single.data, {
-        'ingredients': ['Salz, nach Geschmack', '2 Eier'],
-      });
-    });
-
-    test('parses line by line when Tandoor fails on one', () async {
-      final adapter = tandoor();
-
-      final parsed = await parser(adapter)
-          .parseAll(['Salz, nach Geschmack', 'etwas Liebe', '2 Eier']);
-
-      expect(parsed, [salz, ParsedIngredient.unparsed('etwas Liebe'), eier]);
-      expect(adapter.requests.map((r) => r.data), [
-        {
-          'ingredients': ['Salz, nach Geschmack', 'etwas Liebe', '2 Eier'],
-        },
-        {'ingredient': 'Salz, nach Geschmack'},
-        {'ingredient': 'etwas Liebe'},
-        {'ingredient': '2 Eier'},
+      expect(adapter.requests.map(sent), [
+        ['Salz, nach Geschmack', '2 Eier'],
       ]);
     });
 
-    test('parses line by line when Tandoor leaves a line out', () async {
+    test('splits a list Tandoor fails on until it finds the line', () async {
+      final adapter = tandoor();
+
+      final parsed = await parser(adapter).parseAll([
+        'Salz, nach Geschmack',
+        '2 Eier',
+        'etwas Liebe',
+        '2 tbsp olive oil',
+      ]);
+
+      expect(parsed, [
+        salz,
+        eier,
+        ParsedIngredient.unparsed('etwas Liebe'),
+        oil,
+      ]);
+      expect(adapter.requests.map(sent), [
+        ['Salz, nach Geschmack', '2 Eier', 'etwas Liebe', '2 tbsp olive oil'],
+        ['Salz, nach Geschmack', '2 Eier'],
+        ['etwas Liebe', '2 tbsp olive oil'],
+        ['etwas Liebe'],
+        ['2 tbsp olive oil'],
+      ]);
+    });
+
+    test('splits a list when Tandoor leaves a line out', () async {
       // `\u001c` is blank to Python's strip(), not to Dart's trim().
-      final adapter = FakeHttpAdapter((request) {
-        final body = request.data as Map<String, dynamic>;
-        return jsonResponse({
-          'ingredient': switch (body['ingredient']) {
-            '2 Eier' => recorded('2 Eier'),
-            _ => null,
-          },
+      final adapter = FakeHttpAdapter(
+        (request) => jsonResponse({
+          'ingredient': null,
           'ingredients': [
-            if (body.containsKey('ingredients')) recorded('2 Eier'),
+            for (final line in sent(request))
+              if (line == '2 Eier') recorded(line),
           ],
-        });
-      });
+        }),
+      );
 
       expect(await parser(adapter).parseAll(['\u001c', '2 Eier']), [
         ParsedIngredient.unparsed('\u001c'),
@@ -213,16 +291,13 @@ void main() {
       expect(await parser(adapter).parseAll(['', ' ', '#']), [
         ParsedIngredient.unparsed('#'),
       ]);
+      expect(await parser(adapter).parseAll([]), isEmpty);
       expect(adapter.requests, isEmpty);
     });
 
     test('throws a failure when the request fails', () async {
-      final adapter = FakeHttpAdapter(
-        (_) => jsonResponse({'detail': 'nope'}, status: 403),
-      );
-
       await expectLater(
-        parser(adapter).parseAll(['2 Eier']),
+        parser(forbidden).parseAll(['2 Eier']),
         throwsA(isA<UnauthorizedFailure>()),
       );
     });

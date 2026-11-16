@@ -10,42 +10,50 @@ import '../mappers/mapping.dart';
 
 /// [IngredientParser] with `POST /api/ingredient-parser/post/`
 /// (docs/TANDOOR_API.md#ingredient-parser).
+///
+/// Tandoor answers a line it can't parse with a 500 and can't be told apart
+/// from a server error that way, so a broken server also gives unparsed
+/// lines here. Saving the recipe then fails and shows the error.
 class TandoorIngredientParser implements IngredientParser {
   TandoorIngredientParser(this._api);
 
   final api.ApiApi _api;
 
-  @override
-  Future<ParsedIngredient> parse(String line) async {
-    if (!_isParseable(line)) return ParsedIngredient.unparsed(line);
-    try {
-      return await guardRequest(() async {
-        final response = await _api.apiIngredientParserPostCreate(
-          ingredientParserRequest: api.IngredientParserRequest(
-            (b) => b..ingredient = line,
-          ),
-        );
-        // `null` for a line that is blank to Python but not to Dart.
-        final parsed = requireBody(response.data).ingredient;
-        return parsed?.toParsed(line) ?? ParsedIngredient.unparsed(line);
-      });
-    } on ServerFailure catch (e) {
-      if (!_isParserError(e)) rethrow;
-      return ParsedIngredient.unparsed(line);
-    }
-  }
+  /// The end of the last call. Calls run one after the other: Tandoor gets
+  /// or creates foods and units without a lock, so parallel requests could
+  /// create the same food twice.
+  Future<void> _queue = Future.value();
 
   @override
-  Future<List<ParsedIngredient>> parseAll(Iterable<String> lines) async {
+  Future<ParsedIngredient> parse(String line) =>
+      _serially(() async => (await _parseList([line])).single);
+
+  @override
+  Future<List<ParsedIngredient>> parseAll(Iterable<String> lines) {
     final nonBlank = [
       for (final line in lines)
         if (line.trim().isNotEmpty) line,
     ];
-    final parseable = nonBlank.where(_isParseable).toList();
-    final parsed = await _parseList(parseable);
+    return _serially(() => _parseList(nonBlank));
+  }
+
+  Future<T> _serially<T>(Future<T> Function() call) {
+    final result = _queue.then((_) => call());
+    _queue = result.then<void>((_) {}, onError: (_) {});
+    return result;
+  }
+
+  /// [lines] parsed, with as few requests as possible: in one, or, if a line
+  /// makes Tandoor fail the whole list, in halves until the line that fails
+  /// is found.
+  Future<List<ParsedIngredient>> _parseList(List<String> lines) async {
+    final parseable = lines.where(_isParseable).toList();
+    final parsed = parseable.isEmpty
+        ? const <ParsedIngredient>[]
+        : await _request(parseable);
     final results = parsed.iterator;
     return [
-      for (final line in nonBlank)
+      for (final line in lines)
         if (_isParseable(line) && results.moveNext())
           results.current
         else
@@ -53,10 +61,7 @@ class TandoorIngredientParser implements IngredientParser {
     ];
   }
 
-  /// [lines] parsed in one request, or one by one if a line in it makes the
-  /// parser fail (it fails the whole list then).
-  Future<List<ParsedIngredient>> _parseList(List<String> lines) async {
-    if (lines.isEmpty) return const [];
+  Future<List<ParsedIngredient>> _request(List<String> lines) async {
     try {
       final parsed = await guardRequest(() async {
         final response = await _api.apiIngredientParserPostCreate(
@@ -64,39 +69,42 @@ class TandoorIngredientParser implements IngredientParser {
             (b) => b..ingredients = ListBuilder(lines),
           ),
         );
-        return requireBody(response.data).ingredients.toList();
-      });
-      // The server leaves out lines that are blank to Python's strip(),
-      // which can be more than to Dart's trim(); then results can't be
-      // matched to lines.
-      if (parsed.length == lines.length) {
+        final ingredients = requireBody(response.data).ingredients;
+        // The server leaves out lines that are blank to Python's strip(),
+        // which can be more than to Dart's trim(); then results can't be
+        // matched to lines.
+        if (ingredients.length != lines.length) return null;
         return [
-          for (final (i, ingredient) in parsed.indexed)
+          for (final (i, ingredient) in ingredients.indexed)
             ingredient.toParsed(lines[i]),
         ];
-      }
+      });
+      if (parsed != null) return parsed;
     } on ServerFailure catch (e) {
-      // Otherwise fall through to parsing line by line.
       if (!_isParserError(e)) rethrow;
     }
-    // One after the other: Tandoor gets or creates foods without a lock, so
-    // parallel requests could create the same food twice.
-    return [for (final line in lines) await parse(line)];
+    if (lines.length == 1) return [ParsedIngredient.unparsed(lines.single)];
+    final half = lines.length ~/ 2;
+    return [
+      ...await _request(lines.sublist(0, half)),
+      ...await _request(lines.sublist(half)),
+    ];
   }
 
   /// Whether Tandoor's parser can get past the start of [line]: it strips
   /// leading symbols and fails with a 500 when nothing is left, and for lines
-  /// longer than 512 characters (`cookbook/helper/ingredient_parser.py`).
+  /// longer than 512 characters (`cookbook/helper/ingredient_parser.py`;
+  /// Python counts code points).
   static bool _isParseable(String line) {
     final trimmed = line.trim();
-    return trimmed.length <= 512 &&
+    return trimmed.runes.length <= 512 &&
         trimmed.replaceFirst(_leadingSymbols, '').trim().isNotEmpty;
   }
 
   static final _leadingSymbols = RegExp(r'^[,.\-_=+#*|\\/]+');
 
   /// The parser answers a line it can't parse with a 500 (an uncaught
-  /// `ValueError` or `IndexError`) and a blank one with a 400.
+  /// `ValueError` or `IndexError`).
   static bool _isParserError(ServerFailure failure) =>
-      failure.statusCode == 400 || failure.statusCode == 500;
+      failure.statusCode == 500;
 }
