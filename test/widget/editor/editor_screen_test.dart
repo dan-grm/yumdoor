@@ -272,6 +272,8 @@ void main() {
     tester,
   ) async {
     connectivity.isOnline = false;
+    // The recipe screen below shows the stored copy; the editor gets none.
+    recipes.offline = true;
     await pumpEditor(tester);
 
     expect(

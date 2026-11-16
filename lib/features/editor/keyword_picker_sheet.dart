@@ -86,11 +86,14 @@ class _KeywordPickerSheetState extends ConsumerState<_KeywordPickerSheet> {
     try {
       final keyword = await ref.read(keywordRepositoryProvider).create(name);
       if (mounted) Navigator.of(context).pop(keyword);
-    } on Failure catch (failure) {
+    } on Object catch (error) {
+      // Anything else, too: a sheet stuck in `_creating` takes no taps.
       if (mounted) {
         setState(() {
           _creating = false;
-          _createFailure = failure;
+          _createFailure = error is Failure
+              ? error
+              : ServerFailure(cause: error);
         });
       }
     }

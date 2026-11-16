@@ -74,7 +74,7 @@ void main() {
   });
 
   test('offline, the cached copy is not edited', () async {
-    connectivity.isOnline = false;
+    recipes.offline = true;
     final provider = recipeEditorProvider(7);
     container.listen(provider, (_, _) {});
 
@@ -191,7 +191,8 @@ class _SlowRepository extends FakeRecipeRepository {
   final Error? _error;
 
   @override
-  Future<Recipe> fetchRecipe(int id) => _inner.fetchRecipe(id);
+  Future<Recipe> fetchRecipe(int id, {bool allowCached = true}) =>
+      _inner.fetchRecipe(id, allowCached: allowCached);
 
   @override
   Future<Recipe> updateRecipe(int id, RecipeDraft draft) async {

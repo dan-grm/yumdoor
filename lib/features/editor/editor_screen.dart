@@ -296,8 +296,11 @@ class _Body extends ConsumerWidget {
                       ),
                     ),
                   },
-                  // Asking again won't change a refusal.
-                  onRetry: failure is UnauthorizedFailure || offline
+                  // Asking again won't change a refusal or a deleted recipe.
+                  onRetry:
+                      failure is UnauthorizedFailure ||
+                          failure is NotFoundFailure ||
+                          offline
                       ? null
                       : onRetry,
                 )

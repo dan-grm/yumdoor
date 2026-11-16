@@ -32,7 +32,10 @@ class _GeneralTabState extends ConsumerState<GeneralTab> {
       .draft;
   late final _name = TextEditingController(text: _initial.name);
   late final _description = TextEditingController(text: _initial.description);
-  late final _servings = TextEditingController(text: '${_initial.servings}');
+  // 0 is what an emptied field left in the draft.
+  late final _servings = TextEditingController(
+    text: _initial.servings == 0 ? '' : '${_initial.servings}',
+  );
   late final _servingsText = TextEditingController(text: _initial.servingsText);
   late final _workingTime = TextEditingController(
     text: _minutes(_initial.workingTime),
@@ -118,7 +121,6 @@ class _GeneralTabState extends ConsumerState<GeneralTab> {
       label: l10n.editorWorkingTime,
       controller: _workingTime,
       enabled: enabled,
-      hint: '0',
       onChanged: (text) => _edit(
         (draft) => draft.copyWith(workingTime: Duration(minutes: number(text))),
       ),
@@ -127,7 +129,6 @@ class _GeneralTabState extends ConsumerState<GeneralTab> {
       label: l10n.editorWaitingTime,
       controller: _waitingTime,
       enabled: enabled,
-      hint: '0',
       onChanged: (text) => _edit(
         (draft) => draft.copyWith(waitingTime: Duration(minutes: number(text))),
       ),

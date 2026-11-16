@@ -92,6 +92,16 @@ void main() {
       expect(await fetch(7), _karotten);
     });
 
+    test('without allowCached, stays offline despite a stored copy', () async {
+      await fetch(7);
+      remote.failure = const OfflineFailure();
+
+      await expectLater(
+        repository.fetchRecipe(7, allowCached: false),
+        throwsA(isA<OfflineFailure>()),
+      );
+    });
+
     test('prefers the server over the stored copy', () async {
       await fetch(7);
       remote.recipes[7] = _karotten.copyWith(name: 'Ofenkarotten neu');

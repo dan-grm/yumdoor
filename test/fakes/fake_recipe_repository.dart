@@ -65,10 +65,15 @@ class FakeRecipeRepository implements RecipeRepository {
   /// While set, searches wait for it before answering.
   Completer<void>? gate;
 
+  /// Makes [fetchRecipe] answer as if offline with a stored copy: the
+  /// recipe, or [OfflineFailure] when the caller doesn't allow cached ones.
+  bool offline = false;
+
   @override
-  Future<Recipe> fetchRecipe(int id) async {
+  Future<Recipe> fetchRecipe(int id, {bool allowCached = true}) async {
     fetchCount++;
     if (failure case final failure?) throw failure;
+    if (offline && !allowCached) throw const OfflineFailure();
     return recipes[id] ?? (throw const NotFoundFailure());
   }
 

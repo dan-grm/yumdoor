@@ -1,6 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../app/offline.dart';
 import '../../app/repository_providers.dart';
 import '../../core/failures.dart';
 import '../../domain/models/keyword.dart';
@@ -75,12 +74,11 @@ class RecipeEditor extends _$RecipeEditor {
   @override
   Future<EditorState> build(int? recipeId) async {
     if (recipeId == null) return const EditorState(draft: RecipeDraft());
+    // Not the offline copy: it may be old, and saving it later would undo
+    // newer changes on the server.
     final recipe = await ref
         .read(recipeRepositoryProvider)
-        .fetchRecipe(recipeId);
-    // Offline, the recipe comes from the offline cache and may be old;
-    // saving that copy later would undo newer changes on the server.
-    if (ref.read(isOfflineProvider)) throw const OfflineFailure();
+        .fetchRecipe(recipeId, allowCached: false);
     return EditorState(
       recipeId: recipeId,
       recipeName: recipe.name,
