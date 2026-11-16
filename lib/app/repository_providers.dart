@@ -13,6 +13,7 @@ import '../domain/repositories/auth_repository.dart';
 import '../domain/repositories/book_repository.dart';
 import '../domain/repositories/cook_log_repository.dart';
 import '../domain/repositories/food_repository.dart';
+import '../domain/repositories/ingredient_parser.dart';
 import '../domain/repositories/keyword_repository.dart';
 import '../domain/repositories/offline_cache.dart';
 import '../domain/repositories/recipe_repository.dart';
@@ -85,6 +86,10 @@ KeywordRepository keywordRepository(Ref ref) =>
 @Riverpod(keepAlive: true)
 UnitRepository unitRepository(Ref ref) =>
     ref.watch(_tandoorRepositoriesProvider).units;
+
+@Riverpod(keepAlive: true)
+IngredientParser ingredientParser(Ref ref) =>
+    ref.watch(_tandoorRepositoriesProvider).ingredientParser;
 
 @Riverpod(keepAlive: true)
 CookLogRepository cookLogRepository(Ref ref) =>

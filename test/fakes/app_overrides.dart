@@ -10,6 +10,7 @@ import 'fake_book_user_repositories.dart';
 import 'fake_connectivity_service.dart';
 import 'fake_cook_log_repository.dart';
 import 'fake_food_keyword_repositories.dart';
+import 'fake_ingredient_parser.dart';
 import 'fake_link_opener.dart';
 import 'fake_offline_cache.dart';
 import 'fake_recipe_repository.dart';
@@ -39,6 +40,7 @@ List<Override> appOverrides({
   FakeFoodRepository? foods,
   FakeKeywordRepository? keywords,
   FakeUnitRepository? units,
+  FakeIngredientParser? ingredientParser,
   FakeCookLogRepository? cookLogs,
   FakeBookRepository? books,
   FakeUserRepository? users,
@@ -60,6 +62,9 @@ List<Override> appOverrides({
     keywords ?? FakeKeywordRepository(),
   ),
   unitRepositoryProvider.overrideWithValue(units ?? FakeUnitRepository()),
+  ingredientParserProvider.overrideWithValue(
+    ingredientParser ?? FakeIngredientParser(),
+  ),
   cookLogRepositoryProvider.overrideWithValue(
     cookLogs ?? FakeCookLogRepository(),
   ),

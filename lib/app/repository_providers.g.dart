@@ -380,6 +380,52 @@ final class UnitRepositoryProvider
 
 String _$unitRepositoryHash() => r'a828e4e25ccb8a572eb32de7da4f49edfaaa6e32';
 
+@ProviderFor(ingredientParser)
+final ingredientParserProvider = IngredientParserProvider._();
+
+final class IngredientParserProvider
+    extends
+        $FunctionalProvider<
+          IngredientParser,
+          IngredientParser,
+          IngredientParser
+        >
+    with $Provider<IngredientParser> {
+  IngredientParserProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'ingredientParserProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$ingredientParserHash();
+
+  @$internal
+  @override
+  $ProviderElement<IngredientParser> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  IngredientParser create(Ref ref) {
+    return ingredientParser(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(IngredientParser value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<IngredientParser>(value),
+    );
+  }
+}
+
+String _$ingredientParserHash() => r'497df1a8bcf95b001f4489fc23ed722421222cec';
+
 @ProviderFor(cookLogRepository)
 final cookLogRepositoryProvider = CookLogRepositoryProvider._();
 
