@@ -8,7 +8,7 @@ import '../../domain/services/recipe_draft_validation.dart';
 import '../../l10n/l10n.dart';
 import 'editor_controller.dart';
 import 'editor_field.dart';
-import 'keyword_picker_sheet.dart';
+import 'picker_sheet.dart';
 
 /// The editor's "Allgemein" tab: name, description, servings, times,
 /// keywords and source.

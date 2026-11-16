@@ -2,12 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show ProviderBase;
 
 import '../../app/repository_providers.dart';
 import '../../core/failures.dart';
 import '../../design/components/search_field.dart';
 import '../../design/design.dart';
+import '../../domain/models/food.dart';
 import '../../domain/models/keyword.dart';
+import '../../domain/models/unit.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import '../common/offline_disabled.dart';
@@ -22,9 +25,80 @@ const _maxHeightFactor = 0.8;
 Future<Keyword?> showKeywordPicker(
   BuildContext context, {
   required Set<int> exclude,
-}) {
+}) => _showPicker(
+  context,
+  _PickerConfig<Keyword>(
+    title: (l10n) => l10n.keywordPickerTitle,
+    hint: (l10n) => l10n.keywordPickerHint,
+    suggestions: keywordSuggestionsProvider.call,
+    create: (ref, name) => ref.read(keywordRepositoryProvider).create(name),
+    id: (keyword) => keyword.id,
+    name: (keyword) => keyword.name,
+    exclude: exclude,
+  ),
+);
+
+/// Lets the user find a food by name, or create one, and returns it; `null`
+/// if the sheet was closed.
+Future<Food?> showFoodPicker(BuildContext context) => _showPicker(
+  context,
+  _PickerConfig<Food>(
+    title: (l10n) => l10n.foodPickerTitle,
+    hint: (l10n) => l10n.foodPickerHint,
+    suggestions: foodSuggestionsProvider.call,
+    create: (ref, name) => ref.read(foodRepositoryProvider).create(name),
+    id: (food) => food.id,
+    name: (food) => food.name,
+  ),
+);
+
+/// Lets the user find a unit by name, or create one, and returns it; `null`
+/// if the sheet was closed.
+Future<Unit?> showUnitPicker(BuildContext context) => _showPicker(
+  context,
+  _PickerConfig<Unit>(
+    title: (l10n) => l10n.unitPickerTitle,
+    hint: (l10n) => l10n.unitPickerHint,
+    suggestions: unitSuggestionsProvider.call,
+    create: (ref, name) => ref.read(unitRepositoryProvider).create(name),
+    id: (unit) => unit.id,
+    name: (unit) => unit.name,
+  ),
+);
+
+/// What a picker sheet finds and creates.
+final class _PickerConfig<T extends Object> {
+  const _PickerConfig({
+    required this.title,
+    required this.hint,
+    required this.suggestions,
+    required this.create,
+    required this.id,
+    required this.name,
+    this.exclude = const {},
+  });
+
+  final String Function(AppLocalizations l10n) title;
+  final String Function(AppLocalizations l10n) hint;
+
+  /// The suggestions for the typed text.
+  final ProviderBase<AsyncValue<List<T>>> Function(String query) suggestions;
+
+  /// Creates an item with the name, or finds the one that has it.
+  final Future<T> Function(WidgetRef ref, String name) create;
+  final int Function(T item) id;
+  final String Function(T item) name;
+
+  /// Ids of items that aren't offered.
+  final Set<int> exclude;
+}
+
+Future<T?> _showPicker<T extends Object>(
+  BuildContext context,
+  _PickerConfig<T> config,
+) {
   final t = context.tokens;
-  return showModalBottomSheet<Keyword>(
+  return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
@@ -32,26 +106,28 @@ Future<Keyword?> showKeywordPicker(
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(t.radiusL)),
     ),
-    builder: (context) => _KeywordPickerSheet(exclude: exclude),
+    builder: (context) => _PickerSheet<T>(config: config),
   );
 }
 
-class _KeywordPickerSheet extends ConsumerStatefulWidget {
-  const _KeywordPickerSheet({required this.exclude});
+class _PickerSheet<T extends Object> extends ConsumerStatefulWidget {
+  const _PickerSheet({required this.config});
 
-  final Set<int> exclude;
+  final _PickerConfig<T> config;
 
   @override
-  ConsumerState<_KeywordPickerSheet> createState() =>
-      _KeywordPickerSheetState();
+  ConsumerState<_PickerSheet<T>> createState() => _PickerSheetState<T>();
 }
 
-class _KeywordPickerSheetState extends ConsumerState<_KeywordPickerSheet> {
+class _PickerSheetState<T extends Object>
+    extends ConsumerState<_PickerSheet<T>> {
   final _controller = TextEditingController();
   Timer? _debounce;
   var _query = '';
   var _creating = false;
   Failure? _createFailure;
+
+  _PickerConfig<T> get _config => widget.config;
 
   @override
   void dispose() {
@@ -71,9 +147,9 @@ class _KeywordPickerSheetState extends ConsumerState<_KeywordPickerSheet> {
     if (text.trim() != _query) setState(() => _query = text.trim());
   }
 
-  /// Creates the keyword [name], or finds it if it exists already, and
-  /// returns it. If the field has changed since [name] was searched, only
-  /// searches for what it now says, so the row shows what would be created.
+  /// Creates the item [name], or finds it if it exists already, and returns
+  /// it. If the field has changed since [name] was searched, only searches
+  /// for what it now says, so the row shows what would be created.
   Future<void> _create(String name) async {
     if (_controller.text.trim() != name) {
       _search(_controller.text);
@@ -84,8 +160,8 @@ class _KeywordPickerSheetState extends ConsumerState<_KeywordPickerSheet> {
       _createFailure = null;
     });
     try {
-      final keyword = await ref.read(keywordRepositoryProvider).create(name);
-      if (mounted) Navigator.of(context).pop(keyword);
+      final item = await _config.create(ref, name);
+      if (mounted) Navigator.of(context).pop(item);
     } on Object catch (error) {
       // Anything else, too: a sheet stuck in `_creating` takes no taps.
       if (mounted) {
@@ -103,11 +179,12 @@ class _KeywordPickerSheetState extends ConsumerState<_KeywordPickerSheet> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
-    final found = ref.watch(keywordSuggestionsProvider(_query));
+    final config = _config;
+    final found = ref.watch(config.suggestions(_query));
     final suggestions = found.whenData(
-      (keywords) => [
-        for (final k in keywords)
-          if (!widget.exclude.contains(k.id)) k,
+      (items) => [
+        for (final item in items)
+          if (!config.exclude.contains(config.id(item))) item,
       ],
     );
     final createFailure = _createFailure;
@@ -117,7 +194,7 @@ class _KeywordPickerSheetState extends ConsumerState<_KeywordPickerSheet> {
         _query.isNotEmpty &&
         !found.isLoading &&
         !(found.value?.any(
-              (k) => k.name.toLowerCase() == _query.toLowerCase(),
+              (item) => config.name(item).toLowerCase() == _query.toLowerCase(),
             ) ??
             false);
 
@@ -139,7 +216,7 @@ class _KeywordPickerSheetState extends ConsumerState<_KeywordPickerSheet> {
                 Semantics(
                   header: true,
                   child: Text(
-                    l10n.keywordPickerTitle,
+                    config.title(l10n),
                     style: t.titleM.copyWith(color: t.ink),
                   ),
                 ),
@@ -147,8 +224,8 @@ class _KeywordPickerSheetState extends ConsumerState<_KeywordPickerSheet> {
                 SearchField(
                   controller: _controller,
                   autofocus: true,
-                  label: l10n.keywordPickerHint,
-                  hint: l10n.keywordPickerHint,
+                  label: config.hint(l10n),
+                  hint: config.hint(l10n),
                   clearLabel: l10n.searchClear,
                   onChanged: _onChanged,
                   onSubmitted: _search,
@@ -158,7 +235,7 @@ class _KeywordPickerSheetState extends ConsumerState<_KeywordPickerSheet> {
                   OfflineDisabled(
                     builder: (context, enabled) => _Row(
                       icon: Icons.add_rounded,
-                      text: l10n.keywordPickerCreate(_query),
+                      text: l10n.pickerCreate(_query),
                       busy: _creating,
                       onTap: enabled && !_creating
                           ? () => _create(_query)
@@ -171,7 +248,7 @@ class _KeywordPickerSheetState extends ConsumerState<_KeywordPickerSheet> {
                     child: Semantics(
                       liveRegion: true,
                       child: Text(
-                        l10n.keywordPickerCreateFailed(
+                        l10n.pickerCreateFailed(
                           failureMessage(context, createFailure),
                         ),
                         style: t.body.copyWith(color: t.danger),
@@ -186,7 +263,7 @@ class _KeywordPickerSheetState extends ConsumerState<_KeywordPickerSheet> {
                       separatorBuilder: (_, _) =>
                           Divider(height: 1, color: t.line),
                       itemBuilder: (context, index) => _Row(
-                        text: value[index].name,
+                        text: config.name(value[index]),
                         onTap: _creating
                             ? null
                             : () => Navigator.of(context).pop(value[index]),
@@ -196,7 +273,7 @@ class _KeywordPickerSheetState extends ConsumerState<_KeywordPickerSheet> {
                       child: FailureView(
                         error: error,
                         onRetry: () =>
-                            ref.invalidate(keywordSuggestionsProvider(_query)),
+                            ref.invalidate(config.suggestions(_query)),
                       ),
                     ),
                     _ => Padding(
@@ -214,7 +291,7 @@ class _KeywordPickerSheetState extends ConsumerState<_KeywordPickerSheet> {
   }
 }
 
-/// A suggestion, or the row that creates a keyword.
+/// A suggestion, or the row that creates an item.
 class _Row extends StatelessWidget {
   const _Row({
     required this.text,

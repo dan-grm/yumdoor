@@ -822,7 +822,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editorTabComingSoon =>
-      'Coming soon. Until then, saving keeps the ingredients and steps as they are.';
+      'Coming soon. Until then, saving keeps the steps as they are.';
 
   @override
   String get editorName => 'Name';
@@ -905,12 +905,122 @@ class AppLocalizationsEn extends AppLocalizations {
   String get keywordPickerHint => 'Find or create a keyword';
 
   @override
-  String keywordPickerCreate(String name) {
+  String get foodPickerTitle => 'Choose ingredient';
+
+  @override
+  String get foodPickerHint => 'Find or create an ingredient';
+
+  @override
+  String get unitPickerTitle => 'Choose unit';
+
+  @override
+  String get unitPickerHint => 'Find or create a unit';
+
+  @override
+  String ingredientsBaseServings(String servings) {
+    return 'Amounts for $servings (base recipe)';
+  }
+
+  @override
+  String get ingredientsEmpty =>
+      'No ingredients yet. Type a line below, e.g. “200 g carrots”.';
+
+  @override
+  String get ingredientEntryLabel => 'Add ingredient';
+
+  @override
+  String get ingredientEntryHint => 'e.g. 200 g carrots, peeled';
+
+  @override
+  String get ingredientEntryAdd => 'Add';
+
+  @override
+  String ingredientEntryAdded(String ingredient) {
+    return 'Added $ingredient';
+  }
+
+  @override
+  String ingredientEntryUnparsed(String line) {
+    return 'Couldn\'t read “$line”, so it was added as a note. Tap the line to choose an ingredient.';
+  }
+
+  @override
+  String ingredientEntryFailed(String reason) {
+    return 'Not added. $reason';
+  }
+
+  @override
+  String get ingredientEntryDone => 'Done';
+
+  @override
+  String get ingredientAddHeader => 'Add section';
+
+  @override
+  String get ingredientHeaderTitle => 'Section';
+
+  @override
+  String get ingredientHeaderLabel => 'Heading';
+
+  @override
+  String get ingredientHeaderHint => 'e.g. For the dough';
+
+  @override
+  String get ingredientEditTitle => 'Edit ingredient';
+
+  @override
+  String get ingredientAmount => 'Amount';
+
+  @override
+  String get ingredientAmountInvalid => 'A number like 1.5 or ½.';
+
+  @override
+  String get ingredientUnit => 'Unit';
+
+  @override
+  String get ingredientNoUnit => 'None';
+
+  @override
+  String get ingredientRemoveUnit => 'Remove unit';
+
+  @override
+  String get ingredientFood => 'Ingredient';
+
+  @override
+  String get ingredientNote => 'Note';
+
+  @override
+  String get ingredientNoAmount => 'No amount';
+
+  @override
+  String get ingredientApply => 'Apply';
+
+  @override
+  String ingredientActions(String name) {
+    return 'Actions for $name';
+  }
+
+  @override
+  String get ingredientEdit => 'Edit';
+
+  @override
+  String get ingredientMoveUp => 'Move up';
+
+  @override
+  String get ingredientMoveDown => 'Move down';
+
+  @override
+  String get ingredientDelete => 'Delete';
+
+  @override
+  String get ingredientUnnamed => 'No ingredient';
+
+  @override
+  String pickerCreate(String name) {
     return 'Create “$name”';
   }
 
   @override
-  String keywordPickerCreateFailed(String reason) {
+  String pickerCreateFailed(String reason) {
     return 'Not created. $reason';
   }
 }

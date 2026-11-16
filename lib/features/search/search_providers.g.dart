@@ -492,6 +492,89 @@ final class KeywordSuggestionsFamily extends $Family
   String toString() => r'keywordSuggestionsProvider';
 }
 
+/// Units matching what was typed into the editor's unit picker.
+
+@ProviderFor(unitSuggestions)
+final unitSuggestionsProvider = UnitSuggestionsFamily._();
+
+/// Units matching what was typed into the editor's unit picker.
+
+final class UnitSuggestionsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Unit>>,
+          List<Unit>,
+          FutureOr<List<Unit>>
+        >
+    with $FutureModifier<List<Unit>>, $FutureProvider<List<Unit>> {
+  /// Units matching what was typed into the editor's unit picker.
+  UnitSuggestionsProvider._({
+    required UnitSuggestionsFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: _noRetry,
+         name: r'unitSuggestionsProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$unitSuggestionsHash();
+
+  @override
+  String toString() {
+    return r'unitSuggestionsProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<List<Unit>> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<Unit>> create(Ref ref) {
+    final argument = this.argument as String;
+    return unitSuggestions(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is UnitSuggestionsProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$unitSuggestionsHash() => r'4b129826072be8192c131ed2352568d969ad82a2';
+
+/// Units matching what was typed into the editor's unit picker.
+
+final class UnitSuggestionsFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<List<Unit>>, String> {
+  UnitSuggestionsFamily._()
+    : super(
+        retry: _noRetry,
+        name: r'unitSuggestionsProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Units matching what was typed into the editor's unit picker.
+
+  UnitSuggestionsProvider call(String query) =>
+      UnitSuggestionsProvider._(argument: query, from: this);
+
+  @override
+  String toString() => r'unitSuggestionsProvider';
+}
+
 /// The user's recipe books, for the book filter and its chips.
 
 @ProviderFor(recipeBooks)

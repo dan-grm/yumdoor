@@ -21,6 +21,14 @@ class LocaleFormat {
     _locale,
   )..maximumFractionDigits = 2).format(value);
 
+  /// An amount to edit in a text field: up to three decimals, without
+  /// thousands separators, so `parseAmount` reads it back (`1250`, `1,5`).
+  String amountInput(num value) =>
+      (NumberFormat.decimalPattern(_locale)
+            ..maximumFractionDigits = 3
+            ..turnOffGrouping())
+          .format(value);
+
   /// A scaled ingredient amount: `1½`, `¼`, `0,3`, `1.250`. The domain has
   /// already rounded it (see [Quantity.of]).
   String quantity(Quantity value) => switch (value) {

@@ -1337,7 +1337,7 @@ abstract class AppLocalizations {
   /// Placeholder of the Zutaten and Schritte tabs until they are built.
   ///
   /// In de, this message translates to:
-  /// **'Das kommt bald. Bis dahin bleiben Zutaten und Schritte beim Speichern, wie sie sind.'**
+  /// **'Das kommt bald. Bis dahin bleiben die Schritte beim Speichern, wie sie sind.'**
   String get editorTabComingSoon;
 
   /// Label of the recipe name field.
@@ -1484,17 +1484,215 @@ abstract class AppLocalizations {
   /// **'Stichwort suchen oder anlegen'**
   String get keywordPickerHint;
 
-  /// Creates a new keyword with the typed name.
+  /// Title of the sheet that picks the food of an ingredient; also the placeholder of an ingredient without food.
+  ///
+  /// In de, this message translates to:
+  /// **'Zutat wählen'**
+  String get foodPickerTitle;
+
+  /// Hint and accessible name of the food search field.
+  ///
+  /// In de, this message translates to:
+  /// **'Zutat suchen oder anlegen'**
+  String get foodPickerHint;
+
+  /// Title of the sheet that picks the unit of an ingredient.
+  ///
+  /// In de, this message translates to:
+  /// **'Einheit wählen'**
+  String get unitPickerTitle;
+
+  /// Hint and accessible name of the unit search field.
+  ///
+  /// In de, this message translates to:
+  /// **'Einheit suchen oder anlegen'**
+  String get unitPickerHint;
+
+  /// Above the ingredients in the editor: amounts are for the recipe's base servings.
+  ///
+  /// In de, this message translates to:
+  /// **'Mengen für {servings} (Grundrezept)'**
+  String ingredientsBaseServings(String servings);
+
+  /// Empty state of the editor's ingredient list.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Zutaten. Gib unten eine Zeile ein, z. B. „200 g Karotten“.'**
+  String get ingredientsEmpty;
+
+  /// Accessible name of the ingredient entry field and title of the sheet that adds ingredients to a step.
+  ///
+  /// In de, this message translates to:
+  /// **'Zutat hinzufügen'**
+  String get ingredientEntryLabel;
+
+  /// Hint of the ingredient entry field.
+  ///
+  /// In de, this message translates to:
+  /// **'z. B. 200 g Karotten, geschält'**
+  String get ingredientEntryHint;
+
+  /// Tooltip of the button that adds the typed ingredient line.
+  ///
+  /// In de, this message translates to:
+  /// **'Hinzufügen'**
+  String get ingredientEntryAdd;
+
+  /// Shown after a line was added.
+  ///
+  /// In de, this message translates to:
+  /// **'{ingredient} hinzugefügt'**
+  String ingredientEntryAdded(String ingredient);
+
+  /// Shown when the ingredient parser could not split a line.
+  ///
+  /// In de, this message translates to:
+  /// **'„{line}“ nicht erkannt und als Notiz übernommen. Tipp die Zeile an, um eine Zutat zu wählen.'**
+  String ingredientEntryUnparsed(String line);
+
+  /// Shown when parsing an ingredient line failed.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht hinzugefügt. {reason}'**
+  String ingredientEntryFailed(String reason);
+
+  /// Closes the sheet that adds ingredients to a step.
+  ///
+  /// In de, this message translates to:
+  /// **'Fertig'**
+  String get ingredientEntryDone;
+
+  /// Adds a section header (such as 'Für den Teig') to the ingredients.
+  ///
+  /// In de, this message translates to:
+  /// **'Abschnitt hinzufügen'**
+  String get ingredientAddHeader;
+
+  /// Title of the sheet that adds or edits a section header.
+  ///
+  /// In de, this message translates to:
+  /// **'Abschnitt'**
+  String get ingredientHeaderTitle;
+
+  /// Label of the section header text field.
+  ///
+  /// In de, this message translates to:
+  /// **'Überschrift'**
+  String get ingredientHeaderLabel;
+
+  /// Hint of the section header text field.
+  ///
+  /// In de, this message translates to:
+  /// **'z. B. Für den Teig'**
+  String get ingredientHeaderHint;
+
+  /// Title of the sheet that edits an ingredient.
+  ///
+  /// In de, this message translates to:
+  /// **'Zutat bearbeiten'**
+  String get ingredientEditTitle;
+
+  /// Label of the amount field.
+  ///
+  /// In de, this message translates to:
+  /// **'Menge'**
+  String get ingredientAmount;
+
+  /// Error of an amount field that holds no number.
+  ///
+  /// In de, this message translates to:
+  /// **'Eine Zahl wie 1,5 oder ½.'**
+  String get ingredientAmountInvalid;
+
+  /// Label of the unit field.
+  ///
+  /// In de, this message translates to:
+  /// **'Einheit'**
+  String get ingredientUnit;
+
+  /// Unit field of an ingredient without unit.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine'**
+  String get ingredientNoUnit;
+
+  /// Tooltip of the button that removes the unit.
+  ///
+  /// In de, this message translates to:
+  /// **'Einheit entfernen'**
+  String get ingredientRemoveUnit;
+
+  /// Label of the food field.
+  ///
+  /// In de, this message translates to:
+  /// **'Zutat'**
+  String get ingredientFood;
+
+  /// Label of the note field.
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz'**
+  String get ingredientNote;
+
+  /// Switch for an ingredient without amount, such as 'Salz nach Geschmack'.
+  ///
+  /// In de, this message translates to:
+  /// **'Ohne Menge'**
+  String get ingredientNoAmount;
+
+  /// Applies the changes of the ingredient or section sheet to the recipe draft.
+  ///
+  /// In de, this message translates to:
+  /// **'Übernehmen'**
+  String get ingredientApply;
+
+  /// Tooltip of the menu button of an ingredient row.
+  ///
+  /// In de, this message translates to:
+  /// **'Aktionen für {name}'**
+  String ingredientActions(String name);
+
+  /// Menu item: edit the ingredient.
+  ///
+  /// In de, this message translates to:
+  /// **'Bearbeiten'**
+  String get ingredientEdit;
+
+  /// Menu item: move the ingredient one place up.
+  ///
+  /// In de, this message translates to:
+  /// **'Nach oben'**
+  String get ingredientMoveUp;
+
+  /// Menu item: move the ingredient one place down.
+  ///
+  /// In de, this message translates to:
+  /// **'Nach unten'**
+  String get ingredientMoveDown;
+
+  /// Menu item: delete the ingredient.
+  ///
+  /// In de, this message translates to:
+  /// **'Löschen'**
+  String get ingredientDelete;
+
+  /// Name of an ingredient row without food and note.
+  ///
+  /// In de, this message translates to:
+  /// **'Ohne Zutat'**
+  String get ingredientUnnamed;
+
+  /// Creates a new keyword, food or unit with the typed name.
   ///
   /// In de, this message translates to:
   /// **'„{name}“ anlegen'**
-  String keywordPickerCreate(String name);
+  String pickerCreate(String name);
 
-  /// Shown when creating a keyword failed.
+  /// Shown when creating a keyword, food or unit failed.
   ///
   /// In de, this message translates to:
   /// **'Nicht angelegt. {reason}'**
-  String keywordPickerCreateFailed(String reason);
+  String pickerCreateFailed(String reason);
 }
 
 class _AppLocalizationsDelegate

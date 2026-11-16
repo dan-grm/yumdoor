@@ -828,7 +828,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get editorTabComingSoon =>
-      'Das kommt bald. Bis dahin bleiben Zutaten und Schritte beim Speichern, wie sie sind.';
+      'Das kommt bald. Bis dahin bleiben die Schritte beim Speichern, wie sie sind.';
 
   @override
   String get editorName => 'Name';
@@ -911,12 +911,122 @@ class AppLocalizationsDe extends AppLocalizations {
   String get keywordPickerHint => 'Stichwort suchen oder anlegen';
 
   @override
-  String keywordPickerCreate(String name) {
+  String get foodPickerTitle => 'Zutat wählen';
+
+  @override
+  String get foodPickerHint => 'Zutat suchen oder anlegen';
+
+  @override
+  String get unitPickerTitle => 'Einheit wählen';
+
+  @override
+  String get unitPickerHint => 'Einheit suchen oder anlegen';
+
+  @override
+  String ingredientsBaseServings(String servings) {
+    return 'Mengen für $servings (Grundrezept)';
+  }
+
+  @override
+  String get ingredientsEmpty =>
+      'Noch keine Zutaten. Gib unten eine Zeile ein, z. B. „200 g Karotten“.';
+
+  @override
+  String get ingredientEntryLabel => 'Zutat hinzufügen';
+
+  @override
+  String get ingredientEntryHint => 'z. B. 200 g Karotten, geschält';
+
+  @override
+  String get ingredientEntryAdd => 'Hinzufügen';
+
+  @override
+  String ingredientEntryAdded(String ingredient) {
+    return '$ingredient hinzugefügt';
+  }
+
+  @override
+  String ingredientEntryUnparsed(String line) {
+    return '„$line“ nicht erkannt und als Notiz übernommen. Tipp die Zeile an, um eine Zutat zu wählen.';
+  }
+
+  @override
+  String ingredientEntryFailed(String reason) {
+    return 'Nicht hinzugefügt. $reason';
+  }
+
+  @override
+  String get ingredientEntryDone => 'Fertig';
+
+  @override
+  String get ingredientAddHeader => 'Abschnitt hinzufügen';
+
+  @override
+  String get ingredientHeaderTitle => 'Abschnitt';
+
+  @override
+  String get ingredientHeaderLabel => 'Überschrift';
+
+  @override
+  String get ingredientHeaderHint => 'z. B. Für den Teig';
+
+  @override
+  String get ingredientEditTitle => 'Zutat bearbeiten';
+
+  @override
+  String get ingredientAmount => 'Menge';
+
+  @override
+  String get ingredientAmountInvalid => 'Eine Zahl wie 1,5 oder ½.';
+
+  @override
+  String get ingredientUnit => 'Einheit';
+
+  @override
+  String get ingredientNoUnit => 'Keine';
+
+  @override
+  String get ingredientRemoveUnit => 'Einheit entfernen';
+
+  @override
+  String get ingredientFood => 'Zutat';
+
+  @override
+  String get ingredientNote => 'Notiz';
+
+  @override
+  String get ingredientNoAmount => 'Ohne Menge';
+
+  @override
+  String get ingredientApply => 'Übernehmen';
+
+  @override
+  String ingredientActions(String name) {
+    return 'Aktionen für $name';
+  }
+
+  @override
+  String get ingredientEdit => 'Bearbeiten';
+
+  @override
+  String get ingredientMoveUp => 'Nach oben';
+
+  @override
+  String get ingredientMoveDown => 'Nach unten';
+
+  @override
+  String get ingredientDelete => 'Löschen';
+
+  @override
+  String get ingredientUnnamed => 'Ohne Zutat';
+
+  @override
+  String pickerCreate(String name) {
     return '„$name“ anlegen';
   }
 
   @override
-  String keywordPickerCreateFailed(String reason) {
+  String pickerCreateFailed(String reason) {
     return 'Nicht angelegt. $reason';
   }
 }

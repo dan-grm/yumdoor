@@ -10,6 +10,7 @@ import '../../domain/models/recipe_book.dart';
 import '../../domain/models/recipe_match.dart';
 import '../../domain/models/recipe_query.dart';
 import '../../domain/models/saved_filter.dart';
+import '../../domain/models/unit.dart';
 import '../../domain/models/user_ref.dart';
 import '../../domain/services/universal_search.dart';
 
@@ -21,7 +22,7 @@ const searchPageSize = 25;
 /// How long typing has to pause before the search or a picker asks the server.
 const searchDebounce = Duration(milliseconds: 300);
 
-/// Suggestions shown in the food and keyword pickers.
+/// Suggestions shown in the food, unit and keyword pickers.
 const _suggestionLimit = 20;
 
 /// The results loaded so far for a search.
@@ -166,6 +167,16 @@ Future<List<Keyword>> keywordSuggestions(Ref ref, String query) {
   ref.onDispose(cancel.cancel);
   return ref
       .watch(keywordRepositoryProvider)
+      .autocomplete(query, limit: _suggestionLimit, cancel: cancel);
+}
+
+/// Units matching what was typed into the editor's unit picker.
+@Riverpod(retry: _noRetry)
+Future<List<Unit>> unitSuggestions(Ref ref, String query) {
+  final cancel = CancelSignal();
+  ref.onDispose(cancel.cancel);
+  return ref
+      .watch(unitRepositoryProvider)
       .autocomplete(query, limit: _suggestionLimit, cancel: cancel);
 }
 
