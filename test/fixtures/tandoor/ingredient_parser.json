@@ -1,0 +1,230 @@
+{
+  "ingredient": null,
+  "ingredients": [
+    {
+      "id": null,
+      "food": {
+        "id": 91,
+        "name": "Karotte",
+        "plural_name": "Karotten"
+      },
+      "unit": {
+        "id": 20,
+        "name": "g",
+        "plural_name": "g",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 200.0,
+      "note": "geschält",
+      "order": 0,
+      "is_header": false,
+      "no_amount": false,
+      "original_text": "200 g Karotten, geschält",
+      "checked": false
+    },
+    {
+      "id": null,
+      "food": {
+        "id": 141,
+        "name": "Salz",
+        "plural_name": null
+      },
+      "unit": {
+        "id": 25,
+        "name": "TL",
+        "plural_name": "TL",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 0.5,
+      "note": "",
+      "order": 0,
+      "is_header": false,
+      "no_amount": false,
+      "original_text": "½ TL Salz",
+      "checked": false
+    },
+    {
+      "id": null,
+      "food": {
+        "id": 128,
+        "name": "Gemüsebrühe",
+        "plural_name": null
+      },
+      "unit": {
+        "id": 31,
+        "name": "l",
+        "plural_name": "l",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 1.5,
+      "note": "",
+      "order": 0,
+      "is_header": false,
+      "no_amount": false,
+      "original_text": "1,5 l Gemüsebrühe",
+      "checked": false
+    },
+    {
+      "id": null,
+      "food": {
+        "id": 107,
+        "name": "Butter",
+        "plural_name": null
+      },
+      "unit": {
+        "id": 22,
+        "name": "EL",
+        "plural_name": "EL",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 1.5,
+      "note": "",
+      "order": 0,
+      "is_header": false,
+      "no_amount": false,
+      "original_text": "1 ½ EL Butter",
+      "checked": false
+    },
+    {
+      "id": null,
+      "food": {
+        "id": 110,
+        "name": "Ei",
+        "plural_name": "Eier"
+      },
+      "unit": null,
+      "amount": 2.0,
+      "note": "",
+      "order": 0,
+      "is_header": false,
+      "no_amount": false,
+      "original_text": "2 Eier",
+      "checked": false
+    },
+    {
+      "id": null,
+      "food": {
+        "id": 141,
+        "name": "Salz",
+        "plural_name": null
+      },
+      "unit": null,
+      "amount": 0.0,
+      "note": "nach Geschmack",
+      "order": 0,
+      "is_header": false,
+      "no_amount": false,
+      "original_text": "Salz, nach Geschmack",
+      "checked": false
+    },
+    {
+      "id": null,
+      "food": {
+        "id": 107,
+        "name": "Butter",
+        "plural_name": null
+      },
+      "unit": null,
+      "amount": 0.0,
+      "note": "weich",
+      "order": 0,
+      "is_header": false,
+      "no_amount": false,
+      "original_text": "Butter (weich)",
+      "checked": false
+    },
+    {
+      "id": null,
+      "food": {
+        "id": 169,
+        "name": "olive oil",
+        "plural_name": null
+      },
+      "unit": {
+        "id": 36,
+        "name": "tbsp",
+        "plural_name": "tbsp",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 2.0,
+      "note": "",
+      "order": 0,
+      "is_header": false,
+      "no_amount": false,
+      "original_text": "2 tbsp olive oil",
+      "checked": false
+    },
+    {
+      "id": null,
+      "food": {
+        "id": 171,
+        "name": "cinnamon",
+        "plural_name": null
+      },
+      "unit": {
+        "id": 35,
+        "name": "tsp",
+        "plural_name": "tsp",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 1.5,
+      "note": "",
+      "order": 0,
+      "is_header": false,
+      "no_amount": false,
+      "original_text": "1 1/2 tsp cinnamon",
+      "checked": false
+    },
+    {
+      "id": null,
+      "food": {
+        "id": 170,
+        "name": "cumin",
+        "plural_name": null
+      },
+      "unit": {
+        "id": 35,
+        "name": "tsp",
+        "plural_name": "tsp",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 0.5,
+      "note": "",
+      "order": 0,
+      "is_header": false,
+      "no_amount": false,
+      "original_text": "1/2 tsp cumin",
+      "checked": false
+    },
+    {
+      "id": null,
+      "food": {
+        "id": 144,
+        "name": "carrot",
+        "plural_name": "carrots"
+      },
+      "unit": null,
+      "amount": 2.0,
+      "note": "peeled and diced",
+      "order": 0,
+      "is_header": false,
+      "no_amount": false,
+      "original_text": "2 carrots, peeled and diced",
+      "checked": false
+    }
+  ]
+}

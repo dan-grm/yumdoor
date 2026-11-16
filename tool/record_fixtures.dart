@@ -38,6 +38,15 @@ Future<void> main() async {
   final token = (users['anna'] as Map<String, dynamic>)['token'] as String;
 
   final client = TandoorClient(baseUrl, token);
+  void save(String file, Object? response, String request) {
+    File('$root/$fixturesDir/$file')
+      ..createSync(recursive: true)
+      ..writeAsStringSync(
+        '${const JsonEncoder.withIndent('  ').convert(response)}\n',
+      );
+    stdout.writeln('$fixturesDir/$file ← $request');
+  }
+
   try {
     Future<int> recipeId(String name) async {
       final page = await client.get(
@@ -76,12 +85,39 @@ Future<void> main() async {
 
     for (final MapEntry(key: file, value: path) in fixtures.entries) {
       final response = await client.get(path);
-      File('$root/$fixturesDir/$file')
-        ..createSync(recursive: true)
-        ..writeAsStringSync(
-          '${const JsonEncoder.withIndent('  ').convert(response)}\n',
-        );
-      stdout.writeln('$fixturesDir/$file ← GET $path');
+      save(file, response, 'GET $path');
+    }
+
+    // Only foods and units the seed has: Tandoor's parser creates the ones it
+    // doesn't know (docs/TANDOOR_API.md#ingredient-parser).
+    final postFixtures = <String, (String, Object)>{
+      // DE and EN lines: plural food names, a note after a comma or in
+      // brackets, fractions, a decimal comma, no unit, no amount. The blank
+      // line is left out of the response.
+      'ingredient_parser.json': (
+        '/api/ingredient-parser/post/',
+        {
+          'ingredients': [
+            '200 g Karotten, geschält',
+            '½ TL Salz',
+            '1,5 l Gemüsebrühe',
+            '1 ½ EL Butter',
+            '2 Eier',
+            'Salz, nach Geschmack',
+            '',
+            'Butter (weich)',
+            '2 tbsp olive oil',
+            '1 1/2 tsp cinnamon',
+            '1/2 tsp cumin',
+            '2 carrots, peeled and diced',
+          ],
+        },
+      ),
+    };
+    for (final MapEntry(key: file, value: (path, body))
+        in postFixtures.entries) {
+      final response = await client.post(path, body);
+      save(file, response, 'POST $path');
     }
   } on SeedException catch (e) {
     stderr.writeln('record_fixtures: ${e.message}');
