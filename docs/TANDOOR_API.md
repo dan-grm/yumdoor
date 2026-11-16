@@ -377,6 +377,39 @@ amounts across recipes; merging per food and unit for display is our job. "Add t
 `/api/recipe-book-entry/?book=&recipe=`. Search can also filter by `books`, which leaves out what a dynamic book's
 filter finds (see [Recipe search](#recipe-search)).
 
+## Ingredient parser
+
+`POST /api/ingredient-parser/post/` splits ingredient lines into amount, unit, food and note
+(`IngredientParserView`, `cookbook/views/api.py:3319`; the parser is `cookbook/helper/ingredient_parser.py`).
+Tandoor's own editor uses it for its "paste ingredients" dialog (`vue3/src/components/inputs/StepEditor.vue`).
+Verified on 2.6.15:
+
+- **Request:** `{"ingredient": "<line>"}` and/or `{"ingredients": ["<line>", …]}` (both optional). Lines are sent
+  as typed; the server trims them. Any space member may call it, guests included.
+- **Response:** `{"ingredient": IngredientSimple | null, "ingredients": [IngredientSimple, …]}`, 200. Each result
+  has `amount` (`0` without one), `unit` and `food` (full objects **with `id`**, or `null`), `note` (`""` if none),
+  `original_text` (the line as sent), `id: null`, `no_amount: false`, `is_header: false`. Nothing is saved as an
+  ingredient.
+- **Unknown foods and units are created.** The parser gets or creates both (`get_food`, `get_unit`): a food by
+  exact name or plural name, else `Food.objects.create`, which returns an existing food whose name matches
+  ignoring case (`models.py:73`), so `KAROTTE` finds "Karotte" but `karotten` (plural, other case) creates a new
+  food. Units by exact name or plural name only: `G` or `el` create new units next to "g" and "EL". The space's
+  automations (food/unit aliases, replacements, never-unit, transpose) are applied first. So parse a line once it
+  is finished, not on every keystroke, and treat parsing as a write (it needs to be online).
+- **Blank lines in `ingredients` are left out** of the response, so results line up with the non-blank lines
+  only. A blank `ingredient` is a 400 (`"This field may not be blank."`).
+- **A line the parser can't handle is a 500** (HTML, not JSON), and in `ingredients` it fails the **whole
+  list**. Seen with lines that are only symbols after stripping leading `,.-_=+#*|\/` (`-`, `,`), lines over 512
+  characters, and an empty food (`"1 g\t,\tSalz"`). Yumdoor skips the first two without a request and turns every
+  500 into a food-less line with the text as note; a list that fails is parsed line by line.
+- **Amounts:** decimal comma or point (`1,5`, `1.5`), vulgar fractions (`½`), `1/2`, `1 1/2`, `1 ½`, and an amount
+  glued to the unit (`200g`). A range `2-3 Zwiebeln` gives amount `2` and the range as note. No amount: `0`
+  (`Salz` → food "Salz", amount 0, no unit). The parser doesn't depend on the user's language.
+- **Note:** what follows the food after a comma, semicolon or colon (`Karotten, geschält`), or in trailing
+  brackets (`Butter (weich)`). Words before the food that aren't a unit become the food ("a pinch of salt" is one
+  food).
+- The old `POST /api/ingredient-from-string/` is commented out in `urls.py`.
+
 ## Other useful endpoints
 
 `/api/user/` (space members, `display_name`), `/api/user-preference/{user_id}/`, `/api/space/current/`,
