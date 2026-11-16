@@ -19,7 +19,12 @@ abstract interface class RecipeRepository {
 
   /// The recipe with its steps. Throws [NotFoundFailure] if it doesn't exist
   /// or the user can't see it.
-  Future<Recipe> fetchRecipe(int id);
+  ///
+  /// When the server can't be reached, a copy stored for offline use is
+  /// returned if there is one. With [allowCached] `false` it throws
+  /// [OfflineFailure] instead, e.g. for the editor, which must not save an
+  /// old copy over newer changes.
+  Future<Recipe> fetchRecipe(int id, {bool allowCached = true});
 
   /// Notes that the current user opened the recipe, for the "recently
   /// viewed" order. Only the user sees their views.

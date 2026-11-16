@@ -31,11 +31,12 @@ class CachingRecipeRepository implements RecipeRepository {
   final Future<Uint8List?> Function(Uri url)? downloadImage;
 
   @override
-  Future<Recipe> fetchRecipe(int id) async {
+  Future<Recipe> fetchRecipe(int id, {bool allowCached = true}) async {
     final Recipe recipe;
     try {
       recipe = await _remote.fetchRecipe(id);
     } on OfflineFailure {
+      if (!allowCached) rethrow;
       return await _cache.get(id) ?? (throw const OfflineFailure());
     } on NotFoundFailure {
       // Deleted, or no longer shared with the user.

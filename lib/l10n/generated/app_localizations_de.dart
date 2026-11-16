@@ -213,8 +213,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get recipeEdit => 'Bearbeiten';
 
   @override
-  String get recipeActionsComingSoon =>
-      'Planen, Einkaufen und Bearbeiten kommen bald.';
+  String get recipeActionsComingSoon => 'Planen und Einkaufen kommen bald.';
 
   @override
   String get recipeIngredients => 'Zutaten';
@@ -799,4 +798,125 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get searchSavedNameConflict =>
       'Nicht gespeichert. In Tandoor gibt es den Namen vielleicht schon – versuch einen anderen.';
+
+  @override
+  String get searchNewRecipe => 'Neues Rezept';
+
+  @override
+  String get editorCancel => 'Abbrechen';
+
+  @override
+  String get editorSave => 'Speichern';
+
+  @override
+  String get editorSaving => 'Wird gespeichert …';
+
+  @override
+  String get editorTitleEdit => 'Bearbeiten';
+
+  @override
+  String get editorTitleNew => 'Neues Rezept';
+
+  @override
+  String get editorTabGeneral => 'Allgemein';
+
+  @override
+  String get editorTabIngredients => 'Zutaten';
+
+  @override
+  String get editorTabSteps => 'Schritte';
+
+  @override
+  String get editorTabComingSoon =>
+      'Das kommt bald. Bis dahin bleiben Zutaten und Schritte beim Speichern, wie sie sind.';
+
+  @override
+  String get editorName => 'Name';
+
+  @override
+  String get editorDescription => 'Beschreibung';
+
+  @override
+  String get editorDescriptionHelp =>
+      'Markdown geht, z. B. **fett** oder *kursiv*.';
+
+  @override
+  String get editorServings => 'Portionen';
+
+  @override
+  String get editorServingsText => 'Bezeichnung';
+
+  @override
+  String get editorServingsTextHint => 'z. B. Stück';
+
+  @override
+  String get editorWorkingTime => 'Arbeitszeit (Min.)';
+
+  @override
+  String get editorWaitingTime => 'Wartezeit (Min.)';
+
+  @override
+  String get editorKeywords => 'Stichwörter';
+
+  @override
+  String get editorAddKeyword => 'Stichwort';
+
+  @override
+  String get editorAddKeywordTooltip => 'Stichwort hinzufügen';
+
+  @override
+  String editorRemoveKeyword(String keyword) {
+    return '$keyword entfernen';
+  }
+
+  @override
+  String get editorSource => 'Quelle';
+
+  @override
+  String get editorSourceHint => 'https://…';
+
+  @override
+  String get editorNameMissing => 'Gib dem Rezept einen Namen.';
+
+  @override
+  String editorTooLong(int max) {
+    return 'Höchstens $max Zeichen.';
+  }
+
+  @override
+  String get editorServingsTooSmall => 'Mindestens 1.';
+
+  @override
+  String get editorProblems => 'Bitte prüf die markierten Felder.';
+
+  @override
+  String editorSaveFailed(String reason) {
+    return 'Nicht gespeichert. $reason';
+  }
+
+  @override
+  String get editorForbidden =>
+      'Nicht gespeichert: Du darfst dieses Rezept nicht ändern. Deine Änderungen sind noch da.';
+
+  @override
+  String get editorRecipeGone => 'Dieses Rezept gibt es nicht mehr.';
+
+  @override
+  String get editorSaved => 'Rezept gespeichert';
+
+  @override
+  String get keywordPickerTitle => 'Stichwort hinzufügen';
+
+  @override
+  String get keywordPickerHint => 'Stichwort suchen oder anlegen';
+
+  @override
+  String keywordPickerCreate(String name) {
+    return '„$name“ anlegen';
+  }
+
+  @override
+  String keywordPickerCreateFailed(String reason) {
+    return 'Nicht angelegt. $reason';
+  }
 }

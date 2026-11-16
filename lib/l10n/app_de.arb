@@ -256,9 +256,9 @@
   "@recipeEdit": {
     "description": "Button on the recipe screen: edit the recipe."
   },
-  "recipeActionsComingSoon": "Planen, Einkaufen und Bearbeiten kommen bald.",
+  "recipeActionsComingSoon": "Planen und Einkaufen kommen bald.",
   "@recipeActionsComingSoon": {
-    "description": "Explains why the plan, shop and edit buttons are disabled."
+    "description": "Explains why the plan and shop buttons are disabled."
   },
   "recipeIngredients": "Zutaten",
   "@recipeIngredients": {
@@ -1106,5 +1106,176 @@
   },
   "@searchSavedNameConflict": {
     "description": "Message when Tandoor refused a saved search's name, most likely because a saved search in the space (perhaps one the user can't see) has it."
+  },
+  "searchNewRecipe": "Neues Rezept",
+  "@searchNewRecipe": {
+    "description": "Button on the search screen that opens the editor for a new recipe."
+  },
+  "editorCancel": "Abbrechen",
+  "@editorCancel": {
+    "description": "Leaves the recipe editor without saving."
+  },
+  "editorSave": "Speichern",
+  "@editorSave": {
+    "description": "Saves the recipe in the editor."
+  },
+  "editorSaving": "Wird gespeichert …",
+  "@editorSaving": {
+    "description": "Accessible label of the save button while saving."
+  },
+  "editorTitleEdit": "Bearbeiten",
+  "@editorTitleEdit": {
+    "description": "Title of the editor for an existing recipe; the recipe name is shown above it."
+  },
+  "editorTitleNew": "Neues Rezept",
+  "@editorTitleNew": {
+    "description": "Title of the editor for a new recipe."
+  },
+  "editorTabGeneral": "Allgemein",
+  "@editorTabGeneral": {
+    "description": "Editor tab with the recipe's name, description, servings, times, keywords and source."
+  },
+  "editorTabIngredients": "Zutaten",
+  "@editorTabIngredients": {
+    "description": "Editor tab for the ingredients."
+  },
+  "editorTabSteps": "Schritte",
+  "@editorTabSteps": {
+    "description": "Editor tab for the steps."
+  },
+  "editorTabComingSoon": "Das kommt bald. Bis dahin bleiben Zutaten und Schritte beim Speichern, wie sie sind.",
+  "@editorTabComingSoon": {
+    "description": "Placeholder of the Zutaten and Schritte tabs until they are built."
+  },
+  "editorName": "Name",
+  "@editorName": {
+    "description": "Label of the recipe name field."
+  },
+  "editorDescription": "Beschreibung",
+  "@editorDescription": {
+    "description": "Label of the description field."
+  },
+  "editorDescriptionHelp": "Markdown geht, z. B. **fett** oder *kursiv*.",
+  "@editorDescriptionHelp": {
+    "description": "Help below the description field: it takes Markdown."
+  },
+  "editorServings": "Portionen",
+  "@editorServings": {
+    "description": "Label of the servings field (a number)."
+  },
+  "editorServingsText": "Bezeichnung",
+  "@editorServingsText": {
+    "description": "Label of the field for what a serving is called."
+  },
+  "editorServingsTextHint": "z. B. Stück",
+  "@editorServingsTextHint": {
+    "description": "Hint in the servings text field."
+  },
+  "editorWorkingTime": "Arbeitszeit (Min.)",
+  "@editorWorkingTime": {
+    "description": "Label of the working time field, in minutes."
+  },
+  "editorWaitingTime": "Wartezeit (Min.)",
+  "@editorWaitingTime": {
+    "description": "Label of the waiting time field, in minutes."
+  },
+  "editorKeywords": "Stichwörter",
+  "@editorKeywords": {
+    "description": "Label of the keyword chips."
+  },
+  "editorAddKeyword": "Stichwort",
+  "@editorAddKeyword": {
+    "description": "Dashed chip that adds a keyword."
+  },
+  "editorAddKeywordTooltip": "Stichwort hinzufügen",
+  "@editorAddKeywordTooltip": {
+    "description": "Accessible label of the chip that adds a keyword."
+  },
+  "editorRemoveKeyword": "{keyword} entfernen",
+  "@editorRemoveKeyword": {
+    "description": "Accessible label of a keyword chip; tapping it removes the keyword.",
+    "placeholders": {
+      "keyword": {
+        "type": "String",
+        "example": "Vegetarisch"
+      }
+    }
+  },
+  "editorSource": "Quelle",
+  "@editorSource": {
+    "description": "Label of the source URL field."
+  },
+  "editorSourceHint": "https://…",
+  "@editorSourceHint": {
+    "description": "Hint in the source field."
+  },
+  "editorNameMissing": "Gib dem Rezept einen Namen.",
+  "@editorNameMissing": {
+    "description": "Error at the name field when it is empty."
+  },
+  "editorTooLong": "Höchstens {max} Zeichen.",
+  "@editorTooLong": {
+    "description": "Error at a text field that is longer than Tandoor stores.",
+    "placeholders": {
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "editorServingsTooSmall": "Mindestens 1.",
+  "@editorServingsTooSmall": {
+    "description": "Error at the servings field when it is empty or 0."
+  },
+  "editorProblems": "Bitte prüf die markierten Felder.",
+  "@editorProblems": {
+    "description": "Shown above the form when the draft has problems after trying to save."
+  },
+  "editorSaveFailed": "Nicht gespeichert. {reason}",
+  "@editorSaveFailed": {
+    "description": "Shown when saving failed; the reason is one of the error messages. The edits stay.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "editorForbidden": "Nicht gespeichert: Du darfst dieses Rezept nicht ändern. Deine Änderungen sind noch da.",
+  "@editorForbidden": {
+    "description": "Shown when Tandoor refused the save (403), e.g. for a guest. The edits stay on screen."
+  },
+  "editorRecipeGone": "Dieses Rezept gibt es nicht mehr.",
+  "@editorRecipeGone": {
+    "description": "Shown when the recipe to edit doesn't exist (anymore) or can't be seen."
+  },
+  "editorSaved": "Rezept gespeichert",
+  "@editorSaved": {
+    "description": "Snackbar after the recipe was saved."
+  },
+  "keywordPickerTitle": "Stichwort hinzufügen",
+  "@keywordPickerTitle": {
+    "description": "Title of the sheet that adds a keyword to the recipe."
+  },
+  "keywordPickerHint": "Stichwort suchen oder anlegen",
+  "@keywordPickerHint": {
+    "description": "Hint and accessible name of the keyword search field."
+  },
+  "keywordPickerCreate": "„{name}“ anlegen",
+  "@keywordPickerCreate": {
+    "description": "Creates a new keyword with the typed name.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Ofengericht"
+      }
+    }
+  },
+  "keywordPickerCreateFailed": "Nicht angelegt. {reason}",
+  "@keywordPickerCreateFailed": {
+    "description": "Shown when creating a keyword failed.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
   }
 }

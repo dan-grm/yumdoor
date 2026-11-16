@@ -45,6 +45,10 @@ void main() {
         path: '/recipe/:id/cooked',
         builder: (context, state) => Text('cooked ${state.uri}'),
       ),
+      GoRoute(
+        path: '/recipe/:id/edit',
+        builder: (context, state) => Text('edit ${state.uri}'),
+      ),
     ],
   );
 
@@ -144,19 +148,26 @@ void main() {
     expect(find.text('cooked /recipe/7/cooked?servings=3'), findsOneWidget);
   });
 
-  testWidgets('plan, shop and edit are visible but disabled', (tester) async {
+  testWidgets('plan and shop are visible but disabled', (tester) async {
     await pumpRecipe(tester, ofenkarotten.id);
 
-    for (final label in ['Planen', 'Einkaufen', 'Bearbeiten']) {
+    for (final label in ['Planen', 'Einkaufen']) {
       final button = tester.widget<TextButton>(
         find.ancestor(of: find.text(label), matching: find.byType(TextButton)),
       );
       expect(button.onPressed, isNull, reason: label);
     }
-    expect(
-      find.text('Planen, Einkaufen und Bearbeiten kommen bald.'),
-      findsOneWidget,
-    );
+    expect(find.text('Planen und Einkaufen kommen bald.'), findsOneWidget);
+  });
+
+  testWidgets('"Bearbeiten" opens the editor', (tester) async {
+    await pumpRecipe(tester, ofenkarotten.id);
+
+    await tester.ensureVisible(find.text('Bearbeiten'));
+    await tester.tap(find.text('Bearbeiten'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('edit /recipe/7/edit'), findsOneWidget);
   });
 
   testWidgets('long German names fit at 390 px', (tester) async {
