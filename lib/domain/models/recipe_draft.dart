@@ -59,6 +59,62 @@ abstract class RecipeDraft with _$RecipeDraft {
   /// For keeping unsaved drafts locally.
   factory RecipeDraft.fromJson(Map<String, dynamic> json) =>
       _$RecipeDraftFromJson(json);
+
+  /// Whether the ingredients are shown grouped by step: when more than one
+  /// step has ingredients. Otherwise they are one list (decided in M3,
+  /// docs/ROADMAP.md).
+  bool get groupsIngredientsByStep =>
+      steps.where((step) => step.ingredients.isNotEmpty).length > 1;
+
+  /// [ingredient] added at the end of the step at [step], or of the last step
+  /// if [step] is `null` or no longer exists. A draft without steps gets an
+  /// empty one for it.
+  RecipeDraft addIngredient(IngredientDraft ingredient, {int? step}) {
+    if (steps.isEmpty) {
+      return copyWith(
+        steps: [
+          StepDraft(ingredients: [ingredient]),
+        ],
+      );
+    }
+    final index = step != null && step >= 0 && step < steps.length
+        ? step
+        : steps.length - 1;
+    return _changeIngredients(index, (list) => [...list, ingredient]);
+  }
+
+  /// The ingredient at [index] of the step at [step] replaced by
+  /// [ingredient].
+  RecipeDraft replaceIngredient(
+    int step,
+    int index,
+    IngredientDraft ingredient,
+  ) => _changeIngredients(step, (list) => [...list]..[index] = ingredient);
+
+  /// The draft without the ingredient at [index] of the step at [step].
+  RecipeDraft removeIngredient(int step, int index) =>
+      _changeIngredients(step, (list) => [...list]..removeAt(index));
+
+  /// The ingredient at [index] of the step at [step] moved to [to] within
+  /// that step; [to] is clamped to the step's list.
+  RecipeDraft moveIngredient(int step, int index, int to) =>
+      _changeIngredients(step, (list) {
+        final target = to.clamp(0, list.length - 1);
+        if (target == index) return list;
+        final moved = [...list];
+        moved.insert(target, moved.removeAt(index));
+        return moved;
+      });
+
+  RecipeDraft _changeIngredients(
+    int step,
+    List<IngredientDraft> Function(List<IngredientDraft> ingredients) change,
+  ) => copyWith(
+    steps: [
+      for (final (index, s) in steps.indexed)
+        index == step ? s.copyWith(ingredients: change(s.ingredients)) : s,
+    ],
+  );
 }
 
 /// A step of a [RecipeDraft]. [id] is `null` for a step that isn't saved
@@ -113,6 +169,12 @@ abstract class IngredientDraft with _$IngredientDraft {
     /// ingredient is created; later saves don't change it.
     String? originalText,
   }) = _IngredientDraft;
+
+  /// A section header ("Für den Teig") with [title], as Tandoor stores one:
+  /// the title as note, no food, unit or amount
+  /// (docs/TANDOOR_API.md#recipe-detail-and-step-text).
+  factory IngredientDraft.header(String title) =>
+      IngredientDraft(isHeader: true, noAmount: true, note: title.trim());
 
   factory IngredientDraft.fromIngredient(Ingredient ingredient) =>
       IngredientDraft(
