@@ -19,6 +19,7 @@ import '../common/markdown_text.dart';
 import '../common/offline_disabled.dart';
 import '../common/step_text.dart';
 import '../cook_log/cook_log_screen.dart';
+import '../editor/editor_screen.dart';
 import 'ingredient_lines.dart';
 import 'recipe_meta.dart';
 import 'recipe_providers.dart';
@@ -116,6 +117,8 @@ class _RecipeViewState extends State<_RecipeView> {
                               onCooked: () => context.push(
                                 cookLogLocation(recipe.id, _servings),
                               ),
+                              onEdit: () =>
+                                  context.push(editLocation(recipe.id)),
                             ),
                             SizedBox(height: t.space5),
                             Divider(height: 1, thickness: 1, color: t.line),
@@ -362,23 +365,28 @@ class _TitleBlock extends StatelessWidget {
   }
 }
 
-/// "Als gekocht eintragen", then plan, shop and edit: visible but disabled
-/// until their milestones. All of them are disabled while offline.
+/// "Als gekocht eintragen", then plan, shop and edit. Plan and shop are
+/// visible but disabled until their milestones. All of them are disabled
+/// while offline.
 class _WriteActions extends ConsumerWidget {
-  const _WriteActions({required this.onCooked});
+  const _WriteActions({required this.onCooked, required this.onEdit});
 
   /// Opens the cook log screen for the chosen servings.
   final VoidCallback onCooked;
+
+  /// Opens the editor.
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
     final l10n = context.l10n;
     final offline = ref.watch(isOfflineProvider);
+    // Plan and shop aren't built yet, so they are disabled online too.
     final actions = [
-      (Icons.calendar_today_outlined, l10n.recipePlan),
-      (Icons.shopping_cart_outlined, l10n.recipeShop),
-      (Icons.edit_outlined, l10n.recipeEdit),
+      (Icons.calendar_today_outlined, l10n.recipePlan, null),
+      (Icons.shopping_cart_outlined, l10n.recipeShop, null),
+      (Icons.edit_outlined, l10n.recipeEdit, onEdit),
     ];
 
     return Column(
@@ -396,17 +404,17 @@ class _WriteActions extends ConsumerWidget {
         SizedBox(height: t.space2),
         Row(
           children: [
-            for (final (index, (icon, label)) in actions.indexed) ...[
+            for (final (index, (icon, label, onPressed))
+                in actions.indexed) ...[
               if (index > 0) SizedBox(width: t.space2),
               Expanded(
                 child: OfflineDisabled(
-                  // Not built yet, so disabled online too.
-                  builder: (context, _) => PillButton(
+                  builder: (context, enabled) => PillButton(
                     label: label,
                     icon: icon,
                     kind: PillButtonKind.secondary,
                     compact: true,
-                    onPressed: null,
+                    onPressed: enabled ? onPressed : null,
                   ),
                 ),
               ),

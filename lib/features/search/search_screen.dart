@@ -17,6 +17,8 @@ import '../../domain/models/recipe_sort.dart';
 import '../../domain/services/scaling_service.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
+import '../common/offline_disabled.dart';
+import '../editor/editor_screen.dart';
 import '../recipe/recipe_meta.dart';
 import 'filter_picker_sheet.dart';
 import 'history_filters.dart';
@@ -126,6 +128,16 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           ),
                         ),
                       ),
+                      OfflineDisabled(
+                        builder: (context, enabled) => RoundIconButton(
+                          icon: Icons.add_rounded,
+                          label: l10n.searchNewRecipe,
+                          onPressed: enabled
+                              ? () => context.push(newRecipeLocation)
+                              : null,
+                        ),
+                      ),
+                      SizedBox(width: t.space2),
                       // Moves to the settings screen once it exists.
                       RoundIconButton(
                         icon: Icons.logout_rounded,

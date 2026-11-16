@@ -8,6 +8,7 @@ import '../domain/models/session.dart';
 import '../features/auth/login_screen.dart';
 import '../features/cook_log/cook_log_screen.dart';
 import '../features/cooking/cooking_screen.dart';
+import '../features/editor/editor_screen.dart';
 import '../features/recipe/recipe_screen.dart';
 import '../features/search/search_location.dart';
 import '../features/search/search_screen.dart';
@@ -37,6 +38,11 @@ GoRouter router(Ref ref) {
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: loadingPath, builder: (context, state) => const Scaffold()),
+      // Before '/recipe/:id', which would take "new" for an id.
+      GoRoute(
+        path: newRecipeLocation,
+        builder: (context, state) => const EditorScreen(),
+      ),
       GoRoute(
         path: '/recipe/:id',
         redirect: (context, state) =>
@@ -59,6 +65,11 @@ GoRouter router(Ref ref) {
               recipeId: int.parse(state.pathParameters['id']!),
               servings: _servings(state),
             ),
+          ),
+          GoRoute(
+            path: 'edit',
+            builder: (context, state) =>
+                EditorScreen(recipeId: int.parse(state.pathParameters['id']!)),
           ),
         ],
       ),
