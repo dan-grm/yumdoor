@@ -95,8 +95,7 @@ class EditorField extends StatelessWidget {
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(_maxDigits),
               ],
-              if (maxLength != null)
-                LengthLimitingTextInputFormatter(maxLength),
+              if (maxLength != null) CodePointLimitFormatter(maxLength),
             ],
             style: t.bodyL.copyWith(color: t.ink),
             cursorColor: t.sage,
@@ -174,4 +173,24 @@ InputDecoration editorInputDecoration(
     errorBorder: border(t.danger),
     focusedErrorBorder: border(t.danger),
   );
+}
+
+/// Keeps a field at most [max] code points long, as Tandoor counts its
+/// `max_length` (an emoji family is one character but seven code points).
+/// Edits that make a too long text shorter are let through.
+class CodePointLimitFormatter extends TextInputFormatter {
+  CodePointLimitFormatter(this.max);
+
+  final int max;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final length = newValue.text.runes.length;
+    return length <= max || length < oldValue.text.runes.length
+        ? newValue
+        : oldValue;
+  }
 }

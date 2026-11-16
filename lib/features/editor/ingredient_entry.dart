@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/failures.dart';
@@ -11,6 +10,7 @@ import '../common/failure_view.dart';
 import '../common/offline_disabled.dart';
 import 'editor_controller.dart';
 import 'editor_field.dart';
+import 'editor_sheet.dart';
 import 'ingredient_sheets.dart';
 
 /// The name an ingredient row shows: its food, or for a line without food
@@ -76,6 +76,7 @@ class _IngredientEntryState extends ConsumerState<IngredientEntry> {
       final added = await ref
           .read(recipeEditorProvider(widget.recipeId).notifier)
           .addLine(line, step: widget.step);
+      if (!mounted) return;
       if (added != null) {
         _controller.clear();
         message = added.food == null
@@ -131,9 +132,7 @@ class _IngredientEntryState extends ConsumerState<IngredientEntry> {
                       readOnly: _busy,
                       textInputAction: TextInputAction.done,
                       inputFormatters: [
-                        LengthLimitingTextInputFormatter(
-                          ingredientNoteMaxLength,
-                        ),
+                        CodePointLimitFormatter(ingredientNoteMaxLength),
                       ],
                       onSubmitted: (_) => _submit(),
                       // Keeps the focus in the field for the next line.

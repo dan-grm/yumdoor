@@ -87,11 +87,13 @@ class RecipeEditor extends _$RecipeEditor {
     );
   }
 
-  /// Changes the draft. Ignored while loading or saving.
-  void edit(RecipeDraft Function(RecipeDraft draft) change) {
+  /// Changes the draft. Ignored while loading or saving; returns whether
+  /// the change was made.
+  bool edit(RecipeDraft Function(RecipeDraft draft) change) {
     final current = state.value;
-    if (current == null || current.saving) return;
+    if (current == null || current.saving) return false;
     state = AsyncData(current._copyWith(draft: change(current.draft)));
+    return true;
   }
 
   /// Adds [keyword] to the draft unless it is there already.
@@ -123,9 +125,8 @@ class RecipeEditor extends _$RecipeEditor {
     final parsed = await ref.read(ingredientParserProvider).parse(line);
     if (!ref.mounted) return null;
     final ingredient = parsed.toDraft();
-    final before = state.value;
-    edit((draft) => draft.addIngredient(ingredient, step: step));
-    return identical(before, state.value) ? null : ingredient;
+    final added = edit((draft) => draft.addIngredient(ingredient, step: step));
+    return added ? ingredient : null;
   }
 
   /// Adds a section header with [title] at the end of the step at [step],

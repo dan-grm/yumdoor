@@ -116,14 +116,14 @@ String _stepTitle(BuildContext context, StepDraft step, int index) {
   return name.isEmpty ? number : '$number · $name';
 }
 
-/// [amount] as it is saved: `½` and `1½` where that is exact, else the
-/// number itself (`1.234,5`), not rounded for cooking like on the recipe
-/// screen.
+/// [amount] as it is saved, as the edit sheet shows it: `½` and `1½` where
+/// that is exact, else the number itself without thousands separators
+/// (`1234,5`), not rounded for cooking like on the recipe screen.
 String _amount(LocaleFormat format, double amount) {
   final quantity = Quantity.of(amount);
   return quantity.value == amount
       ? format.quantity(quantity)
-      : format.amount(amount);
+      : format.amountInput(amount);
 }
 
 enum _Action { edit, up, down, delete }

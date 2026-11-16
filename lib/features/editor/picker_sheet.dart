@@ -15,6 +15,7 @@ import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import '../common/offline_disabled.dart';
 import '../search/search_providers.dart';
+import 'editor_sheet.dart';
 
 /// Share of the screen height the picker may take.
 const _maxHeightFactor = 0.8;
@@ -96,19 +97,7 @@ final class _PickerConfig<T extends Object> {
 Future<T?> _showPicker<T extends Object>(
   BuildContext context,
   _PickerConfig<T> config,
-) {
-  final t = context.tokens;
-  return showModalBottomSheet<T>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    backgroundColor: t.surface,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(t.radiusL)),
-    ),
-    builder: (context) => _PickerSheet<T>(config: config),
-  );
-}
+) => showEditorSheet<T>(context, (context) => _PickerSheet<T>(config: config));
 
 class _PickerSheet<T extends Object> extends ConsumerStatefulWidget {
   const _PickerSheet({required this.config});

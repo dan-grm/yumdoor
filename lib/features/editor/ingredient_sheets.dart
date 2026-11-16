@@ -7,6 +7,7 @@ import '../../domain/services/amount_input.dart';
 import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import 'editor_field.dart';
+import 'editor_sheet.dart';
 import 'picker_sheet.dart';
 
 /// Most characters of an ingredient's note, and so of a section header and
@@ -29,61 +30,6 @@ Future<IngredientDraft?> showIngredientSheet(
 Future<String?> showHeaderSheet(BuildContext context, {String title = ''}) =>
     showEditorSheet(context, (context) => _HeaderSheet(initial: title));
 
-/// A bottom sheet of the editor that grows with its content and stays above
-/// the keyboard.
-Future<T?> showEditorSheet<T>(BuildContext context, WidgetBuilder builder) {
-  final t = context.tokens;
-  return showModalBottomSheet<T>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    backgroundColor: t.surface,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(t.radiusL)),
-    ),
-    builder: builder,
-  );
-}
-
-/// The frame of an editor sheet: [title], then [children], scrolling when
-/// the keyboard leaves too little room.
-class EditorSheetFrame extends StatelessWidget {
-  const EditorSheetFrame({
-    super.key,
-    required this.title,
-    required this.children,
-  });
-
-  final String title;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.tokens;
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(t.space5, 0, t.space5, t.space4),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: t.space4,
-            children: [
-              Semantics(
-                header: true,
-                child: Text(title, style: t.titleM.copyWith(color: t.ink)),
-              ),
-              ...children,
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _IngredientSheet extends StatefulWidget {
   const _IngredientSheet({required this.initial});
 
@@ -100,16 +46,17 @@ class _IngredientSheetState extends State<_IngredientSheet> {
   late NamedRef? _unit = widget.initial.unit;
   late bool _noAmount = widget.initial.noAmount;
   var _amountInvalid = false;
-  var _amountFilled = false;
+
+  /// The amount as first shown; `null` until it is.
+  String? _shownAmount;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Formatted in the locale, which is only known here.
-    if (!_amountFilled) {
-      _amountFilled = true;
+    if (_shownAmount == null) {
       final amount = widget.initial.amount;
-      _amount.text = amount > 0
+      _amount.text = _shownAmount = amount > 0
           ? LocaleFormat.of(context).amountInput(amount)
           : '';
     }
@@ -137,7 +84,11 @@ class _IngredientSheetState extends State<_IngredientSheet> {
   }
 
   void _apply() {
-    final amount = parseAmount(_amount.text);
+    // Unchanged, the amount stays exact, also one shown rounded (⅓) or
+    // with three decimals, which parseAmount refuses as ambiguous.
+    final amount = _amount.text == _shownAmount
+        ? widget.initial.amount
+        : parseAmount(_amount.text);
     if (amount == null && !_noAmount) {
       setState(() => _amountInvalid = true);
       return;

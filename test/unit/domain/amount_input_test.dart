@@ -7,8 +7,14 @@ void main() {
     expect(parseAmount('1,5'), 1.5);
     expect(parseAmount('1.5'), 1.5);
     expect(parseAmount(' 0,25 '), 0.25);
-    // A point is never a thousands separator.
-    expect(parseAmount('1.000'), 1);
+    expect(parseAmount('0,125'), 0.125);
+    expect(parseAmount('12,25'), 12.25);
+  });
+
+  test('three decimals after a number other than 0 are ambiguous', () {
+    // A thousands separator or a decimal one? Either reading may be wrong.
+    expect(parseAmount('1.000'), isNull);
+    expect(parseAmount('1,250'), isNull);
   });
 
   test('reads fractions and glyphs', () {
@@ -37,6 +43,9 @@ void main() {
       '200 g',
       '1,2,3',
       '/2',
+      '99999999999999999999/2',
+      '1/99999999999999999999',
+      '1234567',
     ]) {
       expect(parseAmount(text), isNull, reason: text);
     }

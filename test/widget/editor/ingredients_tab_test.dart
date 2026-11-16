@@ -14,6 +14,7 @@ import 'package:yumdoor/domain/models/unit.dart';
 import 'package:yumdoor/features/editor/editor_screen.dart';
 import 'package:yumdoor/features/editor/ingredient_entry.dart';
 import 'package:yumdoor/features/editor/ingredient_sheets.dart';
+import 'package:yumdoor/features/editor/ingredients_tab.dart';
 import 'package:yumdoor/features/recipe/recipe_screen.dart';
 import 'package:yumdoor/features/search/search_providers.dart';
 
@@ -368,6 +369,64 @@ void main() {
 
     expect(find.text('Für den Walnusskrokant mit Ahornsirup'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('the entry sheet adds lines to one step', (tester) async {
+    await pumpTab(tester);
+
+    showIngredientEntrySheet(
+      tester.element(find.byType(IngredientsTab)),
+      recipeId: 7,
+      step: 0,
+    ).ignore();
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text('Zutat hinzufügen'),
+      ),
+      findsOneWidget,
+    );
+    await tester.enterText(entryField().last, '200 g Karotten');
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+    await tap(tester, find.text('Fertig'));
+
+    // Now three steps have ingredients; the first one comes first.
+    expect(find.text('SCHRITT 1'), findsOneWidget);
+    expect(rowNames(tester).first, 'Karotte');
+    expect(rowNames(tester), hasLength(7));
+  });
+
+  testWidgets('an unchanged amount stays exact', (tester) async {
+    recipes = FakeRecipeRepository([
+      ofenkarotten.copyWith(
+        steps: [
+          for (final step in ofenkarotten.steps)
+            step.copyWith(
+              ingredients: [
+                for (final i in step.ingredients)
+                  i.id == 2 ? i.copyWith(amount: 1.125) : i,
+              ],
+            ),
+        ],
+      ),
+    ]);
+    await pumpTab(tester);
+    expect(row(tester, 'Olivenöl').amount, '1,125 EL');
+
+    await tap(tester, find.text('Olivenöl'));
+    final fields = find.descendant(
+      of: find.byType(BottomSheet),
+      matching: find.byType(TextField),
+    );
+    await tester.enterText(fields.last, 'kaltgepresst');
+    await tap(tester, find.text('Übernehmen'));
+    await tap(tester, find.text('Speichern'));
+
+    final saved = recipes.saves.single.draft.steps[1].ingredients[1];
+    expect(saved.amount, 1.125);
+    expect(saved.note, 'kaltgepresst');
   });
 
   group('goldens', skip: goldenSkip, () {
