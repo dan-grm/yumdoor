@@ -4,6 +4,7 @@ import 'package:tandoor_api/tandoor_api.dart' as api;
 import '../../domain/repositories/book_repository.dart';
 import '../../domain/repositories/cook_log_repository.dart';
 import '../../domain/repositories/food_repository.dart';
+import '../../domain/repositories/ingredient_parser.dart';
 import '../../domain/repositories/keyword_repository.dart';
 import '../../domain/repositories/recipe_repository.dart';
 import '../../domain/repositories/saved_filter_repository.dart';
@@ -18,6 +19,7 @@ import '../cache/saved_filter_cache.dart';
 import 'tandoor_book_repository.dart';
 import 'tandoor_cook_log_repository.dart';
 import 'tandoor_food_repository.dart';
+import 'tandoor_ingredient_parser.dart';
 import 'tandoor_keyword_repository.dart';
 import 'current_user.dart';
 import 'tandoor_recipe_repository.dart';
@@ -78,6 +80,7 @@ class TandoorRepositories {
       foods: TandoorFoodRepository(apiClient),
       keywords: TandoorKeywordRepository(apiClient),
       units: TandoorUnitRepository(apiClient),
+      ingredientParser: TandoorIngredientParser(apiClient),
       cookLogs: cookLogs,
       books: TandoorBookRepository(apiClient),
       users: TandoorUserRepository(apiClient),
@@ -95,6 +98,7 @@ class TandoorRepositories {
     required this.foods,
     required this.keywords,
     required this.units,
+    required this.ingredientParser,
     required this.cookLogs,
     required this.books,
     required this.users,
@@ -107,6 +111,7 @@ class TandoorRepositories {
   final FoodRepository foods;
   final KeywordRepository keywords;
   final UnitRepository units;
+  final IngredientParser ingredientParser;
   final CookLogRepository cookLogs;
   final BookRepository books;
   final UserRepository users;
