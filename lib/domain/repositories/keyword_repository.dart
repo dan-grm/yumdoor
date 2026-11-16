@@ -14,4 +14,9 @@ abstract interface class KeywordRepository {
 
   /// Throws [NotFoundFailure] if the keyword doesn't exist.
   Future<Keyword> fetchKeyword(int id);
+
+  /// Creates a keyword called [name] (trimmed). If a keyword with that name
+  /// already exists (ignoring case), returns it unchanged instead.
+  /// Fails with an [ArgumentError] if [name] is blank.
+  Future<Keyword> create(String name);
 }

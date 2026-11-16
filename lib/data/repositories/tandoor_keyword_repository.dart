@@ -34,4 +34,15 @@ class TandoorKeywordRepository implements KeywordRepository {
     final response = await _api.apiKeywordRetrieve(id: id);
     return requireBody(response.data).toDomain();
   });
+
+  @override
+  Future<Keyword> create(String name) async {
+    final trimmed = requireName(name);
+    return guardRequest(() async {
+      final response = await _api.apiKeywordCreate(
+        keyword: api.Keyword((b) => b..name = trimmed),
+      );
+      return requireBody(response.data).toDomain();
+    });
+  }
 }

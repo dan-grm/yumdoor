@@ -214,9 +214,14 @@ search preference** (`lookup`, or `trigram` on the model) it doesn't filter at a
 similarity (`FuzzyFilterMixin`, `cookbook/views/api.py:291`), so `query=Karotte` can return `Kartoffel`. The
 universal search keeps only foods and keywords whose name contains the text.
 `parent` is read-only; the tree is changed with `PUT /api/food/{id}/move/{parent_id}/` (`0` = root).
-`POST /api/food/`, `/api/keyword/`, `/api/unit/` and the nested writes in a recipe are get-or-create **by name**
-(case-insensitive for foods and units): if the name exists, the existing object is returned and the other fields
-in the request are ignored.
+`POST /api/food/`, `/api/keyword/`, `/api/unit/` and the nested writes in a recipe are get-or-create **by name**,
+ignoring case (foods and units also match the plural name; keywords go through `TreeManager.get_or_create`,
+`cookbook/models.py:73`, which uses `name__iexact`): if the name exists, the existing object is returned and the
+other fields in the request are ignored. The status is `201` either way, so the response doesn't say whether
+anything was created. A new unit gets its name as plural name too (`serializer.py:745`). The unit list
+(`GET /api/unit/?query=`) uses the same `FuzzyFilterMixin` as foods and keywords; Yumdoor's unit autocomplete
+keeps only units whose name contains the text and asks for the maximum page size (`200`) when there
+is a text, since fuzzy ordering of a short text puts matches anywhere in the list.
 
 ## Recipe detail and step text
 

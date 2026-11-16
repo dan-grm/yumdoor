@@ -681,6 +681,9 @@ class _AllFoods implements FoodRepository {
 
   @override
   Future<Food> fetchFood(int id) => throw UnimplementedError();
+
+  @override
+  Future<Food> create(String name) => throw UnimplementedError();
 }
 
 /// Answers text searches with every recipe, with their foods, like the
