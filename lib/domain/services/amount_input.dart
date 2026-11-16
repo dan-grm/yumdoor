@@ -41,7 +41,7 @@ double? parseAmount(String text) {
 /// (after a space) or a glyph `½`. Digits are limited so that every number
 /// parses.
 final _amount = RegExp(
-  r'^(?:(\d{1,6})(?:[.,](\d{1,3}))?)?'
+  r'^(?:(\d{1,6})(?:[.,](\d{1,6}))?)?'
   r'(?:(?:(?<=\d)\s+|^)(\d{1,3})\s*/\s*(\d{1,3}))?'
   r'\s*([½¼¾⅓⅔⅛])?$',
 );

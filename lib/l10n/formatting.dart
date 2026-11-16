@@ -21,11 +21,11 @@ class LocaleFormat {
     _locale,
   )..maximumFractionDigits = 2).format(value);
 
-  /// An amount to edit in a text field: up to three decimals, without
+  /// An amount to edit in a text field: up to six decimals, without
   /// thousands separators, so `parseAmount` reads it back (`1250`, `1,5`).
   String amountInput(num value) =>
       (NumberFormat.decimalPattern(_locale)
-            ..maximumFractionDigits = 3
+            ..maximumFractionDigits = 6
             ..turnOffGrouping())
           .format(value);
 

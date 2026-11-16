@@ -178,10 +178,10 @@ InputDecoration editorInputDecoration(
 /// Keeps a field at most [max] code points long, as Tandoor counts its
 /// `max_length` (an emoji family is one character but seven code points).
 ///
-/// Like [LengthLimitingTextInputFormatter]: text that gets too long is cut
-/// to the limit (a long paste keeps its start), a full field takes no more,
-/// edits that make a too long text shorter are let through, and an IME
-/// composition is only limited once it is committed.
+/// Like [LengthLimitingTextInputFormatter] with
+/// [MaxLengthEnforcement.truncateAfterCompositionEnds]: a full field takes no
+/// more, text that gets too long is cut to the limit (a long paste keeps
+/// its start), and an IME composition is cut once it is committed.
 class CodePointLimitFormatter extends TextInputFormatter {
   CodePointLimitFormatter(this.max);
 
@@ -192,11 +192,11 @@ class CodePointLimitFormatter extends TextInputFormatter {
     TextEditingValue oldValue,
     TextEditingValue newValue,
   ) {
+    if (newValue.text.runes.length <= max) return newValue;
+    if (oldValue.text.runes.length == max && !oldValue.composing.isValid) {
+      return oldValue;
+    }
     if (newValue.composing.isValid) return newValue;
-    final length = newValue.text.runes.length;
-    final oldLength = oldValue.text.runes.length;
-    if (length <= max || length < oldLength) return newValue;
-    if (oldLength >= max) return oldValue;
     final text = String.fromCharCodes(newValue.text.runes.take(max));
     return TextEditingValue(
       text: text,

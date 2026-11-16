@@ -262,6 +262,28 @@ void main() {
     expect(find.byType(RecipeScreen), findsOneWidget);
   });
 
+  testWidgets('a line left in the field that fails stops the save', (
+    tester,
+  ) async {
+    await pumpTab(tester);
+    parser.failure = const ServerFailure(statusCode: 500);
+
+    await tester.ensureVisible(entryField());
+    await tester.enterText(entryField(), '200 g Karotten');
+    await tap(tester, find.text('Speichern'));
+
+    expect(recipes.saves, isEmpty);
+    expect(find.byType(EditorScreen), findsOneWidget);
+    expect(
+      find.text('Nicht hinzugefügt. Der Server hat einen Fehler gemeldet.'),
+      findsOneWidget,
+    );
+    expect(
+      tester.widget<TextField>(entryField()).controller!.text,
+      '200 g Karotten',
+    );
+  });
+
   testWidgets('a failed parse keeps the line and says why', (tester) async {
     await pumpTab(tester);
     parser.failure = const ServerFailure(statusCode: 500);

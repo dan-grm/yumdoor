@@ -38,10 +38,16 @@ void main() {
       formatter.formatEditUpdate(const TextEditingValue(text: 'ab'), composing),
       composing,
     );
+    // Committed, still over the limit, from a composing value over it too.
+    expect(
+      formatter
+          .formatEditUpdate(composing, const TextEditingValue(text: 'abcde'))
+          .text,
+      'abc',
+    );
   });
 
-  test('a too long text can still be shortened', () {
-    expect(format('abcde', 'abcd').text, 'abcd');
-    expect(format('abcde', 'abcdef').text, 'abcde');
+  test('a too long text is cut to the limit', () {
+    expect(format('abcde', 'abcd').text, 'abc');
   });
 }

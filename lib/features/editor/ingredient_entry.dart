@@ -55,45 +55,56 @@ class _IngredientEntryState extends ConsumerState<IngredientEntry> {
   String? _message;
   var _messageIsError = false;
 
-  /// Whether the entry is being taken out of the tree, when its field loses
-  /// the focus without the user leaving it.
-  var _leaving = false;
+  /// The line being added, which completes with whether that worked.
+  Future<bool>? _adding;
+
+  /// While the editor is saving the line typed here before it saves.
+  var _finishing = false;
+
+  late final void Function() _removePendingLine;
 
   @override
   void initState() {
     super.initState();
-    _focus.addListener(_onFocusChange);
-  }
-
-  @override
-  void activate() {
-    super.activate();
-    _leaving = false;
-  }
-
-  @override
-  void deactivate() {
-    _leaving = true;
-    super.deactivate();
+    _removePendingLine = ref
+        .read(recipeEditorProvider(widget.recipeId).notifier)
+        .addPendingLine(_finish);
   }
 
   @override
   void dispose() {
-    _focus.removeListener(_onFocusChange);
+    _removePendingLine();
     _controller.dispose();
     _focus.dispose();
     super.dispose();
   }
 
-  /// A line is finished when the field loses the focus, too, as when
-  /// "Speichern" is tapped right after typing it.
-  void _onFocusChange() {
-    if (!_focus.hasFocus && !_leaving && mounted) _submit(keepFocus: false);
+  /// Adds what is typed (or still being added) before the recipe is saved.
+  /// Returns `false` if it can't be added; this entry then says why.
+  Future<bool> _finish() async {
+    _finishing = true;
+    try {
+      if (_adding case final adding?) {
+        if (!await adding) return false;
+      }
+      return mounted ? await _submit() : true;
+    } finally {
+      _finishing = false;
+    }
   }
 
-  Future<void> _submit({bool keepFocus = true}) async {
+  /// Adds the typed line; completes with `false` if that failed. A line
+  /// already being added is waited for instead.
+  Future<bool> _submit() {
+    if (_adding case final adding?) return adding;
     final line = _controller.text;
-    if (_busy || line.trim().isEmpty) return;
+    if (line.trim().isEmpty) return Future.value(true);
+    final adding = _add(line);
+    _adding = adding;
+    return adding.whenComplete(() => _adding = null);
+  }
+
+  Future<bool> _add(String line) async {
     final l10n = context.l10n;
     setState(() {
       _busy = true;
@@ -105,7 +116,7 @@ class _IngredientEntryState extends ConsumerState<IngredientEntry> {
       final added = await ref
           .read(recipeEditorProvider(widget.recipeId).notifier)
           .addLine(line, step: widget.step);
-      if (!mounted) return;
+      if (!mounted) return true;
       if (added != null) {
         _controller.clear();
         message = added.food == null && added.note == line.trim()
@@ -113,18 +124,20 @@ class _IngredientEntryState extends ConsumerState<IngredientEntry> {
             : l10n.ingredientEntryAdded(ingredientName(context, added));
       }
     } on Object catch (error) {
-      if (!mounted) return;
+      if (!mounted) return false;
       final failure = error is Failure ? error : ServerFailure(cause: error);
       message = l10n.ingredientEntryFailed(failureMessage(context, failure));
       isError = true;
     }
-    if (!mounted) return;
+    if (!mounted) return !isError;
     setState(() {
       _busy = false;
       _message = message;
       _messageIsError = isError;
     });
-    if (keepFocus) _focus.requestFocus();
+    // For the next line; not while the editor is about to save and leave.
+    if (!_finishing) _focus.requestFocus();
+    return !isError;
   }
 
   @override

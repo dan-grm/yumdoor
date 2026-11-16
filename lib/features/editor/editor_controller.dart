@@ -118,28 +118,31 @@ class RecipeEditor extends _$RecipeEditor {
   /// A line the parser can't split is added all the same, with its text as
   /// note and no food ([ParsedIngredient.unparsed]). Throws the [Failure] of
   /// a request that fails (offline, …); nothing is added then.
-  ///
-  /// A save started meanwhile waits for the line, so it isn't lost.
   Future<IngredientDraft?> addLine(String line, {int? step}) async {
     if (line.trim().isEmpty) return null;
     final current = state.value;
     if (current == null || current.saving) return null;
-    final parsing = ref.read(ingredientParserProvider).parse(line);
-    _parsing.add(parsing);
-    final ParsedIngredient parsed;
-    try {
-      parsed = await parsing;
-    } finally {
-      _parsing.remove(parsing);
-    }
+    final parsed = await ref.read(ingredientParserProvider).parse(line);
     if (!ref.mounted) return null;
     final ingredient = parsed.toDraft();
     final added = edit((draft) => draft.addIngredient(ingredient, step: step));
     return added ? ingredient : null;
   }
 
-  /// Lines being parsed by [addLine].
-  final _parsing = <Future<ParsedIngredient>>{};
+  /// Registers [finish] to be awaited by [save] before it saves: an
+  /// ingredient entry adds the line typed into it (or still being parsed)
+  /// and returns whether that worked. Returns the function that unregisters
+  /// it.
+  ///
+  /// So a line typed right before "Speichern" is saved too, and a line that
+  /// can't be added stops the save, with the entry saying why, instead of
+  /// being lost.
+  void Function() addPendingLine(Future<bool> Function() finish) {
+    _pendingLines.add(finish);
+    return () => _pendingLines.remove(finish);
+  }
+
+  final _pendingLines = <Future<bool> Function()>{};
 
   /// Adds a section header with [title] at the end of the step at [step],
   /// or of the last step if `null`. A blank title adds nothing.
@@ -168,17 +171,14 @@ class RecipeEditor extends _$RecipeEditor {
   /// at their fields, or if saving failed ([EditorState.failure]), or while
   /// another save is under way.
   ///
-  /// Waits for lines still being parsed ([addLine]) first, so they are
-  /// saved with the draft.
+  /// Adds the lines typed into ingredient entries first
+  /// ([addPendingLine]); returns `null` without saving if one can't be
+  /// added.
   Future<Recipe?> save() async {
-    while (_parsing.isNotEmpty) {
-      // A line that fails isn't added; addLine's caller says so.
-      await Future.wait([
-        for (final parsing in _parsing)
-          parsing.then<void>((_) {}, onError: (Object _) {}),
-      ]);
-      // addLine awaited each line first, so it has added it by now.
-      if (!ref.mounted) return null;
+    if (state.value?.saving ?? true) return null;
+    for (final finish in [..._pendingLines]) {
+      final added = await finish();
+      if (!ref.mounted || !added) return null;
     }
     final current = state.value;
     if (current == null || current.saving) return null;

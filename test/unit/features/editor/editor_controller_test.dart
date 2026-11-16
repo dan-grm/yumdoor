@@ -308,54 +308,30 @@ void main() {
       expect(saved.steps[2].ingredients.last, karotten);
     });
 
-    test('a save waits for a line still being parsed', () async {
-      final gate = Completer<void>();
-      parser = _SlowParser(parser, gate.future);
-      container = containerWith(recipes);
+    test('a save first adds the lines typed into entries', () async {
       final controller = await editor(7);
+      final remove = controller.addPendingLine(
+        () async => await controller.addLine('200 g Karotten') != null,
+      );
 
-      final adding = controller.addLine('200 g Karotten');
-      final saving = controller.save();
-      await Future<void>.delayed(Duration.zero);
-      expect(recipes.saves, isEmpty);
-      gate.complete();
-
-      expect(await adding, karotten);
-      expect(await saving, isNotNull);
+      expect(await controller.save(), isNotNull);
       expect(recipes.saves.single.draft.steps[2].ingredients.last, karotten);
+
+      // Unregistered, it isn't asked again.
+      remove();
+      await controller.save();
+      expect(parser.parsed, hasLength(1));
     });
 
-    test('a save goes on when a line being parsed fails', () async {
-      final gate = Completer<void>();
-      parser = _SlowParser(parser, gate.future)
-        ..failure = const OfflineFailure();
-      container = containerWith(recipes);
+    test('a line that cannot be added stops the save', () async {
       final controller = await editor(7);
+      controller.addPendingLine(() async => false);
 
-      final adding = controller.addLine('200 g Karotten');
-      final saving = controller.save();
-      gate.complete();
-
-      await expectLater(adding, throwsA(isA<OfflineFailure>()));
-      expect(await saving, isNotNull);
-      expect(recipes.saves.single.draft, RecipeDraft.fromRecipe(ofenkarotten));
+      expect(await controller.save(), isNull);
+      expect(recipes.saves, isEmpty);
+      expect(state(7).saving, isFalse);
     });
   });
-}
-
-/// Parses like [_inner] once [_gate] completes.
-class _SlowParser extends FakeIngredientParser {
-  _SlowParser(this._inner, this._gate);
-
-  final FakeIngredientParser _inner;
-  final Future<void> _gate;
-
-  @override
-  Future<ParsedIngredient> parse(String line) async {
-    await _gate;
-    if (failure case final failure?) throw failure;
-    return _inner.parse(line);
-  }
 }
 
 /// Saves through [_inner] once [_gate] completes, or throws [_error].
