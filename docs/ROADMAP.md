@@ -49,6 +49,10 @@ An end-to-end slice through every layer, deployable as a PWA.
 - Image upload (camera on phones, file/drag-drop on desktop)
 - Desktop-friendly editor: keyboard navigation, unsaved-changes guard, autosave of drafts locally
 - Delete recipe with confirmation
+- Concurrent changes: the last save wins. No conflict check before saving; a save overwrites what was changed in
+  Tandoor meanwhile, like Tandoor's own editor (decided 2026-11-16)
+- Zutaten tab: ingredients are grouped per step when more than one step has ingredients, otherwise one flat list;
+  new lines go to the last step (decided 2026-11-16)
 
 ## M4 — Meal planning and shopping list
 
