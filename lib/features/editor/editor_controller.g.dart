@@ -11,8 +11,9 @@ part of 'editor_controller.dart';
 /// The recipe editor's state: the single source for all its tabs.
 ///
 /// [recipeId] is the recipe to edit, `null` for a new one. Loading fetches
-/// the recipe fresh; failures are shown with a retry button instead of
-/// retrying on their own.
+/// the recipe fresh from the server and fails with [OfflineFailure] rather
+/// than edit a cached copy; failures are shown with a retry button instead
+/// of retrying on their own.
 ///
 /// Saving overwrites the recipe as it is on the server: the last save wins,
 /// without checking for changes made elsewhere meanwhile, like Tandoor's own
@@ -24,8 +25,9 @@ final recipeEditorProvider = RecipeEditorFamily._();
 /// The recipe editor's state: the single source for all its tabs.
 ///
 /// [recipeId] is the recipe to edit, `null` for a new one. Loading fetches
-/// the recipe fresh; failures are shown with a retry button instead of
-/// retrying on their own.
+/// the recipe fresh from the server and fails with [OfflineFailure] rather
+/// than edit a cached copy; failures are shown with a retry button instead
+/// of retrying on their own.
 ///
 /// Saving overwrites the recipe as it is on the server: the last save wins,
 /// without checking for changes made elsewhere meanwhile, like Tandoor's own
@@ -35,8 +37,9 @@ final class RecipeEditorProvider
   /// The recipe editor's state: the single source for all its tabs.
   ///
   /// [recipeId] is the recipe to edit, `null` for a new one. Loading fetches
-  /// the recipe fresh; failures are shown with a retry button instead of
-  /// retrying on their own.
+  /// the recipe fresh from the server and fails with [OfflineFailure] rather
+  /// than edit a cached copy; failures are shown with a retry button instead
+  /// of retrying on their own.
   ///
   /// Saving overwrites the recipe as it is on the server: the last save wins,
   /// without checking for changes made elsewhere meanwhile, like Tandoor's own
@@ -77,13 +80,14 @@ final class RecipeEditorProvider
   }
 }
 
-String _$recipeEditorHash() => r'a67886a38b93b96f6957fd0b0c4fbfd856201752';
+String _$recipeEditorHash() => r'c7b4fa4f5901b1fcd30dac7d71edd3a6e8f59889';
 
 /// The recipe editor's state: the single source for all its tabs.
 ///
 /// [recipeId] is the recipe to edit, `null` for a new one. Loading fetches
-/// the recipe fresh; failures are shown with a retry button instead of
-/// retrying on their own.
+/// the recipe fresh from the server and fails with [OfflineFailure] rather
+/// than edit a cached copy; failures are shown with a retry button instead
+/// of retrying on their own.
 ///
 /// Saving overwrites the recipe as it is on the server: the last save wins,
 /// without checking for changes made elsewhere meanwhile, like Tandoor's own
@@ -110,8 +114,9 @@ final class RecipeEditorFamily extends $Family
   /// The recipe editor's state: the single source for all its tabs.
   ///
   /// [recipeId] is the recipe to edit, `null` for a new one. Loading fetches
-  /// the recipe fresh; failures are shown with a retry button instead of
-  /// retrying on their own.
+  /// the recipe fresh from the server and fails with [OfflineFailure] rather
+  /// than edit a cached copy; failures are shown with a retry button instead
+  /// of retrying on their own.
   ///
   /// Saving overwrites the recipe as it is on the server: the last save wins,
   /// without checking for changes made elsewhere meanwhile, like Tandoor's own
@@ -127,8 +132,9 @@ final class RecipeEditorFamily extends $Family
 /// The recipe editor's state: the single source for all its tabs.
 ///
 /// [recipeId] is the recipe to edit, `null` for a new one. Loading fetches
-/// the recipe fresh; failures are shown with a retry button instead of
-/// retrying on their own.
+/// the recipe fresh from the server and fails with [OfflineFailure] rather
+/// than edit a cached copy; failures are shown with a retry button instead
+/// of retrying on their own.
 ///
 /// Saving overwrites the recipe as it is on the server: the last save wins,
 /// without checking for changes made elsewhere meanwhile, like Tandoor's own
