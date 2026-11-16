@@ -23,8 +23,10 @@ class TandoorUnitRepository implements UnitRepository {
     final response = await _api.apiUnitList(
       query: query.trim(),
       // With a fuzzy search preference Tandoor doesn't filter, it only orders
-      // by similarity, so ask for more and keep those that contain the text.
-      pageSize: matcher.isEmpty ? limit : limit * _fuzzyHeadroom,
+      // by similarity, and a short text is about as similar to every unit.
+      // A space has few units, so one page of the most Tandoor allows holds
+      // all of them; without fuzzy search the server sends only matches.
+      pageSize: matcher.isEmpty ? limit : _maxPageSize,
       cancelToken: cancelTokenFor(cancel),
     );
     return requireBody(response.data).results
@@ -34,7 +36,8 @@ class TandoorUnitRepository implements UnitRepository {
         .toList();
   });
 
-  static const _fuzzyHeadroom = 3;
+  /// `DefaultPagination.max_page_size` (`cookbook/views/api.py:224`).
+  static const _maxPageSize = 200;
 
   @override
   Future<Unit> create(String name) async {

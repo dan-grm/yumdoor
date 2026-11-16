@@ -1,5 +1,7 @@
 // Helpers shared by the mappers. They throw [FormatException] for data the
 // domain can't represent; `guardRequest` turns that into a `ServerFailure`.
+// [requireName] checks outgoing data instead and throws an [ArgumentError],
+// so call it before `guardRequest`.
 
 /// Every `id` in the generated client is nullable (see
 /// packages/tandoor_api/README.md), but the server always sends one.

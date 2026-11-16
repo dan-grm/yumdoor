@@ -557,7 +557,7 @@ void main() {
       expect(request.uri.path, '/tandoor/api/unit/');
       expect(request.uri.queryParameters['query'], 'l');
       // Room for fuzzy suggestions that get left out.
-      expect(request.uri.queryParameters['page_size'], '12');
+      expect(request.uri.queryParameters['page_size'], '200');
       expect(units.map((u) => u.name), ['l', 'clove', 'EL', 'ml']);
       expect(units.first.pluralName, 'l');
     });

@@ -1,5 +1,6 @@
 import 'package:yumdoor/core/cancellation.dart';
 import 'package:yumdoor/core/failures.dart';
+import 'package:yumdoor/data/mappers/mapping.dart' show requireName;
 import 'package:yumdoor/domain/models/food.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
 import 'package:yumdoor/domain/models/unit.dart';
@@ -39,7 +40,7 @@ class FakeFoodRepository implements FoodRepository {
 
   @override
   Future<Food> create(String name) async {
-    final trimmed = _requireName(name);
+    final trimmed = requireName(name);
     if (failure case final failure?) throw failure;
     created.add(trimmed);
     return _getOrCreate<Food>(
@@ -80,7 +81,7 @@ class FakeKeywordRepository implements KeywordRepository {
 
   @override
   Future<Keyword> create(String name) async {
-    final trimmed = _requireName(name);
+    final trimmed = requireName(name);
     if (failure case final failure?) throw failure;
     created.add(trimmed);
     return _getOrCreate<Keyword>(
@@ -119,7 +120,7 @@ class FakeUnitRepository implements UnitRepository {
 
   @override
   Future<Unit> create(String name) async {
-    final trimmed = _requireName(name);
+    final trimmed = requireName(name);
     if (failure case final failure?) throw failure;
     created.add(trimmed);
     return _getOrCreate<Unit>(
@@ -141,12 +142,6 @@ List<T> _complete<T>(
     .where((item) => name(item).toLowerCase().contains(query.toLowerCase()))
     .take(limit)
     .toList();
-
-String _requireName(String name) {
-  final trimmed = name.trim();
-  if (trimmed.isEmpty) throw ArgumentError.value(name, 'name', 'is blank');
-  return trimmed;
-}
 
 /// The item in [items] one of whose [names] is [name] ignoring case, or a new
 /// one from [make], added to [items] with the next free id.

@@ -220,8 +220,8 @@ ignoring case (foods and units also match the plural name; keywords go through `
 other fields in the request are ignored. The status is `201` either way, so the response doesn't say whether
 anything was created. A new unit gets its name as plural name too (`serializer.py:745`). The unit list
 (`GET /api/unit/?query=`) uses the same `FuzzyFilterMixin` as foods and keywords; Yumdoor's unit autocomplete
-keeps only units whose name contains the text (it asks for three times
-the limit, so fuzzy suggestions that don't contain it leave room for ones that do).
+keeps only units whose name contains the text and asks for the maximum page size (`200`) when there
+is a text, since fuzzy ordering of a short text puts matches anywhere in the list.
 
 ## Recipe detail and step text
 
