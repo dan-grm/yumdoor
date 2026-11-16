@@ -404,10 +404,10 @@ abstract class AppLocalizations {
   /// **'Bearbeiten'**
   String get recipeEdit;
 
-  /// Explains why the plan, shop and edit buttons are disabled.
+  /// Explains why the plan and shop buttons are disabled.
   ///
   /// In de, this message translates to:
-  /// **'Planen, Einkaufen und Bearbeiten kommen bald.'**
+  /// **'Planen und Einkaufen kommen bald.'**
   String get recipeActionsComingSoon;
 
   /// Heading of the ingredient list.
@@ -1279,6 +1279,222 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Nicht gespeichert. In Tandoor gibt es den Namen vielleicht schon – versuch einen anderen.'**
   String get searchSavedNameConflict;
+
+  /// Button on the search screen that opens the editor for a new recipe.
+  ///
+  /// In de, this message translates to:
+  /// **'Neues Rezept'**
+  String get searchNewRecipe;
+
+  /// Leaves the recipe editor without saving.
+  ///
+  /// In de, this message translates to:
+  /// **'Abbrechen'**
+  String get editorCancel;
+
+  /// Saves the recipe in the editor.
+  ///
+  /// In de, this message translates to:
+  /// **'Speichern'**
+  String get editorSave;
+
+  /// Accessible label of the save button while saving.
+  ///
+  /// In de, this message translates to:
+  /// **'Wird gespeichert …'**
+  String get editorSaving;
+
+  /// Title of the editor for an existing recipe; the recipe name is shown above it.
+  ///
+  /// In de, this message translates to:
+  /// **'Bearbeiten'**
+  String get editorTitleEdit;
+
+  /// Title of the editor for a new recipe.
+  ///
+  /// In de, this message translates to:
+  /// **'Neues Rezept'**
+  String get editorTitleNew;
+
+  /// Editor tab with the recipe's name, description, servings, times, keywords and source.
+  ///
+  /// In de, this message translates to:
+  /// **'Allgemein'**
+  String get editorTabGeneral;
+
+  /// Editor tab for the ingredients.
+  ///
+  /// In de, this message translates to:
+  /// **'Zutaten'**
+  String get editorTabIngredients;
+
+  /// Editor tab for the steps.
+  ///
+  /// In de, this message translates to:
+  /// **'Schritte'**
+  String get editorTabSteps;
+
+  /// Placeholder of the Zutaten and Schritte tabs until they are built.
+  ///
+  /// In de, this message translates to:
+  /// **'Das kommt bald. Bis dahin bleiben Zutaten und Schritte beim Speichern, wie sie sind.'**
+  String get editorTabComingSoon;
+
+  /// Label of the recipe name field.
+  ///
+  /// In de, this message translates to:
+  /// **'Name'**
+  String get editorName;
+
+  /// Label of the description field.
+  ///
+  /// In de, this message translates to:
+  /// **'Beschreibung'**
+  String get editorDescription;
+
+  /// Help below the description field: it takes Markdown.
+  ///
+  /// In de, this message translates to:
+  /// **'Markdown geht, z. B. **fett** oder *kursiv*.'**
+  String get editorDescriptionHelp;
+
+  /// Label of the servings field (a number).
+  ///
+  /// In de, this message translates to:
+  /// **'Portionen'**
+  String get editorServings;
+
+  /// Label of the field for what a serving is called.
+  ///
+  /// In de, this message translates to:
+  /// **'Bezeichnung'**
+  String get editorServingsText;
+
+  /// Hint in the servings text field.
+  ///
+  /// In de, this message translates to:
+  /// **'z. B. Stück'**
+  String get editorServingsTextHint;
+
+  /// Label of the working time field, in minutes.
+  ///
+  /// In de, this message translates to:
+  /// **'Arbeitszeit (Min.)'**
+  String get editorWorkingTime;
+
+  /// Label of the waiting time field, in minutes.
+  ///
+  /// In de, this message translates to:
+  /// **'Wartezeit (Min.)'**
+  String get editorWaitingTime;
+
+  /// Label of the keyword chips.
+  ///
+  /// In de, this message translates to:
+  /// **'Stichwörter'**
+  String get editorKeywords;
+
+  /// Dashed chip that adds a keyword.
+  ///
+  /// In de, this message translates to:
+  /// **'Stichwort'**
+  String get editorAddKeyword;
+
+  /// Accessible label of the chip that adds a keyword.
+  ///
+  /// In de, this message translates to:
+  /// **'Stichwort hinzufügen'**
+  String get editorAddKeywordTooltip;
+
+  /// Accessible label of a keyword chip; tapping it removes the keyword.
+  ///
+  /// In de, this message translates to:
+  /// **'{keyword} entfernen'**
+  String editorRemoveKeyword(String keyword);
+
+  /// Label of the source URL field.
+  ///
+  /// In de, this message translates to:
+  /// **'Quelle'**
+  String get editorSource;
+
+  /// Hint in the source field.
+  ///
+  /// In de, this message translates to:
+  /// **'https://…'**
+  String get editorSourceHint;
+
+  /// Error at the name field when it is empty.
+  ///
+  /// In de, this message translates to:
+  /// **'Gib dem Rezept einen Namen.'**
+  String get editorNameMissing;
+
+  /// Error at a text field that is longer than Tandoor stores.
+  ///
+  /// In de, this message translates to:
+  /// **'Höchstens {max} Zeichen.'**
+  String editorTooLong(int max);
+
+  /// Error at the servings field when it is empty or 0.
+  ///
+  /// In de, this message translates to:
+  /// **'Mindestens 1.'**
+  String get editorServingsTooSmall;
+
+  /// Shown above the form when the draft has problems after trying to save.
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte prüf die markierten Felder.'**
+  String get editorProblems;
+
+  /// Shown when saving failed; the reason is one of the error messages. The edits stay.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht gespeichert. {reason}'**
+  String editorSaveFailed(String reason);
+
+  /// Shown when Tandoor refused the save (403), e.g. for a guest. The edits stay on screen.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht gespeichert: Du darfst dieses Rezept nicht ändern. Deine Änderungen sind noch da.'**
+  String get editorForbidden;
+
+  /// Shown when the recipe to edit doesn't exist (anymore) or can't be seen.
+  ///
+  /// In de, this message translates to:
+  /// **'Dieses Rezept gibt es nicht mehr.'**
+  String get editorRecipeGone;
+
+  /// Snackbar after the recipe was saved.
+  ///
+  /// In de, this message translates to:
+  /// **'Rezept gespeichert'**
+  String get editorSaved;
+
+  /// Title of the sheet that adds a keyword to the recipe.
+  ///
+  /// In de, this message translates to:
+  /// **'Stichwort hinzufügen'**
+  String get keywordPickerTitle;
+
+  /// Hint and accessible name of the keyword search field.
+  ///
+  /// In de, this message translates to:
+  /// **'Stichwort suchen oder anlegen'**
+  String get keywordPickerHint;
+
+  /// Creates a new keyword with the typed name.
+  ///
+  /// In de, this message translates to:
+  /// **'„{name}“ anlegen'**
+  String keywordPickerCreate(String name);
+
+  /// Shown when creating a keyword failed.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht angelegt. {reason}'**
+  String keywordPickerCreateFailed(String reason);
 }
 
 class _AppLocalizationsDelegate

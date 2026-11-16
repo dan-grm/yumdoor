@@ -211,7 +211,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recipeActionsComingSoon =>
-      'Planning, shopping and editing are coming soon.';
+      'Planning and shopping are coming soon.';
 
   @override
   String get recipeIngredients => 'Ingredients';
@@ -792,4 +792,125 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get searchSavedNameConflict =>
       'Not saved. The name may already exist in Tandoor – try another one.';
+
+  @override
+  String get searchNewRecipe => 'New recipe';
+
+  @override
+  String get editorCancel => 'Cancel';
+
+  @override
+  String get editorSave => 'Save';
+
+  @override
+  String get editorSaving => 'Saving …';
+
+  @override
+  String get editorTitleEdit => 'Edit';
+
+  @override
+  String get editorTitleNew => 'New recipe';
+
+  @override
+  String get editorTabGeneral => 'General';
+
+  @override
+  String get editorTabIngredients => 'Ingredients';
+
+  @override
+  String get editorTabSteps => 'Steps';
+
+  @override
+  String get editorTabComingSoon =>
+      'Coming soon. Until then, saving keeps the ingredients and steps as they are.';
+
+  @override
+  String get editorName => 'Name';
+
+  @override
+  String get editorDescription => 'Description';
+
+  @override
+  String get editorDescriptionHelp =>
+      'Markdown works, e.g. **bold** or *italic*.';
+
+  @override
+  String get editorServings => 'Servings';
+
+  @override
+  String get editorServingsText => 'Called';
+
+  @override
+  String get editorServingsTextHint => 'e.g. pieces';
+
+  @override
+  String get editorWorkingTime => 'Working time (min)';
+
+  @override
+  String get editorWaitingTime => 'Waiting time (min)';
+
+  @override
+  String get editorKeywords => 'Keywords';
+
+  @override
+  String get editorAddKeyword => 'Keyword';
+
+  @override
+  String get editorAddKeywordTooltip => 'Add keyword';
+
+  @override
+  String editorRemoveKeyword(String keyword) {
+    return 'Remove $keyword';
+  }
+
+  @override
+  String get editorSource => 'Source';
+
+  @override
+  String get editorSourceHint => 'https://…';
+
+  @override
+  String get editorNameMissing => 'Give the recipe a name.';
+
+  @override
+  String editorTooLong(int max) {
+    return 'At most $max characters.';
+  }
+
+  @override
+  String get editorServingsTooSmall => 'At least 1.';
+
+  @override
+  String get editorProblems => 'Please check the marked fields.';
+
+  @override
+  String editorSaveFailed(String reason) {
+    return 'Not saved. $reason';
+  }
+
+  @override
+  String get editorForbidden =>
+      'Not saved: you may not change this recipe. Your changes are still here.';
+
+  @override
+  String get editorRecipeGone => 'This recipe no longer exists.';
+
+  @override
+  String get editorSaved => 'Recipe saved';
+
+  @override
+  String get keywordPickerTitle => 'Add keyword';
+
+  @override
+  String get keywordPickerHint => 'Find or create a keyword';
+
+  @override
+  String keywordPickerCreate(String name) {
+    return 'Create “$name”';
+  }
+
+  @override
+  String keywordPickerCreateFailed(String reason) {
+    return 'Not created. $reason';
+  }
 }
