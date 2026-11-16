@@ -58,6 +58,11 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     FocusManager.instance.primaryFocus?.unfocus();
     final messenger = ScaffoldMessenger.of(context);
     final savedMessage = context.l10n.editorSaved;
+    // Focus changes are delivered in a microtask: a line left typed in the
+    // ingredient entry is handed to the parser then, and the save waits
+    // for it.
+    await Future<void>.delayed(Duration.zero);
+    if (!mounted) return;
     final saved = await ref
         .read(recipeEditorProvider(widget.recipeId).notifier)
         .save();

@@ -55,14 +55,43 @@ class _IngredientEntryState extends ConsumerState<IngredientEntry> {
   String? _message;
   var _messageIsError = false;
 
+  /// Whether the entry is being taken out of the tree, when its field loses
+  /// the focus without the user leaving it.
+  var _leaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(_onFocusChange);
+  }
+
+  @override
+  void activate() {
+    super.activate();
+    _leaving = false;
+  }
+
+  @override
+  void deactivate() {
+    _leaving = true;
+    super.deactivate();
+  }
+
   @override
   void dispose() {
+    _focus.removeListener(_onFocusChange);
     _controller.dispose();
     _focus.dispose();
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  /// A line is finished when the field loses the focus, too, as when
+  /// "Speichern" is tapped right after typing it.
+  void _onFocusChange() {
+    if (!_focus.hasFocus && !_leaving && mounted) _submit(keepFocus: false);
+  }
+
+  Future<void> _submit({bool keepFocus = true}) async {
     final line = _controller.text;
     if (_busy || line.trim().isEmpty) return;
     final l10n = context.l10n;
@@ -79,9 +108,9 @@ class _IngredientEntryState extends ConsumerState<IngredientEntry> {
       if (!mounted) return;
       if (added != null) {
         _controller.clear();
-        message = added.food == null
+        message = added.food == null && added.note == line.trim()
             ? l10n.ingredientEntryUnparsed(line.trim())
-            : l10n.ingredientEntryAdded(added.food!.name);
+            : l10n.ingredientEntryAdded(ingredientName(context, added));
       }
     } on Object catch (error) {
       if (!mounted) return;
@@ -95,7 +124,7 @@ class _IngredientEntryState extends ConsumerState<IngredientEntry> {
       _message = message;
       _messageIsError = isError;
     });
-    _focus.requestFocus();
+    if (keepFocus) _focus.requestFocus();
   }
 
   @override

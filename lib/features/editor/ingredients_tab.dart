@@ -8,6 +8,7 @@ import '../../domain/models/recipe_draft.dart';
 import '../../domain/services/scaling_service.dart';
 import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
+import '../common/step_text.dart';
 import '../recipe/ingredient_lines.dart';
 import 'editor_controller.dart';
 import 'ingredient_entry.dart';
@@ -72,7 +73,7 @@ class IngredientsTab extends ConsumerWidget {
               child: Semantics(
                 header: true,
                 child: Text(
-                  _stepTitle(context, step, stepIndex).toUpperCase(),
+                  stepTitle(context, step.name, stepIndex).toUpperCase(),
                   style: t.overline.copyWith(color: t.sage),
                 ),
               ),
@@ -109,22 +110,15 @@ class IngredientsTab extends ConsumerWidget {
   }
 }
 
-/// "Schritt 2 · Anrichten", or "Schritt 2" for a step without a name.
-String _stepTitle(BuildContext context, StepDraft step, int index) {
-  final number = context.l10n.recipeStepTitle(index + 1);
-  final name = step.name.trim();
-  return name.isEmpty ? number : '$number · $name';
-}
-
-/// [amount] as it is saved, as the edit sheet shows it: `½` and `1½` where
-/// that is exact, else the number itself without thousands separators
-/// (`1234,5`), not rounded for cooking like on the recipe screen.
-String _amount(LocaleFormat format, double amount) {
-  final quantity = Quantity.of(amount);
-  return quantity.value == amount
-      ? format.quantity(quantity)
-      : format.amountInput(amount);
-}
+/// [amount] as it is saved: `½` and `1½` where that is exact, else the
+/// number as the edit sheet shows it, without thousands separators (`1250`,
+/// `1234,5`), not rounded for cooking like on the recipe screen.
+String _amount(LocaleFormat format, double amount) =>
+    switch (Quantity.of(amount)) {
+      final FractionQuantity fraction when fraction.value == amount =>
+        format.quantity(fraction),
+      _ => format.amountInput(amount),
+    };
 
 enum _Action { edit, up, down, delete }
 

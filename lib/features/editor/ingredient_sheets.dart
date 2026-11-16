@@ -93,15 +93,21 @@ class _IngredientSheetState extends State<_IngredientSheet> {
       setState(() => _amountInvalid = true);
       return;
     }
+    final initial = widget.initial;
+    final changed = initial.copyWith(
+      food: _food,
+      unit: _unit,
+      // An amount hidden by "ohne Menge" is kept if it is one.
+      amount: amount ?? initial.amount,
+      noAmount: _noAmount,
+      note: _note.text.trim(),
+    );
     Navigator.of(context).pop(
-      widget.initial.copyWith(
-        food: _food,
-        unit: _unit,
-        // An amount hidden by "ohne Menge" is kept if it is one.
-        amount: amount ?? widget.initial.amount,
-        noAmount: _noAmount,
-        note: _note.text.trim(),
-      ),
+      // The typed line no longer describes an ingredient changed before it
+      // is first saved, and Tandoor keeps it only then.
+      changed == initial || initial.id != null
+          ? changed
+          : changed.copyWith(originalText: null),
     );
   }
 

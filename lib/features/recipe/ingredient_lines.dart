@@ -138,7 +138,7 @@ class IngredientGroups extends StatelessWidget {
               child: Semantics(
                 header: true,
                 child: Text(
-                  stepTitle(context, step, index).toUpperCase(),
+                  stepTitle(context, step.name, index).toUpperCase(),
                   style: t.overline.copyWith(color: t.sage),
                 ),
               ),

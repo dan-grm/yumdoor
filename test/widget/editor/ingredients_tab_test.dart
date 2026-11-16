@@ -239,6 +239,27 @@ void main() {
     expect(row(tester, 'Karottengrün').note, 'etwas Grünes');
     // Picking an existing food creates nothing.
     expect(foods.created, isEmpty);
+
+    await tap(tester, find.text('Speichern'));
+    final saved = recipes.saves.single.draft.steps[2].ingredients.last;
+    expect(saved.food, const NamedRef(id: 7, name: 'Karottengrün'));
+    // The typed line no longer describes the ingredient.
+    expect(saved.originalText, isNull);
+  });
+
+  testWidgets('a line left in the field is saved with the recipe', (
+    tester,
+  ) async {
+    await pumpTab(tester);
+
+    await tester.ensureVisible(entryField());
+    await tester.enterText(entryField(), '200 g Karotten');
+    await tap(tester, find.text('Speichern'));
+
+    expect(parser.parsed, ['200 g Karotten']);
+    final saved = recipes.saves.single.draft.steps[2].ingredients.last;
+    expect(saved.food?.name, 'Karotte');
+    expect(find.byType(RecipeScreen), findsOneWidget);
   });
 
   testWidgets('a failed parse keeps the line and says why', (tester) async {

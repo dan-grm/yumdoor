@@ -307,7 +307,55 @@ void main() {
       expect(saved.steps[1].ingredients, hasLength(3));
       expect(saved.steps[2].ingredients.last, karotten);
     });
+
+    test('a save waits for a line still being parsed', () async {
+      final gate = Completer<void>();
+      parser = _SlowParser(parser, gate.future);
+      container = containerWith(recipes);
+      final controller = await editor(7);
+
+      final adding = controller.addLine('200 g Karotten');
+      final saving = controller.save();
+      await Future<void>.delayed(Duration.zero);
+      expect(recipes.saves, isEmpty);
+      gate.complete();
+
+      expect(await adding, karotten);
+      expect(await saving, isNotNull);
+      expect(recipes.saves.single.draft.steps[2].ingredients.last, karotten);
+    });
+
+    test('a save goes on when a line being parsed fails', () async {
+      final gate = Completer<void>();
+      parser = _SlowParser(parser, gate.future)
+        ..failure = const OfflineFailure();
+      container = containerWith(recipes);
+      final controller = await editor(7);
+
+      final adding = controller.addLine('200 g Karotten');
+      final saving = controller.save();
+      gate.complete();
+
+      await expectLater(adding, throwsA(isA<OfflineFailure>()));
+      expect(await saving, isNotNull);
+      expect(recipes.saves.single.draft, RecipeDraft.fromRecipe(ofenkarotten));
+    });
   });
+}
+
+/// Parses like [_inner] once [_gate] completes.
+class _SlowParser extends FakeIngredientParser {
+  _SlowParser(this._inner, this._gate);
+
+  final FakeIngredientParser _inner;
+  final Future<void> _gate;
+
+  @override
+  Future<ParsedIngredient> parse(String line) async {
+    await _gate;
+    if (failure case final failure?) throw failure;
+    return _inner.parse(line);
+  }
 }
 
 /// Saves through [_inner] once [_gate] completes, or throws [_error].

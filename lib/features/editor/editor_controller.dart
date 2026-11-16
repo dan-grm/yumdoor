@@ -118,16 +118,28 @@ class RecipeEditor extends _$RecipeEditor {
   /// A line the parser can't split is added all the same, with its text as
   /// note and no food ([ParsedIngredient.unparsed]). Throws the [Failure] of
   /// a request that fails (offline, …); nothing is added then.
+  ///
+  /// A save started meanwhile waits for the line, so it isn't lost.
   Future<IngredientDraft?> addLine(String line, {int? step}) async {
     if (line.trim().isEmpty) return null;
     final current = state.value;
     if (current == null || current.saving) return null;
-    final parsed = await ref.read(ingredientParserProvider).parse(line);
+    final parsing = ref.read(ingredientParserProvider).parse(line);
+    _parsing.add(parsing);
+    final ParsedIngredient parsed;
+    try {
+      parsed = await parsing;
+    } finally {
+      _parsing.remove(parsing);
+    }
     if (!ref.mounted) return null;
     final ingredient = parsed.toDraft();
     final added = edit((draft) => draft.addIngredient(ingredient, step: step));
     return added ? ingredient : null;
   }
+
+  /// Lines being parsed by [addLine].
+  final _parsing = <Future<ParsedIngredient>>{};
 
   /// Adds a section header with [title] at the end of the step at [step],
   /// or of the last step if `null`. A blank title adds nothing.
@@ -155,7 +167,19 @@ class RecipeEditor extends _$RecipeEditor {
   /// saved. Returns `null` if the draft has problems, which are then shown
   /// at their fields, or if saving failed ([EditorState.failure]), or while
   /// another save is under way.
+  ///
+  /// Waits for lines still being parsed ([addLine]) first, so they are
+  /// saved with the draft.
   Future<Recipe?> save() async {
+    while (_parsing.isNotEmpty) {
+      // A line that fails isn't added; addLine's caller says so.
+      await Future.wait([
+        for (final parsing in _parsing)
+          parsing.then<void>((_) {}, onError: (Object _) {}),
+      ]);
+      // addLine awaited each line first, so it has added it by now.
+      if (!ref.mounted) return null;
+    }
     final current = state.value;
     if (current == null || current.saving) return null;
     if (current.problems.isNotEmpty) {

@@ -18,6 +18,8 @@ double? parseAmount(String text) {
   final denominator = match.group(4);
   final glyph = match.group(5);
   if (whole == null && numerator == null && glyph == null) return null;
+  // "1/2½" isn't an amount.
+  if (numerator != null && glyph != null) return null;
   if (decimals != null) {
     // "1,5 1/2" and "1,5½" aren't amounts.
     if (numerator != null || glyph != null) return null;

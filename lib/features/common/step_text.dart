@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../design/components/timer_chip.dart';
-import '../../domain/models/recipe_step.dart';
 import '../../domain/services/scaling_service.dart';
 import '../../domain/services/step_template.dart';
 import '../../domain/services/timer_detection.dart';
@@ -90,10 +89,10 @@ List<Duration> stepDurations(String instruction, StepTemplate template) => [
         for (final found in TimerDetection.find(text)) found.duration,
 ];
 
-/// "Schritt 3" for [index] 2, with the step's name if it has one:
+/// "Schritt 3" for [index] 2, with the step's [name] if it has one:
 /// "Schritt 3 · Anrichten". The number matches cooking mode.
-String stepTitle(BuildContext context, RecipeStep step, int index) {
+String stepTitle(BuildContext context, String name, int index) {
   final number = context.l10n.recipeStepTitle(index + 1);
-  final name = step.name.trim();
-  return name.isEmpty ? number : '$number · $name';
+  final trimmed = name.trim();
+  return trimmed.isEmpty ? number : '$number · $trimmed';
 }
