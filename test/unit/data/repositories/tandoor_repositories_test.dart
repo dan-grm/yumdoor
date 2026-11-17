@@ -616,6 +616,36 @@ void main() {
           ),
         );
       });
+
+      test('a broken upload connection is an interrupted upload', () async {
+        final reports = <bool>[];
+        final adapter = FakeHttpAdapter(
+          (request) => throw DioException(
+            requestOptions: request,
+            type: DioExceptionType.connectionError,
+          ),
+        );
+        final dio = createTandoorDio(
+          serverUrl,
+          token: 'tda_test',
+          onReachable: reports.add,
+        )..httpClientAdapter = adapter;
+        final repository = TandoorRecipeRepository(
+          api.TandoorApi(dio: dio, interceptors: const []).getApiApi(),
+          dio: dio,
+        );
+
+        await expectLater(
+          repository.uploadImage(58, upload),
+          throwsA(isA<UploadInterruptedFailure>()),
+        );
+        // A removal sends nothing large: offline as usual.
+        await expectLater(
+          repository.removeImage(58),
+          throwsA(isA<OfflineFailure>()),
+        );
+        expect(reports, [false]);
+      });
     });
 
     test('throws NotFoundFailure for a missing recipe', () {

@@ -282,14 +282,13 @@ class RecipeEditor extends _$RecipeEditor {
       );
       return null;
     }
-    state = AsyncData(
-      current._copyWith(
-        saving: true,
-        showProblems: true,
-        failure: () => null,
-        imageFailure: () => null,
-      ),
+    // What the last save said no longer applies.
+    final base = current._copyWith(
+      showProblems: true,
+      failure: () => null,
+      imageFailure: () => null,
     );
+    state = AsyncData(base._copyWith(saving: true));
     final draft = current.draft.copyWith(name: current.draft.name.trim());
     final repository = ref.read(recipeRepositoryProvider);
     Recipe saved;
@@ -300,10 +299,9 @@ class RecipeEditor extends _$RecipeEditor {
       };
     } on Object catch (error) {
       // Anything else, too: a save stuck in `saving` would lock the editor.
-      final failure = error is Failure ? error : ServerFailure(cause: error);
       if (ref.mounted) {
         state = AsyncData(
-          current._copyWith(saving: false, failure: () => failure),
+          base._copyWith(saving: false, failure: () => _asFailure(error)),
         );
       }
       return null;
@@ -320,36 +318,32 @@ class RecipeEditor extends _$RecipeEditor {
       }
     } on Object catch (error) {
       // The recipe is saved all the same; the screen says the photo isn't.
-      imageFailure = error is Failure ? error : ServerFailure(cause: error);
+      imageFailure = _asFailure(error);
     }
     if (ref.mounted) {
       // Screens showing the recipe load it again, as saved.
       ref
         ..invalidate(recipeProvider(saved.id))
         ..invalidate(searchResultsProvider);
+      // A failed photo change is dropped too: the screen leaves and says it
+      // wasn't saved (a new recipe saved again from here would be created
+      // twice).
       state = AsyncData(
-        imageFailure == null
-            ? current._copyWith(
-                saving: false,
-                failure: () => null,
-                savedImage: () => saved.image,
-                newImage: () => null,
-                removeImage: false,
-              )
-            // The photo change is dropped: the screen leaves and says it
-            // wasn't saved (a new recipe saved again from here would be
-            // created twice).
-            : current._copyWith(
-                saving: false,
-                failure: () => null,
-                imageFailure: () => imageFailure,
-                newImage: () => null,
-                removeImage: false,
-              ),
+        base._copyWith(
+          saving: false,
+          imageFailure: () => imageFailure,
+          savedImage: () => saved.image,
+          newImage: () => null,
+          removeImage: false,
+        ),
       );
     }
     return saved;
   }
 }
+
+/// [error] as a [Failure]; anything else as a [ServerFailure].
+Failure _asFailure(Object error) =>
+    error is Failure ? error : ServerFailure(cause: error);
 
 Duration? _noRetry(int retryCount, Object error) => null;

@@ -532,6 +532,11 @@ void main() {
       // Dropped: saving again would save the recipe again, not just the
       // photo.
       expect(state(7).newImage, isNull);
+
+      // The next save that works says nothing about the photo.
+      recipes.imageFailure = null;
+      await edit.save();
+      expect(state(7).imageFailure, isNull);
     });
 
     test('a failed recipe save uploads nothing', () async {

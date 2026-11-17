@@ -62,6 +62,16 @@ final class CancelledFailure extends Failure {
   String toString() => 'CancelledFailure';
 }
 
+/// The connection broke off while a file was being uploaded. A proxy that
+/// refuses the file's size often does this instead of answering 413; it may
+/// also be a lost connection.
+final class UploadInterruptedFailure extends Failure {
+  const UploadInterruptedFailure();
+
+  @override
+  String toString() => 'UploadInterruptedFailure';
+}
+
 /// The URL does not point to a Tandoor 2.x server.
 final class IncompatibleServerFailure extends Failure {
   const IncompatibleServerFailure();

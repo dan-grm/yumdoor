@@ -78,11 +78,15 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   RecipeEditor get _editor =>
       ref.read(recipeEditorProvider(widget.recipeId).notifier);
 
+  /// [_canChange] now, for event handlers.
+  bool get _canChangeImage => _canChange(
+    ref.read(recipeEditorProvider(widget.recipeId)).value,
+    offline: ref.read(isOfflineProvider),
+  );
+
   /// Whether the photo can be changed: loaded, online and not saving.
-  bool get _canChangeImage {
-    final state = ref.read(recipeEditorProvider(widget.recipeId)).value;
-    return state != null && !state.saving && !ref.read(isOfflineProvider);
-  }
+  static bool _canChange(EditorState? state, {required bool offline}) =>
+      state != null && !state.saving && !offline;
 
   void _onDrop(ImageDropEvent event) {
     switch (event) {
@@ -125,9 +129,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   String _imageFailureMessage(Failure failure) => switch (failure) {
     // A proxy in front of Tandoor limits the size (docs/TANDOOR_API.md).
     ServerFailure(statusCode: 413) => context.l10n.editorImageServerTooLarge,
-    // The recipe was just saved, so the server was there: a proxy that
-    // refuses the size often just drops the connection.
-    OfflineFailure() => context.l10n.editorImageInterrupted,
+    UploadInterruptedFailure() => context.l10n.editorImageInterrupted,
     _ => failureMessage(
       context,
       failure,
@@ -193,6 +195,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     final editor = ref.watch(provider);
     final state = editor.value;
     final saving = state?.saving ?? false;
+    final offline = ref.watch(isOfflineProvider);
 
     return PopScope(
       // Leaving while saving would race with the return after it.
@@ -221,6 +224,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     onRetry: _save,
                     imageArea: ImageArea(
                       state: value,
+                      enabled: _canChange(value, offline: offline),
                       canUseCamera: _picker.canUseCamera,
                       supportsDrop: _picker.supportsDrop,
                       dragging: _dragging,

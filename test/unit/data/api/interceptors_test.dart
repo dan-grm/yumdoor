@@ -177,6 +177,17 @@ void main() {
         isEmpty,
       );
       expect(await reportsFor((_) => jsonResponse({}), extra: upload), [true]);
+      // Nothing was sent before a connect timeout.
+      expect(
+        await reportsFor(
+          (request) => throw DioException(
+            requestOptions: request,
+            type: DioExceptionType.connectionTimeout,
+          ),
+          extra: upload,
+        ),
+        [false],
+      );
     });
   });
 }

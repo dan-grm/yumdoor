@@ -350,6 +350,7 @@ class TandoorRecipeRepository implements RecipeRepository {
           contentType: DioMediaType.parse(image.mimeType),
         ),
       }),
+      upload: true,
     );
     if (path == null) throw const ServerFailure(cause: 'No image path');
     // Relative to the server's origin (`/media/recipes/…`, or wherever
@@ -366,23 +367,40 @@ class TandoorRecipeRepository implements RecipeRepository {
 
   /// `PUT /api/recipe/{id}/image/` with [form]; returns the path of the
   /// image the recipe has now, `null` for none.
-  Future<String?> _putImage(int id, FormData form) => guardRequest(() async {
-    final response = await _dio.put<Object?>(
-      '/api/recipe/$id/image/',
-      data: form,
-      options: Options(
-        // Sending a large photo over a slow connection, then Tandoor
-        // scaling it, takes longer than an ordinary request may. On the
-        // web this is the whole request's timeout.
-        receiveTimeout: _imageTimeout,
-        extra: {ReachabilityInterceptor.uploadKey: true},
-      ),
-    );
+  ///
+  /// An [upload] whose connection breaks fails with
+  /// [UploadInterruptedFailure] and doesn't mark the server unreachable: a
+  /// proxy refusing the size often resets the connection instead of
+  /// answering 413 (docs/TANDOOR_API.md#recipe-images).
+  Future<String?> _putImage(
+    int id,
+    FormData form, {
+    bool upload = false,
+  }) async {
+    final Response<Object?> response;
+    try {
+      response = await _dio.put<Object?>(
+        '/api/recipe/$id/image/',
+        data: form,
+        options: Options(
+          // Sending a large photo over a slow connection, then Tandoor
+          // scaling it, takes longer than an ordinary request may. On the
+          // web this is the whole request's timeout.
+          receiveTimeout: _imageTimeout,
+          extra: {if (upload) ReachabilityInterceptor.uploadKey: true},
+        ),
+      );
+    } on DioException catch (e) {
+      if (upload && e.type == DioExceptionType.connectionError) {
+        throw const UploadInterruptedFailure();
+      }
+      throw failureFromDioException(e);
+    }
     return switch (response.data) {
       {'image': final String? path} => path,
-      _ => throw const FormatException('Unexpected image response'),
+      final body => throw ServerFailure(cause: body),
     };
-  });
+  }
 
   @override
   Future<void> recordView(int id) => guardRequest(() async {

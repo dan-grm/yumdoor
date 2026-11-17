@@ -536,7 +536,7 @@ void main() {
       tester,
     ) async {
       await pumpEditor(tester);
-      recipes.imageFailure = const OfflineFailure();
+      recipes.imageFailure = const UploadInterruptedFailure();
 
       picker.nextPick = checkImage(name: 'karotten.png', bytes: photo);
       await tap(tester, find.text('Bild auswählen'));

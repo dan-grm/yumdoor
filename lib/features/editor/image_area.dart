@@ -1,9 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../app/offline.dart';
 import '../../design/components/buttons.dart';
 import '../../design/components/filter_chips.dart';
 import '../../design/design.dart';
@@ -25,10 +23,11 @@ const _previewHeight = 180.0;
 ///
 /// Changes are only made to the draft; saving uploads them. Offline and
 /// while saving the buttons are disabled.
-class ImageArea extends ConsumerWidget {
+class ImageArea extends StatelessWidget {
   const ImageArea({
     super.key,
     required this.state,
+    required this.enabled,
     required this.canUseCamera,
     required this.supportsDrop,
     required this.dragging,
@@ -39,6 +38,9 @@ class ImageArea extends ConsumerWidget {
   });
 
   final EditorState state;
+
+  /// Whether the photo can be changed: online and not saving.
+  final bool enabled;
   final bool canUseCamera;
   final bool supportsDrop;
 
@@ -52,10 +54,9 @@ class ImageArea extends ConsumerWidget {
   final VoidCallback onRemove;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
-    final enabled = !state.saving && !ref.watch(isOfflineProvider);
     final note = switch (rejection) {
       ImageRejection.notAnImage => l10n.editorImageNotAnImage,
       ImageRejection.tooLarge => l10n.editorImageTooLarge(
@@ -110,8 +111,8 @@ class ImageArea extends ConsumerWidget {
         ],
         SizedBox(height: t.space3),
         OfflineDisabled(
-          builder: (context, online) {
-            final canChange = online && !state.saving;
+          // Only for its tooltip: [enabled] covers being offline.
+          builder: (context, _) {
             return Wrap(
               spacing: t.space2,
               runSpacing: t.space2,
@@ -122,14 +123,14 @@ class ImageArea extends ConsumerWidget {
                     icon: Icons.photo_camera_outlined,
                     kind: PillButtonKind.secondary,
                     compact: true,
-                    onPressed: canChange ? onTakePhoto : null,
+                    onPressed: enabled ? onTakePhoto : null,
                   ),
                 PillButton(
                   label: l10n.editorImagePick,
                   icon: Icons.image_outlined,
                   kind: PillButtonKind.secondary,
                   compact: true,
-                  onPressed: canChange ? onPickFile : null,
+                  onPressed: enabled ? onPickFile : null,
                 ),
                 if (state.hasImage)
                   PillButton(
@@ -137,7 +138,7 @@ class ImageArea extends ConsumerWidget {
                     icon: Icons.delete_outline_rounded,
                     kind: PillButtonKind.secondary,
                     compact: true,
-                    onPressed: canChange ? onRemove : null,
+                    onPressed: enabled ? onRemove : null,
                   ),
               ],
             );
@@ -175,11 +176,13 @@ class _Preview extends StatelessWidget {
             final image? => LayoutBuilder(
               builder: (context, constraints) => Image.memory(
                 image.bytes,
-                // Decoded at the width shown: a camera photo at full size
-                // takes ~50 MB.
+                // A camera photo decoded at full size takes ~50 MB. Twice
+                // the width shown stays sharp when the box crops a wide
+                // image (up to 4:1).
                 cacheWidth: max(
                   1,
-                  (constraints.maxWidth *
+                  (2 *
+                          constraints.maxWidth *
                           MediaQuery.devicePixelRatioOf(context))
                       .round(),
                 ),

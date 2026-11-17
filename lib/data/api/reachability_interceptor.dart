@@ -9,9 +9,9 @@ class ReachabilityInterceptor extends Interceptor {
 
   final void Function(bool reachable) _onReachable;
 
-  /// Set to `true` in a request's `extra` so that its failed connection
-  /// doesn't count as unreachable: an upload a proxy refuses as too large
-  /// often ends as a reset connection rather than a 413.
+  /// Set to `true` in a request's `extra` so that a broken connection (not
+  /// a connect timeout) doesn't count as unreachable: an upload a proxy
+  /// refuses as too large often ends as a reset connection, not a 413.
   static const uploadKey = 'yumdoor.upload';
 
   @override
@@ -26,9 +26,12 @@ class ReachabilityInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     switch (err.type) {
+      // A connect timeout happens before any upload is sent.
+      case DioExceptionType.connectionError
+          when err.requestOptions.extra[uploadKey] == true:
+        break;
       case DioExceptionType.connectionError ||
-              DioExceptionType.connectionTimeout
-          when err.requestOptions.extra[uploadKey] != true:
+          DioExceptionType.connectionTimeout:
         _onReachable(false);
       case DioExceptionType.badResponse:
         _onReachable(true);
