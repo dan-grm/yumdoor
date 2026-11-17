@@ -1143,7 +1143,7 @@
   "@editorTabSteps": {
     "description": "Editor tab for the steps."
   },
-  "editorTabComingSoon": "Das kommt bald. Bis dahin bleiben Zutaten und Schritte beim Speichern, wie sie sind.",
+  "editorTabComingSoon": "Das kommt bald. Bis dahin bleiben die Schritte beim Speichern, wie sie sind.",
   "@editorTabComingSoon": {
     "description": "Placeholder of the Zutaten and Schritte tabs until they are built."
   },
@@ -1259,9 +1259,170 @@
   "@keywordPickerHint": {
     "description": "Hint and accessible name of the keyword search field."
   },
-  "keywordPickerCreate": "„{name}“ anlegen",
-  "@keywordPickerCreate": {
-    "description": "Creates a new keyword with the typed name.",
+  "foodPickerTitle": "Zutat wählen",
+  "@foodPickerTitle": {
+    "description": "Title of the sheet that picks the food of an ingredient; also the placeholder of an ingredient without food."
+  },
+  "foodPickerHint": "Zutat suchen oder anlegen",
+  "@foodPickerHint": {
+    "description": "Hint and accessible name of the food search field."
+  },
+  "unitPickerTitle": "Einheit wählen",
+  "@unitPickerTitle": {
+    "description": "Title of the sheet that picks the unit of an ingredient."
+  },
+  "unitPickerHint": "Einheit suchen oder anlegen",
+  "@unitPickerHint": {
+    "description": "Hint and accessible name of the unit search field."
+  },
+  "ingredientsBaseServings": "Mengen für {servings} (Grundrezept)",
+  "@ingredientsBaseServings": {
+    "description": "Above the ingredients in the editor: amounts are for the recipe's base servings.",
+    "placeholders": {
+      "servings": {
+        "type": "String",
+        "example": "2 Portionen"
+      }
+    }
+  },
+  "ingredientsEmpty": "Noch keine Zutaten. Gib unten eine Zeile ein, z. B. „200 g Karotten“.",
+  "@ingredientsEmpty": {
+    "description": "Empty state of the editor's ingredient list."
+  },
+  "ingredientEntryLabel": "Zutat hinzufügen",
+  "@ingredientEntryLabel": {
+    "description": "Accessible name of the ingredient entry field and title of the sheet that adds ingredients to a step."
+  },
+  "ingredientEntryHint": "z. B. 200 g Karotten, geschält",
+  "@ingredientEntryHint": {
+    "description": "Hint of the ingredient entry field."
+  },
+  "ingredientEntryAdd": "Hinzufügen",
+  "@ingredientEntryAdd": {
+    "description": "Tooltip of the button that adds the typed ingredient line."
+  },
+  "ingredientEntryAdded": "{ingredient} hinzugefügt",
+  "@ingredientEntryAdded": {
+    "description": "Shown after a line was added.",
+    "placeholders": {
+      "ingredient": {
+        "type": "String",
+        "example": "Karotten"
+      }
+    }
+  },
+  "ingredientEntryUnparsed": "„{line}“ nicht erkannt und als Notiz übernommen. Tipp die Zeile an, um eine Zutat zu wählen.",
+  "@ingredientEntryUnparsed": {
+    "description": "Shown when the ingredient parser could not split a line.",
+    "placeholders": {
+      "line": {
+        "type": "String",
+        "example": "etwas Grünes"
+      }
+    }
+  },
+  "ingredientEntryFailed": "Nicht hinzugefügt. {reason}",
+  "@ingredientEntryFailed": {
+    "description": "Shown when parsing an ingredient line failed.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "ingredientEntryDone": "Fertig",
+  "@ingredientEntryDone": {
+    "description": "Closes the sheet that adds ingredients to a step."
+  },
+  "ingredientAddHeader": "Abschnitt hinzufügen",
+  "@ingredientAddHeader": {
+    "description": "Adds a section header (such as 'Für den Teig') to the ingredients."
+  },
+  "ingredientHeaderTitle": "Abschnitt",
+  "@ingredientHeaderTitle": {
+    "description": "Title of the sheet that adds or edits a section header."
+  },
+  "ingredientHeaderLabel": "Überschrift",
+  "@ingredientHeaderLabel": {
+    "description": "Label of the section header text field."
+  },
+  "ingredientHeaderHint": "z. B. Für den Teig",
+  "@ingredientHeaderHint": {
+    "description": "Hint of the section header text field."
+  },
+  "ingredientEditTitle": "Zutat bearbeiten",
+  "@ingredientEditTitle": {
+    "description": "Title of the sheet that edits an ingredient."
+  },
+  "ingredientAmount": "Menge",
+  "@ingredientAmount": {
+    "description": "Label of the amount field."
+  },
+  "ingredientAmountInvalid": "Eine Zahl wie 1,5 oder ½.",
+  "@ingredientAmountInvalid": {
+    "description": "Error of an amount field that holds no number."
+  },
+  "ingredientUnit": "Einheit",
+  "@ingredientUnit": {
+    "description": "Label of the unit field."
+  },
+  "ingredientNoUnit": "Keine",
+  "@ingredientNoUnit": {
+    "description": "Unit field of an ingredient without unit."
+  },
+  "ingredientRemoveUnit": "Einheit entfernen",
+  "@ingredientRemoveUnit": {
+    "description": "Tooltip of the button that removes the unit."
+  },
+  "ingredientFood": "Zutat",
+  "@ingredientFood": {
+    "description": "Label of the food field."
+  },
+  "ingredientNote": "Notiz",
+  "@ingredientNote": {
+    "description": "Label of the note field."
+  },
+  "ingredientNoAmount": "Ohne Menge",
+  "@ingredientNoAmount": {
+    "description": "Switch for an ingredient without amount, such as 'Salz nach Geschmack'."
+  },
+  "ingredientApply": "Übernehmen",
+  "@ingredientApply": {
+    "description": "Applies the changes of the ingredient or section sheet to the recipe draft."
+  },
+  "ingredientActions": "Aktionen für {name}",
+  "@ingredientActions": {
+    "description": "Tooltip of the menu button of an ingredient row.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      }
+    }
+  },
+  "ingredientEdit": "Bearbeiten",
+  "@ingredientEdit": {
+    "description": "Menu item: edit the ingredient."
+  },
+  "ingredientMoveUp": "Nach oben",
+  "@ingredientMoveUp": {
+    "description": "Menu item: move the ingredient one place up."
+  },
+  "ingredientMoveDown": "Nach unten",
+  "@ingredientMoveDown": {
+    "description": "Menu item: move the ingredient one place down."
+  },
+  "ingredientDelete": "Löschen",
+  "@ingredientDelete": {
+    "description": "Menu item: delete the ingredient."
+  },
+  "ingredientUnnamed": "Ohne Zutat",
+  "@ingredientUnnamed": {
+    "description": "Name of an ingredient row without food and note."
+  },
+  "pickerCreate": "„{name}“ anlegen",
+  "@pickerCreate": {
+    "description": "Creates a new keyword, food or unit with the typed name.",
     "placeholders": {
       "name": {
         "type": "String",
@@ -1269,9 +1430,9 @@
       }
     }
   },
-  "keywordPickerCreateFailed": "Nicht angelegt. {reason}",
-  "@keywordPickerCreateFailed": {
-    "description": "Shown when creating a keyword failed.",
+  "pickerCreateFailed": "Nicht angelegt. {reason}",
+  "@pickerCreateFailed": {
+    "description": "Shown when creating a keyword, food or unit failed.",
     "placeholders": {
       "reason": {
         "type": "String"

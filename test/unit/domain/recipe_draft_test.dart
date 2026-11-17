@@ -109,4 +109,79 @@ void main() {
 
     expect(RecipeDraft.fromJson(json), draft);
   });
+
+  group('ingredient changes', () {
+    const salz = IngredientDraft(food: NamedRef(name: 'Salz'), noAmount: true);
+    const pfeffer = IngredientDraft(food: NamedRef(name: 'Pfeffer'));
+    const oel = IngredientDraft(food: NamedRef(name: 'Öl'), amount: 1);
+    final draft = RecipeDraft(
+      steps: [
+        const StepDraft(id: 1, ingredients: [salz]),
+        const StepDraft(id: 2, ingredients: [pfeffer, oel]),
+      ],
+    );
+
+    List<List<IngredientDraft>> ingredients(RecipeDraft draft) => [
+      for (final step in draft.steps) step.ingredients,
+    ];
+
+    test('adds to the last step unless a step is given', () {
+      expect(ingredients(draft.addIngredient(salz)), [
+        [salz],
+        [pfeffer, oel, salz],
+      ]);
+      expect(ingredients(draft.addIngredient(oel, step: 0)), [
+        [salz, oel],
+        [pfeffer, oel],
+      ]);
+      // A step that no longer exists falls back to the last one.
+      expect(ingredients(draft.addIngredient(salz, step: 5)), [
+        [salz],
+        [pfeffer, oel, salz],
+      ]);
+    });
+
+    test('a draft without steps gets one for the first ingredient', () {
+      final added = const RecipeDraft().addIngredient(salz);
+
+      expect(added.steps, [
+        const StepDraft(ingredients: [salz]),
+      ]);
+    });
+
+    test('replaces, removes and moves within a step', () {
+      expect(ingredients(draft.replaceIngredient(1, 0, salz)), [
+        [salz],
+        [salz, oel],
+      ]);
+      expect(ingredients(draft.removeIngredient(1, 1)), [
+        [salz],
+        [pfeffer],
+      ]);
+      expect(ingredients(draft.moveIngredient(1, 0, 1)), [
+        [salz],
+        [oel, pfeffer],
+      ]);
+      // Not past the ends.
+      expect(ingredients(draft.moveIngredient(1, 0, -1)), ingredients(draft));
+      expect(ingredients(draft.moveIngredient(1, 1, 2)), ingredients(draft));
+    });
+
+    test('groups by step when more than one step has ingredients', () {
+      expect(draft.groupsIngredientsByStep, isTrue);
+      expect(draft.removeIngredient(0, 0).groupsIngredientsByStep, isFalse);
+      expect(const RecipeDraft().groupsIngredientsByStep, isFalse);
+    });
+
+    test('a header has its title as note and no amount', () {
+      expect(
+        IngredientDraft.header('  Für den Teig '),
+        const IngredientDraft(
+          isHeader: true,
+          noAmount: true,
+          note: 'Für den Teig',
+        ),
+      );
+    });
+  });
 }

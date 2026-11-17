@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../app/repository_providers.dart';
 import '../../core/failures.dart';
 import '../../domain/models/keyword.dart';
+import '../../domain/models/parsed_ingredient.dart';
 import '../../domain/models/recipe.dart';
 import '../../domain/models/recipe_draft.dart';
 import '../../domain/services/recipe_draft_validation.dart';
@@ -86,11 +87,13 @@ class RecipeEditor extends _$RecipeEditor {
     );
   }
 
-  /// Changes the draft. Ignored while loading or saving.
-  void edit(RecipeDraft Function(RecipeDraft draft) change) {
+  /// Changes the draft. Ignored while loading or saving; returns whether
+  /// the change was made.
+  bool edit(RecipeDraft Function(RecipeDraft draft) change) {
     final current = state.value;
-    if (current == null || current.saving) return;
+    if (current == null || current.saving) return false;
     state = AsyncData(current._copyWith(draft: change(current.draft)));
+    return true;
   }
 
   /// Adds [keyword] to the draft unless it is there already.
@@ -107,11 +110,76 @@ class RecipeEditor extends _$RecipeEditor {
     (draft) => draft.copyWith(keywords: [...draft.keywords]..removeAt(index)),
   );
 
+  /// Parses [line] with Tandoor's ingredient parser and adds the result to
+  /// the step at [step], or to the last step if `null` (decided in M3,
+  /// docs/ROADMAP.md). Returns what was added, or `null` if [line] is blank
+  /// or the draft can't be changed (loading, saving).
+  ///
+  /// A line the parser can't split is added all the same, with its text as
+  /// note and no food ([ParsedIngredient.unparsed]). Throws the [Failure] of
+  /// a request that fails (offline, …); nothing is added then.
+  Future<IngredientDraft?> addLine(String line, {int? step}) async {
+    if (line.trim().isEmpty) return null;
+    final current = state.value;
+    if (current == null || current.saving) return null;
+    final parsed = await ref.read(ingredientParserProvider).parse(line);
+    if (!ref.mounted) return null;
+    final ingredient = parsed.toDraft();
+    final added = edit((draft) => draft.addIngredient(ingredient, step: step));
+    return added ? ingredient : null;
+  }
+
+  /// Registers [finish] to be awaited by [save] before it saves: an
+  /// ingredient entry adds the line typed into it (or still being parsed)
+  /// and returns whether that worked. Returns the function that unregisters
+  /// it.
+  ///
+  /// So a line typed right before "Speichern" is saved too, and a line that
+  /// can't be added stops the save, with the entry saying why, instead of
+  /// being lost.
+  void Function() addPendingLine(Future<bool> Function() finish) {
+    _pendingLines.add(finish);
+    return () => _pendingLines.remove(finish);
+  }
+
+  final _pendingLines = <Future<bool> Function()>{};
+
+  /// Adds a section header with [title] at the end of the step at [step],
+  /// or of the last step if `null`. A blank title adds nothing.
+  void addHeader(String title, {int? step}) {
+    if (title.trim().isEmpty) return;
+    edit(
+      (draft) => draft.addIngredient(IngredientDraft.header(title), step: step),
+    );
+  }
+
+  /// Replaces the ingredient at [index] of the step at [step].
+  void updateIngredient(int step, int index, IngredientDraft ingredient) =>
+      edit((draft) => draft.replaceIngredient(step, index, ingredient));
+
+  /// Removes the ingredient at [index] of the step at [step].
+  void removeIngredient(int step, int index) =>
+      edit((draft) => draft.removeIngredient(step, index));
+
+  /// Moves the ingredient at [index] of the step at [step] by [offset]
+  /// places within the step (-1 up, 1 down); not past its ends.
+  void moveIngredient(int step, int index, int offset) =>
+      edit((draft) => draft.moveIngredient(step, index, index + offset));
+
   /// Saves the draft, creating the recipe if it is new, and returns it as
   /// saved. Returns `null` if the draft has problems, which are then shown
   /// at their fields, or if saving failed ([EditorState.failure]), or while
   /// another save is under way.
+  ///
+  /// Adds the lines typed into ingredient entries first
+  /// ([addPendingLine]); returns `null` without saving if one can't be
+  /// added.
   Future<Recipe?> save() async {
+    if (state.value?.saving ?? true) return null;
+    for (final finish in [..._pendingLines]) {
+      final added = await finish();
+      if (!ref.mounted || !added) return null;
+    }
     final current = state.value;
     if (current == null || current.saving) return null;
     if (current.problems.isNotEmpty) {

@@ -6,18 +6,21 @@ import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
+import 'package:yumdoor/domain/models/parsed_ingredient.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
 import 'package:yumdoor/domain/models/recipe_draft.dart';
 import 'package:yumdoor/domain/services/recipe_draft_validation.dart';
 import 'package:yumdoor/features/editor/editor_controller.dart';
 
 import '../../../fakes/fake_connectivity_service.dart';
+import '../../../fakes/fake_ingredient_parser.dart';
 import '../../../fakes/fake_recipe_repository.dart';
 import '../../../fixtures/recipes.dart';
 
 void main() {
   late FakeRecipeRepository recipes;
   late FakeConnectivityService connectivity;
+  late FakeIngredientParser parser;
   late ProviderContainer container;
 
   ProviderContainer containerWith(FakeRecipeRepository recipes) {
@@ -25,6 +28,7 @@ void main() {
       overrides: [
         recipeRepositoryProvider.overrideWithValue(recipes),
         connectivityServiceProvider.overrideWithValue(connectivity),
+        ingredientParserProvider.overrideWithValue(parser),
       ],
     );
     addTearDown(container.dispose);
@@ -34,6 +38,14 @@ void main() {
   setUp(() {
     recipes = FakeRecipeRepository([ofenkarotten]);
     connectivity = FakeConnectivityService();
+    parser = FakeIngredientParser({
+      '200 g Karotten': const ParsedIngredient(
+        originalText: '200 g Karotten',
+        food: NamedRef(id: 1, name: 'Karotte'),
+        unit: NamedRef(id: 9, name: 'g'),
+        amount: 200,
+      ),
+    });
     container = containerWith(recipes);
   });
 
@@ -179,6 +191,146 @@ void main() {
     expect(await first, isNotNull);
     expect(recipes.saves, hasLength(1));
     expect(state(7).draft.name, 'Ofenkarotten mit Feta');
+  });
+
+  group('ingredients', () {
+    List<List<IngredientDraft>> ingredients(int? recipeId) => [
+      for (final step in state(recipeId).draft.steps) step.ingredients,
+    ];
+
+    final karotten = const IngredientDraft(
+      food: NamedRef(id: 1, name: 'Karotte'),
+      unit: NamedRef(id: 9, name: 'g'),
+      amount: 200,
+      originalText: '200 g Karotten',
+    );
+
+    test('adds a parsed line to the last step', () async {
+      final controller = await editor(7);
+      final before = ingredients(7);
+
+      expect(await controller.addLine('200 g Karotten'), karotten);
+
+      expect(parser.parsed, ['200 g Karotten']);
+      expect(ingredients(7), [
+        before[0],
+        before[1],
+        [...before[2], karotten],
+      ]);
+    });
+
+    test('adds a line to the given step', () async {
+      final controller = await editor(7);
+
+      await controller.addLine('200 g Karotten', step: 0);
+
+      expect(ingredients(7)[0], [karotten]);
+    });
+
+    test('a line that does not parse is added as a note', () async {
+      final controller = await editor(null);
+
+      final added = await controller.addLine('etwas Grünes ');
+
+      expect(
+        added,
+        const IngredientDraft(
+          note: 'etwas Grünes',
+          originalText: 'etwas Grünes ',
+        ),
+      );
+      // A new recipe gets a step for it.
+      expect(ingredients(null), [
+        [added],
+      ]);
+    });
+
+    test('a blank line adds nothing and is not sent', () async {
+      final controller = await editor(7);
+      final before = state(7).draft;
+
+      expect(await controller.addLine('   '), isNull);
+
+      expect(parser.parsed, isEmpty);
+      expect(state(7).draft, before);
+    });
+
+    test('a failed parse adds nothing and throws', () async {
+      final controller = await editor(7);
+      final before = state(7).draft;
+      parser.failure = const OfflineFailure();
+
+      await expectLater(
+        controller.addLine('200 g Karotten'),
+        throwsA(isA<OfflineFailure>()),
+      );
+
+      expect(state(7).draft, before);
+    });
+
+    test('adds a header, edits, moves and removes rows', () async {
+      final controller = await editor(7);
+      final step = ingredients(7)[1];
+      final [karotte, oel, kuemmel, salz] = step;
+
+      controller.addHeader('Für die Gewürze', step: 1);
+      final header = IngredientDraft.header('Für die Gewürze');
+      expect(ingredients(7)[1], [karotte, oel, kuemmel, salz, header]);
+
+      controller.moveIngredient(1, 4, -1);
+      expect(ingredients(7)[1], [karotte, oel, kuemmel, header, salz]);
+
+      controller.updateIngredient(1, 0, karotte.copyWith(amount: 400));
+      expect(ingredients(7)[1].first.amount, 400);
+
+      controller.removeIngredient(1, 1);
+      expect(ingredients(7)[1], [
+        karotte.copyWith(amount: 400),
+        kuemmel,
+        header,
+        salz,
+      ]);
+
+      // A blank header adds nothing.
+      controller.addHeader('  ', step: 1);
+      expect(ingredients(7)[1], hasLength(4));
+    });
+
+    test('ingredient changes are saved with the recipe', () async {
+      final controller = await editor(7);
+
+      await controller.addLine('200 g Karotten');
+      controller.removeIngredient(1, 3);
+      await controller.save();
+
+      final saved = recipes.saves.single.draft;
+      expect(saved.steps[1].ingredients, hasLength(3));
+      expect(saved.steps[2].ingredients.last, karotten);
+    });
+
+    test('a save first adds the lines typed into entries', () async {
+      final controller = await editor(7);
+      final remove = controller.addPendingLine(
+        () async => await controller.addLine('200 g Karotten') != null,
+      );
+
+      expect(await controller.save(), isNotNull);
+      expect(recipes.saves.single.draft.steps[2].ingredients.last, karotten);
+
+      // Unregistered, it isn't asked again.
+      remove();
+      await controller.save();
+      expect(parser.parsed, hasLength(1));
+    });
+
+    test('a line that cannot be added stops the save', () async {
+      final controller = await editor(7);
+      controller.addPendingLine(() async => false);
+
+      expect(await controller.save(), isNull);
+      expect(recipes.saves, isEmpty);
+      expect(state(7).saving, isFalse);
+    });
   });
 }
 
