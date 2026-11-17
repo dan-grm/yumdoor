@@ -12,6 +12,7 @@ import '../common/offline_disabled.dart';
 import 'editor_controller.dart';
 import 'general_tab.dart';
 import 'ingredients_tab.dart';
+import 'steps_tab.dart';
 
 /// The tabs of the editor (mockup 09-rezept-bearbeiten).
 enum EditorTab { general, ingredients, steps }
@@ -315,14 +316,7 @@ class _Body extends ConsumerWidget {
               switch (tab) {
                 EditorTab.general => GeneralTab(recipeId: recipeId),
                 EditorTab.ingredients => IngredientsTab(recipeId: recipeId),
-                EditorTab.steps => Padding(
-                  padding: EdgeInsets.symmetric(vertical: t.space6),
-                  child: Text(
-                    l10n.editorTabComingSoon,
-                    textAlign: TextAlign.center,
-                    style: t.body.copyWith(color: t.inkMuted),
-                  ),
-                ),
+                EditorTab.steps => StepsTab(recipeId: recipeId),
               },
             ],
           ),

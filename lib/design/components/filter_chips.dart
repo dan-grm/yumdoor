@@ -66,7 +66,7 @@ class AddFilterChip extends StatelessWidget {
       label: tooltip,
       onTap: onPressed,
       child: CustomPaint(
-        painter: _DashedOutlinePainter(
+        painter: DashedOutlinePainter(
           color: onPressed == null ? t.line : t.controlBorder,
           radius: t.radiusM,
         ),
@@ -214,8 +214,9 @@ class _ChipTapArea extends StatelessWidget {
   }
 }
 
-class _DashedOutlinePainter extends CustomPainter {
-  _DashedOutlinePainter({required this.color, required this.radius});
+/// Paints a dashed rounded outline (mockup 03-suche, 09-rezept-bearbeiten).
+class DashedOutlinePainter extends CustomPainter {
+  DashedOutlinePainter({required this.color, required this.radius});
 
   final Color color;
   final double radius;
@@ -248,6 +249,6 @@ class _DashedOutlinePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_DashedOutlinePainter old) =>
+  bool shouldRepaint(DashedOutlinePainter old) =>
       old.color != color || old.radius != radius;
 }

@@ -1334,11 +1334,149 @@ abstract class AppLocalizations {
   /// **'Schritte'**
   String get editorTabSteps;
 
-  /// Placeholder of the Zutaten and Schritte tabs until they are built.
+  /// Empty state of the editor's step list.
   ///
   /// In de, this message translates to:
-  /// **'Das kommt bald. Bis dahin bleiben die Schritte beim Speichern, wie sie sind.'**
-  String get editorTabComingSoon;
+  /// **'Noch keine Schritte. Füge unten den ersten hinzu.'**
+  String get stepsEmpty;
+
+  /// Adds an empty step at the end.
+  ///
+  /// In de, this message translates to:
+  /// **'Schritt hinzufügen'**
+  String get stepAdd;
+
+  /// Preview of a collapsed step without instruction.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch kein Text'**
+  String get stepEmptyPreview;
+
+  /// Screen-reader label of a collapsed step card.
+  ///
+  /// In de, this message translates to:
+  /// **'Schritt {number} aufklappen'**
+  String stepExpand(int number);
+
+  /// Screen-reader label of the header of an expanded step card.
+  ///
+  /// In de, this message translates to:
+  /// **'Schritt {number} zuklappen'**
+  String stepCollapse(int number);
+
+  /// Tooltip and screen-reader label of the drag handle of a step.
+  ///
+  /// In de, this message translates to:
+  /// **'Schritt {number} verschieben'**
+  String stepDragHandle(int number);
+
+  /// Tooltip of the menu button of a step.
+  ///
+  /// In de, this message translates to:
+  /// **'Aktionen für Schritt {number}'**
+  String stepActions(int number);
+
+  /// Menu item: move the step one place up.
+  ///
+  /// In de, this message translates to:
+  /// **'Nach oben'**
+  String get stepMoveUp;
+
+  /// Menu item: move the step one place down.
+  ///
+  /// In de, this message translates to:
+  /// **'Nach unten'**
+  String get stepMoveDown;
+
+  /// Menu item and tooltip: delete the step.
+  ///
+  /// In de, this message translates to:
+  /// **'Schritt löschen'**
+  String get stepDelete;
+
+  /// Title of the confirmation before a step with text or ingredients is deleted.
+  ///
+  /// In de, this message translates to:
+  /// **'Schritt {number} löschen?'**
+  String stepDeleteTitle(int number);
+
+  /// Body of the confirmation before a step is deleted: its ingredients go with it. Count is the number of ingredients, which may be 0.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =0{Der Text dieses Schritts wird gelöscht.} =1{Der Text und die Zutat dieses Schritts werden gelöscht.} other{Der Text und die {count} Zutaten dieses Schritts werden gelöscht.}}'**
+  String stepDeleteBody(int count);
+
+  /// Label of the instruction field of a step.
+  ///
+  /// In de, this message translates to:
+  /// **'Anleitung'**
+  String get stepInstruction;
+
+  /// Label of the optional name field of a step.
+  ///
+  /// In de, this message translates to:
+  /// **'Name (optional)'**
+  String get stepName;
+
+  /// Label above the ingredient chips of a step.
+  ///
+  /// In de, this message translates to:
+  /// **'Zutaten in diesem Schritt'**
+  String get stepIngredients;
+
+  /// Label of the dashed chip that adds an ingredient to a step; shown with a plus icon.
+  ///
+  /// In de, this message translates to:
+  /// **'Zutat'**
+  String get stepAddIngredient;
+
+  /// Accessible name of the chip that adds an ingredient to a step.
+  ///
+  /// In de, this message translates to:
+  /// **'Zutat zu Schritt {number} hinzufügen'**
+  String stepAddIngredientTooltip(int number);
+
+  /// Tooltip of the x on an ingredient chip.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} aus diesem Schritt entfernen'**
+  String stepRemoveIngredient(String name);
+
+  /// Tooltip of an ingredient chip, which opens a menu of steps to move it to.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} in einen anderen Schritt verschieben'**
+  String stepMoveIngredient(String name);
+
+  /// Menu item: move the ingredient to the step.
+  ///
+  /// In de, this message translates to:
+  /// **'Nach Schritt {number}'**
+  String stepMoveIngredientTo(int number);
+
+  /// Label of the duration field of a step.
+  ///
+  /// In de, this message translates to:
+  /// **'Dauer'**
+  String get stepDuration;
+
+  /// Unit after the duration field of a step: minutes.
+  ///
+  /// In de, this message translates to:
+  /// **'Min'**
+  String get stepDurationUnit;
+
+  /// Note next to the duration field: cooking mode offers it as a timer.
+  ///
+  /// In de, this message translates to:
+  /// **'wird als Timer angeboten'**
+  String get stepDurationHelp;
+
+  /// Snackbar after the ingredients of a step were reordered or one was removed, when its text refers to them by position.
+  ///
+  /// In de, this message translates to:
+  /// **'Der Text von Schritt {number} verweist auf Zutaten nach ihrer Position (ingredients[0]). Prüfe, ob er noch passt.'**
+  String stepTemplateWarning(int number);
 
   /// Label of the recipe name field.
   ///

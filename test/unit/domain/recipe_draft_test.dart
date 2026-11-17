@@ -184,4 +184,51 @@ void main() {
       );
     });
   });
+
+  group('steps', () {
+    final draft = RecipeDraft.fromRecipe(ofenkarotten);
+    List<int?> ids(RecipeDraft d) => [for (final s in d.steps) s.id];
+
+    test('adds an empty step at the end', () {
+      final added = draft.addStep();
+
+      expect(ids(added), [1, 2, 3, null]);
+      expect(added.steps.last, const StepDraft());
+    });
+
+    test('removes a step with its ingredients', () {
+      final removed = draft.removeStep(1);
+
+      expect(ids(removed), [1, 3]);
+      expect(removed.steps.expand((s) => s.ingredients).map((i) => i.id), [
+        5,
+        6,
+      ]);
+    });
+
+    test('moves a step, not past the ends', () {
+      expect(ids(draft.moveStep(0, 2)), [2, 3, 1]);
+      expect(ids(draft.moveStep(2, 1)), [1, 3, 2]);
+      expect(ids(draft.moveStep(0, -1)), [1, 2, 3]);
+      expect(ids(draft.moveStep(2, 3)), [1, 2, 3]);
+    });
+
+    test('changes one step', () {
+      final changed = draft.changeStep(
+        0,
+        (s) => s.copyWith(time: const Duration(minutes: 10)),
+      );
+
+      expect(changed.steps[0].time, const Duration(minutes: 10));
+      expect(changed.steps[1], draft.steps[1]);
+    });
+
+    test('moves an ingredient to the end of another step', () {
+      final moved = draft.moveIngredientToStep(1, 0, 2);
+
+      expect(moved.steps[1].ingredients.map((i) => i.id), [2, 3, 4]);
+      expect(moved.steps[2].ingredients.map((i) => i.id), [5, 6, 1]);
+      expect(draft.moveIngredientToStep(1, 0, 1), draft);
+    });
+  });
 }

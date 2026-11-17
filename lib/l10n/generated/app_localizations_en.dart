@@ -821,8 +821,105 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editorTabSteps => 'Steps';
 
   @override
-  String get editorTabComingSoon =>
-      'Coming soon. Until then, saving keeps the steps as they are.';
+  String get stepsEmpty => 'No steps yet. Add the first one below.';
+
+  @override
+  String get stepAdd => 'Add step';
+
+  @override
+  String get stepEmptyPreview => 'No text yet';
+
+  @override
+  String stepExpand(int number) {
+    return 'Expand step $number';
+  }
+
+  @override
+  String stepCollapse(int number) {
+    return 'Collapse step $number';
+  }
+
+  @override
+  String stepDragHandle(int number) {
+    return 'Move step $number';
+  }
+
+  @override
+  String stepActions(int number) {
+    return 'Actions for step $number';
+  }
+
+  @override
+  String get stepMoveUp => 'Move up';
+
+  @override
+  String get stepMoveDown => 'Move down';
+
+  @override
+  String get stepDelete => 'Delete step';
+
+  @override
+  String stepDeleteTitle(int number) {
+    return 'Delete step $number?';
+  }
+
+  @override
+  String stepDeleteBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'The text and the $count ingredients of this step are deleted.',
+      one: 'The text and the ingredient of this step are deleted.',
+      zero: 'The text of this step is deleted.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stepInstruction => 'Instructions';
+
+  @override
+  String get stepName => 'Name (optional)';
+
+  @override
+  String get stepIngredients => 'Ingredients in this step';
+
+  @override
+  String get stepAddIngredient => 'Ingredient';
+
+  @override
+  String stepAddIngredientTooltip(int number) {
+    return 'Add an ingredient to step $number';
+  }
+
+  @override
+  String stepRemoveIngredient(String name) {
+    return 'Remove $name from this step';
+  }
+
+  @override
+  String stepMoveIngredient(String name) {
+    return 'Move $name to another step';
+  }
+
+  @override
+  String stepMoveIngredientTo(int number) {
+    return 'To step $number';
+  }
+
+  @override
+  String get stepDuration => 'Duration';
+
+  @override
+  String get stepDurationUnit => 'min';
+
+  @override
+  String get stepDurationHelp => 'offered as a timer';
+
+  @override
+  String stepTemplateWarning(int number) {
+    return 'The text of step $number refers to ingredients by position (ingredients[0]). Check that it still fits.';
+  }
 
   @override
   String get editorName => 'Name';

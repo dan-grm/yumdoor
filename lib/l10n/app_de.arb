@@ -1143,9 +1143,167 @@
   "@editorTabSteps": {
     "description": "Editor tab for the steps."
   },
-  "editorTabComingSoon": "Das kommt bald. Bis dahin bleiben die Schritte beim Speichern, wie sie sind.",
-  "@editorTabComingSoon": {
-    "description": "Placeholder of the Zutaten and Schritte tabs until they are built."
+  "stepsEmpty": "Noch keine Schritte. Füge unten den ersten hinzu.",
+  "@stepsEmpty": {
+    "description": "Empty state of the editor's step list."
+  },
+  "stepAdd": "Schritt hinzufügen",
+  "@stepAdd": {
+    "description": "Adds an empty step at the end."
+  },
+  "stepEmptyPreview": "Noch kein Text",
+  "@stepEmptyPreview": {
+    "description": "Preview of a collapsed step without instruction."
+  },
+  "stepExpand": "Schritt {number} aufklappen",
+  "@stepExpand": {
+    "description": "Screen-reader label of a collapsed step card.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "stepCollapse": "Schritt {number} zuklappen",
+  "@stepCollapse": {
+    "description": "Screen-reader label of the header of an expanded step card.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "stepDragHandle": "Schritt {number} verschieben",
+  "@stepDragHandle": {
+    "description": "Tooltip and screen-reader label of the drag handle of a step.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "stepActions": "Aktionen für Schritt {number}",
+  "@stepActions": {
+    "description": "Tooltip of the menu button of a step.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "stepMoveUp": "Nach oben",
+  "@stepMoveUp": {
+    "description": "Menu item: move the step one place up."
+  },
+  "stepMoveDown": "Nach unten",
+  "@stepMoveDown": {
+    "description": "Menu item: move the step one place down."
+  },
+  "stepDelete": "Schritt löschen",
+  "@stepDelete": {
+    "description": "Menu item and tooltip: delete the step."
+  },
+  "stepDeleteTitle": "Schritt {number} löschen?",
+  "@stepDeleteTitle": {
+    "description": "Title of the confirmation before a step with text or ingredients is deleted.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "stepDeleteBody": "{count, plural, =0{Der Text dieses Schritts wird gelöscht.} =1{Der Text und die Zutat dieses Schritts werden gelöscht.} other{Der Text und die {count} Zutaten dieses Schritts werden gelöscht.}}",
+  "@stepDeleteBody": {
+    "description": "Body of the confirmation before a step is deleted: its ingredients go with it. Count is the number of ingredients, which may be 0.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "stepInstruction": "Anleitung",
+  "@stepInstruction": {
+    "description": "Label of the instruction field of a step."
+  },
+  "stepName": "Name (optional)",
+  "@stepName": {
+    "description": "Label of the optional name field of a step."
+  },
+  "stepIngredients": "Zutaten in diesem Schritt",
+  "@stepIngredients": {
+    "description": "Label above the ingredient chips of a step."
+  },
+  "stepAddIngredient": "Zutat",
+  "@stepAddIngredient": {
+    "description": "Label of the dashed chip that adds an ingredient to a step; shown with a plus icon."
+  },
+  "stepAddIngredientTooltip": "Zutat zu Schritt {number} hinzufügen",
+  "@stepAddIngredientTooltip": {
+    "description": "Accessible name of the chip that adds an ingredient to a step.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "stepRemoveIngredient": "{name} aus diesem Schritt entfernen",
+  "@stepRemoveIngredient": {
+    "description": "Tooltip of the x on an ingredient chip.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      }
+    }
+  },
+  "stepMoveIngredient": "{name} in einen anderen Schritt verschieben",
+  "@stepMoveIngredient": {
+    "description": "Tooltip of an ingredient chip, which opens a menu of steps to move it to.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      }
+    }
+  },
+  "stepMoveIngredientTo": "Nach Schritt {number}",
+  "@stepMoveIngredientTo": {
+    "description": "Menu item: move the ingredient to the step.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+  "stepDuration": "Dauer",
+  "@stepDuration": {
+    "description": "Label of the duration field of a step."
+  },
+  "stepDurationUnit": "Min",
+  "@stepDurationUnit": {
+    "description": "Unit after the duration field of a step: minutes."
+  },
+  "stepDurationHelp": "wird als Timer angeboten",
+  "@stepDurationHelp": {
+    "description": "Note next to the duration field: cooking mode offers it as a timer."
+  },
+  "stepTemplateWarning": "Der Text von Schritt {number} verweist auf Zutaten nach ihrer Position (ingredients[0]). Prüfe, ob er noch passt.",
+  "@stepTemplateWarning": {
+    "description": "Snackbar after the ingredients of a step were reordered or one was removed, when its text refers to them by position.",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "example": "3"
+      }
+    }
   },
   "editorName": "Name",
   "@editorName": {
