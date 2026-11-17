@@ -244,7 +244,33 @@ is a text, since fuzzy ordering of a short text puts matches anywhere in the lis
   - Tandoor replaces the **whole step** with "Could not parse template code" on a Jinja error and strips every
     leftover `{` and `}`. Yumdoor keeps the step and shows unknown expressions as written instead.
 - Same for `MealPlan.note_markdown`: use `note`, not the HTML.
-- Images: `PUT /api/recipe/{id}/image/` (multipart `image`, or `image_url`).
+- Images: `PUT /api/recipe/{id}/image/`, see [Recipe images](#recipe-images).
+
+## Recipe images
+
+`PUT /api/recipe/{id}/image/` (`RecipeViewSet.image`, `cookbook/views/api.py:1856`; `RecipeImageSerializer`,
+`cookbook/serializer.py:1237`; `cookbook/helper/image_processing.py`). Verified on 2.6.15:
+
+- **Multipart only** (`MultiPartParser`); JSON is a 415. The file goes in `image`; `image_url` instead makes the
+  server download it. The generated client types `image` as a string, so Yumdoor sends the form with plain Dio
+  (`TandoorRecipeRepository.uploadImage`).
+- **Formats:** the file name must end in `.jpg`, `.jpeg`, `.png`, `.webp` or `.gif` (any case); without one, or
+  with another (`photo.heic`), it's a 400 from Django's `ImageField`. The content must be an image Pillow can
+  open, else 400 ("Upload a valid image"). A PNG named `.jpg` is accepted and stored as PNG. Yumdoor sniffs the
+  type from the content and sends a matching name (`PickedImage.fileName`).
+- **Size:** Tandoor has no limit of its own; the nginx in the official image allows 512 MB. A reverse proxy in
+  front of it often allows less (nginx's default is 1 MB) and answers **413**, which Yumdoor explains as "too large
+  for the server". Yumdoor itself accepts up to 20 MiB (`maxImageBytes`).
+- **Processing:** files over 500 KB are scaled to **1020 px wide** (aspect kept, also upscaled if narrower; JPEG at
+  quality 90, EXIF orientation applied). Smaller ones are re-encoded without metadata. Animated GIFs stay animated.
+  A 6 MB 3000×2000 JPEG came back as 1020×680, 360 KB.
+- **Response:** 200 with `{"image": "/media/recipes/<uuid>_<id>.<ext>", "image_url": null}`, the path relative to
+  the server. `GET /api/recipe/{id}/` then has the absolute URL. Every upload gets a new file name, so cached copies
+  never go stale. Media under `/media/` is served without authentication.
+- **Removing:** a PUT with an empty form (no `image`, no `image_url`) sets the image to `null` (200). An `image`
+  field with an empty value is a **500**.
+- **Permissions:** like a recipe update: 403 for a user who may not change the recipe (also for someone else's
+  private recipe), 404 for a recipe that doesn't exist.
 
 ## Recipe writes
 

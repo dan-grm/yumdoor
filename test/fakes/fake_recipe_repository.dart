@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:yumdoor/core/cancellation.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/domain/models/food.dart';
+import 'package:yumdoor/domain/models/image_upload.dart';
 import 'package:yumdoor/domain/models/ingredient.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
@@ -142,6 +143,33 @@ class FakeRecipeRepository implements RecipeRepository {
             ],
           ),
       ],
+    );
+  }
+
+  /// The image uploads and removals, in order: the upload, or `null` for a
+  /// removal.
+  final imageChanges = <({int id, ImageUpload? image})>[];
+
+  /// Makes [uploadImage] and [removeImage] throw it.
+  Failure? imageFailure;
+
+  /// Where the fake stores uploaded images.
+  static Uri imageUrl(int id, int upload) =>
+      Uri.parse('https://example.com/media/recipes/${upload}_$id.jpg');
+
+  @override
+  Future<Recipe> uploadImage(int id, ImageUpload image) =>
+      _changeImage(id, image);
+
+  @override
+  Future<Recipe> removeImage(int id) => _changeImage(id, null);
+
+  Future<Recipe> _changeImage(int id, ImageUpload? image) async {
+    imageChanges.add((id: id, image: image));
+    if (failure ?? imageFailure case final failure?) throw failure;
+    final recipe = recipes[id] ?? (throw const NotFoundFailure());
+    return recipes[id] = recipe.copyWith(
+      image: image == null ? null : imageUrl(id, imageChanges.length),
     );
   }
 

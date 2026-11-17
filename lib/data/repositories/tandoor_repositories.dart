@@ -63,6 +63,7 @@ class TandoorRepositories {
     );
     final remoteRecipes = TandoorRecipeRepository(
       apiClient,
+      dio: dio,
       lastCooked: cookLogs.lastCooked,
     );
     final images = cache == null ? null : ImageDownloader();

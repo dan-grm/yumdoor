@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,6 +14,7 @@ import 'package:yumdoor/data/repositories/tandoor_recipe_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_server_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_unit_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_user_repository.dart';
+import 'package:yumdoor/domain/models/image_upload.dart';
 import 'package:yumdoor/domain/models/recipe_book.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
 import 'package:yumdoor/domain/models/recipe_sort.dart';
@@ -473,6 +475,84 @@ void main() {
       expect(request.method, 'POST');
       expect(request.uri.path, '/tandoor/api/view-log/');
       expect(request.data, {'recipe': 58});
+    });
+
+    group('images', () {
+      final upload = ImageUpload(
+        bytes: Uint8List.fromList([0x89, 0x50, 0x4E, 0x47]),
+        fileName: 'apfelkuchen.png',
+        mimeType: 'image/png',
+      );
+      const path = '/media/recipes/a_58.png';
+
+      FakeHttpAdapter imageAdapter({int status = 200}) =>
+          FakeHttpAdapter((request) {
+            if (request.uri.path.endsWith('/image/')) {
+              return jsonResponse({
+                'image': status == 200 ? path : null,
+                'image_url': null,
+              }, status: status);
+            }
+            final recipe = tandoorFixture('recipe_apfelkuchen.json')! as Map;
+            return jsonResponse({
+              ...recipe,
+              'image': 'https://example.com/tandoor$path',
+            });
+          });
+
+      TandoorRecipeRepository repository(FakeHttpAdapter adapter) =>
+          TandoorRecipeRepository(client(adapter), dio: fakeDio(adapter));
+
+      test('uploads an image as multipart and returns the recipe', () async {
+        final adapter = imageAdapter();
+
+        final recipe = await repository(adapter).uploadImage(58, upload);
+
+        final [put, get] = adapter.requests;
+        expect(put.method, 'PUT');
+        expect(put.uri.path, '/tandoor/api/recipe/58/image/');
+        expect(put.headers['Authorization'], 'Bearer tda_test');
+        final form = put.data as FormData;
+        expect(form.fields, isEmpty);
+        final file = form.files.single;
+        expect(file.key, 'image');
+        expect(file.value.filename, 'apfelkuchen.png');
+        expect(file.value.contentType.toString(), 'image/png');
+        expect(file.value.length, 4);
+        // Longer than the usual 30 s, for large photos on slow connections.
+        expect(put.receiveTimeout, greaterThan(const Duration(minutes: 1)));
+        expect(get.uri.path, '/tandoor/api/recipe/58/');
+        expect(
+          recipe.image,
+          Uri.parse('https://example.com/tandoor/media/recipes/a_58.png'),
+        );
+      });
+
+      test('removes the image with an empty form', () async {
+        final adapter = imageAdapter();
+
+        await repository(adapter).removeImage(58);
+
+        final put = adapter.requests.first;
+        expect(put.method, 'PUT');
+        expect(put.uri.path, '/tandoor/api/recipe/58/image/');
+        final form = put.data as FormData;
+        expect(form.fields, isEmpty);
+        expect(form.files, isEmpty);
+      });
+
+      test('maps a refused size to a ServerFailure with 413', () async {
+        final adapter = imageAdapter(status: 413);
+
+        await expectLater(
+          repository(adapter).uploadImage(58, upload),
+          throwsA(
+            isA<ServerFailure>().having((f) => f.statusCode, 'status', 413),
+          ),
+        );
+        // No fetch after a failed upload.
+        expect(adapter.requests, hasLength(1));
+      });
     });
 
     test('throws NotFoundFailure for a missing recipe', () {

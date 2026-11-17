@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import '../../core/cancellation.dart';
 import '../../core/failures.dart';
+import '../../domain/models/image_upload.dart';
 import '../../domain/models/recipe.dart';
 import '../../domain/models/recipe_draft.dart';
 import '../../domain/models/recipe_query.dart';
@@ -98,10 +99,24 @@ class CachingRecipeRepository implements RecipeRepository {
   }
 
   @override
-  Future<Recipe> updateRecipe(int id, RecipeDraft draft) async {
+  Future<Recipe> updateRecipe(int id, RecipeDraft draft) =>
+      _save(id, () => _remote.updateRecipe(id, draft));
+
+  /// Like saves: the recipe as saved is stored, and its new image
+  /// downloaded in the background, so the offline copy shows it.
+  @override
+  Future<Recipe> uploadImage(int id, ImageUpload image) =>
+      _save(id, () => _remote.uploadImage(id, image));
+
+  @override
+  Future<Recipe> removeImage(int id) =>
+      _save(id, () => _remote.removeImage(id));
+
+  /// Saves the recipe [id] with [save] and stores it as saved.
+  Future<Recipe> _save(int id, Future<Recipe> Function() save) async {
     final Recipe recipe;
     try {
-      recipe = await _remote.updateRecipe(id, draft);
+      recipe = await save();
     } on NotFoundFailure {
       // Deleted, or no longer shared with the user.
       await _ignoreErrors(_cache.remove(id));
