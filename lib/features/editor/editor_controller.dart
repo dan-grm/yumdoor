@@ -166,6 +166,45 @@ class RecipeEditor extends _$RecipeEditor {
   void moveIngredient(int step, int index, int offset) =>
       edit((draft) => draft.moveIngredient(step, index, index + offset));
 
+  /// Adds an empty step at the end.
+  void addStep() => edit((draft) => draft.addStep());
+
+  /// Removes the step at [index] with its ingredients.
+  void removeStep(int index) => edit((draft) => draft.removeStep(index));
+
+  /// Moves the step at [index] by [offset] places (-1 up, 1 down); not past
+  /// the ends.
+  void moveStep(int index, int offset) =>
+      edit((draft) => draft.moveStep(index, index + offset));
+
+  /// Moves the step at [index] to place [to].
+  void reorderStep(int index, int to) =>
+      edit((draft) => draft.moveStep(index, to));
+
+  /// Sets the instruction of the step at [index].
+  void setStepInstruction(int index, String instruction) => edit(
+    (draft) =>
+        draft.changeStep(index, (s) => s.copyWith(instruction: instruction)),
+  );
+
+  /// Sets the name of the step at [index].
+  void setStepName(int index, String name) =>
+      edit((draft) => draft.changeStep(index, (s) => s.copyWith(name: name)));
+
+  /// Sets the explicit duration of the step at [index], in whole minutes;
+  /// [Duration.zero] for none.
+  void setStepTime(int index, Duration time) => edit(
+    (draft) => draft.changeStep(
+      index,
+      (s) => s.copyWith(time: Duration(minutes: time.inMinutes)),
+    ),
+  );
+
+  /// Moves the ingredient at [index] of the step at [from] to the end of the
+  /// step at [to].
+  void moveIngredientToStep(int from, int index, int to) =>
+      edit((draft) => draft.moveIngredientToStep(from, index, to));
+
   /// Saves the draft, creating the recipe if it is new, and returns it as
   /// saved. Returns `null` if the draft has problems, which are then shown
   /// at their fields, or if saving failed ([EditorState.failure]), or while

@@ -13,6 +13,7 @@ import '../recipe/ingredient_lines.dart';
 import 'editor_controller.dart';
 import 'ingredient_entry.dart';
 import 'ingredient_sheets.dart';
+import 'steps_tab.dart';
 
 /// The editor's "Zutaten" tab: the recipe's ingredients with their section
 /// headers, fast entry of new lines, and per row edit, move and delete.
@@ -113,7 +114,7 @@ class IngredientsTab extends ConsumerWidget {
 /// [amount] as it is saved: `½` and `1½` where that is exact, else the
 /// number as the edit sheet shows it, without thousands separators (`1250`,
 /// `1234,5`), not rounded for cooking like on the recipe screen.
-String _amount(LocaleFormat format, double amount) =>
+String ingredientAmountText(LocaleFormat format, double amount) =>
     switch (Quantity.of(amount)) {
       final FractionQuantity fraction when fraction.value == amount =>
         format.quantity(fraction),
@@ -170,12 +171,30 @@ class _EditableRow extends ConsumerWidget {
       }
     }
 
-    void act(_Action action) => switch (action) {
-      _Action.edit => edit(),
-      _Action.up => editor.moveIngredient(step, index, -1),
-      _Action.down => editor.moveIngredient(step, index, 1),
-      _Action.delete => editor.removeIngredient(step, index),
-    };
+    void act(_Action action) {
+      final draft = ref.read(recipeEditorProvider(recipeId)).value?.draft;
+      // Moving and removing change what `{{ ingredients[n] }}` refers to.
+      if (draft != null &&
+          action != _Action.edit &&
+          step < draft.steps.length) {
+        warnIfReferencesShift(
+          context,
+          draft.steps[step],
+          step + 1,
+          action == _Action.up ? index - 1 : index,
+        );
+      }
+      switch (action) {
+        case _Action.edit:
+          edit();
+        case _Action.up:
+          editor.moveIngredient(step, index, -1);
+        case _Action.down:
+          editor.moveIngredient(step, index, 1);
+        case _Action.delete:
+          editor.removeIngredient(step, index);
+      }
+    }
 
     final Widget content;
     if (ingredient.isHeader) {
@@ -195,7 +214,8 @@ class _EditableRow extends ConsumerWidget {
         amount: ingredient.noAmount
             ? ''
             : [
-                if (ingredient.amount > 0) _amount(format, ingredient.amount),
+                if (ingredient.amount > 0)
+                  ingredientAmountText(format, ingredient.amount),
                 ?ingredient.unit?.name,
               ].join(' '),
       );

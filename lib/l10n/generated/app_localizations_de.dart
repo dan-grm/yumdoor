@@ -827,8 +827,105 @@ class AppLocalizationsDe extends AppLocalizations {
   String get editorTabSteps => 'Schritte';
 
   @override
-  String get editorTabComingSoon =>
-      'Das kommt bald. Bis dahin bleiben die Schritte beim Speichern, wie sie sind.';
+  String get stepsEmpty => 'Noch keine Schritte. Füge unten den ersten hinzu.';
+
+  @override
+  String get stepAdd => 'Schritt hinzufügen';
+
+  @override
+  String get stepEmptyPreview => 'Noch kein Text';
+
+  @override
+  String stepExpand(int number) {
+    return 'Schritt $number aufklappen';
+  }
+
+  @override
+  String stepCollapse(int number) {
+    return 'Schritt $number zuklappen';
+  }
+
+  @override
+  String stepDragHandle(int number) {
+    return 'Schritt $number verschieben';
+  }
+
+  @override
+  String stepActions(int number) {
+    return 'Aktionen für Schritt $number';
+  }
+
+  @override
+  String get stepMoveUp => 'Nach oben';
+
+  @override
+  String get stepMoveDown => 'Nach unten';
+
+  @override
+  String get stepDelete => 'Schritt löschen';
+
+  @override
+  String stepDeleteTitle(int number) {
+    return 'Schritt $number löschen?';
+  }
+
+  @override
+  String stepDeleteBody(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Der Text und die $count Zutaten dieses Schritts werden gelöscht.',
+      one: 'Der Text und die Zutat dieses Schritts werden gelöscht.',
+      zero: 'Der Text dieses Schritts wird gelöscht.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get stepInstruction => 'Anleitung';
+
+  @override
+  String get stepName => 'Name (optional)';
+
+  @override
+  String get stepIngredients => 'Zutaten in diesem Schritt';
+
+  @override
+  String get stepAddIngredient => 'Zutat';
+
+  @override
+  String stepAddIngredientTooltip(int number) {
+    return 'Zutat zu Schritt $number hinzufügen';
+  }
+
+  @override
+  String stepRemoveIngredient(String name) {
+    return '$name aus diesem Schritt entfernen';
+  }
+
+  @override
+  String stepMoveIngredient(String name) {
+    return '$name in einen anderen Schritt verschieben';
+  }
+
+  @override
+  String stepMoveIngredientTo(int number) {
+    return 'Nach Schritt $number';
+  }
+
+  @override
+  String get stepDuration => 'Dauer';
+
+  @override
+  String get stepDurationUnit => 'Min';
+
+  @override
+  String get stepDurationHelp => 'wird als Timer angeboten';
+
+  @override
+  String stepTemplateWarning(int number) {
+    return 'Der Text von Schritt $number verweist auf Zutaten nach ihrer Position (ingredients[0]). Prüfe, ob er noch passt.';
+  }
 
   @override
   String get editorName => 'Name';

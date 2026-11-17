@@ -106,6 +106,41 @@ abstract class RecipeDraft with _$RecipeDraft {
         return moved;
       });
 
+  /// A new, empty step at the end.
+  RecipeDraft addStep() => copyWith(steps: [...steps, const StepDraft()]);
+
+  /// The draft without the step at [index], with its ingredients.
+  RecipeDraft removeStep(int index) =>
+      copyWith(steps: [...steps]..removeAt(index));
+
+  /// The step at [index] moved to [to]; [to] is clamped to the steps.
+  RecipeDraft moveStep(int index, int to) {
+    final target = to.clamp(0, steps.length - 1);
+    if (target == index) return this;
+    final moved = [...steps];
+    moved.insert(target, moved.removeAt(index));
+    return copyWith(steps: moved);
+  }
+
+  /// The step at [index] changed by [change].
+  RecipeDraft changeStep(
+    int index,
+    StepDraft Function(StepDraft step) change,
+  ) => copyWith(
+    steps: [for (final (i, s) in steps.indexed) i == index ? change(s) : s],
+  );
+
+  /// The ingredient at [index] of the step at [from] moved to the end of the
+  /// step at [to]. Nothing changes if [from] and [to] are the same step.
+  RecipeDraft moveIngredientToStep(int from, int index, int to) {
+    if (from == to) return this;
+    final ingredient = steps[from].ingredients[index];
+    return removeIngredient(
+      from,
+      index,
+    )._changeIngredients(to, (list) => [...list, ingredient]);
+  }
+
   RecipeDraft _changeIngredients(
     int step,
     List<IngredientDraft> Function(List<IngredientDraft> ingredients) change,

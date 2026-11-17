@@ -332,6 +332,79 @@ void main() {
       expect(state(7).saving, isFalse);
     });
   });
+
+  group('steps', () {
+    List<int?> ids() => [for (final s in state(7).draft.steps) s.id];
+
+    test('adds a step', () async {
+      final controller = await editor(7);
+
+      controller.addStep();
+
+      expect(ids(), [1, 2, 3, null]);
+    });
+
+    test('deletes a step', () async {
+      final controller = await editor(7);
+
+      controller.removeStep(1);
+
+      expect(ids(), [1, 3]);
+    });
+
+    test('moves steps by an offset and to a place', () async {
+      final controller = await editor(7);
+
+      controller.moveStep(2, -1);
+      expect(ids(), [1, 3, 2]);
+      controller.moveStep(0, -1);
+      expect(ids(), [1, 3, 2]);
+      controller.reorderStep(0, 2);
+      expect(ids(), [3, 2, 1]);
+    });
+
+    test('sets instruction, name and whole minutes of the duration', () async {
+      final controller = await editor(7);
+
+      controller
+        ..setStepInstruction(0, 'Vorheizen.')
+        ..setStepName(0, 'Ofen')
+        ..setStepTime(0, const Duration(minutes: 25, seconds: 40));
+
+      final step = state(7).draft.steps[0];
+      expect(step.instruction, 'Vorheizen.');
+      expect(step.name, 'Ofen');
+      expect(step.time, const Duration(minutes: 25));
+      controller.setStepTime(0, Duration.zero);
+      expect(state(7).draft.steps[0].time, Duration.zero);
+    });
+
+    test('moves an ingredient between steps', () async {
+      final controller = await editor(7);
+
+      controller.moveIngredientToStep(1, 0, 0);
+
+      final steps = state(7).draft.steps;
+      expect(steps[0].ingredients.map((i) => i.id), [1]);
+      expect(steps[1].ingredients.map((i) => i.id), [2, 3, 4]);
+    });
+
+    test('edits are saved in the new order', () async {
+      final controller = await editor(7);
+
+      controller
+        ..moveStep(0, 1)
+        ..addStep();
+      await controller.save();
+
+      expect(recipes.saves.single.draft.steps.map((s) => s.id), [
+        2,
+        1,
+        3,
+        null,
+      ]);
+    });
+  });
 }
 
 /// Saves through [_inner] once [_gate] completes, or throws [_error].
