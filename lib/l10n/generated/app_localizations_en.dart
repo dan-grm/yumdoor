@@ -821,6 +821,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editorTabSteps => 'Steps';
 
   @override
+  String get editorTabIngredientsSteps => 'Ingredients & steps';
+
+  @override
+  String get editorShortcuts =>
+      'Shortcuts: Ctrl/Cmd+S saves, Esc cancels, Alt+1 to Alt+3 switch tabs, Alt+Up/Down moves a step, Enter adds an ingredient.';
+
+  @override
   String get stepsEmpty => 'No steps yet. Add the first one below.';
 
   @override

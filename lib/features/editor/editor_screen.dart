@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -16,6 +17,7 @@ import '../../l10n/l10n.dart';
 import '../../platform/image_picker/image_picker_service.dart';
 import '../../platform/unload_guard/unload_guard.dart';
 import '../common/failure_view.dart';
+import '../common/layout.dart';
 import '../common/offline_disabled.dart';
 import 'editor_controller.dart';
 import 'general_tab.dart';
@@ -320,54 +322,83 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     final saving = state?.saving ?? false;
     final offline = ref.watch(isOfflineProvider);
 
+    final canSave = state != null && !saving && !offline;
+
     return PopScope(
       // Leaving while saving would race with the return after it.
       canPop: !saving,
-      child: Scaffold(
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _Header(
-                recipeName: state?.recipeName,
-                isNew: widget.recipeId == null,
-                saving: saving,
-                canSave: state != null,
-                onCancel: saving ? null : _leave,
-                onSave: _save,
-              ),
-              Expanded(
-                child: switch (editor) {
-                  AsyncData(:final value) => _Body(
-                    // A restored draft replaces what the fields hold.
-                    key: ValueKey(_restored),
-                    recipeId: widget.recipeId,
-                    state: value,
-                    tab: _tab,
-                    onTab: (tab) => setState(() => _tab = tab),
-                    onRetry: _save,
-                    imageArea: ImageArea(
-                      state: value,
-                      enabled: _canChange(value, offline: offline),
-                      canUseCamera: _picker.canUseCamera,
-                      supportsDrop: _picker.supportsDrop,
-                      dragging: _dragging,
-                      rejection: _rejection,
-                      onTakePhoto: () => unawaited(_pick(camera: true)),
-                      onPickFile: () => unawaited(_pick(camera: false)),
-                      onRemove: _removeImage,
-                    ),
+      // Keyboard: Ctrl/Cmd+S saves, Esc leaves (through the same guard as
+      // "Abbrechen"), Alt+1 to Alt+3 switch the tabs. Dialogs and menus are
+      // other routes, so Esc closes those first.
+      child: CallbackShortcuts(
+        bindings: {
+          const SingleActivator(LogicalKeyboardKey.keyS, control: true): () {
+            if (canSave) unawaited(_save());
+          },
+          const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () {
+            if (canSave) unawaited(_save());
+          },
+          const SingleActivator(LogicalKeyboardKey.escape): () {
+            if (!saving) _leave();
+          },
+          for (final (index, key) in [
+            LogicalKeyboardKey.digit1,
+            LogicalKeyboardKey.digit2,
+            LogicalKeyboardKey.digit3,
+          ].indexed)
+            SingleActivator(key, alt: true): () =>
+                setState(() => _tab = EditorTab.values[index]),
+        },
+        child: Focus(
+          autofocus: true,
+          skipTraversal: true,
+          child: Scaffold(
+            body: SafeArea(
+              bottom: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _Header(
+                    recipeName: state?.recipeName,
+                    isNew: widget.recipeId == null,
+                    saving: saving,
+                    canSave: state != null,
+                    onCancel: saving ? null : _leave,
+                    onSave: _save,
                   ),
-                  AsyncError(:final error) => FailureView(
-                    error: error,
-                    notFoundMessage: l10n.editorRecipeGone,
-                    onRetry: () => ref.invalidate(provider),
+                  Expanded(
+                    child: switch (editor) {
+                      AsyncData(:final value) => _Body(
+                        // A restored draft replaces what the fields hold.
+                        key: ValueKey(_restored),
+                        recipeId: widget.recipeId,
+                        state: value,
+                        tab: _tab,
+                        onTab: (tab) => setState(() => _tab = tab),
+                        onRetry: _save,
+                        imageArea: ImageArea(
+                          state: value,
+                          enabled: _canChange(value, offline: offline),
+                          canUseCamera: _picker.canUseCamera,
+                          supportsDrop: _picker.supportsDrop,
+                          dragging: _dragging,
+                          rejection: _rejection,
+                          onTakePhoto: () => unawaited(_pick(camera: true)),
+                          onPickFile: () => unawaited(_pick(camera: false)),
+                          onRemove: _removeImage,
+                        ),
+                      ),
+                      AsyncError(:final error) => FailureView(
+                        error: error,
+                        notFoundMessage: l10n.editorRecipeGone,
+                        onRetry: () => ref.invalidate(provider),
+                      ),
+                      _ => const Center(child: CircularProgressIndicator()),
+                    },
                   ),
-                  _ => const Center(child: CircularProgressIndicator()),
-                },
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -483,6 +514,13 @@ class _Header extends StatelessWidget {
               ),
             ),
           ),
+          if (isWideLayout(context))
+            IconButton(
+              // Only there for the tooltip, which shows on hover and focus.
+              onPressed: () {},
+              tooltip: l10n.editorShortcuts,
+              icon: Icon(Icons.keyboard_outlined, color: t.inkMuted),
+            ),
           if (saving)
             _SavingButton(label: l10n.editorSaving)
           else
@@ -561,16 +599,23 @@ class _Body extends ConsumerWidget {
     final offline = ref.watch(isOfflineProvider);
     final failure = state.failure;
     final hasProblems = state.showProblems && state.problems.isNotEmpty;
+    final twoColumns = isTwoColumnEditor(context);
+    // Ingredients and steps share the screen on large windows.
+    final shown = twoColumns && tab == EditorTab.steps
+        ? EditorTab.ingredients
+        : tab;
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(t.space5, t.space3, t.space5, t.space6),
       child: Center(
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: t.sizeWide),
+          constraints: BoxConstraints(
+            maxWidth: twoColumns ? t.sizeWide * 2 : t.sizeWide,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _Tabs(selected: tab, onSelect: onTab),
+              _Tabs(selected: shown, onSelect: onTab, merged: twoColumns),
               if (offline)
                 _Notice(
                   icon: Icons.cloud_off_outlined,
@@ -607,13 +652,30 @@ class _Body extends ConsumerWidget {
                   text: l10n.editorProblems,
                 ),
               SizedBox(height: t.space4),
-              switch (tab) {
+              switch (shown) {
                 EditorTab.general => Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   spacing: t.space4,
                   children: [
                     imageArea,
                     GeneralTab(recipeId: recipeId),
+                  ],
+                ),
+                EditorTab.ingredients when twoColumns => Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: t.space6,
+                  children: [
+                    // Each column is tabbed through on its own.
+                    Expanded(
+                      child: FocusTraversalGroup(
+                        child: IngredientsTab(recipeId: recipeId),
+                      ),
+                    ),
+                    Expanded(
+                      child: FocusTraversalGroup(
+                        child: StepsTab(recipeId: recipeId),
+                      ),
+                    ),
                   ],
                 ),
                 EditorTab.ingredients => IngredientsTab(recipeId: recipeId),
@@ -630,9 +692,16 @@ class _Body extends ConsumerWidget {
 /// The segmented tab bar: a `surface-sunken` pill with the selected tab
 /// raised on `surface`.
 class _Tabs extends StatelessWidget {
-  const _Tabs({required this.selected, required this.onSelect});
+  const _Tabs({
+    required this.selected,
+    required this.onSelect,
+    required this.merged,
+  });
 
   final EditorTab selected;
+
+  /// Ingredients and steps are on one tab.
+  final bool merged;
   final ValueChanged<EditorTab> onSelect;
 
   @override
@@ -641,8 +710,10 @@ class _Tabs extends StatelessWidget {
     final l10n = context.l10n;
     final labels = {
       EditorTab.general: l10n.editorTabGeneral,
-      EditorTab.ingredients: l10n.editorTabIngredients,
-      EditorTab.steps: l10n.editorTabSteps,
+      EditorTab.ingredients: merged
+          ? l10n.editorTabIngredientsSteps
+          : l10n.editorTabIngredients,
+      if (!merged) EditorTab.steps: l10n.editorTabSteps,
     };
     return Container(
       padding: EdgeInsets.all(t.space1),
@@ -672,7 +743,7 @@ class _Tabs extends StatelessWidget {
   }
 }
 
-class _TabButton extends StatelessWidget {
+class _TabButton extends StatefulWidget {
   const _TabButton({
     required this.label,
     required this.selected,
@@ -684,17 +755,30 @@ class _TabButton extends StatelessWidget {
   final VoidCallback onTap;
 
   @override
+  State<_TabButton> createState() => _TabButtonState();
+}
+
+class _TabButtonState extends State<_TabButton> {
+  var _focused = false;
+
+  @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final selected = widget.selected;
     final shape = StadiumBorder(
-      side: selected ? BorderSide(color: t.line) : BorderSide.none,
+      side: _focused
+          ? BorderSide(color: t.focus, width: t.space1 / 2)
+          : selected
+          ? BorderSide(color: t.line)
+          : BorderSide.none,
     );
     return Material(
       color: selected ? t.surface : Colors.transparent,
       shape: shape,
       child: InkWell(
         customBorder: shape,
-        onTap: onTap,
+        onTap: widget.onTap,
+        onFocusChange: (focused) => setState(() => _focused = focused),
         child: SizedBox(
           height: t.sizeTouch,
           child: Center(
@@ -703,7 +787,7 @@ class _TabButton extends StatelessWidget {
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: t.space2),
                 child: Text(
-                  label,
+                  widget.label,
                   style: t.label.copyWith(color: selected ? t.ink : t.inkMuted),
                 ),
               ),

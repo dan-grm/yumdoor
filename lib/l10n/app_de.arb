@@ -1143,6 +1143,14 @@
   "@editorTabSteps": {
     "description": "Editor tab for the steps."
   },
+  "editorTabIngredientsSteps": "Zutaten & Schritte",
+  "@editorTabIngredientsSteps": {
+    "description": "Editor tab for ingredients and steps together, on wide windows."
+  },
+  "editorShortcuts": "Tastenkürzel: Strg/Cmd+S speichert, Esc bricht ab, Alt+1 bis Alt+3 wechseln den Tab, Alt+Pfeil hoch/runter verschiebt einen Schritt, Enter fügt eine Zutat hinzu.",
+  "@editorShortcuts": {
+    "description": "Tooltip listing the editor's keyboard shortcuts."
+  },
   "stepsEmpty": "Noch keine Schritte. Füge unten den ersten hinzu.",
   "@stepsEmpty": {
     "description": "Empty state of the editor's step list."

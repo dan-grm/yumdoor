@@ -1334,6 +1334,18 @@ abstract class AppLocalizations {
   /// **'Schritte'**
   String get editorTabSteps;
 
+  /// Editor tab for ingredients and steps together, on wide windows.
+  ///
+  /// In de, this message translates to:
+  /// **'Zutaten & Schritte'**
+  String get editorTabIngredientsSteps;
+
+  /// Tooltip listing the editor's keyboard shortcuts.
+  ///
+  /// In de, this message translates to:
+  /// **'Tastenkürzel: Strg/Cmd+S speichert, Esc bricht ab, Alt+1 bis Alt+3 wechseln den Tab, Alt+Pfeil hoch/runter verschiebt einen Schritt, Enter fügt eine Zutat hinzu.'**
+  String get editorShortcuts;
+
   /// Empty state of the editor's step list.
   ///
   /// In de, this message translates to:

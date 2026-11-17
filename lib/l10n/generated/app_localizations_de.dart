@@ -827,6 +827,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get editorTabSteps => 'Schritte';
 
   @override
+  String get editorTabIngredientsSteps => 'Zutaten & Schritte';
+
+  @override
+  String get editorShortcuts =>
+      'Tastenkürzel: Strg/Cmd+S speichert, Esc bricht ab, Alt+1 bis Alt+3 wechseln den Tab, Alt+Pfeil hoch/runter verschiebt einen Schritt, Enter fügt eine Zutat hinzu.';
+
+  @override
   String get stepsEmpty => 'Noch keine Schritte. Füge unten den ersten hinzu.';
 
   @override
