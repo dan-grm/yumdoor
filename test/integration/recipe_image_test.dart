@@ -53,13 +53,13 @@ void main() {
       ImageUpload(bytes: bytes, fileName: 'foto.png', mimeType: 'image/png');
 
   test('uploads an image and reads its URL back', () async {
-    final saved = await recipes.uploadImage(
+    final image = await recipes.uploadImage(
       recipe,
       png(testPng(width: 400, height: 300)),
     );
 
-    final image = saved.image!;
     expect(image.path, matches(RegExp(r'/media/recipes/[^/]+_\d+\.png$')));
+    // The URL from the upload is the one the recipe has.
     expect((await recipes.fetchRecipe(recipe)).image, image);
     // Media is served without the token.
     final file = await Dio().get<List<int>>(
@@ -70,19 +70,18 @@ void main() {
   });
 
   test('a new upload replaces the image under a new URL', () async {
-    final first = (await recipes.uploadImage(recipe, png(testPng()))).image;
-    final second = (await recipes.uploadImage(recipe, png(testPng()))).image;
+    final first = await recipes.uploadImage(recipe, png(testPng()));
+    final second = await recipes.uploadImage(recipe, png(testPng()));
 
-    expect(second, isNotNull);
     expect(second, isNot(first));
+    expect((await recipes.fetchRecipe(recipe)).image, second);
   });
 
   test('removes the image', () async {
     await recipes.uploadImage(recipe, png(testPng()));
 
-    final saved = await recipes.removeImage(recipe);
+    await recipes.removeImage(recipe);
 
-    expect(saved.image, isNull);
     expect((await recipes.fetchRecipe(recipe)).image, isNull);
   });
 

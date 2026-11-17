@@ -361,7 +361,7 @@ void main() {
         );
 
     final preview = find.byWidgetPredicate(
-      (w) => w is Image && w.image is MemoryImage,
+      (w) => w is Image && w.image is ResizeImage,
     );
 
     testWidgets('picks an image, previews it and uploads it on save', (
@@ -550,6 +550,17 @@ void main() {
       expect(find.text('Rezept gespeichert'), findsOneWidget);
     });
 
+    testWidgets('offline, the empty area does not invite dropping', (
+      tester,
+    ) async {
+      await pumpEditor(tester);
+      connectivity.isOnline = false;
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bild hierher ziehen'), findsNothing);
+      expect(find.text('Noch kein Foto'), findsOneWidget);
+    });
+
     testWidgets('offline, the photo cannot be changed', (tester) async {
       recipes.recipes[7] = ofenkarotten.copyWith(image: saved);
       await pumpEditor(tester);
@@ -590,10 +601,17 @@ void main() {
         await pumpEditor(tester, theme: theme);
         // Visible already; `tap` would scroll.
         await tester.tap(find.text('Bild auswählen'));
+        await tester.pump();
         // Images decode outside the test's fake time.
         await tester.runAsync(
           () => precacheImage(
-            MemoryImage(photo),
+            tester
+                .widget<Image>(
+                  find.byWidgetPredicate(
+                    (w) => w is Image && w.image is ResizeImage,
+                  ),
+                )
+                .image,
             tester.element(find.byType(EditorScreen)),
           ),
         );

@@ -43,14 +43,13 @@ abstract interface class RecipeRepository {
   Future<Recipe> updateRecipe(int id, RecipeDraft draft);
 
   /// Makes [image] the photo of the recipe [id], replacing the one it had,
-  /// and returns the recipe as saved, with the new [Recipe.image]. Tandoor
-  /// scales images over 500 KB down to 1020 px wide. Throws
-  /// [NotFoundFailure] if the recipe doesn't exist or the user can't see it,
-  /// [UnauthorizedFailure] if they may not change it, a [ServerFailure]
-  /// with status 413 if a proxy in front of Tandoor refuses the size.
-  Future<Recipe> uploadImage(int id, ImageUpload image);
+  /// and returns its URL, the recipe's new [Recipe.image]. Tandoor scales
+  /// images over 500 KB down to 1020 px wide. Throws [NotFoundFailure] if
+  /// the recipe doesn't exist, [UnauthorizedFailure] if the user may not
+  /// change it, a [ServerFailure] with status 413 if a proxy in front of
+  /// Tandoor refuses the size.
+  Future<Uri> uploadImage(int id, ImageUpload image);
 
-  /// Removes the photo of the recipe [id] and returns the recipe as saved.
-  /// Throws like [uploadImage].
-  Future<Recipe> removeImage(int id);
+  /// Removes the photo of the recipe [id]. Throws like [uploadImage].
+  Future<void> removeImage(int id);
 }

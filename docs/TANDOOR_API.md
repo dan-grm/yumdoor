@@ -265,8 +265,9 @@ is a text, since fuzzy ordering of a short text puts matches anywhere in the lis
   quality 90, EXIF orientation applied). Smaller ones are re-encoded without metadata. Animated GIFs stay animated.
   A 6 MB 3000×2000 JPEG came back as 1020×680, 360 KB.
 - **Response:** 200 with `{"image": "/media/recipes/<uuid>_<id>.<ext>", "image_url": null}`, the path relative to
-  the server. `GET /api/recipe/{id}/` then has the absolute URL. Every upload gets a new file name, so cached copies
-  never go stale. Media under `/media/` is served without authentication.
+  the server's origin (whatever `MEDIA_URL` makes it); `GET /api/recipe/{id}/` has the same path as an absolute URL
+  (`build_absolute_uri`). Yumdoor resolves the path against the server URL instead of fetching the recipe again. Every upload gets a
+  new file name, so cached copies never go stale. Media under `/media/` is served without authentication.
 - **Removing:** a PUT with an empty form (no `image`, no `image_url`) sets the image to `null` (200). An `image`
   field with an empty value is a **500**.
 - **Permissions:** like a recipe update: 403 for a user who may not change the recipe (also for someone else's

@@ -212,6 +212,7 @@ void main() {
     test('fills in last cooked from the cook log', () async {
       final repository = TandoorRecipeRepository(
         client(recipeServer()),
+        dio: Dio(),
         lastCooked: (id) async => DateTime.utc(2026, 11, 2),
       );
 
@@ -223,6 +224,7 @@ void main() {
     test('shows the recipe if the cook log fails', () async {
       final repository = TandoorRecipeRepository(
         client(recipeServer()),
+        dio: Dio(),
         lastCooked: (id) async => throw const ServerFailure(statusCode: 500),
       );
 

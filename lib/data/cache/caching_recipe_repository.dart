@@ -99,30 +99,42 @@ class CachingRecipeRepository implements RecipeRepository {
   }
 
   @override
-  Future<Recipe> updateRecipe(int id, RecipeDraft draft) =>
-      _save(id, () => _remote.updateRecipe(id, draft));
+  Future<Recipe> updateRecipe(int id, RecipeDraft draft) async => _storeSaved(
+    await _forgetIfGone(id, () => _remote.updateRecipe(id, draft)),
+  );
 
-  /// Like saves: the recipe as saved is stored, and its new image
-  /// downloaded in the background, so the offline copy shows it.
+  /// Like saves: the stored copy gets the new image, downloaded in the
+  /// background, so it shows offline too.
   @override
-  Future<Recipe> uploadImage(int id, ImageUpload image) =>
-      _save(id, () => _remote.uploadImage(id, image));
+  Future<Uri> uploadImage(int id, ImageUpload image) async {
+    final url = await _forgetIfGone(id, () => _remote.uploadImage(id, image));
+    await _ignoreErrors(_storeImageChange(id, url));
+    return url;
+  }
 
   @override
-  Future<Recipe> removeImage(int id) =>
-      _save(id, () => _remote.removeImage(id));
+  Future<void> removeImage(int id) async {
+    await _forgetIfGone(id, () => _remote.removeImage(id));
+    await _ignoreErrors(_storeImageChange(id, null));
+  }
 
-  /// Saves the recipe [id] with [save] and stores it as saved.
-  Future<Recipe> _save(int id, Future<Recipe> Function() save) async {
-    final Recipe recipe;
+  /// Gives the stored copy of the recipe [id], if there is one, the image
+  /// at [url].
+  Future<void> _storeImageChange(int id, Uri? url) async {
+    final stored = await _cache.get(id);
+    if (stored != null) await _storeSaved(stored.copyWith(image: url));
+  }
+
+  /// Runs [save] for the recipe [id], forgetting the stored copy if the
+  /// server no longer has it.
+  Future<T> _forgetIfGone<T>(int id, Future<T> Function() save) async {
     try {
-      recipe = await save();
+      return await save();
     } on NotFoundFailure {
       // Deleted, or no longer shared with the user.
       await _ignoreErrors(_cache.remove(id));
       rethrow;
     }
-    return _storeSaved(recipe);
   }
 
   /// Views are only recorded online; offline there is nothing to record

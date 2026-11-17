@@ -23,14 +23,13 @@ import '../mappers/recipe_mapper.dart';
 import '../mappers/recipe_sort_mapper.dart';
 
 class TandoorRecipeRepository implements RecipeRepository {
-  TandoorRecipeRepository(this._api, {this._dio, this.lastCooked});
+  TandoorRecipeRepository(this._api, {required this._dio, this.lastCooked});
 
   final api.ApiApi _api;
 
   /// The [Dio] behind [_api], for the image upload: the generated client
-  /// takes the file as a string (docs/TANDOOR_API.md#recipe-images). Without
-  /// it, [uploadImage] and [removeImage] throw a [StateError].
-  final Dio? _dio;
+  /// takes the file as a string (docs/TANDOOR_API.md#recipe-images).
+  final Dio _dio;
 
   /// When the current user last cooked a recipe. Tandoor 2.6.15 sends
   /// `last_cooked: null` on every recipe, so [fetchRecipe] asks this instead
@@ -340,8 +339,8 @@ class TandoorRecipeRepository implements RecipeRepository {
   }
 
   @override
-  Future<Recipe> uploadImage(int id, ImageUpload image) async {
-    await _putImage(
+  Future<Uri> uploadImage(int id, ImageUpload image) async {
+    final path = await _putImage(
       id,
       FormData.fromMap({
         'image': MultipartFile.fromBytes(
@@ -351,35 +350,37 @@ class TandoorRecipeRepository implements RecipeRepository {
         ),
       }),
     );
-    return fetchRecipe(id);
+    if (path == null) throw const ServerFailure(cause: 'No image path');
+    // Relative to the server's origin (`/media/recipes/…`, or wherever
+    // `MEDIA_URL` puts it), like the absolute URL a fetch would give.
+    return Uri.parse(_dio.options.baseUrl).resolve(path);
   }
 
   @override
-  Future<Recipe> removeImage(int id) async {
+  Future<void> removeImage(int id) async {
     // A form without `image` and `image_url` clears the image
     // (docs/TANDOOR_API.md#recipe-images).
     await _putImage(id, FormData());
-    return fetchRecipe(id);
   }
 
-  /// `PUT /api/recipe/{id}/image/` with [form]. The response holds only the
-  /// image path, relative to the server, so the callers fetch the recipe
-  /// afterwards.
-  Future<void> _putImage(int id, FormData form) {
-    final dio = _dio ?? (throw StateError('No Dio for image uploads'));
-    return guardRequest(
-      () => dio.put<Object?>(
-        '/api/recipe/$id/image/',
-        data: form,
-        options: Options(
-          // Sending a large photo over a slow connection, then Tandoor
-          // scaling it, takes longer than an ordinary request may. On the
-          // web this is the whole request's timeout.
-          receiveTimeout: _imageTimeout,
-        ),
+  /// `PUT /api/recipe/{id}/image/` with [form]; returns the path of the
+  /// image the recipe has now, `null` for none.
+  Future<String?> _putImage(int id, FormData form) => guardRequest(() async {
+    final response = await _dio.put<Object?>(
+      '/api/recipe/$id/image/',
+      data: form,
+      options: Options(
+        // Sending a large photo over a slow connection, then Tandoor
+        // scaling it, takes longer than an ordinary request may. On the
+        // web this is the whole request's timeout.
+        receiveTimeout: _imageTimeout,
       ),
     );
-  }
+    return switch (response.data) {
+      {'image': final String? path} => path,
+      _ => throw const FormatException('Unexpected image response'),
+    };
+  });
 
   @override
   Future<void> recordView(int id) => guardRequest(() async {

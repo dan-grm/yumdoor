@@ -469,17 +469,24 @@ void main() {
       expect(recipe!.image, isNull);
     });
 
-    test('Entfernen after choosing an image leaves none', () async {
-      final edit = await editor(7);
-      edit
-        ..setImage(photo)
-        ..removeImage();
-      expect(state(7).newImage, isNull);
-      // The saved one is removed too.
-      expect(state(7).hasImage, isFalse);
-      edit.setImage(photo);
-      expect(state(7).removeImage, isFalse);
-    });
+    test(
+      'Entfernen after choosing an image goes back to the saved one',
+      () async {
+        final edit = await editor(7);
+        edit
+          ..setImage(photo)
+          ..removeImage();
+        expect(state(7).newImage, isNull);
+        expect(state(7).removeImage, isFalse);
+        expect(state(7).hasImage, isTrue);
+
+        // A second time removes the saved one; choosing again undoes that.
+        edit.removeImage();
+        expect(state(7).hasImage, isFalse);
+        edit.setImage(photo);
+        expect(state(7).removeImage, isFalse);
+      },
+    );
 
     test('without changes no image request is made', () async {
       final edit = await editor(7);

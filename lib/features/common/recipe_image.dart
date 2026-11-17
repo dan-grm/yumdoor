@@ -1,7 +1,20 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../recipe/recipe_providers.dart';
+import '../../app/repository_providers.dart';
+
+part 'recipe_image.g.dart';
+
+/// The bytes of the image at [url] from the offline cache, `null` if it
+/// isn't stored.
+@Riverpod(retry: _noRetry)
+Future<Uint8List?> cachedImage(Ref ref, Uri url) =>
+    ref.watch(offlineCacheProvider).image(url);
+
+Duration? _noRetry(int retryCount, Object error) => null;
 
 /// A recipe's photo at [url], covering its box; a copy from the offline
 /// cache is preferred over the network. [placeholder] shows when there is no

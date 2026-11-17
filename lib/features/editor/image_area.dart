@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/offline.dart';
 import '../../design/components/buttons.dart';
 import '../../design/components/filter_chips.dart';
 import '../../design/design.dart';
@@ -21,7 +23,7 @@ const _previewHeight = 180.0;
 ///
 /// Changes are only made to the draft; saving uploads them. Offline and
 /// while saving the buttons are disabled.
-class ImageArea extends StatelessWidget {
+class ImageArea extends ConsumerWidget {
   const ImageArea({
     super.key,
     required this.state,
@@ -48,10 +50,10 @@ class ImageArea extends StatelessWidget {
   final VoidCallback onRemove;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
     final l10n = context.l10n;
-    final saving = state.saving;
+    final enabled = !state.saving && !ref.watch(isOfflineProvider);
     final note = switch (rejection) {
       ImageRejection.notAnImage => l10n.editorImageNotAnImage,
       ImageRejection.tooLarge => l10n.editorImageTooLarge(
@@ -82,10 +84,11 @@ class ImageArea extends StatelessWidget {
           child: dragging || !state.hasImage
               ? _EmptyFrame(
                   dragging: dragging,
-                  enabled: !saving,
+                  enabled: enabled,
                   text: dragging
                       ? l10n.editorImageDropRelease
-                      : supportsDrop
+                      // Offline a drop is ignored; the notice above says why.
+                      : supportsDrop && enabled
                       ? l10n.editorImageDrop
                       : l10n.editorImageNone,
                 )
@@ -105,8 +108,7 @@ class ImageArea extends StatelessWidget {
         ],
         SizedBox(height: t.space3),
         OfflineDisabled(
-          builder: (context, online) {
-            final enabled = online && !saving;
+          builder: (context, _) {
             return Wrap(
               spacing: t.space2,
               runSpacing: t.space2,
@@ -169,6 +171,11 @@ class _Preview extends StatelessWidget {
           child: switch (state.newImage) {
             final image? => Image.memory(
               image.bytes,
+              // A camera photo decoded at full size takes ~50 MB.
+              cacheWidth:
+                  (MediaQuery.sizeOf(context).width *
+                          MediaQuery.devicePixelRatioOf(context))
+                      .round(),
               fit: BoxFit.cover,
               excludeFromSemantics: true,
               errorBuilder: (_, _, _) => placeholder,

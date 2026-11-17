@@ -120,12 +120,8 @@ class RecipeEditor extends _$RecipeEditor {
 
   /// Changes the draft. Ignored while loading or saving; returns whether
   /// the change was made.
-  bool edit(RecipeDraft Function(RecipeDraft draft) change) {
-    final current = state.value;
-    if (current == null || current.saving) return false;
-    state = AsyncData(current._copyWith(draft: change(current.draft)));
-    return true;
-  }
+  bool edit(RecipeDraft Function(RecipeDraft draft) change) =>
+      _change((state) => state._copyWith(draft: change(state.draft)));
 
   /// Makes [image] the recipe's photo when it is saved. Ignored while
   /// loading or saving.
@@ -133,19 +129,22 @@ class RecipeEditor extends _$RecipeEditor {
     (state) => state._copyWith(newImage: () => image, removeImage: false),
   );
 
-  /// Removes the recipe's photo when it is saved: the one chosen, or the
-  /// one it had. Ignored while loading or saving.
+  /// Drops the photo chosen with [setImage], back to the saved one; without
+  /// one, removes the saved photo when the recipe is saved. Ignored while
+  /// loading or saving.
   void removeImage() => _change(
-    (state) => state._copyWith(
-      newImage: () => null,
-      removeImage: state.savedImage != null,
-    ),
+    (state) => state.newImage != null
+        ? state._copyWith(newImage: () => null)
+        : state._copyWith(removeImage: state.savedImage != null),
   );
 
-  void _change(EditorState Function(EditorState state) change) {
+  /// Changes the state with [change]. Ignored while loading or saving;
+  /// returns whether the change was made.
+  bool _change(EditorState Function(EditorState state) change) {
     final current = state.value;
-    if (current == null || current.saving) return;
+    if (current == null || current.saving) return false;
     state = AsyncData(change(current));
+    return true;
   }
 
   /// Adds [keyword] to the draft unless it is there already.
@@ -313,9 +312,11 @@ class RecipeEditor extends _$RecipeEditor {
     Failure? imageFailure;
     try {
       if (current.newImage case final image?) {
-        saved = await repository.uploadImage(saved.id, image);
+        final url = await repository.uploadImage(saved.id, image);
+        saved = saved.copyWith(image: url);
       } else if (current.removeImage && saved.image != null) {
-        saved = await repository.removeImage(saved.id);
+        await repository.removeImage(saved.id);
+        saved = saved.copyWith(image: null);
       }
     } on Object catch (error) {
       // The recipe is saved all the same; the screen says the photo isn't.

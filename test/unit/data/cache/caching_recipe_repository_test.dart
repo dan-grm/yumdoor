@@ -382,15 +382,14 @@ void main() {
       mimeType: 'image/jpeg',
     );
 
-    test('an upload stores the recipe with its new image', () async {
+    test('an upload gives the stored recipe the new image', () async {
       await fetch(7);
 
-      final saved = await repository.uploadImage(7, upload);
+      final url = await repository.uploadImage(7, upload);
       await pumpEventQueue();
 
-      final url = FakeRecipeRepository.imageUrl(7, 1);
-      expect(saved.image, url);
-      expect(await cache.get(7), saved);
+      expect(url, FakeRecipeRepository.imageUrl(7, 1));
+      expect((await cache.get(7))?.image, url);
       // The new image is downloaded for offline use; the old one goes.
       expect(downloads, [_image, url]);
       expect(await cache.image(url), [1, 2, 3]);
@@ -400,10 +399,16 @@ void main() {
     test('a removal stores the recipe without an image', () async {
       await fetch(7);
 
-      final saved = await repository.removeImage(7);
+      await repository.removeImage(7);
 
-      expect(saved.image, isNull);
       expect((await cache.get(7))?.image, isNull);
+      expect(await cache.image(_image), isNull);
+    });
+
+    test('a recipe that is not stored stays so', () async {
+      await repository.uploadImage(7, upload);
+
+      expect(await cache.get(7), isNull);
     });
 
     test('fail offline and keep the stored recipe', () async {

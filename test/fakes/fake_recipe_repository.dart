@@ -158,19 +158,19 @@ class FakeRecipeRepository implements RecipeRepository {
       Uri.parse('https://example.com/media/recipes/${upload}_$id.jpg');
 
   @override
-  Future<Recipe> uploadImage(int id, ImageUpload image) =>
-      _changeImage(id, image);
+  Future<Uri> uploadImage(int id, ImageUpload image) async =>
+      (await _changeImage(id, image))!;
 
   @override
-  Future<Recipe> removeImage(int id) => _changeImage(id, null);
+  Future<void> removeImage(int id) => _changeImage(id, null);
 
-  Future<Recipe> _changeImage(int id, ImageUpload? image) async {
+  Future<Uri?> _changeImage(int id, ImageUpload? image) async {
     imageChanges.add((id: id, image: image));
     if (failure ?? imageFailure case final failure?) throw failure;
     final recipe = recipes[id] ?? (throw const NotFoundFailure());
-    return recipes[id] = recipe.copyWith(
-      image: image == null ? null : imageUrl(id, imageChanges.length),
-    );
+    final url = image == null ? null : imageUrl(id, imageChanges.length);
+    recipes[id] = recipe.copyWith(image: url);
+    return url;
   }
 
   @override
