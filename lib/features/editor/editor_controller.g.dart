@@ -98,7 +98,7 @@ final class RecipeEditorProvider
   }
 }
 
-String _$recipeEditorHash() => r'b1a2335f9d89a2746cae9394bbb2477f221c61ca';
+String _$recipeEditorHash() => r'4939a779f6bcf6d80ca519d1973c82ae480b2aa2';
 
 /// The recipe editor's state: the single source for all its tabs.
 ///
