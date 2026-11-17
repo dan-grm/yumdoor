@@ -15,3 +15,14 @@ bool isWideLayout(BuildContext context) {
       (view.padding.left + view.padding.right) / view.devicePixelRatio;
   return MediaQuery.sizeOf(context).width - insets >= context.tokens.sizeWide;
 }
+
+/// Whether the editor shows ingredients and steps side by side: from one and
+/// a half times [isWideLayout]'s width (laptops and desktops), where each
+/// column still has room for its fields.
+bool isTwoColumnEditor(BuildContext context) {
+  final view = View.of(context);
+  final insets =
+      (view.padding.left + view.padding.right) / view.devicePixelRatio;
+  return MediaQuery.sizeOf(context).width - insets >=
+      context.tokens.sizeWide * 1.5;
+}

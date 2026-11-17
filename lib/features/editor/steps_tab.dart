@@ -166,20 +166,40 @@ class _StepsTabState extends ConsumerState<StepsTab> {
           },
           itemBuilder: (context, index) {
             final key = _keys[index];
+            void moveBy(int offset) {
+              final to = index + offset;
+              if (enabled && to >= 0 && to < steps.length) _move(index, to);
+            }
+
             return Padding(
               key: key,
               padding: EdgeInsets.only(bottom: t.space3),
-              child: _StepCard(
-                recipeId: widget.recipeId,
-                index: index,
-                count: steps.length,
-                step: steps[index],
-                servings: state.draft,
-                expanded: _expanded.contains(key),
-                enabled: enabled,
-                onToggle: () => _toggle(key),
-                onMove: (offset) => _move(index, index + offset),
-                onDelete: () => _delete(index, steps[index]),
+              // Alt+Up and Alt+Down move the step while focus is in it.
+              child: CallbackShortcuts(
+                bindings: {
+                  const SingleActivator(
+                    LogicalKeyboardKey.arrowUp,
+                    alt: true,
+                  ): () =>
+                      moveBy(-1),
+                  const SingleActivator(
+                    LogicalKeyboardKey.arrowDown,
+                    alt: true,
+                  ): () =>
+                      moveBy(1),
+                },
+                child: _StepCard(
+                  recipeId: widget.recipeId,
+                  index: index,
+                  count: steps.length,
+                  step: steps[index],
+                  servings: state.draft,
+                  expanded: _expanded.contains(key),
+                  enabled: enabled,
+                  onToggle: () => _toggle(key),
+                  onMove: (offset) => _move(index, index + offset),
+                  onDelete: () => _delete(index, steps[index]),
+                ),
               ),
             );
           },
