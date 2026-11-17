@@ -123,19 +123,17 @@ class CacheDatabase extends _$CacheDatabase {
   @override
   int get schemaVersion => 3;
 
-  /// The first version with [EditorDrafts].
-  static const _draftsSince = 3;
-
   @override
   MigrationStrategy get migration => MigrationStrategy(
     // Drift calls this for downgrades too, e.g. after rolling back the app.
     onUpgrade: (migrator, from, to) async {
       for (final table in allTables) {
-        // Drafts can't be fetched again. One that no longer decodes is
-        // dropped when it is read (DraftCache).
-        if (table.actualTableName == editorDrafts.actualTableName &&
-            from >= _draftsSince &&
-            to >= _draftsSince) {
+        // Drafts can't be fetched again: their table is only created if it
+        // is missing (e.g. coming from a version before it), even after a
+        // rollback to such a version. One that no longer decodes is dropped
+        // when it is read (DraftCache).
+        if (table.actualTableName == editorDrafts.actualTableName) {
+          await migrator.createTable(table);
           continue;
         }
         await migrator.deleteTable(table.actualTableName);

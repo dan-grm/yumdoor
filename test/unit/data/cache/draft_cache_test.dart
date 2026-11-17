@@ -211,6 +211,16 @@ void main() {
       expect(await RecipeCache(next).all(), isEmpty);
     });
 
+    test('keeps the drafts through a rollback and back', () async {
+      final old = _VersionedCacheDatabase(NativeDatabase(file), 2);
+      await old.customSelect('SELECT 1').get();
+      await old.close();
+      final current = CacheDatabase(NativeDatabase(file));
+      addTearDown(current.close);
+
+      expect((await DraftCache(current).load(7))!.draft.name, 'Sieben');
+    });
+
     test('the first version with drafts creates their table', () async {
       // As the app before drafts left it.
       final old = _VersionedCacheDatabase(NativeDatabase(file), 2);

@@ -239,8 +239,11 @@ class RecipeEditor extends _$RecipeEditor {
   void discardDraft() {
     final current = state.value;
     if (current?.offeredDraft == null) return;
-    state = AsyncData(current!._copyWith(offeredDraft: () => null));
+    final next = current!._copyWith(offeredDraft: () => null);
+    state = AsyncData(next);
     unawaited(_deleteDraft(recipeId));
+    // A change made while it was offered is stored then.
+    if (next.isDirty) _scheduleDraft(next);
   }
 
   /// Deletes the draft of the changes made here, for leaving without
@@ -260,6 +263,11 @@ class RecipeEditor extends _$RecipeEditor {
     if (pending == null || pending.offeredDraft != null) return;
     try {
       if (pending.isDirty) {
+        final imageChanged =
+            _storedImage == null ||
+            !identical(_storedImage!.image, pending.newImage);
+        // Before the write, so a flush meanwhile doesn't write it again.
+        _storedImage = (image: pending.newImage);
         await _drafts.save(
           pending.recipeId,
           StoredDraft(
@@ -270,16 +278,15 @@ class RecipeEditor extends _$RecipeEditor {
             baseUpdatedAt: _draftBase,
           ),
           // A photo can be many MB; typing shouldn't write it again.
-          imageChanged:
-              _storedImage == null ||
-              !identical(_storedImage!.image, pending.newImage),
+          imageChanged: imageChanged,
         );
-        _storedImage = (image: pending.newImage);
       } else {
         await _deleteDraft(pending.recipeId);
       }
     } on Object {
-      // The draft is a safety net; editing goes on without it.
+      // The draft is a safety net; editing goes on without it. The next
+      // write stores everything.
+      _storedImage = null;
     }
   }
 
@@ -318,10 +325,16 @@ class RecipeEditor extends _$RecipeEditor {
     if (current == null || current.saving) return false;
     final changed = change(current);
     state = AsyncData(changed);
-    _pendingDraft = changed;
+    _scheduleDraft(changed);
+    return true;
+  }
+
+  /// Stores [state] as draft after [draftDelay], unless it changes again
+  /// meanwhile.
+  void _scheduleDraft(EditorState state) {
+    _pendingDraft = state;
     _draftTimer?.cancel();
     _draftTimer = Timer(draftDelay, () => unawaited(flushDraft()));
-    return true;
   }
 
   /// Adds [keyword] to the draft unless it is there already.
