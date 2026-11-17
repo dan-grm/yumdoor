@@ -17,49 +17,53 @@ class OfflineBanner extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final offline = ref.watch(isOfflineProvider);
-    if (!offline) return child;
-
     final t = context.tokens;
+    // The same structure online and offline: if the banner changed the tree
+    // above [child], the app's navigator would be built anew and every open
+    // screen with it (an editor would lose its form). The key keeps [child]
+    // matched when the banner is put before it.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Material(
-          color: t.butter,
-          child: SafeArea(
-            bottom: false,
-            child: Semantics(
-              liveRegion: true,
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: t.space5,
-                  vertical: t.space2,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.cloud_off_rounded,
-                      size: t.space5,
-                      color: t.onButter,
-                    ),
-                    SizedBox(width: t.space3),
-                    Expanded(
-                      child: Text(
-                        context.l10n.offlineBanner,
-                        style: t.caption.copyWith(color: t.onButter),
+        if (offline)
+          Material(
+            color: t.butter,
+            child: SafeArea(
+              bottom: false,
+              child: Semantics(
+                liveRegion: true,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: t.space5,
+                    vertical: t.space2,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.cloud_off_rounded,
+                        size: t.space5,
+                        color: t.onButter,
                       ),
-                    ),
-                  ],
+                      SizedBox(width: t.space3),
+                      Expanded(
+                        child: Text(
+                          context.l10n.offlineBanner,
+                          style: t.caption.copyWith(color: t.onButter),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
         // The banner takes the status bar area; the screen below starts
         // underneath it.
         Expanded(
+          key: const ValueKey('app'),
           child: MediaQuery.removePadding(
             context: context,
-            removeTop: true,
+            removeTop: offline,
             child: child,
           ),
         ),

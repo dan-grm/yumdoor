@@ -2,12 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/platform/image_picker/image_picker_service.dart';
+import 'package:yumdoor/platform/unload_guard/unload_guard.dart';
 import 'package:yumdoor/platform/wake_lock/wake_lock_service.dart';
 
 import '../../fakes/fake_alert_channels.dart';
 import '../../fakes/fake_connectivity_service.dart';
 import '../../fakes/fake_image_picker_service.dart';
 import '../../fakes/fake_link_opener.dart';
+import '../../fakes/fake_unload_guard.dart';
 import '../../fakes/in_memory_local_store.dart';
 import '../../fakes/fake_wake_lock_service.dart';
 import '../../fakes/in_memory_token_store.dart';
@@ -123,6 +125,10 @@ void main() {
       expect(await picker.pickFile(), isNull);
     });
   });
+
+  group('FakeUnloadGuard', () => unloadGuardContract(FakeUnloadGuard.new));
+
+  group('native UnloadGuard', () => unloadGuardContract(UnloadGuard.new));
 
   test('providers can be overridden with the fakes', () {
     final wakeLock = FakeWakeLockService();

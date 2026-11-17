@@ -68,7 +68,10 @@ class _IngredientEntryState extends ConsumerState<IngredientEntry> {
     super.initState();
     _removePendingLine = ref
         .read(recipeEditorProvider(widget.recipeId).notifier)
-        .addPendingLine(_finish);
+        .addPendingLine(
+          _finish,
+          hasText: () => _controller.text.trim().isNotEmpty,
+        );
   }
 
   @override

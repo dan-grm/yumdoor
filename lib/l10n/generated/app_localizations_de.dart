@@ -1002,6 +1002,37 @@ class AppLocalizationsDe extends AppLocalizations {
   String get editorSaved => 'Rezept gespeichert';
 
   @override
+  String get editorDiscardTitle => 'Änderungen verwerfen?';
+
+  @override
+  String get editorDiscardBody =>
+      'Deine Änderungen an diesem Rezept sind noch nicht gespeichert.';
+
+  @override
+  String get editorDiscardKeepEditing => 'Weiter bearbeiten';
+
+  @override
+  String get editorDiscard => 'Verwerfen';
+
+  @override
+  String get editorDraftTitle => 'Ungespeicherter Entwurf';
+
+  @override
+  String editorDraftBody(String date, String time) {
+    return 'Du hast hier am $date um $time Änderungen gemacht, die nicht gespeichert sind.';
+  }
+
+  @override
+  String get editorDraftStale =>
+      'Das Rezept wurde danach auf dem Server geändert. Speicherst du den Entwurf, überschreibt er diese Änderungen.';
+
+  @override
+  String get editorDraftRestore => 'Entwurf wiederherstellen';
+
+  @override
+  String get editorDraftDiscard => 'Verwerfen';
+
+  @override
   String get keywordPickerTitle => 'Stichwort hinzufügen';
 
   @override

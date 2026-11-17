@@ -42,6 +42,7 @@ GoRouter router(Ref ref) {
       GoRoute(
         path: newRecipeLocation,
         builder: (context, state) => const EditorScreen(),
+        onExit: confirmEditorExit,
       ),
       GoRoute(
         path: '/recipe/:id',
@@ -70,6 +71,7 @@ GoRouter router(Ref ref) {
             path: 'edit',
             builder: (context, state) =>
                 EditorScreen(recipeId: int.parse(state.pathParameters['id']!)),
+            onExit: confirmEditorExit,
           ),
         ],
       ),

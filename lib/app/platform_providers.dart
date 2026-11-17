@@ -9,6 +9,7 @@ import '../platform/local_store/local_store.dart';
 import '../platform/timers/timer_alert_service.dart';
 import '../platform/token_store/secure_storage_token_store.dart';
 import '../platform/token_store/token_store.dart';
+import '../platform/unload_guard/unload_guard.dart';
 import '../platform/wake_lock/wake_lock_service.dart';
 
 part 'platform_providers.g.dart';
@@ -61,3 +62,10 @@ DateTime Function() clock(Ref ref) => DateTime.now;
 
 @Riverpod(keepAlive: true)
 TimerAlertService timerAlertService(Ref ref) => TimerAlertService();
+
+@Riverpod(keepAlive: true)
+UnloadGuard unloadGuard(Ref ref) {
+  final guard = UnloadGuard();
+  ref.onDispose(guard.dispose);
+  return guard;
+}

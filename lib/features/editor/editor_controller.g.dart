@@ -18,6 +18,12 @@ part of 'editor_controller.dart';
 /// Saving overwrites the recipe as it is on the server: the last save wins,
 /// without checking for changes made elsewhere meanwhile, like Tandoor's own
 /// editor (decided in M3, docs/ROADMAP.md).
+///
+/// Unsaved changes are kept in the [DraftStore] ([draftDelay] after the last
+/// change, and when the editor closes), one draft per recipe and one for a
+/// new recipe. Loading offers a stored draft that differs from the recipe
+/// ([EditorState.offeredDraft]); saving deletes it, and so does
+/// [discardChanges].
 
 @ProviderFor(RecipeEditor)
 final recipeEditorProvider = RecipeEditorFamily._();
@@ -32,6 +38,12 @@ final recipeEditorProvider = RecipeEditorFamily._();
 /// Saving overwrites the recipe as it is on the server: the last save wins,
 /// without checking for changes made elsewhere meanwhile, like Tandoor's own
 /// editor (decided in M3, docs/ROADMAP.md).
+///
+/// Unsaved changes are kept in the [DraftStore] ([draftDelay] after the last
+/// change, and when the editor closes), one draft per recipe and one for a
+/// new recipe. Loading offers a stored draft that differs from the recipe
+/// ([EditorState.offeredDraft]); saving deletes it, and so does
+/// [discardChanges].
 final class RecipeEditorProvider
     extends $AsyncNotifierProvider<RecipeEditor, EditorState> {
   /// The recipe editor's state: the single source for all its tabs.
@@ -44,6 +56,12 @@ final class RecipeEditorProvider
   /// Saving overwrites the recipe as it is on the server: the last save wins,
   /// without checking for changes made elsewhere meanwhile, like Tandoor's own
   /// editor (decided in M3, docs/ROADMAP.md).
+  ///
+  /// Unsaved changes are kept in the [DraftStore] ([draftDelay] after the last
+  /// change, and when the editor closes), one draft per recipe and one for a
+  /// new recipe. Loading offers a stored draft that differs from the recipe
+  /// ([EditorState.offeredDraft]); saving deletes it, and so does
+  /// [discardChanges].
   RecipeEditorProvider._({
     required RecipeEditorFamily super.from,
     required int? super.argument,
@@ -80,7 +98,7 @@ final class RecipeEditorProvider
   }
 }
 
-String _$recipeEditorHash() => r'bf791e62f84a3fe23afbdca4af2dcc25dc0bd3bf';
+String _$recipeEditorHash() => r'4939a779f6bcf6d80ca519d1973c82ae480b2aa2';
 
 /// The recipe editor's state: the single source for all its tabs.
 ///
@@ -92,6 +110,12 @@ String _$recipeEditorHash() => r'bf791e62f84a3fe23afbdca4af2dcc25dc0bd3bf';
 /// Saving overwrites the recipe as it is on the server: the last save wins,
 /// without checking for changes made elsewhere meanwhile, like Tandoor's own
 /// editor (decided in M3, docs/ROADMAP.md).
+///
+/// Unsaved changes are kept in the [DraftStore] ([draftDelay] after the last
+/// change, and when the editor closes), one draft per recipe and one for a
+/// new recipe. Loading offers a stored draft that differs from the recipe
+/// ([EditorState.offeredDraft]); saving deletes it, and so does
+/// [discardChanges].
 
 final class RecipeEditorFamily extends $Family
     with
@@ -121,6 +145,12 @@ final class RecipeEditorFamily extends $Family
   /// Saving overwrites the recipe as it is on the server: the last save wins,
   /// without checking for changes made elsewhere meanwhile, like Tandoor's own
   /// editor (decided in M3, docs/ROADMAP.md).
+  ///
+  /// Unsaved changes are kept in the [DraftStore] ([draftDelay] after the last
+  /// change, and when the editor closes), one draft per recipe and one for a
+  /// new recipe. Loading offers a stored draft that differs from the recipe
+  /// ([EditorState.offeredDraft]); saving deletes it, and so does
+  /// [discardChanges].
 
   RecipeEditorProvider call(int? recipeId) =>
       RecipeEditorProvider._(argument: recipeId, from: this);
@@ -139,6 +169,12 @@ final class RecipeEditorFamily extends $Family
 /// Saving overwrites the recipe as it is on the server: the last save wins,
 /// without checking for changes made elsewhere meanwhile, like Tandoor's own
 /// editor (decided in M3, docs/ROADMAP.md).
+///
+/// Unsaved changes are kept in the [DraftStore] ([draftDelay] after the last
+/// change, and when the editor closes), one draft per recipe and one for a
+/// new recipe. Loading offers a stored draft that differs from the recipe
+/// ([EditorState.offeredDraft]); saving deletes it, and so does
+/// [discardChanges].
 
 abstract class _$RecipeEditor extends $AsyncNotifier<EditorState> {
   late final _$args = ref.$arg as int?;

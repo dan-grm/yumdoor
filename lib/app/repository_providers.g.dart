@@ -733,3 +733,52 @@ final class OfflineCacheProvider
 }
 
 String _$offlineCacheHash() => r'd9e087a2b51ebfdefd355288b08e352b27943fa0';
+
+/// The recipe editor's unsaved drafts, in the offline cache's database.
+/// Kept across sessions until logout clears them.
+
+@ProviderFor(draftStore)
+final draftStoreProvider = DraftStoreProvider._();
+
+/// The recipe editor's unsaved drafts, in the offline cache's database.
+/// Kept across sessions until logout clears them.
+
+final class DraftStoreProvider
+    extends $FunctionalProvider<DraftStore, DraftStore, DraftStore>
+    with $Provider<DraftStore> {
+  /// The recipe editor's unsaved drafts, in the offline cache's database.
+  /// Kept across sessions until logout clears them.
+  DraftStoreProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'draftStoreProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$draftStoreHash();
+
+  @$internal
+  @override
+  $ProviderElement<DraftStore> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  DraftStore create(Ref ref) {
+    return draftStore(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(DraftStore value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<DraftStore>(value),
+    );
+  }
+}
+
+String _$draftStoreHash() => r'b1fbc2dbd22756bef3e83cc5464a7e8167ea975c';

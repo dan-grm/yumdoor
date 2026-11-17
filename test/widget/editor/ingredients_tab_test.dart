@@ -19,9 +19,11 @@ import 'package:yumdoor/features/recipe/recipe_screen.dart';
 import 'package:yumdoor/features/search/search_providers.dart';
 
 import '../../fakes/fake_connectivity_service.dart';
+import '../../fakes/fake_draft_store.dart';
 import '../../fakes/fake_food_keyword_repositories.dart';
 import '../../fakes/fake_ingredient_parser.dart';
 import '../../fakes/fake_recipe_repository.dart';
+import '../../fakes/fake_unload_guard.dart';
 import '../../fixtures/recipes.dart';
 import '../fonts.dart';
 import '../golden.dart';
@@ -33,6 +35,7 @@ void main() {
   late FakeUnitRepository units;
   late FakeIngredientParser parser;
   late FakeConnectivityService connectivity;
+  late FakeDraftStore drafts;
 
   setUpAll(loadBundledFonts);
 
@@ -55,6 +58,7 @@ void main() {
       ),
     });
     connectivity = FakeConnectivityService();
+    drafts = FakeDraftStore();
   });
 
   /// The editor of [recipeId] over its recipe screen, on the Zutaten tab.
@@ -73,6 +77,8 @@ void main() {
         unitRepositoryProvider.overrideWithValue(units),
         ingredientParserProvider.overrideWithValue(parser),
         connectivityServiceProvider.overrideWithValue(connectivity),
+        draftStoreProvider.overrideWithValue(drafts),
+        unloadGuardProvider.overrideWithValue(FakeUnloadGuard()),
       ],
       routes: [
         GoRoute(

@@ -1409,6 +1409,52 @@
   "@editorSaved": {
     "description": "Snackbar after the recipe was saved."
   },
+  "editorDiscardTitle": "Änderungen verwerfen?",
+  "@editorDiscardTitle": {
+    "description": "Title of the dialog when leaving the editor with unsaved changes."
+  },
+  "editorDiscardBody": "Deine Änderungen an diesem Rezept sind noch nicht gespeichert.",
+  "@editorDiscardBody": {
+    "description": "Body of the dialog when leaving the editor with unsaved changes."
+  },
+  "editorDiscardKeepEditing": "Weiter bearbeiten",
+  "@editorDiscardKeepEditing": {
+    "description": "Button: stay in the editor instead of leaving."
+  },
+  "editorDiscard": "Verwerfen",
+  "@editorDiscard": {
+    "description": "Button: leave the editor and throw the unsaved changes away."
+  },
+  "editorDraftTitle": "Ungespeicherter Entwurf",
+  "@editorDraftTitle": {
+    "description": "Title of the dialog offering a draft kept on the device from an earlier visit to the editor."
+  },
+  "editorDraftBody": "Du hast hier am {date} um {time} Änderungen gemacht, die nicht gespeichert sind.",
+  "@editorDraftBody": {
+    "description": "Body of the draft dialog: when the draft was kept.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "17. Nov. 2026"
+      },
+      "time": {
+        "type": "String",
+        "example": "18:30"
+      }
+    }
+  },
+  "editorDraftStale": "Das Rezept wurde danach auf dem Server geändert. Speicherst du den Entwurf, überschreibt er diese Änderungen.",
+  "@editorDraftStale": {
+    "description": "Added to the draft dialog when the recipe on the server is newer than the draft."
+  },
+  "editorDraftRestore": "Entwurf wiederherstellen",
+  "@editorDraftRestore": {
+    "description": "Button of the draft dialog: continue with the draft."
+  },
+  "editorDraftDiscard": "Verwerfen",
+  "@editorDraftDiscard": {
+    "description": "Button of the draft dialog: delete the draft and edit the recipe as saved."
+  },
   "keywordPickerTitle": "Stichwort hinzufügen",
   "@keywordPickerTitle": {
     "description": "Title of the sheet that adds a keyword to the recipe."

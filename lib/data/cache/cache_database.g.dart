@@ -961,6 +961,550 @@ class CachedSavedFiltersCompanion
   }
 }
 
+class $EditorDraftsTable extends EditorDrafts
+    with TableInfo<$EditorDraftsTable, EditorDraftRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $EditorDraftsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _recipeIdMeta = const VerificationMeta(
+    'recipeId',
+  );
+  @override
+  late final GeneratedColumn<int> recipeId = GeneratedColumn<int>(
+    'recipe_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _jsonMeta = const VerificationMeta('json');
+  @override
+  late final GeneratedColumn<String> json = GeneratedColumn<String>(
+    'json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _savedAtMeta = const VerificationMeta(
+    'savedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> savedAt = GeneratedColumn<DateTime>(
+    'saved_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _baseUpdatedAtMeta = const VerificationMeta(
+    'baseUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> baseUpdatedAt = GeneratedColumn<int>(
+    'base_updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _imageBytesMeta = const VerificationMeta(
+    'imageBytes',
+  );
+  @override
+  late final GeneratedColumn<Uint8List> imageBytes = GeneratedColumn<Uint8List>(
+    'image_bytes',
+    aliasedName,
+    true,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _imageFileNameMeta = const VerificationMeta(
+    'imageFileName',
+  );
+  @override
+  late final GeneratedColumn<String> imageFileName = GeneratedColumn<String>(
+    'image_file_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _imageMimeTypeMeta = const VerificationMeta(
+    'imageMimeType',
+  );
+  @override
+  late final GeneratedColumn<String> imageMimeType = GeneratedColumn<String>(
+    'image_mime_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _removeImageMeta = const VerificationMeta(
+    'removeImage',
+  );
+  @override
+  late final GeneratedColumn<bool> removeImage = GeneratedColumn<bool>(
+    'remove_image',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("remove_image" IN (0, 1))',
+    ),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    recipeId,
+    json,
+    savedAt,
+    baseUpdatedAt,
+    imageBytes,
+    imageFileName,
+    imageMimeType,
+    removeImage,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'editor_draft';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<EditorDraftRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('recipe_id')) {
+      context.handle(
+        _recipeIdMeta,
+        recipeId.isAcceptableOrUnknown(data['recipe_id']!, _recipeIdMeta),
+      );
+    }
+    if (data.containsKey('json')) {
+      context.handle(
+        _jsonMeta,
+        json.isAcceptableOrUnknown(data['json']!, _jsonMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_jsonMeta);
+    }
+    if (data.containsKey('saved_at')) {
+      context.handle(
+        _savedAtMeta,
+        savedAt.isAcceptableOrUnknown(data['saved_at']!, _savedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_savedAtMeta);
+    }
+    if (data.containsKey('base_updated_at')) {
+      context.handle(
+        _baseUpdatedAtMeta,
+        baseUpdatedAt.isAcceptableOrUnknown(
+          data['base_updated_at']!,
+          _baseUpdatedAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('image_bytes')) {
+      context.handle(
+        _imageBytesMeta,
+        imageBytes.isAcceptableOrUnknown(data['image_bytes']!, _imageBytesMeta),
+      );
+    }
+    if (data.containsKey('image_file_name')) {
+      context.handle(
+        _imageFileNameMeta,
+        imageFileName.isAcceptableOrUnknown(
+          data['image_file_name']!,
+          _imageFileNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('image_mime_type')) {
+      context.handle(
+        _imageMimeTypeMeta,
+        imageMimeType.isAcceptableOrUnknown(
+          data['image_mime_type']!,
+          _imageMimeTypeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('remove_image')) {
+      context.handle(
+        _removeImageMeta,
+        removeImage.isAcceptableOrUnknown(
+          data['remove_image']!,
+          _removeImageMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_removeImageMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {recipeId};
+  @override
+  EditorDraftRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return EditorDraftRow(
+      recipeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}recipe_id'],
+      )!,
+      json: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}json'],
+      )!,
+      savedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}saved_at'],
+      )!,
+      baseUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}base_updated_at'],
+      ),
+      imageBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}image_bytes'],
+      ),
+      imageFileName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_file_name'],
+      ),
+      imageMimeType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_mime_type'],
+      ),
+      removeImage: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}remove_image'],
+      )!,
+    );
+  }
+
+  @override
+  $EditorDraftsTable createAlias(String alias) {
+    return $EditorDraftsTable(attachedDatabase, alias);
+  }
+}
+
+class EditorDraftRow extends DataClass implements Insertable<EditorDraftRow> {
+  /// The recipe's id; [newRecipeDraftId] for a new recipe.
+  final int recipeId;
+
+  /// The `RecipeDraft` as JSON.
+  final String json;
+  final DateTime savedAt;
+
+  /// `StoredDraft.baseUpdatedAt` in microseconds since the epoch: exact,
+  /// to compare with the recipe's (a date time column keeps only seconds).
+  final int? baseUpdatedAt;
+
+  /// A photo chosen to replace the recipe's, with its name and type.
+  final Uint8List? imageBytes;
+  final String? imageFileName;
+  final String? imageMimeType;
+  final bool removeImage;
+  const EditorDraftRow({
+    required this.recipeId,
+    required this.json,
+    required this.savedAt,
+    this.baseUpdatedAt,
+    this.imageBytes,
+    this.imageFileName,
+    this.imageMimeType,
+    required this.removeImage,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['recipe_id'] = Variable<int>(recipeId);
+    map['json'] = Variable<String>(json);
+    map['saved_at'] = Variable<DateTime>(savedAt);
+    if (!nullToAbsent || baseUpdatedAt != null) {
+      map['base_updated_at'] = Variable<int>(baseUpdatedAt);
+    }
+    if (!nullToAbsent || imageBytes != null) {
+      map['image_bytes'] = Variable<Uint8List>(imageBytes);
+    }
+    if (!nullToAbsent || imageFileName != null) {
+      map['image_file_name'] = Variable<String>(imageFileName);
+    }
+    if (!nullToAbsent || imageMimeType != null) {
+      map['image_mime_type'] = Variable<String>(imageMimeType);
+    }
+    map['remove_image'] = Variable<bool>(removeImage);
+    return map;
+  }
+
+  EditorDraftsCompanion toCompanion(bool nullToAbsent) {
+    return EditorDraftsCompanion(
+      recipeId: Value(recipeId),
+      json: Value(json),
+      savedAt: Value(savedAt),
+      baseUpdatedAt: baseUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(baseUpdatedAt),
+      imageBytes: imageBytes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageBytes),
+      imageFileName: imageFileName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageFileName),
+      imageMimeType: imageMimeType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageMimeType),
+      removeImage: Value(removeImage),
+    );
+  }
+
+  factory EditorDraftRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return EditorDraftRow(
+      recipeId: serializer.fromJson<int>(json['recipeId']),
+      json: serializer.fromJson<String>(json['json']),
+      savedAt: serializer.fromJson<DateTime>(json['savedAt']),
+      baseUpdatedAt: serializer.fromJson<int?>(json['baseUpdatedAt']),
+      imageBytes: serializer.fromJson<Uint8List?>(json['imageBytes']),
+      imageFileName: serializer.fromJson<String?>(json['imageFileName']),
+      imageMimeType: serializer.fromJson<String?>(json['imageMimeType']),
+      removeImage: serializer.fromJson<bool>(json['removeImage']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'recipeId': serializer.toJson<int>(recipeId),
+      'json': serializer.toJson<String>(json),
+      'savedAt': serializer.toJson<DateTime>(savedAt),
+      'baseUpdatedAt': serializer.toJson<int?>(baseUpdatedAt),
+      'imageBytes': serializer.toJson<Uint8List?>(imageBytes),
+      'imageFileName': serializer.toJson<String?>(imageFileName),
+      'imageMimeType': serializer.toJson<String?>(imageMimeType),
+      'removeImage': serializer.toJson<bool>(removeImage),
+    };
+  }
+
+  EditorDraftRow copyWith({
+    int? recipeId,
+    String? json,
+    DateTime? savedAt,
+    Value<int?> baseUpdatedAt = const Value.absent(),
+    Value<Uint8List?> imageBytes = const Value.absent(),
+    Value<String?> imageFileName = const Value.absent(),
+    Value<String?> imageMimeType = const Value.absent(),
+    bool? removeImage,
+  }) => EditorDraftRow(
+    recipeId: recipeId ?? this.recipeId,
+    json: json ?? this.json,
+    savedAt: savedAt ?? this.savedAt,
+    baseUpdatedAt: baseUpdatedAt.present
+        ? baseUpdatedAt.value
+        : this.baseUpdatedAt,
+    imageBytes: imageBytes.present ? imageBytes.value : this.imageBytes,
+    imageFileName: imageFileName.present
+        ? imageFileName.value
+        : this.imageFileName,
+    imageMimeType: imageMimeType.present
+        ? imageMimeType.value
+        : this.imageMimeType,
+    removeImage: removeImage ?? this.removeImage,
+  );
+  EditorDraftRow copyWithCompanion(EditorDraftsCompanion data) {
+    return EditorDraftRow(
+      recipeId: data.recipeId.present ? data.recipeId.value : this.recipeId,
+      json: data.json.present ? data.json.value : this.json,
+      savedAt: data.savedAt.present ? data.savedAt.value : this.savedAt,
+      baseUpdatedAt: data.baseUpdatedAt.present
+          ? data.baseUpdatedAt.value
+          : this.baseUpdatedAt,
+      imageBytes: data.imageBytes.present
+          ? data.imageBytes.value
+          : this.imageBytes,
+      imageFileName: data.imageFileName.present
+          ? data.imageFileName.value
+          : this.imageFileName,
+      imageMimeType: data.imageMimeType.present
+          ? data.imageMimeType.value
+          : this.imageMimeType,
+      removeImage: data.removeImage.present
+          ? data.removeImage.value
+          : this.removeImage,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EditorDraftRow(')
+          ..write('recipeId: $recipeId, ')
+          ..write('json: $json, ')
+          ..write('savedAt: $savedAt, ')
+          ..write('baseUpdatedAt: $baseUpdatedAt, ')
+          ..write('imageBytes: $imageBytes, ')
+          ..write('imageFileName: $imageFileName, ')
+          ..write('imageMimeType: $imageMimeType, ')
+          ..write('removeImage: $removeImage')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    recipeId,
+    json,
+    savedAt,
+    baseUpdatedAt,
+    $driftBlobEquality.hash(imageBytes),
+    imageFileName,
+    imageMimeType,
+    removeImage,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is EditorDraftRow &&
+          other.recipeId == this.recipeId &&
+          other.json == this.json &&
+          other.savedAt == this.savedAt &&
+          other.baseUpdatedAt == this.baseUpdatedAt &&
+          $driftBlobEquality.equals(other.imageBytes, this.imageBytes) &&
+          other.imageFileName == this.imageFileName &&
+          other.imageMimeType == this.imageMimeType &&
+          other.removeImage == this.removeImage);
+}
+
+class EditorDraftsCompanion extends UpdateCompanion<EditorDraftRow> {
+  final Value<int> recipeId;
+  final Value<String> json;
+  final Value<DateTime> savedAt;
+  final Value<int?> baseUpdatedAt;
+  final Value<Uint8List?> imageBytes;
+  final Value<String?> imageFileName;
+  final Value<String?> imageMimeType;
+  final Value<bool> removeImage;
+  const EditorDraftsCompanion({
+    this.recipeId = const Value.absent(),
+    this.json = const Value.absent(),
+    this.savedAt = const Value.absent(),
+    this.baseUpdatedAt = const Value.absent(),
+    this.imageBytes = const Value.absent(),
+    this.imageFileName = const Value.absent(),
+    this.imageMimeType = const Value.absent(),
+    this.removeImage = const Value.absent(),
+  });
+  EditorDraftsCompanion.insert({
+    this.recipeId = const Value.absent(),
+    required String json,
+    required DateTime savedAt,
+    this.baseUpdatedAt = const Value.absent(),
+    this.imageBytes = const Value.absent(),
+    this.imageFileName = const Value.absent(),
+    this.imageMimeType = const Value.absent(),
+    required bool removeImage,
+  }) : json = Value(json),
+       savedAt = Value(savedAt),
+       removeImage = Value(removeImage);
+  static Insertable<EditorDraftRow> custom({
+    Expression<int>? recipeId,
+    Expression<String>? json,
+    Expression<DateTime>? savedAt,
+    Expression<int>? baseUpdatedAt,
+    Expression<Uint8List>? imageBytes,
+    Expression<String>? imageFileName,
+    Expression<String>? imageMimeType,
+    Expression<bool>? removeImage,
+  }) {
+    return RawValuesInsertable({
+      if (recipeId != null) 'recipe_id': recipeId,
+      if (json != null) 'json': json,
+      if (savedAt != null) 'saved_at': savedAt,
+      if (baseUpdatedAt != null) 'base_updated_at': baseUpdatedAt,
+      if (imageBytes != null) 'image_bytes': imageBytes,
+      if (imageFileName != null) 'image_file_name': imageFileName,
+      if (imageMimeType != null) 'image_mime_type': imageMimeType,
+      if (removeImage != null) 'remove_image': removeImage,
+    });
+  }
+
+  EditorDraftsCompanion copyWith({
+    Value<int>? recipeId,
+    Value<String>? json,
+    Value<DateTime>? savedAt,
+    Value<int?>? baseUpdatedAt,
+    Value<Uint8List?>? imageBytes,
+    Value<String?>? imageFileName,
+    Value<String?>? imageMimeType,
+    Value<bool>? removeImage,
+  }) {
+    return EditorDraftsCompanion(
+      recipeId: recipeId ?? this.recipeId,
+      json: json ?? this.json,
+      savedAt: savedAt ?? this.savedAt,
+      baseUpdatedAt: baseUpdatedAt ?? this.baseUpdatedAt,
+      imageBytes: imageBytes ?? this.imageBytes,
+      imageFileName: imageFileName ?? this.imageFileName,
+      imageMimeType: imageMimeType ?? this.imageMimeType,
+      removeImage: removeImage ?? this.removeImage,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (recipeId.present) {
+      map['recipe_id'] = Variable<int>(recipeId.value);
+    }
+    if (json.present) {
+      map['json'] = Variable<String>(json.value);
+    }
+    if (savedAt.present) {
+      map['saved_at'] = Variable<DateTime>(savedAt.value);
+    }
+    if (baseUpdatedAt.present) {
+      map['base_updated_at'] = Variable<int>(baseUpdatedAt.value);
+    }
+    if (imageBytes.present) {
+      map['image_bytes'] = Variable<Uint8List>(imageBytes.value);
+    }
+    if (imageFileName.present) {
+      map['image_file_name'] = Variable<String>(imageFileName.value);
+    }
+    if (imageMimeType.present) {
+      map['image_mime_type'] = Variable<String>(imageMimeType.value);
+    }
+    if (removeImage.present) {
+      map['remove_image'] = Variable<bool>(removeImage.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('EditorDraftsCompanion(')
+          ..write('recipeId: $recipeId, ')
+          ..write('json: $json, ')
+          ..write('savedAt: $savedAt, ')
+          ..write('baseUpdatedAt: $baseUpdatedAt, ')
+          ..write('imageBytes: $imageBytes, ')
+          ..write('imageFileName: $imageFileName, ')
+          ..write('imageMimeType: $imageMimeType, ')
+          ..write('removeImage: $removeImage')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$CacheDatabase extends GeneratedDatabase {
   _$CacheDatabase(QueryExecutor e) : super(e);
   $CacheDatabaseManager get managers => $CacheDatabaseManager(this);
@@ -968,6 +1512,7 @@ abstract class _$CacheDatabase extends GeneratedDatabase {
   late final $CachedImagesTable cachedImages = $CachedImagesTable(this);
   late final $CachedSavedFiltersTable cachedSavedFilters =
       $CachedSavedFiltersTable(this);
+  late final $EditorDraftsTable editorDrafts = $EditorDraftsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -976,6 +1521,7 @@ abstract class _$CacheDatabase extends GeneratedDatabase {
     cachedRecipes,
     cachedImages,
     cachedSavedFilters,
+    editorDrafts,
   ];
 }
 
@@ -1574,6 +2120,276 @@ typedef $$CachedSavedFiltersTableProcessedTableManager =
       CachedSavedFilterRow,
       PrefetchHooks Function()
     >;
+typedef $$EditorDraftsTableCreateCompanionBuilder =
+    EditorDraftsCompanion Function({
+      Value<int> recipeId,
+      required String json,
+      required DateTime savedAt,
+      Value<int?> baseUpdatedAt,
+      Value<Uint8List?> imageBytes,
+      Value<String?> imageFileName,
+      Value<String?> imageMimeType,
+      required bool removeImage,
+    });
+typedef $$EditorDraftsTableUpdateCompanionBuilder =
+    EditorDraftsCompanion Function({
+      Value<int> recipeId,
+      Value<String> json,
+      Value<DateTime> savedAt,
+      Value<int?> baseUpdatedAt,
+      Value<Uint8List?> imageBytes,
+      Value<String?> imageFileName,
+      Value<String?> imageMimeType,
+      Value<bool> removeImage,
+    });
+
+class $$EditorDraftsTableFilterComposer
+    extends Composer<_$CacheDatabase, $EditorDraftsTable> {
+  $$EditorDraftsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get recipeId => $composableBuilder(
+    column: $table.recipeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get json => $composableBuilder(
+    column: $table.json,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get savedAt => $composableBuilder(
+    column: $table.savedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get baseUpdatedAt => $composableBuilder(
+    column: $table.baseUpdatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get imageBytes => $composableBuilder(
+    column: $table.imageBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageFileName => $composableBuilder(
+    column: $table.imageFileName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get imageMimeType => $composableBuilder(
+    column: $table.imageMimeType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get removeImage => $composableBuilder(
+    column: $table.removeImage,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$EditorDraftsTableOrderingComposer
+    extends Composer<_$CacheDatabase, $EditorDraftsTable> {
+  $$EditorDraftsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get recipeId => $composableBuilder(
+    column: $table.recipeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get json => $composableBuilder(
+    column: $table.json,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get savedAt => $composableBuilder(
+    column: $table.savedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get baseUpdatedAt => $composableBuilder(
+    column: $table.baseUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get imageBytes => $composableBuilder(
+    column: $table.imageBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get imageFileName => $composableBuilder(
+    column: $table.imageFileName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get imageMimeType => $composableBuilder(
+    column: $table.imageMimeType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get removeImage => $composableBuilder(
+    column: $table.removeImage,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$EditorDraftsTableAnnotationComposer
+    extends Composer<_$CacheDatabase, $EditorDraftsTable> {
+  $$EditorDraftsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get recipeId =>
+      $composableBuilder(column: $table.recipeId, builder: (column) => column);
+
+  GeneratedColumn<String> get json =>
+      $composableBuilder(column: $table.json, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get savedAt =>
+      $composableBuilder(column: $table.savedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get baseUpdatedAt => $composableBuilder(
+    column: $table.baseUpdatedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<Uint8List> get imageBytes => $composableBuilder(
+    column: $table.imageBytes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get imageFileName => $composableBuilder(
+    column: $table.imageFileName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get imageMimeType => $composableBuilder(
+    column: $table.imageMimeType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get removeImage => $composableBuilder(
+    column: $table.removeImage,
+    builder: (column) => column,
+  );
+}
+
+class $$EditorDraftsTableTableManager
+    extends
+        RootTableManager<
+          _$CacheDatabase,
+          $EditorDraftsTable,
+          EditorDraftRow,
+          $$EditorDraftsTableFilterComposer,
+          $$EditorDraftsTableOrderingComposer,
+          $$EditorDraftsTableAnnotationComposer,
+          $$EditorDraftsTableCreateCompanionBuilder,
+          $$EditorDraftsTableUpdateCompanionBuilder,
+          (
+            EditorDraftRow,
+            BaseReferences<_$CacheDatabase, $EditorDraftsTable, EditorDraftRow>,
+          ),
+          EditorDraftRow,
+          PrefetchHooks Function()
+        > {
+  $$EditorDraftsTableTableManager(_$CacheDatabase db, $EditorDraftsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$EditorDraftsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$EditorDraftsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$EditorDraftsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> recipeId = const Value.absent(),
+                Value<String> json = const Value.absent(),
+                Value<DateTime> savedAt = const Value.absent(),
+                Value<int?> baseUpdatedAt = const Value.absent(),
+                Value<Uint8List?> imageBytes = const Value.absent(),
+                Value<String?> imageFileName = const Value.absent(),
+                Value<String?> imageMimeType = const Value.absent(),
+                Value<bool> removeImage = const Value.absent(),
+              }) => EditorDraftsCompanion(
+                recipeId: recipeId,
+                json: json,
+                savedAt: savedAt,
+                baseUpdatedAt: baseUpdatedAt,
+                imageBytes: imageBytes,
+                imageFileName: imageFileName,
+                imageMimeType: imageMimeType,
+                removeImage: removeImage,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> recipeId = const Value.absent(),
+                required String json,
+                required DateTime savedAt,
+                Value<int?> baseUpdatedAt = const Value.absent(),
+                Value<Uint8List?> imageBytes = const Value.absent(),
+                Value<String?> imageFileName = const Value.absent(),
+                Value<String?> imageMimeType = const Value.absent(),
+                required bool removeImage,
+              }) => EditorDraftsCompanion.insert(
+                recipeId: recipeId,
+                json: json,
+                savedAt: savedAt,
+                baseUpdatedAt: baseUpdatedAt,
+                imageBytes: imageBytes,
+                imageFileName: imageFileName,
+                imageMimeType: imageMimeType,
+                removeImage: removeImage,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$EditorDraftsTable, EditorDraftRow>(table),
+                  BaseReferences<
+                    _$CacheDatabase,
+                    $EditorDraftsTable,
+                    EditorDraftRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$EditorDraftsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$CacheDatabase,
+      $EditorDraftsTable,
+      EditorDraftRow,
+      $$EditorDraftsTableFilterComposer,
+      $$EditorDraftsTableOrderingComposer,
+      $$EditorDraftsTableAnnotationComposer,
+      $$EditorDraftsTableCreateCompanionBuilder,
+      $$EditorDraftsTableUpdateCompanionBuilder,
+      (
+        EditorDraftRow,
+        BaseReferences<_$CacheDatabase, $EditorDraftsTable, EditorDraftRow>,
+      ),
+      EditorDraftRow,
+      PrefetchHooks Function()
+    >;
 
 class $CacheDatabaseManager {
   final _$CacheDatabase _db;
@@ -1584,4 +2400,6 @@ class $CacheDatabaseManager {
       $$CachedImagesTableTableManager(_db, _db.cachedImages);
   $$CachedSavedFiltersTableTableManager get cachedSavedFilters =>
       $$CachedSavedFiltersTableTableManager(_db, _db.cachedSavedFilters);
+  $$EditorDraftsTableTableManager get editorDrafts =>
+      $$EditorDraftsTableTableManager(_db, _db.editorDrafts);
 }

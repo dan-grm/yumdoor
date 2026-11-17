@@ -9,6 +9,7 @@ import 'fake_auth_repository.dart';
 import 'fake_book_user_repositories.dart';
 import 'fake_connectivity_service.dart';
 import 'fake_cook_log_repository.dart';
+import 'fake_draft_store.dart';
 import 'fake_food_keyword_repositories.dart';
 import 'fake_ingredient_parser.dart';
 import 'fake_link_opener.dart';
@@ -16,6 +17,7 @@ import 'fake_offline_cache.dart';
 import 'fake_recipe_repository.dart';
 import 'fake_saved_filter_repository.dart';
 import 'fake_server_repository.dart';
+import 'fake_unload_guard.dart';
 import 'in_memory_local_store.dart';
 import 'in_memory_token_store.dart';
 
@@ -46,6 +48,8 @@ List<Override> appOverrides({
   FakeUserRepository? users,
   FakeSavedFilterRepository? savedFilters,
   FakeOfflineCache? offlineCache,
+  FakeDraftStore? drafts,
+  FakeUnloadGuard? unloadGuard,
   TimerAlertService? timerAlerts,
   FakeLinkOpener? linkOpener,
   InMemoryLocalStore? localStore,
@@ -74,6 +78,8 @@ List<Override> appOverrides({
     savedFilters ?? FakeSavedFilterRepository(),
   ),
   offlineCacheProvider.overrideWithValue(offlineCache ?? FakeOfflineCache()),
+  draftStoreProvider.overrideWithValue(drafts ?? FakeDraftStore()),
+  unloadGuardProvider.overrideWithValue(unloadGuard ?? FakeUnloadGuard()),
   connectivityServiceProvider.overrideWithValue(
     connectivity ?? FakeConnectivityService(),
   ),

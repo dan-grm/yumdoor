@@ -6,12 +6,15 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/offline.dart';
 import '../../app/platform_providers.dart';
+import '../../app/session.dart';
 import '../../core/failures.dart';
 import '../../design/components/buttons.dart';
 import '../../design/design.dart';
 import '../../domain/models/image_upload.dart';
+import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import '../../platform/image_picker/image_picker_service.dart';
+import '../../platform/unload_guard/unload_guard.dart';
 import '../common/failure_view.dart';
 import '../common/offline_disabled.dart';
 import 'editor_controller.dart';
@@ -31,6 +34,68 @@ const newRecipeLocation = '/recipe/new';
 
 /// How long the snackbar saying the photo wasn't saved stays.
 const _imageFailureDuration = Duration(seconds: 8);
+
+/// `GoRoute.onExit` of the editor's routes: whether the editor may close.
+///
+/// Called for every way of leaving it: "Abbrechen", back, and any other
+/// route change (a link, the browser's back button, a typed URL). With
+/// unsaved changes it asks "Änderungen verwerfen?" first, and deletes the
+/// draft if the user agrees. Not while saving: the editor closes on its own
+/// once saved.
+Future<bool> confirmEditorExit(
+  BuildContext context,
+  GoRouterState state,
+) async {
+  // The app is being torn down.
+  if (!context.mounted) return true;
+  final container = ProviderScope.containerOf(context, listen: false);
+  final provider = recipeEditorProvider(
+    int.tryParse(state.pathParameters['id'] ?? ''),
+  );
+  if (!container.exists(provider)) return true;
+  // Logged out: login takes over. Logout deleted the drafts; none may be
+  // stored after it for the next user to find.
+  if (container.exists(sessionControllerProvider)) {
+    final session = container.read(sessionControllerProvider);
+    if (session.hasValue && session.value == null) {
+      await container.read(provider.notifier).discardChanges();
+      return true;
+    }
+  }
+  final editor = container.read(provider).value;
+  if (editor == null) return true;
+  if (editor.saving) return false;
+  if (!editor.isDirty && !container.read(provider.notifier).hasUnaddedLine) {
+    return true;
+  }
+  final discard = await showDialog<bool>(
+    context: context,
+    builder: (context) {
+      final t = context.tokens;
+      final l10n = context.l10n;
+      return AlertDialog(
+        title: Text(l10n.editorDiscardTitle),
+        content: Text(l10n.editorDiscardBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.editorDiscardKeepEditing),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: t.danger),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.editorDiscard),
+          ),
+        ],
+      );
+    },
+  );
+  if (discard != true) return false;
+  if (container.exists(provider)) {
+    await container.read(provider.notifier).discardChanges();
+  }
+  return true;
+}
 
 /// The recipe editor (mockup `09-rezept-bearbeiten`): "Abbrechen", the
 /// title and "Speichern" on top, then the tabs Allgemein, Zutaten and
@@ -63,26 +128,84 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   /// Why the last file chosen or dropped can't be used.
   ImageRejection? _rejection;
 
+  late final UnloadGuard _unloadGuard = ref.read(unloadGuardProvider);
+
+  /// Stores the draft right away when the app is hidden: it may be closed
+  /// before the draft's delay is over.
+  late final AppLifecycleListener _lifecycle;
+
+  /// Whether the dialog offering a stored draft is open.
+  var _offering = false;
+
+  /// How often a draft was restored; the form is built anew each time.
+  var _restored = 0;
+
   @override
   void initState() {
     super.initState();
     if (_picker.supportsDrop) _drops = _picker.drops.listen(_onDrop);
+    _lifecycle = AppLifecycleListener(
+      onHide: () => unawaited(_editor.flushDraft()),
+    );
+    ref.listenManual(recipeEditorProvider(widget.recipeId), (_, next) {
+      final state = next.value;
+      _unloadGuard.active = state?.isDirty ?? false;
+      if (state?.offeredDraft != null && !_offering) {
+        _offering = true;
+        // Not while building, which is where this first runs.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) unawaited(_offerDraft());
+        });
+      }
+    }, fireImmediately: true);
   }
 
   @override
   void dispose() {
     unawaited(_drops?.cancel());
+    _lifecycle.dispose();
+    _unloadGuard.active = false;
     super.dispose();
+  }
+
+  /// Asks whether to continue with the draft stored on an earlier visit.
+  Future<void> _offerDraft() async {
+    final state = ref.read(recipeEditorProvider(widget.recipeId)).value;
+    final stored = state?.offeredDraft;
+    if (state == null || stored == null) {
+      _offering = false;
+      return;
+    }
+    final restore = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _DraftDialog(
+        savedAt: stored.savedAt,
+        stale: state.offeredDraftIsStale,
+      ),
+    );
+    _offering = false;
+    if (!mounted) return;
+    // Closed some other way (e.g. back): keep the work rather than lose it;
+    // leaving still asks.
+    if (restore ?? true) {
+      _editor.restoreDraft();
+      setState(() => _restored++);
+    } else {
+      _editor.discardDraft();
+    }
   }
 
   RecipeEditor get _editor =>
       ref.read(recipeEditorProvider(widget.recipeId).notifier);
 
   /// [_canChange] now, for event handlers.
-  bool get _canChangeImage => _canChange(
-    ref.read(recipeEditorProvider(widget.recipeId)).value,
-    offline: ref.read(isOfflineProvider),
-  );
+  bool get _canChangeImage =>
+      _canChange(
+        ref.read(recipeEditorProvider(widget.recipeId)).value,
+        offline: ref.read(isOfflineProvider),
+      ) &&
+      !_offering;
 
   /// Whether the photo can be changed: loaded, online and not saving.
   static bool _canChange(EditorState? state, {required bool offline}) =>
@@ -217,6 +340,8 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
               Expanded(
                 child: switch (editor) {
                   AsyncData(:final value) => _Body(
+                    // A restored draft replaces what the fields hold.
+                    key: ValueKey(_restored),
                     recipeId: widget.recipeId,
                     state: value,
                     tab: _tab,
@@ -246,6 +371,46 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Offers the draft stored on an earlier visit: "Entwurf wiederherstellen"
+/// pops `true`, "Verwerfen" `false`.
+class _DraftDialog extends StatelessWidget {
+  const _DraftDialog({required this.savedAt, required this.stale});
+
+  /// When the draft was stored.
+  final DateTime savedAt;
+
+  /// Whether the recipe was changed on the server after that.
+  final bool stale;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final l10n = context.l10n;
+    final format = LocaleFormat.of(context);
+    final local = savedAt.toLocal();
+    return AlertDialog(
+      title: Text(l10n.editorDraftTitle),
+      content: Text(
+        [
+          l10n.editorDraftBody(format.date(local), format.time(local)),
+          if (stale) l10n.editorDraftStale,
+        ].join('\n\n'),
+      ),
+      actions: [
+        TextButton(
+          style: TextButton.styleFrom(foregroundColor: t.danger),
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(l10n.editorDraftDiscard),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(l10n.editorDraftRestore),
+        ),
+      ],
     );
   }
 }
@@ -371,6 +536,7 @@ class _SavingButton extends StatelessWidget {
 
 class _Body extends ConsumerWidget {
   const _Body({
+    super.key,
     required this.recipeId,
     required this.state,
     required this.tab,

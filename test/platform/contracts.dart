@@ -5,6 +5,7 @@ import 'package:yumdoor/platform/link_opener/link_opener.dart';
 import 'package:yumdoor/platform/local_store/local_store.dart';
 import 'package:yumdoor/platform/timers/timer_alert_service.dart';
 import 'package:yumdoor/platform/token_store/token_store.dart';
+import 'package:yumdoor/platform/unload_guard/unload_guard.dart';
 import 'package:yumdoor/platform/wake_lock/wake_lock_service.dart';
 
 // Behavior every implementation of a platform service must have. Run against
@@ -220,5 +221,31 @@ void imagePickerContract(ImagePickerService Function() create) {
     picker.drops.listen((_) {});
     await pumpEventQueue();
     picker.dispose();
+  });
+}
+
+void unloadGuardContract(UnloadGuard Function() create) {
+  late UnloadGuard guard;
+  setUp(() => guard = create());
+  tearDown(() => guard.dispose());
+
+  test('starts inactive', () => expect(guard.active, isFalse));
+
+  test('turns on and off, any number of times', () {
+    guard
+      ..active = true
+      ..active = true;
+    expect(guard.active, isTrue);
+    guard
+      ..active = false
+      ..active = false;
+    expect(guard.active, isFalse);
+  });
+
+  test('dispose turns it off', () {
+    guard
+      ..active = true
+      ..dispose();
+    expect(guard.active, isFalse);
   });
 }

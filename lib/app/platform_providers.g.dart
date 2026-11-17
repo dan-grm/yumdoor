@@ -461,3 +461,44 @@ final class TimerAlertServiceProvider
 }
 
 String _$timerAlertServiceHash() => r'7384ce5287b84000649723ee26714c7e6f19a253';
+
+@ProviderFor(unloadGuard)
+final unloadGuardProvider = UnloadGuardProvider._();
+
+final class UnloadGuardProvider
+    extends $FunctionalProvider<UnloadGuard, UnloadGuard, UnloadGuard>
+    with $Provider<UnloadGuard> {
+  UnloadGuardProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'unloadGuardProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$unloadGuardHash();
+
+  @$internal
+  @override
+  $ProviderElement<UnloadGuard> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  UnloadGuard create(Ref ref) {
+    return unloadGuard(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UnloadGuard value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UnloadGuard>(value),
+    );
+  }
+}
+
+String _$unloadGuardHash() => r'32c78e96c035685733d65d3aa3a55b5dd7740250';
