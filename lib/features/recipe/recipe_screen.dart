@@ -17,6 +17,7 @@ import '../common/failure_view.dart';
 import '../common/layout.dart';
 import '../common/markdown_text.dart';
 import '../common/offline_disabled.dart';
+import '../common/recipe_image.dart';
 import '../common/step_text.dart';
 import '../cook_log/cook_log_screen.dart';
 import '../editor/editor_screen.dart';
@@ -223,15 +224,14 @@ class _RecipeViewState extends State<_RecipeView> {
 
 /// The image (or a placeholder) with the back button over it. A copy from
 /// the offline cache is preferred over the network.
-class _Header extends ConsumerWidget {
+class _Header extends StatelessWidget {
   const _Header({required this.recipe});
 
   final Recipe recipe;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final t = context.tokens;
-    final image = recipe.image;
     final placeholder = Center(
       child: Icon(
         Icons.soup_kitchen_outlined,
@@ -247,27 +247,7 @@ class _Header extends ConsumerWidget {
         children: [
           ColoredBox(
             color: t.sageSoft,
-            child:
-                image != null &&
-                    (image.isScheme('https') || image.isScheme('http'))
-                ? switch (ref.watch(cachedImageProvider(image))) {
-                    AsyncData(value: final bytes?) => Image.memory(
-                      bytes,
-                      fit: BoxFit.cover,
-                      excludeFromSemantics: true,
-                      errorBuilder: (_, _, _) => placeholder,
-                    ),
-                    // Reading the cache takes a moment; the background
-                    // shows meanwhile.
-                    AsyncLoading() => const SizedBox.shrink(),
-                    _ => Image.network(
-                      image.toString(),
-                      fit: BoxFit.cover,
-                      excludeFromSemantics: true,
-                      errorBuilder: (_, _, _) => placeholder,
-                    ),
-                  }
-                : placeholder,
+            child: RecipeImage(url: recipe.image, placeholder: placeholder),
           ),
           const SafeArea(child: _BackButton()),
         ],
