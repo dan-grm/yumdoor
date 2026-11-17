@@ -1831,6 +1831,96 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Nicht angelegt. {reason}'**
   String pickerCreateFailed(String reason);
+
+  /// Heading of the recipe photo area in the Allgemein tab.
+  ///
+  /// In de, this message translates to:
+  /// **'Foto'**
+  String get editorImage;
+
+  /// Button that opens the camera to take the recipe photo (phones and tablets).
+  ///
+  /// In de, this message translates to:
+  /// **'Foto aufnehmen'**
+  String get editorImageTakePhoto;
+
+  /// Button that opens a file picker for the recipe photo.
+  ///
+  /// In de, this message translates to:
+  /// **'Bild auswählen'**
+  String get editorImagePick;
+
+  /// Button that removes the recipe photo (on save).
+  ///
+  /// In de, this message translates to:
+  /// **'Entfernen'**
+  String get editorImageRemove;
+
+  /// Shown in the empty photo area on phones and tablets.
+  ///
+  /// In de, this message translates to:
+  /// **'Noch kein Foto'**
+  String get editorImageNone;
+
+  /// Shown in the empty photo area on devices with a mouse: an image file can be dropped onto the window.
+  ///
+  /// In de, this message translates to:
+  /// **'Bild hierher ziehen'**
+  String get editorImageDrop;
+
+  /// Shown in the photo area while an image file is dragged over the window.
+  ///
+  /// In de, this message translates to:
+  /// **'Loslassen, um das Bild zu verwenden'**
+  String get editorImageDropRelease;
+
+  /// Under the photo just chosen: it is uploaded when the recipe is saved.
+  ///
+  /// In de, this message translates to:
+  /// **'Wird beim Speichern hochgeladen.'**
+  String get editorImagePending;
+
+  /// In the photo area after removing the saved photo: it is removed when the recipe is saved.
+  ///
+  /// In de, this message translates to:
+  /// **'Das Foto wird beim Speichern entfernt.'**
+  String get editorImageRemoved;
+
+  /// Shown when the chosen or dropped file is not a supported image.
+  ///
+  /// In de, this message translates to:
+  /// **'Das ist kein Bild. Es gehen JPEG, PNG, WebP und GIF.'**
+  String get editorImageNotAnImage;
+
+  /// Shown when the chosen or dropped image is larger than the limit.
+  ///
+  /// In de, this message translates to:
+  /// **'Das Bild ist größer als {megabytes} MB.'**
+  String editorImageTooLarge(int megabytes);
+
+  /// Shown when the chosen or dropped file could not be read (moved, folder, access revoked).
+  ///
+  /// In de, this message translates to:
+  /// **'Die Datei ließ sich nicht lesen.'**
+  String get editorImageUnreadable;
+
+  /// Snackbar when the recipe was saved but uploading or removing its photo failed; the reason is one of the error messages.
+  ///
+  /// In de, this message translates to:
+  /// **'Rezept gespeichert, das Foto aber nicht. {reason}'**
+  String editorImageNotSaved(String reason);
+
+  /// Reason when the server (or a proxy before it) refused the photo as too large (HTTP 413).
+  ///
+  /// In de, this message translates to:
+  /// **'Der Server nimmt so große Bilder nicht an.'**
+  String get editorImageServerTooLarge;
+
+  /// Reason when the photo upload failed without an answer from the server, right after the recipe itself was saved (a proxy refusing the size often resets the connection).
+  ///
+  /// In de, this message translates to:
+  /// **'Die Verbindung brach beim Hochladen ab. Vielleicht ist das Bild zu groß für den Server.'**
+  String get editorImageInterrupted;
 }
 
 class _AppLocalizationsDelegate

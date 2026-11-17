@@ -7,6 +7,7 @@ import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/data/cache/cache_database.dart';
 import 'package:yumdoor/data/cache/caching_recipe_repository.dart';
 import 'package:yumdoor/data/cache/recipe_cache.dart';
+import 'package:yumdoor/domain/models/image_upload.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
 import 'package:yumdoor/domain/models/recipe_draft.dart';
@@ -367,6 +368,73 @@ void main() {
 
       await expectLater(
         repository.updateRecipe(7, RecipeDraft.fromRecipe(_karotten)),
+        throwsA(isA<NotFoundFailure>()),
+      );
+
+      expect(await cache.get(7), isNull);
+    });
+  });
+
+  group('images', () {
+    final upload = ImageUpload(
+      bytes: Uint8List.fromList([0xFF, 0xD8, 0xFF]),
+      fileName: 'karotten.jpg',
+      mimeType: 'image/jpeg',
+    );
+
+    test('an upload gives the stored recipe the new image', () async {
+      await fetch(7);
+
+      final url = await repository.uploadImage(7, upload);
+      await pumpEventQueue();
+
+      expect(url, FakeRecipeRepository.imageUrl(7, 1));
+      expect((await cache.get(7))?.image, url);
+      // The new image is downloaded for offline use; the old one goes.
+      expect(downloads, [_image, url]);
+      expect(await cache.image(url), [1, 2, 3]);
+      expect(await cache.image(_image), isNull);
+    });
+
+    test('a removal stores the recipe without an image', () async {
+      await fetch(7);
+
+      await repository.removeImage(7);
+      await pumpEventQueue();
+
+      expect((await cache.get(7))?.image, isNull);
+      expect(await cache.image(_image), isNull);
+    });
+
+    test('a recipe that is not stored stays so', () async {
+      await repository.uploadImage(7, upload);
+      await pumpEventQueue();
+
+      expect(await cache.get(7), isNull);
+    });
+
+    test('fail offline and keep the stored recipe', () async {
+      await fetch(7);
+      remote.imageFailure = const OfflineFailure();
+
+      await expectLater(
+        repository.uploadImage(7, upload),
+        throwsA(isA<OfflineFailure>()),
+      );
+      await expectLater(
+        repository.removeImage(7),
+        throwsA(isA<OfflineFailure>()),
+      );
+
+      expect((await cache.get(7))?.image, _image);
+    });
+
+    test('an upload to a deleted recipe removes it from the cache', () async {
+      await fetch(7);
+      remote.recipes.remove(7);
+
+      await expectLater(
+        repository.uploadImage(7, upload),
         throwsA(isA<NotFoundFailure>()),
       );
 

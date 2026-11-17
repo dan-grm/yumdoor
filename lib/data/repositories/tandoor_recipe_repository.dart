@@ -7,6 +7,7 @@ import 'package:tandoor_api/tandoor_api.dart' as api;
 
 import '../../core/cancellation.dart';
 import '../../core/failures.dart';
+import '../../domain/models/image_upload.dart';
 import '../../domain/models/recipe.dart';
 import '../../domain/models/recipe_draft.dart';
 import '../../domain/models/recipe_query.dart';
@@ -22,9 +23,13 @@ import '../mappers/recipe_mapper.dart';
 import '../mappers/recipe_sort_mapper.dart';
 
 class TandoorRecipeRepository implements RecipeRepository {
-  TandoorRecipeRepository(this._api, {this.lastCooked});
+  TandoorRecipeRepository(this._api, {required this._dio, this.lastCooked});
 
   final api.ApiApi _api;
+
+  /// The [Dio] behind [_api], for the image upload: the generated client
+  /// takes the file as a string (docs/TANDOOR_API.md#recipe-images).
+  final Dio _dio;
 
   /// When the current user last cooked a recipe. Tandoor 2.6.15 sends
   /// `last_cooked: null` on every recipe, so [fetchRecipe] asks this instead
@@ -334,6 +339,72 @@ class TandoorRecipeRepository implements RecipeRepository {
   }
 
   @override
+  Future<Uri> uploadImage(int id, ImageUpload image) async {
+    final path = await _putImage(
+      id,
+      FormData.fromMap({
+        'image': MultipartFile.fromBytes(
+          image.bytes,
+          filename: image.fileName,
+          contentType: DioMediaType.parse(image.mimeType),
+        ),
+      }),
+      upload: true,
+    );
+    if (path == null) throw const ServerFailure(cause: 'No image path');
+    // Relative to the server's origin (`/media/recipes/…`, or wherever
+    // `MEDIA_URL` puts it), like the absolute URL a fetch would give.
+    return Uri.parse(_dio.options.baseUrl).resolve(path);
+  }
+
+  @override
+  Future<void> removeImage(int id) async {
+    // A form without `image` and `image_url` clears the image
+    // (docs/TANDOOR_API.md#recipe-images).
+    await _putImage(id, FormData());
+  }
+
+  /// `PUT /api/recipe/{id}/image/` with [form]; returns the path of the
+  /// image the recipe has now, `null` for none.
+  ///
+  /// An [upload] that ends without an answer fails with
+  /// [UploadInterruptedFailure]: a proxy refusing the size often resets the
+  /// connection instead of answering 413 (docs/TANDOOR_API.md#recipe-images).
+  Future<String?> _putImage(
+    int id,
+    FormData form, {
+    bool upload = false,
+  }) async {
+    final Response<Object?> response;
+    try {
+      response = await _dio.put<Object?>(
+        '/api/recipe/$id/image/',
+        data: form,
+        options: Options(
+          // Sending a large photo over a slow connection, then Tandoor
+          // scaling it, takes longer than an ordinary request may. On the
+          // web this is the whole request's timeout.
+          receiveTimeout: _imageTimeout,
+        ),
+      );
+    } on DioException catch (e) {
+      // A reset while sending is `connectionError` on the web, and
+      // `unknown` (a SocketException) on native.
+      if (upload &&
+          e.response == null &&
+          (e.type == DioExceptionType.connectionError ||
+              e.type == DioExceptionType.unknown)) {
+        throw const UploadInterruptedFailure();
+      }
+      throw failureFromDioException(e);
+    }
+    return switch (response.data) {
+      {'image': final String? path} => path,
+      final body => throw ServerFailure(cause: body),
+    };
+  }
+
+  @override
   Future<void> recordView(int id) => guardRequest(() async {
     // Tandoor keeps one view per recipe and user every 5 minutes, so opening
     // a recipe again soon after doesn't add one (docs/TANDOOR_API.md).
@@ -348,6 +419,9 @@ class TandoorRecipeRepository implements RecipeRepository {
     }
   }
 }
+
+/// How long an image upload may take.
+const _imageTimeout = Duration(minutes: 5);
 
 /// Recipes per request when loading every recipe a saved search finds; the
 /// most Tandoor allows for recipes.

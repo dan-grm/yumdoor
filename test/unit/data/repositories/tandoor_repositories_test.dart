@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,6 +15,7 @@ import 'package:yumdoor/data/repositories/tandoor_recipe_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_server_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_unit_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_user_repository.dart';
+import 'package:yumdoor/domain/models/image_upload.dart';
 import 'package:yumdoor/domain/models/recipe_book.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
 import 'package:yumdoor/domain/models/recipe_sort.dart';
@@ -53,11 +56,19 @@ void main() {
         (_) => jsonResponse(tandoorFixture('recipe_list.json')),
       );
 
-      final page = await TandoorRecipeRepository(client(adapter)).search(
-        const RecipeQuery(text: ' Kuchen ', foodIds: {1, 2}, keywordIds: {3}),
-        page: 2,
-        pageSize: 3,
-      );
+      final page =
+          await TandoorRecipeRepository(
+            client(adapter),
+            dio: fakeDio(adapter),
+          ).search(
+            const RecipeQuery(
+              text: ' Kuchen ',
+              foodIds: {1, 2},
+              keywordIds: {3},
+            ),
+            page: 2,
+            pageSize: 3,
+          );
 
       final query = adapter.requests.single.uri.queryParametersAll;
       expect(query['query'], ['Kuchen']);
@@ -75,7 +86,10 @@ void main() {
         (_) => jsonResponse(tandoorFixture('recipe_list.json')),
       );
 
-      await TandoorRecipeRepository(client(adapter)).search(
+      await TandoorRecipeRepository(
+        client(adapter),
+        dio: fakeDio(adapter),
+      ).search(
         RecipeQuery(minRating: 4, lastCookedBefore: DateTime(2026, 9, 1, 18)),
       );
 
@@ -88,7 +102,10 @@ void main() {
       final adapter = FakeHttpAdapter(
         (_) => jsonResponse(tandoorFixture('recipe_list.json')),
       );
-      final repository = TandoorRecipeRepository(client(adapter));
+      final repository = TandoorRecipeRepository(
+        client(adapter),
+        dio: fakeDio(adapter),
+      );
 
       await repository.search(const RecipeQuery(minTimesCooked: 5));
       await repository.search(const RecipeQuery(neverCooked: true));
@@ -107,7 +124,10 @@ void main() {
       final adapter = FakeHttpAdapter(
         (_) => jsonResponse(tandoorFixture('recipe_list.json')),
       );
-      final repository = TandoorRecipeRepository(client(adapter));
+      final repository = TandoorRecipeRepository(
+        client(adapter),
+        dio: fakeDio(adapter),
+      );
 
       await repository.search(
         const RecipeQuery(maxMissingFoods: 0, bookIds: {4, 7}, createdBy: 2),
@@ -130,7 +150,10 @@ void main() {
       final adapter = FakeHttpAdapter(
         (_) => jsonResponse(tandoorFixture('recipe_list.json')),
       );
-      final repository = TandoorRecipeRepository(client(adapter));
+      final repository = TandoorRecipeRepository(
+        client(adapter),
+        dio: fakeDio(adapter),
+      );
 
       await repository.search(const RecipeQuery(sort: RecipeSort.rating));
       await repository.search(const RecipeQuery(sort: RecipeSort.random));
@@ -157,8 +180,10 @@ void main() {
       final adapter = FakeHttpAdapter((_) => response.future);
       final cancel = CancelSignal();
 
-      final search = TandoorRecipeRepository(client(adapter))
-          .search(const RecipeQuery(), cancel: cancel);
+      final search = TandoorRecipeRepository(
+        client(adapter),
+        dio: fakeDio(adapter),
+      ).search(const RecipeQuery(), cancel: cancel);
       cancel.cancel();
 
       await expectLater(search, throwsA(isA<CancelledFailure>()));
@@ -170,8 +195,10 @@ void main() {
         (_) => jsonResponse(tandoorFixture('recipe_list.json')),
       );
 
-      await TandoorRecipeRepository(client(adapter))
-          .search(const RecipeQuery(text: '  '));
+      await TandoorRecipeRepository(
+        client(adapter),
+        dio: fakeDio(adapter),
+      ).search(const RecipeQuery(text: '  '));
 
       expect(adapter.requests.single.uri.queryParameters.keys, {
         'page',
@@ -233,14 +260,18 @@ void main() {
           '"sort_order":"-rating","new":true,"version":"2"}',
         );
 
-        final page = await TandoorRecipeRepository(client(adapter)).search(
-          const RecipeQuery(
-            savedSearchOfBook: 5,
-            foodIds: {9},
-            minRating: 2,
-            sort: RecipeSort.name,
-          ),
-        );
+        final page =
+            await TandoorRecipeRepository(
+              client(adapter),
+              dio: fakeDio(adapter),
+            ).search(
+              const RecipeQuery(
+                savedSearchOfBook: 5,
+                foodIds: {9},
+                minRating: 2,
+                sort: RecipeSort.name,
+              ),
+            );
 
         final query = recipeSearches(adapter).single;
         expect(query['keywords_or'], ['1', '2']);
@@ -263,7 +294,10 @@ void main() {
         'keeps what the whole saved search finds when a parameter clashes',
         () async {
           final adapter = tandoor('{"keywords_or":[1]}', all: [58, 67]);
-          final repository = TandoorRecipeRepository(client(adapter));
+          final repository = TandoorRecipeRepository(
+            client(adapter),
+            dio: fakeDio(adapter),
+          );
 
           final first = await repository.search(
             const RecipeQuery(savedSearchOfBook: 5, anyKeywordIds: {4}),
@@ -312,6 +346,7 @@ void main() {
 
         final page = await TandoorRecipeRepository(
           client(adapter),
+          dio: fakeDio(adapter),
         ).search(const RecipeQuery(savedSearchOfBook: 5, anyKeywordIds: {4}));
 
         expect([for (final r in page.items) r.id], [72]);
@@ -331,8 +366,10 @@ void main() {
           all: [72],
         );
 
-        final page = await TandoorRecipeRepository(client(adapter))
-            .search(const RecipeQuery(savedSearchOfBook: 5, foodIds: {9}));
+        final page = await TandoorRecipeRepository(
+          client(adapter),
+          dio: fakeDio(adapter),
+        ).search(const RecipeQuery(savedSearchOfBook: 5, foodIds: {9}));
 
         final [ours, all] = recipeSearches(adapter);
         expect(ours['foods_or'], ['3']);
@@ -344,8 +381,10 @@ void main() {
       test('is not checked by itself for the default child matching', () async {
         final adapter = tandoor('{"foods_or":[3],"include_children":true}');
 
-        final page = await TandoorRecipeRepository(client(adapter))
-            .search(const RecipeQuery(savedSearchOfBook: 5, foodIds: {9}));
+        final page = await TandoorRecipeRepository(
+          client(adapter),
+          dio: fakeDio(adapter),
+        ).search(const RecipeQuery(savedSearchOfBook: 5, foodIds: {9}));
 
         expect(recipeSearches(adapter), hasLength(1));
         expect(page.items, hasLength(3));
@@ -360,8 +399,10 @@ void main() {
           interceptors: const [],
         ).getApiApi();
 
-        final page = await TandoorRecipeRepository(bare)
-            .search(const RecipeQuery(savedSearchOfBook: 5));
+        final page = await TandoorRecipeRepository(
+          bare,
+          dio: Dio(),
+        ).search(const RecipeQuery(savedSearchOfBook: 5));
 
         expect([for (final r in page.items) r.id], [67]);
       });
@@ -377,8 +418,10 @@ void main() {
           final unreadable = tandoor('{"keywords_or":[{"name":"x"}]}');
 
           for (final adapter in [none, gone, unreadable]) {
-            final page = await TandoorRecipeRepository(client(adapter))
-                .search(const RecipeQuery(savedSearchOfBook: 5));
+            final page = await TandoorRecipeRepository(
+              client(adapter),
+              dio: fakeDio(adapter),
+            ).search(const RecipeQuery(savedSearchOfBook: 5));
 
             expect(page.items, isEmpty);
             expect(page.hasMore, isFalse);
@@ -396,6 +439,7 @@ void main() {
 
         final page = await TandoorRecipeRepository(
           client(adapter),
+          dio: fakeDio(adapter),
         ).search(const RecipeQuery(savedSearchOfBook: 5, anyKeywordIds: {4}));
 
         final [ours, all] = recipeSearches(adapter);
@@ -418,7 +462,10 @@ void main() {
           }
           return jsonResponse(recipeList);
         });
-        final repository = TandoorRecipeRepository(client(adapter));
+        final repository = TandoorRecipeRepository(
+          client(adapter),
+          dio: fakeDio(adapter),
+        );
         const query = RecipeQuery(savedSearchOfBook: 5, anyKeywordIds: {4});
         final cancel = CancelSignal();
 
@@ -455,8 +502,10 @@ void main() {
         (_) => jsonResponse(tandoorFixture('recipe_apfelkuchen.json')),
       );
 
-      final recipe = await TandoorRecipeRepository(client(adapter))
-          .fetchRecipe(58);
+      final recipe = await TandoorRecipeRepository(
+        client(adapter),
+        dio: fakeDio(adapter),
+      ).fetchRecipe(58);
 
       expect(adapter.requests.single.uri.path, '/tandoor/api/recipe/58/');
       expect(recipe.name, 'Apfelkuchen vom Blech');
@@ -467,12 +516,134 @@ void main() {
         (_) => jsonResponse({'id': 1, 'recipe': 58}, status: 201),
       );
 
-      await TandoorRecipeRepository(client(adapter)).recordView(58);
+      await TandoorRecipeRepository(
+        client(adapter),
+        dio: fakeDio(adapter),
+      ).recordView(58);
 
       final request = adapter.requests.single;
       expect(request.method, 'POST');
       expect(request.uri.path, '/tandoor/api/view-log/');
       expect(request.data, {'recipe': 58});
+    });
+
+    group('images', () {
+      final upload = ImageUpload(
+        bytes: Uint8List.fromList([0x89, 0x50, 0x4E, 0x47]),
+        fileName: 'apfelkuchen.png',
+        mimeType: 'image/png',
+      );
+
+      /// Answers the PUT with [image] as the recipe's image path.
+      FakeHttpAdapter imageAdapter({Object? image, int status = 200}) =>
+          FakeHttpAdapter(
+            (_) => jsonResponse({
+              'image': image,
+              'image_url': null,
+            }, status: status),
+          );
+
+      TandoorRecipeRepository repository(FakeHttpAdapter adapter) =>
+          TandoorRecipeRepository(client(adapter), dio: fakeDio(adapter));
+
+      test('uploads an image as multipart and returns its URL', () async {
+        // With MEDIA_URL set for a Tandoor under a subpath.
+        final adapter = imageAdapter(image: '/tandoor/media/recipes/a_58.png');
+
+        final url = await repository(adapter).uploadImage(58, upload);
+
+        final put = adapter.requests.single;
+        expect(put.method, 'PUT');
+        expect(put.uri.path, '/tandoor/api/recipe/58/image/');
+        expect(put.headers['Authorization'], 'Bearer tda_test');
+        final form = put.data as FormData;
+        expect(form.fields, isEmpty);
+        final file = form.files.single;
+        expect(file.key, 'image');
+        expect(file.value.filename, 'apfelkuchen.png');
+        expect(file.value.contentType.toString(), 'image/png');
+        expect(file.value.length, 4);
+        // Longer than the usual 30 s, for large photos on slow connections.
+        expect(put.receiveTimeout, greaterThan(const Duration(minutes: 1)));
+        expect(
+          url,
+          Uri.parse('https://example.com/tandoor/media/recipes/a_58.png'),
+        );
+      });
+
+      test('keeps an absolute image URL', () async {
+        final adapter = imageAdapter(
+          image: 'https://media.example.com/recipes/a_58.png',
+        );
+
+        expect(
+          await repository(adapter).uploadImage(58, upload),
+          Uri.parse('https://media.example.com/recipes/a_58.png'),
+        );
+      });
+
+      test('an upload without an image in the answer fails', () async {
+        final adapter = imageAdapter();
+
+        await expectLater(
+          repository(adapter).uploadImage(58, upload),
+          throwsA(isA<ServerFailure>()),
+        );
+      });
+
+      test('removes the image with an empty form', () async {
+        final adapter = imageAdapter();
+
+        await repository(adapter).removeImage(58);
+
+        final put = adapter.requests.single;
+        expect(put.method, 'PUT');
+        expect(put.uri.path, '/tandoor/api/recipe/58/image/');
+        final form = put.data as FormData;
+        expect(form.fields, isEmpty);
+        expect(form.files, isEmpty);
+      });
+
+      test('maps a refused size to a ServerFailure with 413', () async {
+        final adapter = imageAdapter(status: 413);
+
+        await expectLater(
+          repository(adapter).uploadImage(58, upload),
+          throwsA(
+            isA<ServerFailure>().having((f) => f.statusCode, 'status', 413),
+          ),
+        );
+      });
+
+      for (final (type, error) in [
+        // How the web reports a reset connection.
+        (DioExceptionType.connectionError, null),
+        // How native does: a SocketException while sending.
+        (
+          DioExceptionType.unknown,
+          const SocketException('Connection reset by peer'),
+        ),
+      ]) {
+        test('an upload cut off ($type) is an interrupted upload', () async {
+          final adapter = FakeHttpAdapter(
+            (request) => throw DioException(
+              requestOptions: request,
+              type: type,
+              error: error,
+            ),
+          );
+
+          await expectLater(
+            repository(adapter).uploadImage(58, upload),
+            throwsA(isA<UploadInterruptedFailure>()),
+          );
+          // A removal sends nothing large: it fails like any request.
+          await expectLater(
+            repository(adapter).removeImage(58),
+            throwsA(isNot(isA<UploadInterruptedFailure>())),
+          );
+        });
+      }
     });
 
     test('throws NotFoundFailure for a missing recipe', () {
@@ -483,7 +654,10 @@ void main() {
       );
 
       expect(
-        TandoorRecipeRepository(client(adapter)).fetchRecipe(1),
+        TandoorRecipeRepository(
+          client(adapter),
+          dio: fakeDio(adapter),
+        ).fetchRecipe(1),
         throwsA(isA<NotFoundFailure>()),
       );
     });
@@ -496,7 +670,10 @@ void main() {
       );
 
       expect(
-        TandoorRecipeRepository(client(adapter)).search(const RecipeQuery()),
+        TandoorRecipeRepository(
+          client(adapter),
+          dio: fakeDio(adapter),
+        ).search(const RecipeQuery()),
         throwsA(isA<UnauthorizedFailure>()),
       );
     });

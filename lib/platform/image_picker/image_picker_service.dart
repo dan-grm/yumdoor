@@ -117,7 +117,8 @@ final class ImageDropped extends ImageDropEvent {
 
 /// The largest image accepted: 20 MiB. Phone camera photos are 2–8 MB.
 ///
-/// Provisional until #82 verifies Tandoor 2.6.15's upload limit.
+/// Tandoor has no limit of its own and scales large images down; a proxy in
+/// front of it may allow less (docs/TANDOOR_API.md#recipe-images).
 const maxImageBytes = 20 * 1024 * 1024;
 
 /// The image types accepted, as a file picker should list them.

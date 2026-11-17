@@ -231,8 +231,10 @@ void main() {
         filter(3, 'Selten', '{"timescooked_lte":2,"units":[6],"version":"2"}'),
       ]);
 
-      final page = await TandoorRecipeRepository(client(adapter))
-          .search(const RecipeQuery(savedFilter: 3, text: 'Suppe'));
+      final page = await TandoorRecipeRepository(
+        client(adapter),
+        dio: Dio(),
+      ).search(const RecipeQuery(savedFilter: 3, text: 'Suppe'));
 
       final query = recipeSearches(adapter).single;
       expect(query['timescooked_lte'], ['2']);
@@ -252,8 +254,10 @@ void main() {
         filter(3, 'Nie', '{"timescooked":0,"timescooked_gte":1}'),
       ]);
 
-      await TandoorRecipeRepository(client(adapter))
-          .search(const RecipeQuery(savedFilter: 3));
+      await TandoorRecipeRepository(
+        client(adapter),
+        dio: Dio(),
+      ).search(const RecipeQuery(savedFilter: 3));
 
       // Tandoor lets the exact value win; nothing to check by ids.
       final query = recipeSearches(adapter).single;
@@ -264,8 +268,10 @@ void main() {
     test('finds nothing when it is gone', () async {
       final adapter = server([filter(4, 'Andere', '{"units":[6]}')]);
 
-      final page = await TandoorRecipeRepository(client(adapter))
-          .search(const RecipeQuery(savedFilter: 3));
+      final page = await TandoorRecipeRepository(
+        client(adapter),
+        dio: Dio(),
+      ).search(const RecipeQuery(savedFilter: 3));
 
       expect(page.items, isEmpty);
       expect(recipeSearches(adapter), isEmpty);
@@ -277,8 +283,10 @@ void main() {
         all: [58],
       );
 
-      final page = await TandoorRecipeRepository(client(adapter))
-          .search(const RecipeQuery(savedFilter: 3, text: 'Karotte'));
+      final page = await TandoorRecipeRepository(
+        client(adapter),
+        dio: Dio(),
+      ).search(const RecipeQuery(savedFilter: 3, text: 'Karotte'));
 
       final [ours, all] = recipeSearches(adapter);
       expect(ours['query'], ['Karotte']);
@@ -295,8 +303,10 @@ void main() {
           all: [58, 67],
         );
 
-        final page = await TandoorRecipeRepository(client(adapter))
-            .search(const RecipeQuery(savedFilter: 3, savedSearchOfBook: 5));
+        final page = await TandoorRecipeRepository(
+          client(adapter),
+          dio: Dio(),
+        ).search(const RecipeQuery(savedFilter: 3, savedSearchOfBook: 5));
 
         final [ours, ids] = recipeSearches(adapter);
         // The book's goes with ours, the filter's alone gives the ids.

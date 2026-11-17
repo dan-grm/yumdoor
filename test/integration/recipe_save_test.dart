@@ -42,6 +42,7 @@ void main() {
       );
     recipes = TandoorRecipeRepository(
       api.TandoorApi(dio: dio, interceptors: const []).getApiApi(),
+      dio: dio,
     );
     final type = await dio.post<Map<String, dynamic>>(
       '/api/property-type/',

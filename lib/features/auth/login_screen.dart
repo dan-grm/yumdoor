@@ -174,6 +174,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       IncompatibleServerFailure() => l10n.loginServerNotTandoor,
       NotFoundFailure() ||
       CancelledFailure() ||
+      // Login uploads nothing.
+      UploadInterruptedFailure() ||
       ServerFailure() => l10n.loginServerError,
     };
   }

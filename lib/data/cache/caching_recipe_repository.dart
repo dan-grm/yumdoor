@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import '../../core/cancellation.dart';
 import '../../core/failures.dart';
+import '../../domain/models/image_upload.dart';
 import '../../domain/models/recipe.dart';
 import '../../domain/models/recipe_draft.dart';
 import '../../domain/models/recipe_query.dart';
@@ -98,16 +99,42 @@ class CachingRecipeRepository implements RecipeRepository {
   }
 
   @override
-  Future<Recipe> updateRecipe(int id, RecipeDraft draft) async {
-    final Recipe recipe;
+  Future<Recipe> updateRecipe(int id, RecipeDraft draft) async => _storeSaved(
+    await _forgetIfGone(id, () => _remote.updateRecipe(id, draft)),
+  );
+
+  /// Like saves: the stored copy gets the new image, downloaded in the
+  /// background, so it shows offline too.
+  @override
+  Future<Uri> uploadImage(int id, ImageUpload image) async {
+    final url = await _forgetIfGone(id, () => _remote.uploadImage(id, image));
+    unawaited(_ignoreErrors(_storeImageChange(id, url)));
+    return url;
+  }
+
+  @override
+  Future<void> removeImage(int id) async {
+    await _forgetIfGone(id, () => _remote.removeImage(id));
+    unawaited(_ignoreErrors(_storeImageChange(id, null)));
+  }
+
+  /// Gives the stored copy of the recipe [id], if there is one, the image
+  /// at [url].
+  Future<void> _storeImageChange(int id, Uri? url) async {
+    final stored = await _cache.get(id);
+    if (stored != null) await _storeSaved(stored.copyWith(image: url));
+  }
+
+  /// Runs [save] for the recipe [id], forgetting the stored copy if the
+  /// server no longer has it.
+  Future<T> _forgetIfGone<T>(int id, Future<T> Function() save) async {
     try {
-      recipe = await _remote.updateRecipe(id, draft);
+      return await save();
     } on NotFoundFailure {
       // Deleted, or no longer shared with the user.
       await _ignoreErrors(_cache.remove(id));
       rethrow;
     }
-    return _storeSaved(recipe);
   }
 
   /// Views are only recorded online; offline there is nothing to record

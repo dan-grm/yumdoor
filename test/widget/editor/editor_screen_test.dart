@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -11,10 +13,14 @@ import 'package:yumdoor/features/editor/editor_field.dart';
 import 'package:yumdoor/features/editor/editor_screen.dart';
 import 'package:yumdoor/features/recipe/recipe_screen.dart';
 import 'package:yumdoor/features/search/search_providers.dart';
+import 'package:yumdoor/platform/image_picker/image_picker_service.dart';
 
 import '../../fakes/fake_connectivity_service.dart';
 import '../../fakes/fake_food_keyword_repositories.dart';
+import '../../fakes/fake_image_picker_service.dart';
+import '../../fakes/fake_offline_cache.dart';
 import '../../fakes/fake_recipe_repository.dart';
+import '../../fixtures/images.dart';
 import '../../fixtures/recipes.dart';
 import '../fonts.dart';
 import '../golden.dart';
@@ -24,6 +30,7 @@ void main() {
   late FakeRecipeRepository recipes;
   late FakeKeywordRepository keywords;
   late FakeConnectivityService connectivity;
+  late FakeImagePickerService picker;
 
   setUpAll(loadBundledFonts);
 
@@ -35,6 +42,7 @@ void main() {
       Keyword(id: 3, name: 'Schnell'),
     ]);
     connectivity = FakeConnectivityService();
+    picker = FakeImagePickerService();
   });
 
   /// [location] pushed over [below], like the app does.
@@ -52,6 +60,8 @@ void main() {
         recipeRepositoryProvider.overrideWithValue(recipes),
         keywordRepositoryProvider.overrideWithValue(keywords),
         connectivityServiceProvider.overrideWithValue(connectivity),
+        imagePickerServiceProvider.overrideWithValue(picker),
+        offlineCacheProvider.overrideWithValue(FakeOfflineCache()),
       ],
       routes: [
         GoRoute(
@@ -297,7 +307,8 @@ void main() {
         'Offline kannst du nichts ändern. Sobald du wieder verbunden bist, '
         'geht es weiter.',
       ),
-      findsOneWidget,
+      // "Speichern" and the photo buttons.
+      findsNWidgets(2),
     );
     await tester.enterText(field('Name'), 'Ofengemüse');
     await tester.tap(find.text('Speichern'));
@@ -337,6 +348,259 @@ void main() {
     expect(saveButton(tester).onPressed, isNull);
   });
 
+  group('image', () {
+    final photo = testPng();
+    final saved = Uri.parse('https://example.com/media/recipes/a_7.jpg');
+
+    TextButton button(WidgetTester tester, String label) =>
+        tester.widget<TextButton>(
+          find.ancestor(
+            of: find.text(label),
+            matching: find.byType(TextButton),
+          ),
+        );
+
+    final preview = find.byWidgetPredicate(
+      (w) => w is Image && w.image is ResizeImage,
+    );
+
+    testWidgets('picks an image, previews it and uploads it on save', (
+      tester,
+    ) async {
+      await pumpEditor(tester);
+      expect(find.text('Foto'), findsOneWidget);
+      expect(find.text('Bild hierher ziehen'), findsOneWidget);
+      // No camera on this device.
+      expect(find.text('Foto aufnehmen'), findsNothing);
+      expect(find.text('Entfernen'), findsNothing);
+
+      picker.nextPick = checkImage(name: 'karotten.PNG', bytes: photo);
+      await tap(tester, find.text('Bild auswählen'));
+
+      expect(picker.picks, ['file']);
+      expect(preview, findsOneWidget);
+      expect(find.text('Wird beim Speichern hochgeladen.'), findsOneWidget);
+      expect(find.text('Entfernen'), findsOneWidget);
+      // Nothing is sent before saving.
+      expect(recipes.imageChanges, isEmpty);
+
+      await tap(tester, find.text('Speichern'));
+
+      final upload = recipes.imageChanges.single;
+      expect(upload.id, 7);
+      expect(upload.image!.bytes, photo);
+      expect(upload.image!.fileName, 'karotten.png');
+      expect(upload.image!.mimeType, 'image/png');
+      expect(recipes.saves.single.id, 7);
+      expect(find.byType(RecipeScreen), findsOneWidget);
+      expect(find.text('Rezept gespeichert'), findsOneWidget);
+    });
+
+    testWidgets('a cancelled pick changes nothing', (tester) async {
+      await pumpEditor(tester);
+
+      await tap(tester, find.text('Bild auswählen'));
+
+      expect(picker.picks, ['file']);
+      expect(preview, findsNothing);
+      expect(find.text('Bild hierher ziehen'), findsOneWidget);
+    });
+
+    testWidgets('takes a photo where there is a camera', (tester) async {
+      picker
+        ..canUseCamera = true
+        ..supportsDrop = false
+        ..nextPick = checkImage(name: 'image.jpg', bytes: photo);
+      await pumpEditor(tester);
+      expect(find.text('Noch kein Foto'), findsOneWidget);
+      expect(picker.isDropTarget, isFalse);
+
+      await tap(tester, find.text('Foto aufnehmen'));
+
+      expect(picker.picks, ['camera']);
+      expect(preview, findsOneWidget);
+    });
+
+    testWidgets('explains a file that cannot be used', (tester) async {
+      await pumpEditor(tester);
+
+      picker.nextPick = checkImage(
+        name: 'notiz.txt',
+        bytes: Uint8List.fromList('Notiz'.codeUnits),
+      );
+      await tap(tester, find.text('Bild auswählen'));
+      expect(
+        find.text('Das ist kein Bild. Es gehen JPEG, PNG, WebP und GIF.'),
+        findsOneWidget,
+      );
+      expect(preview, findsNothing);
+
+      picker.nextPick = const RejectedImage(
+        name: 'riesig.jpg',
+        reason: ImageRejection.tooLarge,
+      );
+      await tap(tester, find.text('Bild auswählen'));
+      expect(find.text('Das Bild ist größer als 20 MB.'), findsOneWidget);
+
+      // A usable image clears the message.
+      picker.nextPick = checkImage(name: 'karotten.png', bytes: photo);
+      await tap(tester, find.text('Bild auswählen'));
+      expect(find.text('Das Bild ist größer als 20 MB.'), findsNothing);
+      expect(preview, findsOneWidget);
+    });
+
+    testWidgets('removes the saved image on save', (tester) async {
+      recipes.recipes[7] = ofenkarotten.copyWith(image: saved);
+      await pumpEditor(tester);
+      expect(find.text('Bild hierher ziehen'), findsNothing);
+
+      await tap(tester, find.text('Entfernen'));
+
+      expect(find.text('Entfernen'), findsNothing);
+      expect(
+        find.text('Das Foto wird beim Speichern entfernt.'),
+        findsOneWidget,
+      );
+      await tap(tester, find.text('Speichern'));
+      expect(recipes.imageChanges.single, (id: 7, image: null));
+      expect(recipes.recipes[7]!.image, isNull);
+    });
+
+    testWidgets('a dropped image lands in the Allgemein tab', (tester) async {
+      final router = await pumpEditor(tester);
+      expect(picker.isDropTarget, isTrue);
+
+      picker.hover(isOver: true);
+      await tester.pump();
+      expect(find.text('Loslassen, um das Bild zu verwenden'), findsOneWidget);
+      picker.hover(isOver: false);
+      await tester.pump();
+      expect(find.text('Bild hierher ziehen'), findsOneWidget);
+
+      // On another tab too, so the browser doesn't open the file instead.
+      await tap(tester, find.text('Schritte'));
+      picker.drop('karotten.png', photo);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Name'), findsOneWidget);
+      expect(preview, findsOneWidget);
+      expect(find.text('Wird beim Speichern hochgeladen.'), findsOneWidget);
+
+      router.pop();
+      await tester.pumpAndSettle();
+      expect(picker.isDropTarget, isFalse);
+    });
+
+    testWidgets('a failed upload keeps the saved recipe and says so', (
+      tester,
+    ) async {
+      await pumpEditor(tester);
+      recipes.imageFailure = const ServerFailure(statusCode: 500);
+
+      await tester.enterText(field('Name'), 'Ofengemüse');
+      picker.nextPick = checkImage(name: 'karotten.png', bytes: photo);
+      await tap(tester, find.text('Bild auswählen'));
+      await tap(tester, find.text('Speichern'));
+
+      expect(recipes.saves.single.draft.name, 'Ofengemüse');
+      expect(recipes.imageChanges, hasLength(1));
+      expect(find.byType(RecipeScreen), findsOneWidget);
+      expect(find.text('Ofengemüse'), findsOneWidget);
+      expect(
+        find.text(
+          'Rezept gespeichert, das Foto aber nicht. '
+          'Der Server hat einen Fehler gemeldet.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a size the server refuses is explained', (tester) async {
+      await pumpEditor(tester);
+      recipes.imageFailure = const ServerFailure(statusCode: 413);
+
+      picker.nextPick = checkImage(name: 'karotten.png', bytes: photo);
+      await tap(tester, find.text('Bild auswählen'));
+      await tap(tester, find.text('Speichern'));
+
+      expect(
+        find.text(
+          'Rezept gespeichert, das Foto aber nicht. '
+          'Der Server nimmt so große Bilder nicht an.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('an upload cut off after the save hints at the size', (
+      tester,
+    ) async {
+      await pumpEditor(tester);
+      recipes.imageFailure = const UploadInterruptedFailure();
+
+      picker.nextPick = checkImage(name: 'karotten.png', bytes: photo);
+      await tap(tester, find.text('Bild auswählen'));
+      await tap(tester, find.text('Speichern'));
+
+      expect(
+        find.text(
+          'Rezept gespeichert, das Foto aber nicht. Die Verbindung brach beim '
+          'Hochladen ab. Vielleicht ist das Bild zu groß für den Server.',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('a new recipe gets its photo right after it is created', (
+      tester,
+    ) async {
+      await pumpEditor(tester, below: '/search', location: newRecipeLocation);
+
+      await tester.enterText(field('Name'), 'Linsensuppe');
+      picker.nextPick = checkImage(name: 'suppe.png', bytes: photo);
+      await tap(tester, find.text('Bild auswählen'));
+      await tap(tester, find.text('Speichern'));
+
+      final id = recipes.recipes.values.last.id;
+      expect(recipes.saves.single.id, isNull);
+      expect(recipes.imageChanges.single.id, id);
+      expect(recipes.recipes[id]!.image, isNotNull);
+      expect(find.byType(RecipeScreen), findsOneWidget);
+      expect(find.text('Rezept gespeichert'), findsOneWidget);
+    });
+
+    testWidgets('offline, the empty area does not invite dropping', (
+      tester,
+    ) async {
+      await pumpEditor(tester);
+      connectivity.isOnline = false;
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bild hierher ziehen'), findsNothing);
+      expect(find.text('Noch kein Foto'), findsOneWidget);
+    });
+
+    testWidgets('offline, the photo cannot be changed', (tester) async {
+      recipes.recipes[7] = ofenkarotten.copyWith(image: saved);
+      await pumpEditor(tester);
+      connectivity.isOnline = false;
+      await tester.pumpAndSettle();
+
+      expect(button(tester, 'Bild auswählen').onPressed, isNull);
+      expect(button(tester, 'Entfernen').onPressed, isNull);
+      picker.hover(isOver: true);
+      await tester.pump();
+      expect(find.text('Loslassen, um das Bild zu verwenden'), findsNothing);
+      picker.drop('karotten.png', photo);
+      await tester.pumpAndSettle();
+      expect(preview, findsNothing);
+
+      await tester.tap(find.text('Bild auswählen'));
+      await tester.pumpAndSettle();
+      expect(picker.picks, isEmpty);
+    });
+  });
+
   group('goldens', skip: goldenSkip, () {
     for (final (name, theme) in [('light', lightTheme), ('dark', darkTheme)]) {
       testWidgets('Allgemein in $name', tags: goldenTags, (tester) async {
@@ -345,6 +609,49 @@ void main() {
         await expectLater(
           find.byType(EditorScreen),
           matchesGoldenFile('../goldens/editor_general_$name.png'),
+        );
+      });
+
+      testWidgets('a chosen image in $name', tags: goldenTags, (tester) async {
+        final photo = testPng(width: 320, height: 180);
+        picker
+          ..canUseCamera = true
+          ..nextPick = checkImage(name: 'karotten.jpg', bytes: photo);
+        await pumpEditor(tester, theme: theme);
+        // Visible already; `tap` would scroll.
+        await tester.tap(find.text('Bild auswählen'));
+        await tester.pump();
+        // Images decode outside the test's fake time.
+        await tester.runAsync(
+          () => precacheImage(
+            tester
+                .widget<Image>(
+                  find.byWidgetPredicate(
+                    (w) => w is Image && w.image is ResizeImage,
+                  ),
+                )
+                .image,
+            tester.element(find.byType(EditorScreen)),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await expectLater(
+          find.byType(EditorScreen),
+          matchesGoldenFile('../goldens/editor_image_$name.png'),
+        );
+      });
+
+      testWidgets('an image dragged over in $name', tags: goldenTags, (
+        tester,
+      ) async {
+        await pumpEditor(tester, theme: theme);
+        picker.hover(isOver: true);
+        await tester.pump();
+
+        await expectLater(
+          find.byType(EditorScreen),
+          matchesGoldenFile('../goldens/editor_image_drop_$name.png'),
         );
       });
     }

@@ -1120,4 +1120,56 @@ class AppLocalizationsEn extends AppLocalizations {
   String pickerCreateFailed(String reason) {
     return 'Not created. $reason';
   }
+
+  @override
+  String get editorImage => 'Photo';
+
+  @override
+  String get editorImageTakePhoto => 'Take photo';
+
+  @override
+  String get editorImagePick => 'Choose image';
+
+  @override
+  String get editorImageRemove => 'Remove';
+
+  @override
+  String get editorImageNone => 'No photo yet';
+
+  @override
+  String get editorImageDrop => 'Drag an image here';
+
+  @override
+  String get editorImageDropRelease => 'Release to use the image';
+
+  @override
+  String get editorImagePending => 'Uploaded when you save.';
+
+  @override
+  String get editorImageRemoved => 'The photo is removed when you save.';
+
+  @override
+  String get editorImageNotAnImage =>
+      'That is not an image. JPEG, PNG, WebP and GIF work.';
+
+  @override
+  String editorImageTooLarge(int megabytes) {
+    return 'The image is larger than $megabytes MB.';
+  }
+
+  @override
+  String get editorImageUnreadable => 'The file could not be read.';
+
+  @override
+  String editorImageNotSaved(String reason) {
+    return 'Recipe saved, but not its photo. $reason';
+  }
+
+  @override
+  String get editorImageServerTooLarge =>
+      'The server does not accept images this large.';
+
+  @override
+  String get editorImageInterrupted =>
+      'The connection broke off during the upload. The image may be too large for the server.';
 }

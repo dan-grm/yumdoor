@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -33,11 +32,5 @@ Future<void> _ignoreFailure(Future<void> request) async {
     // A missed view only makes the order less accurate.
   }
 }
-
-/// The bytes of the image at [url] from the offline cache, `null` if it
-/// isn't stored.
-@Riverpod(retry: _noRetry)
-Future<Uint8List?> cachedImage(Ref ref, Uri url) =>
-    ref.watch(offlineCacheProvider).image(url);
 
 Duration? _noRetry(int retryCount, Object error) => null;
