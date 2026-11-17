@@ -80,9 +80,10 @@ void main() {
         tokenStoreProvider.overrideWithValue(InMemoryTokenStore()),
       ],
       routes: [
+        GoRoute(path: '/', redirect: (context, state) => '/search'),
         GoRoute(
           path: '/search',
-          builder: (context, state) => const Text('search'),
+          builder: (context, state) => const Scaffold(body: Text('search')),
         ),
         GoRoute(
           path: newRecipeLocation,
@@ -325,8 +326,8 @@ void main() {
         'Offline kannst du nichts ändern. Sobald du wieder verbunden bist, '
         'geht es weiter.',
       ),
-      // "Speichern" and the photo buttons.
-      findsNWidgets(2),
+      // "Speichern", the photo buttons and "Rezept löschen".
+      findsNWidgets(3),
     );
     await tester.enterText(field('Name'), 'Ofengemüse');
     await tester.tap(find.text('Speichern'));
@@ -360,6 +361,119 @@ void main() {
     await tap(tester, find.text('Speichern'));
     expect(recipes.saves.single.draft.name, 'Ofengemüse');
     expect(drafts.drafts, isEmpty);
+  });
+
+  group('deleting', () {
+    Future<void> openDialog(WidgetTester tester) async {
+      await tap(tester, find.text('Rezept löschen'));
+      expect(find.text('Rezept löschen?'), findsOneWidget);
+    }
+
+    testWidgets('only an existing recipe has the button', (tester) async {
+      await pumpEditor(tester, location: newRecipeLocation);
+
+      expect(find.text('Rezept löschen'), findsNothing);
+    });
+
+    testWidgets('the dialog names the recipe and what goes with it', (
+      tester,
+    ) async {
+      await pumpEditor(tester);
+
+      await openDialog(tester);
+
+      expect(find.textContaining('„Ofenkarotten mit Feta“'), findsOneWidget);
+      expect(
+        find.textContaining(
+          'Kochprotokoll, im Essensplan, in Büchern und in Einkaufslisten',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Behalten closes the dialog and deletes nothing', (
+      tester,
+    ) async {
+      await pumpEditor(tester);
+
+      await openDialog(tester);
+      await tap(tester, find.text('Behalten'));
+
+      expect(find.text('Rezept löschen?'), findsNothing);
+      expect(find.byType(EditorScreen), findsOneWidget);
+      expect(recipes.deletions, isEmpty);
+    });
+
+    testWidgets('confirming deletes, returns to search and says so', (
+      tester,
+    ) async {
+      await pumpEditor(tester);
+      // Unsaved changes and a stored draft go with the recipe.
+      await tester.enterText(field('Name'), 'Ofengemüse');
+      await tester.pump(const Duration(seconds: 5));
+
+      await openDialog(tester);
+      await tap(tester, find.text('Endgültig löschen'));
+
+      expect(recipes.deletions, [7]);
+      expect(find.text('Änderungen verwerfen?'), findsNothing);
+      expect(find.byType(EditorScreen), findsNothing);
+      expect(find.byType(RecipeScreen), findsNothing);
+      expect(find.text('search'), findsOneWidget);
+      expect(find.text('Rezept gelöscht'), findsOneWidget);
+      expect(drafts.drafts, isEmpty);
+    });
+
+    testWidgets('no permission (403) says so and stays in the editor', (
+      tester,
+    ) async {
+      await pumpEditor(tester);
+      recipes.failure = const UnauthorizedFailure();
+
+      await openDialog(tester);
+      await tap(tester, find.text('Endgültig löschen'));
+
+      expect(
+        find.text('Nicht gelöscht: Du darfst dieses Rezept nicht löschen.'),
+        findsOneWidget,
+      );
+      expect(find.byType(EditorScreen), findsOneWidget);
+      // Can be tried again.
+      expect(find.text('Rezept löschen'), findsOneWidget);
+    });
+
+    testWidgets('a server error hints at a recipe used as a step', (
+      tester,
+    ) async {
+      await pumpEditor(tester);
+      recipes.failure = const ServerFailure(statusCode: 500);
+
+      await openDialog(tester);
+      await tap(tester, find.text('Endgültig löschen'));
+
+      expect(
+        find.textContaining('in einem anderen Rezept als Schritt'),
+        findsOneWidget,
+      );
+      expect(find.byType(EditorScreen), findsOneWidget);
+    });
+
+    testWidgets('offline, the button is disabled and says why', (tester) async {
+      await pumpEditor(tester);
+      connectivity.isOnline = false;
+      await tester.pumpAndSettle();
+      final button = find.ancestor(
+        of: find.text('Rezept löschen'),
+        matching: find.bySubtype<ButtonStyleButton>(),
+      );
+      await tester.ensureVisible(button);
+
+      expect(tester.widget<ButtonStyleButton>(button).onPressed, isNull);
+      await tester.tap(find.text('Rezept löschen'), warnIfMissed: false);
+      await tester.pumpAndSettle();
+      expect(find.text('Rezept löschen?'), findsNothing);
+      expect(recipes.deletions, isEmpty);
+    });
   });
 
   testWidgets('Abbrechen without changes returns right away', (tester) async {
@@ -953,6 +1067,16 @@ void main() {
           matchesGoldenFile('../goldens/editor_discard_$name.png'),
         );
       });
+      testWidgets('deleting in $name', tags: goldenTags, (tester) async {
+        await pumpEditor(tester, theme: theme);
+        await tap(tester, find.text('Rezept löschen'));
+
+        await expectLater(
+          find.byType(MaterialApp),
+          matchesGoldenFile('../goldens/editor_delete_$name.png'),
+        );
+      });
+
       testWidgets('Allgemein in $name', tags: goldenTags, (tester) async {
         await pumpEditor(tester, theme: theme);
 

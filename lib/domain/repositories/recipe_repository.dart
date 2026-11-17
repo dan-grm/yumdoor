@@ -42,6 +42,14 @@ abstract interface class RecipeRepository {
   /// it (Tandoor can't tell that apart from an invalid token).
   Future<Recipe> updateRecipe(int id, RecipeDraft draft);
 
+  /// Deletes the recipe [id] for good, with what belongs to it on the server:
+  /// its cook log entries, meal plans, book entries and shopping list
+  /// entries. Throws [NotFoundFailure] if it doesn't exist or the user can't
+  /// see it, [UnauthorizedFailure] if they may not delete it (Tandoor can't
+  /// tell that apart from an invalid token), a [ServerFailure] if the server
+  /// refuses, which it does for a recipe that another recipe uses as a step.
+  Future<void> deleteRecipe(int id);
+
   /// Makes [image] the photo of the recipe [id], replacing the one it had,
   /// and returns its URL, the recipe's new [Recipe.image]. Tandoor scales
   /// images over 500 KB down to 1020 px wide. Throws [NotFoundFailure] if

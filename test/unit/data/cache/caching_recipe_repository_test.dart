@@ -429,6 +429,45 @@ void main() {
       expect((await cache.get(7))?.image, _image);
     });
 
+    test(
+      'a deletion removes the recipe and its image from the cache',
+      () async {
+        await fetch(7);
+        await pumpEventQueue();
+        expect(await cache.image(_image), isNotNull);
+
+        await repository.deleteRecipe(7);
+
+        expect(remote.deletions, [7]);
+        expect(await cache.get(7), isNull);
+        expect(await cache.image(_image), isNull);
+      },
+    );
+
+    test('a deletion that fails keeps the stored recipe', () async {
+      await fetch(7);
+      remote.failure = const UnauthorizedFailure();
+
+      await expectLater(
+        repository.deleteRecipe(7),
+        throwsA(isA<UnauthorizedFailure>()),
+      );
+
+      expect(await cache.get(7), isNotNull);
+    });
+
+    test('deleting a recipe the server lacks forgets the stored one', () async {
+      await fetch(7);
+      remote.recipes.remove(7);
+
+      await expectLater(
+        repository.deleteRecipe(7),
+        throwsA(isA<NotFoundFailure>()),
+      );
+
+      expect(await cache.get(7), isNull);
+    });
+
     test('an upload to a deleted recipe removes it from the cache', () async {
       await fetch(7);
       remote.recipes.remove(7);

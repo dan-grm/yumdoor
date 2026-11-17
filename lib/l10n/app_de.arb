@@ -1721,5 +1721,51 @@
   "editorImageInterrupted": "Die Verbindung brach beim Hochladen ab. Vielleicht ist das Bild zu groß für den Server.",
   "@editorImageInterrupted": {
     "description": "Reason when the photo upload failed without an answer from the server, right after the recipe itself was saved (a proxy refusing the size often resets the connection)."
+  },
+  "editorDelete": "Rezept löschen",
+  "@editorDelete": {
+    "description": "Danger button at the end of the editor's General tab, for an existing recipe."
+  },
+  "editorDeleteTitle": "Rezept löschen?",
+  "@editorDeleteTitle": {
+    "description": "Title of the confirmation dialog."
+  },
+  "editorDeleteBody": "„{name}“ wird endgültig gelöscht. Dazu gehören auch die Einträge im Kochprotokoll, im Essensplan, in Büchern und in Einkaufslisten. Das lässt sich nicht rückgängig machen.",
+  "@editorDeleteBody": {
+    "description": "Body of the delete confirmation; {name} is the recipe name.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "editorDeleteKeep": "Behalten",
+  "@editorDeleteKeep": {
+    "description": "Dialog button that cancels deleting the recipe."
+  },
+  "editorDeleteConfirm": "Endgültig löschen",
+  "@editorDeleteConfirm": {
+    "description": "Dialog button that deletes the recipe."
+  },
+  "editorDeleted": "Rezept gelöscht",
+  "@editorDeleted": {
+    "description": "Snackbar after the recipe was deleted."
+  },
+  "editorDeleteFailed": "Nicht gelöscht. {reason}",
+  "@editorDeleteFailed": {
+    "description": "Snackbar when deleting failed; {reason} is a sentence.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "editorDeleteForbidden": "Nicht gelöscht: Du darfst dieses Rezept nicht löschen.",
+  "@editorDeleteForbidden": {
+    "description": "Snackbar when the server refused deleting (403)."
+  },
+  "editorDeleteInUse": "Nicht gelöscht: Vielleicht wird das Rezept in einem anderen Rezept als Schritt verwendet. Entferne es dort zuerst.",
+  "@editorDeleteInUse": {
+    "description": "Snackbar when the server errors on deleting; the usual cause is a recipe used as a step of another one."
   }
 }

@@ -35,6 +35,7 @@ final class EditorState {
     this.removeImage = false,
     this.imageFailure,
     this.offeredDraft,
+    this.deleted = false,
   });
 
   /// The recipe being edited, `null` for a new one.
@@ -86,6 +87,10 @@ final class EditorState {
   final String? recipeName;
   final RecipeDraft draft;
 
+  /// Whether the recipe was deleted from here: the editor closes without
+  /// asking about changes, which are gone with the recipe.
+  final bool deleted;
+
   /// While a save is under way. The form can't be saved again meanwhile.
   final bool saving;
 
@@ -110,6 +115,7 @@ final class EditorState {
     bool? removeImage,
     Failure? Function()? imageFailure,
     StoredDraft? Function()? offeredDraft,
+    bool? deleted,
   }) => EditorState(
     recipeId: recipeId,
     recipeName: recipeName,
@@ -124,6 +130,7 @@ final class EditorState {
     newImage: newImage != null ? newImage() : this.newImage,
     removeImage: removeImage ?? this.removeImage,
     imageFailure: imageFailure != null ? imageFailure() : this.imageFailure,
+    deleted: deleted ?? this.deleted,
   );
 }
 
@@ -550,6 +557,34 @@ class RecipeEditor extends _$RecipeEditor {
       );
     }
     return saved;
+  }
+
+  /// Deletes the recipe from the server, and with it the draft stored for
+  /// it. Returns `null` once it is gone ([EditorState.deleted]; a recipe the
+  /// server no longer has counts), else why it isn't. Does nothing for a new
+  /// recipe, or while saving.
+  ///
+  /// The editor stays locked after a deletion: the screen leaves.
+  Future<Failure?> deleteRecipe() async {
+    final current = state.value;
+    final id = current?.recipeId;
+    if (current == null || id == null || current.saving) return null;
+    state = AsyncData(current._copyWith(saving: true, failure: () => null));
+    try {
+      await ref.read(recipeRepositoryProvider).deleteRecipe(id);
+    } on NotFoundFailure {
+      // Deleted elsewhere meanwhile: as good as done.
+    } on Object catch (error) {
+      if (ref.mounted) state = AsyncData(current._copyWith(saving: false));
+      return _asFailure(error);
+    }
+    await discardChanges();
+    if (ref.mounted) {
+      // Screens listing or showing the recipe load again.
+      ref.invalidate(searchResultsProvider);
+      state = AsyncData(current._copyWith(saving: true, deleted: true));
+    }
+    return null;
   }
 }
 

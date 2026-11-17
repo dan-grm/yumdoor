@@ -1210,4 +1210,37 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get editorImageInterrupted =>
       'The connection broke off during the upload. The image may be too large for the server.';
+
+  @override
+  String get editorDelete => 'Delete recipe';
+
+  @override
+  String get editorDeleteTitle => 'Delete recipe?';
+
+  @override
+  String editorDeleteBody(String name) {
+    return '“$name” will be deleted for good. That includes its entries in the cook log, meal plans, books and shopping lists. This cannot be undone.';
+  }
+
+  @override
+  String get editorDeleteKeep => 'Keep';
+
+  @override
+  String get editorDeleteConfirm => 'Delete for good';
+
+  @override
+  String get editorDeleted => 'Recipe deleted';
+
+  @override
+  String editorDeleteFailed(String reason) {
+    return 'Not deleted. $reason';
+  }
+
+  @override
+  String get editorDeleteForbidden =>
+      'Not deleted: you may not delete this recipe.';
+
+  @override
+  String get editorDeleteInUse =>
+      'Not deleted: the recipe may be used as a step in another recipe. Remove it there first.';
 }

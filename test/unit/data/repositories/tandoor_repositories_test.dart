@@ -527,6 +527,41 @@ void main() {
       expect(request.data, {'recipe': 58});
     });
 
+    group('deleting', () {
+      TandoorRecipeRepository repository(FakeHttpAdapter adapter) =>
+          TandoorRecipeRepository(client(adapter), dio: fakeDio(adapter));
+
+      test('sends a DELETE', () async {
+        final adapter = FakeHttpAdapter(
+          (_) => ResponseBody.fromString('', 204),
+        );
+
+        await repository(adapter).deleteRecipe(58);
+
+        final request = adapter.requests.single;
+        expect(request.method, 'DELETE');
+        expect(request.uri.path, '/tandoor/api/recipe/58/');
+      });
+
+      for (final (status, matcher) in [
+        (403, isA<UnauthorizedFailure>()),
+        (404, isA<NotFoundFailure>()),
+        // A recipe that another recipe uses as a step.
+        (500, isA<ServerFailure>()),
+      ]) {
+        test('maps $status to a Failure', () async {
+          final adapter = FakeHttpAdapter(
+            (_) => jsonResponse({'detail': 'no'}, status: status),
+          );
+
+          await expectLater(
+            repository(adapter).deleteRecipe(58),
+            throwsA(matcher),
+          );
+        });
+      }
+    });
+
     group('images', () {
       final upload = ImageUpload(
         bytes: Uint8List.fromList([0x89, 0x50, 0x4E, 0x47]),

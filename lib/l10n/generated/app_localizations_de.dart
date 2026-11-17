@@ -1216,4 +1216,37 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get editorImageInterrupted =>
       'Die Verbindung brach beim Hochladen ab. Vielleicht ist das Bild zu groß für den Server.';
+
+  @override
+  String get editorDelete => 'Rezept löschen';
+
+  @override
+  String get editorDeleteTitle => 'Rezept löschen?';
+
+  @override
+  String editorDeleteBody(String name) {
+    return '„$name“ wird endgültig gelöscht. Dazu gehören auch die Einträge im Kochprotokoll, im Essensplan, in Büchern und in Einkaufslisten. Das lässt sich nicht rückgängig machen.';
+  }
+
+  @override
+  String get editorDeleteKeep => 'Behalten';
+
+  @override
+  String get editorDeleteConfirm => 'Endgültig löschen';
+
+  @override
+  String get editorDeleted => 'Rezept gelöscht';
+
+  @override
+  String editorDeleteFailed(String reason) {
+    return 'Nicht gelöscht. $reason';
+  }
+
+  @override
+  String get editorDeleteForbidden =>
+      'Nicht gelöscht: Du darfst dieses Rezept nicht löschen.';
+
+  @override
+  String get editorDeleteInUse =>
+      'Nicht gelöscht: Vielleicht wird das Rezept in einem anderen Rezept als Schritt verwendet. Entferne es dort zuerst.';
 }

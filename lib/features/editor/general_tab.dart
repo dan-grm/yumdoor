@@ -6,6 +6,7 @@ import '../../design/design.dart';
 import '../../domain/models/recipe_draft.dart';
 import '../../domain/services/recipe_draft_validation.dart';
 import '../../l10n/l10n.dart';
+import 'delete_recipe.dart';
 import 'editor_controller.dart';
 import 'editor_field.dart';
 import 'picker_sheet.dart';
@@ -176,6 +177,7 @@ class _GeneralTabState extends ConsumerState<GeneralTab> {
             ),
           ),
         ),
+        if (widget.recipeId case final id?) DeleteRecipeButton(recipeId: id),
       ],
     );
   }

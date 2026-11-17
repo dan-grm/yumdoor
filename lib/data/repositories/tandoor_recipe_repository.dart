@@ -339,6 +339,11 @@ class TandoorRecipeRepository implements RecipeRepository {
   }
 
   @override
+  Future<void> deleteRecipe(int id) => guardRequest(() async {
+    await _api.apiRecipeDestroy(id: id);
+  });
+
+  @override
   Future<Uri> uploadImage(int id, ImageUpload image) async {
     final path = await _putImage(
       id,
