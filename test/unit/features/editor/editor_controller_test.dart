@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/core/failures.dart';
+import 'package:yumdoor/domain/models/image_upload.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
 import 'package:yumdoor/domain/models/parsed_ingredient.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
@@ -403,6 +405,137 @@ void main() {
         3,
         null,
       ]);
+    });
+  });
+
+  group('image', () {
+    final photo = ImageUpload(
+      bytes: Uint8List.fromList([0xFF, 0xD8, 0xFF]),
+      fileName: 'karotten.jpg',
+      mimeType: 'image/jpeg',
+    );
+    final saved = Uri.parse('https://example.com/media/recipes/a_7.jpg');
+
+    setUp(() {
+      recipes = FakeRecipeRepository([ofenkarotten.copyWith(image: saved)]);
+      container = containerWith(recipes);
+    });
+
+    test('starts with the saved image', () async {
+      await editor(7);
+
+      expect(state(7).savedImage, saved);
+      expect(state(7).hasImage, isTrue);
+      expect(state(7).newImage, isNull);
+    });
+
+    test('a chosen image is uploaded after the recipe is saved', () async {
+      final edit = await editor(7);
+      edit.setImage(photo);
+      expect(state(7).newImage, photo);
+
+      final recipe = await edit.save();
+
+      expect(recipes.saves.single.id, 7);
+      expect(recipes.imageChanges.single, (id: 7, image: photo));
+      expect(recipe!.image, FakeRecipeRepository.imageUrl(7, 1));
+      expect(state(7).savedImage, recipe.image);
+      expect(state(7).newImage, isNull);
+      expect(state(7).imageFailure, isNull);
+    });
+
+    test('a new recipe gets its image right after it is created', () async {
+      final edit = await editor(null);
+      edit
+        ..edit((d) => d.copyWith(name: 'Brot', servings: 1))
+        ..setImage(photo);
+
+      final recipe = await edit.save();
+
+      expect(recipes.saves.single.id, isNull);
+      expect(recipes.imageChanges.single.id, recipe!.id);
+      expect(recipe.image, isNotNull);
+    });
+
+    test('removing the saved image removes it on save', () async {
+      final edit = await editor(7);
+      edit.removeImage();
+      expect(state(7).hasImage, isFalse);
+      expect(state(7).removeImage, isTrue);
+
+      final recipe = await edit.save();
+
+      expect(recipes.imageChanges.single, (id: 7, image: null));
+      expect(recipe!.image, isNull);
+    });
+
+    test('Entfernen after choosing an image leaves none', () async {
+      final edit = await editor(7);
+      edit
+        ..setImage(photo)
+        ..removeImage();
+      expect(state(7).newImage, isNull);
+      // The saved one is removed too.
+      expect(state(7).hasImage, isFalse);
+      edit.setImage(photo);
+      expect(state(7).removeImage, isFalse);
+    });
+
+    test('without changes no image request is made', () async {
+      final edit = await editor(7);
+
+      await edit.save();
+
+      expect(recipes.imageChanges, isEmpty);
+    });
+
+    test('a failed upload keeps the saved recipe and says so', () async {
+      final edit = await editor(7);
+      edit
+        ..edit((d) => d.copyWith(name: 'Ofengemüse'))
+        ..setImage(photo);
+      recipes.imageFailure = const ServerFailure(statusCode: 413);
+
+      final recipe = await edit.save();
+
+      expect(recipe!.name, 'Ofengemüse');
+      expect(recipe.image, saved);
+      expect(recipes.recipes[7]!.name, 'Ofengemüse');
+      expect(state(7).saving, isFalse);
+      expect(state(7).failure, isNull);
+      expect(
+        state(7).imageFailure,
+        isA<ServerFailure>().having((f) => f.statusCode, 'status', 413),
+      );
+      // Still chosen, should the user stay and save again.
+      expect(state(7).newImage, photo);
+    });
+
+    test('a failed recipe save uploads nothing', () async {
+      final edit = await editor(7);
+      edit.setImage(photo);
+      recipes.failure = const OfflineFailure();
+
+      expect(await edit.save(), isNull);
+
+      expect(recipes.imageChanges, isEmpty);
+      expect(state(7).failure, isA<OfflineFailure>());
+      expect(state(7).newImage, photo);
+    });
+
+    test('the image cannot change while saving', () async {
+      final gate = Completer<void>();
+      container = containerWith(_SlowRepository(recipes, gate.future));
+      final edit = await editor(7);
+
+      final save = edit.save();
+      edit
+        ..setImage(photo)
+        ..removeImage();
+      expect(state(7).newImage, isNull);
+      expect(state(7).removeImage, isFalse);
+      gate.complete();
+      await save;
     });
   });
 }

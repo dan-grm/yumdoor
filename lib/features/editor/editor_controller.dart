@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../app/repository_providers.dart';
 import '../../core/failures.dart';
+import '../../domain/models/image_upload.dart';
 import '../../domain/models/keyword.dart';
 import '../../domain/models/parsed_ingredient.dart';
 import '../../domain/models/recipe.dart';
@@ -22,10 +23,31 @@ final class EditorState {
     this.saving = false,
     this.failure,
     this.showProblems = false,
+    this.savedImage,
+    this.newImage,
+    this.removeImage = false,
+    this.imageFailure,
   });
 
   /// The recipe being edited, `null` for a new one.
   final int? recipeId;
+
+  /// The recipe's photo as it was loaded.
+  final Uri? savedImage;
+
+  /// A photo chosen to replace [savedImage], uploaded on save.
+  final ImageUpload? newImage;
+
+  /// Whether saving removes [savedImage] (and there is no [newImage]).
+  final bool removeImage;
+
+  /// Why the photo wasn't saved by the last save, which saved the recipe
+  /// itself.
+  final Failure? imageFailure;
+
+  /// Whether the recipe will have a photo after saving: [newImage], or
+  /// [savedImage] unless it is removed.
+  bool get hasImage => newImage != null || (savedImage != null && !removeImage);
 
   /// The recipe's name as it was loaded, for the header; `null` for a new
   /// recipe.
@@ -50,6 +72,10 @@ final class EditorState {
     bool? saving,
     Failure? Function()? failure,
     bool? showProblems,
+    Uri? Function()? savedImage,
+    ImageUpload? Function()? newImage,
+    bool? removeImage,
+    Failure? Function()? imageFailure,
   }) => EditorState(
     recipeId: recipeId,
     recipeName: recipeName,
@@ -57,6 +83,10 @@ final class EditorState {
     saving: saving ?? this.saving,
     failure: failure != null ? failure() : this.failure,
     showProblems: showProblems ?? this.showProblems,
+    savedImage: savedImage != null ? savedImage() : this.savedImage,
+    newImage: newImage != null ? newImage() : this.newImage,
+    removeImage: removeImage ?? this.removeImage,
+    imageFailure: imageFailure != null ? imageFailure() : this.imageFailure,
   );
 }
 
@@ -84,6 +114,7 @@ class RecipeEditor extends _$RecipeEditor {
       recipeId: recipeId,
       recipeName: recipe.name,
       draft: RecipeDraft.fromRecipe(recipe),
+      savedImage: recipe.image,
     );
   }
 
@@ -94,6 +125,27 @@ class RecipeEditor extends _$RecipeEditor {
     if (current == null || current.saving) return false;
     state = AsyncData(current._copyWith(draft: change(current.draft)));
     return true;
+  }
+
+  /// Makes [image] the recipe's photo when it is saved. Ignored while
+  /// loading or saving.
+  void setImage(ImageUpload image) => _change(
+    (state) => state._copyWith(newImage: () => image, removeImage: false),
+  );
+
+  /// Removes the recipe's photo when it is saved: the one chosen, or the
+  /// one it had. Ignored while loading or saving.
+  void removeImage() => _change(
+    (state) => state._copyWith(
+      newImage: () => null,
+      removeImage: state.savedImage != null,
+    ),
+  );
+
+  void _change(EditorState Function(EditorState state) change) {
+    final current = state.value;
+    if (current == null || current.saving) return;
+    state = AsyncData(change(current));
   }
 
   /// Adds [keyword] to the draft unless it is there already.
@@ -210,6 +262,10 @@ class RecipeEditor extends _$RecipeEditor {
   /// at their fields, or if saving failed ([EditorState.failure]), or while
   /// another save is under way.
   ///
+  /// Then uploads or removes the photo ([setImage], [removeImage]). If that
+  /// fails, the recipe is saved all the same and returned, and
+  /// [EditorState.imageFailure] says why the photo isn't.
+  ///
   /// Adds the lines typed into ingredient entries first
   /// ([addPendingLine]); returns `null` without saving if one can't be
   /// added.
@@ -228,11 +284,16 @@ class RecipeEditor extends _$RecipeEditor {
       return null;
     }
     state = AsyncData(
-      current._copyWith(saving: true, showProblems: true, failure: () => null),
+      current._copyWith(
+        saving: true,
+        showProblems: true,
+        failure: () => null,
+        imageFailure: () => null,
+      ),
     );
     final draft = current.draft.copyWith(name: current.draft.name.trim());
     final repository = ref.read(recipeRepositoryProvider);
-    final Recipe saved;
+    Recipe saved;
     try {
       saved = switch (current.recipeId) {
         final id? => await repository.updateRecipe(id, draft),
@@ -248,12 +309,38 @@ class RecipeEditor extends _$RecipeEditor {
       }
       return null;
     }
+    // The photo goes in a request of its own, once the recipe exists.
+    Failure? imageFailure;
+    try {
+      if (current.newImage case final image?) {
+        saved = await repository.uploadImage(saved.id, image);
+      } else if (current.removeImage && saved.image != null) {
+        saved = await repository.removeImage(saved.id);
+      }
+    } on Object catch (error) {
+      // The recipe is saved all the same; the screen says the photo isn't.
+      imageFailure = error is Failure ? error : ServerFailure(cause: error);
+    }
     if (ref.mounted) {
       // Screens showing the recipe load it again, as saved.
       ref
         ..invalidate(recipeProvider(saved.id))
         ..invalidate(searchResultsProvider);
-      state = AsyncData(current._copyWith(saving: false, failure: () => null));
+      state = AsyncData(
+        imageFailure == null
+            ? current._copyWith(
+                saving: false,
+                failure: () => null,
+                savedImage: () => saved.image,
+                newImage: () => null,
+                removeImage: false,
+              )
+            : current._copyWith(
+                saving: false,
+                failure: () => null,
+                imageFailure: () => imageFailure,
+              ),
+      );
     }
     return saved;
   }

@@ -1126,4 +1126,52 @@ class AppLocalizationsDe extends AppLocalizations {
   String pickerCreateFailed(String reason) {
     return 'Nicht angelegt. $reason';
   }
+
+  @override
+  String get editorImage => 'Foto';
+
+  @override
+  String get editorImageTakePhoto => 'Foto aufnehmen';
+
+  @override
+  String get editorImagePick => 'Bild auswählen';
+
+  @override
+  String get editorImageRemove => 'Entfernen';
+
+  @override
+  String get editorImageNone => 'Noch kein Foto';
+
+  @override
+  String get editorImageDrop => 'Bild hierher ziehen';
+
+  @override
+  String get editorImageDropRelease => 'Loslassen, um das Bild zu verwenden';
+
+  @override
+  String get editorImagePending => 'Wird beim Speichern hochgeladen.';
+
+  @override
+  String get editorImageRemoved => 'Das Foto wird beim Speichern entfernt.';
+
+  @override
+  String get editorImageNotAnImage =>
+      'Das ist kein Bild. Es gehen JPEG, PNG, WebP und GIF.';
+
+  @override
+  String editorImageTooLarge(int megabytes) {
+    return 'Das Bild ist größer als $megabytes MB.';
+  }
+
+  @override
+  String get editorImageUnreadable => 'Die Datei ließ sich nicht lesen.';
+
+  @override
+  String editorImageNotSaved(String reason) {
+    return 'Rezept gespeichert, das Foto aber nicht. $reason';
+  }
+
+  @override
+  String get editorImageServerTooLarge =>
+      'Der Server nimmt so große Bilder nicht an.';
 }

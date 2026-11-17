@@ -1,16 +1,22 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/offline.dart';
+import '../../app/platform_providers.dart';
 import '../../core/failures.dart';
 import '../../design/components/buttons.dart';
 import '../../design/design.dart';
+import '../../domain/models/image_upload.dart';
 import '../../l10n/l10n.dart';
+import '../../platform/image_picker/image_picker_service.dart';
 import '../common/failure_view.dart';
 import '../common/offline_disabled.dart';
 import 'editor_controller.dart';
 import 'general_tab.dart';
+import 'image_area.dart';
 import 'ingredients_tab.dart';
 import 'steps_tab.dart';
 
@@ -22,6 +28,9 @@ String editLocation(int recipeId) => '/recipe/$recipeId/edit';
 
 /// Where the editor for a new recipe is.
 const newRecipeLocation = '/recipe/new';
+
+/// How long the snackbar saying the photo wasn't saved stays.
+const _imageFailureDuration = Duration(seconds: 8);
 
 /// The recipe editor (mockup `09-rezept-bearbeiten`): "Abbrechen", the
 /// title and "Speichern" on top, then the tabs Allgemein, Zutaten and
@@ -42,6 +51,92 @@ class EditorScreen extends ConsumerStatefulWidget {
 class _EditorScreenState extends ConsumerState<EditorScreen> {
   var _tab = EditorTab.general;
 
+  late final ImagePickerService _picker = ref.read(imagePickerServiceProvider);
+
+  /// Files dropped onto the window. Listened to on every tab, so a file
+  /// dropped on another one isn't opened by the browser in place of the app.
+  StreamSubscription<ImageDropEvent>? _drops;
+
+  /// Whether an image file is being dragged over the window.
+  var _dragging = false;
+
+  /// Why the last file chosen or dropped can't be used.
+  ImageRejection? _rejection;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_picker.supportsDrop) _drops = _picker.drops.listen(_onDrop);
+  }
+
+  @override
+  void dispose() {
+    unawaited(_drops?.cancel());
+    super.dispose();
+  }
+
+  RecipeEditor get _editor =>
+      ref.read(recipeEditorProvider(widget.recipeId).notifier);
+
+  /// Whether the photo can be changed: loaded, online and not saving.
+  bool get _canChangeImage {
+    final state = ref.read(recipeEditorProvider(widget.recipeId)).value;
+    return state != null && !state.saving && !ref.read(isOfflineProvider);
+  }
+
+  void _onDrop(ImageDropEvent event) {
+    switch (event) {
+      case ImageDragHover(:final isOver):
+        setState(() => _dragging = isOver && _canChangeImage);
+      case ImageDropped(:final result):
+        setState(() => _dragging = false);
+        if (!_canChangeImage) return;
+        // Shows where it went.
+        setState(() => _tab = EditorTab.general);
+        _useImage(result);
+    }
+  }
+
+  /// Opens the camera or a file picker; called right from the tap, as
+  /// browsers require.
+  Future<void> _pick({required bool camera}) async {
+    final result = camera
+        ? await _picker.pickFromCamera()
+        : await _picker.pickFile();
+    if (mounted && _canChangeImage) _useImage(result);
+  }
+
+  void _useImage(ImagePickResult? result) {
+    switch (result) {
+      case null:
+        // Cancelled.
+        return;
+      case RejectedImage(:final reason):
+        setState(() => _rejection = reason);
+      case PickedImage(:final bytes, :final fileName, :final mimeType):
+        setState(() => _rejection = null);
+        _editor.setImage(
+          ImageUpload(bytes: bytes, fileName: fileName, mimeType: mimeType),
+        );
+    }
+  }
+
+  /// Why the photo wasn't saved, in words.
+  String _imageFailureMessage(Failure failure) => switch (failure) {
+    // A proxy in front of Tandoor limits the size (docs/TANDOOR_API.md).
+    ServerFailure(statusCode: 413) => context.l10n.editorImageServerTooLarge,
+    _ => failureMessage(
+      context,
+      failure,
+      notFoundMessage: context.l10n.editorRecipeGone,
+    ),
+  };
+
+  void _removeImage() {
+    setState(() => _rejection = null);
+    _editor.removeImage();
+  }
+
   /// Back to where the editor was opened from: the recipe, or search for a
   /// new recipe if the editor was opened directly.
   void _leave() {
@@ -58,12 +153,24 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   Future<void> _save() async {
     FocusManager.instance.primaryFocus?.unfocus();
     final messenger = ScaffoldMessenger.of(context);
-    final savedMessage = context.l10n.editorSaved;
-    final saved = await ref
-        .read(recipeEditorProvider(widget.recipeId).notifier)
-        .save();
+    final l10n = context.l10n;
+    final saved = await _editor.save();
     if (saved == null || !mounted) return;
-    messenger.showSnackBar(SnackBar(content: Text(savedMessage)));
+    final imageFailure = ref
+        .read(recipeEditorProvider(widget.recipeId))
+        .value
+        ?.imageFailure;
+    messenger.showSnackBar(
+      imageFailure == null
+          ? SnackBar(content: Text(l10n.editorSaved))
+          : SnackBar(
+              content: Text(
+                l10n.editorImageNotSaved(_imageFailureMessage(imageFailure)),
+              ),
+              // Long enough to read; the photo has to be chosen again.
+              duration: _imageFailureDuration,
+            ),
+    );
     if (widget.recipeId == null) {
       // The new recipe takes the editor's place, so back leads to search.
       if (context.canPop()) {
@@ -109,6 +216,16 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                     tab: _tab,
                     onTab: (tab) => setState(() => _tab = tab),
                     onRetry: _save,
+                    imageArea: ImageArea(
+                      state: value,
+                      canUseCamera: _picker.canUseCamera,
+                      supportsDrop: _picker.supportsDrop,
+                      dragging: _dragging,
+                      rejection: _rejection,
+                      onTakePhoto: () => unawaited(_pick(camera: true)),
+                      onPickFile: () => unawaited(_pick(camera: false)),
+                      onRemove: _removeImage,
+                    ),
                   ),
                   AsyncError(:final error) => FailureView(
                     error: error,
@@ -252,9 +369,13 @@ class _Body extends ConsumerWidget {
     required this.tab,
     required this.onTab,
     required this.onRetry,
+    required this.imageArea,
   });
 
   final int? recipeId;
+
+  /// Shown above the Allgemein tab.
+  final Widget imageArea;
   final EditorState state;
   final EditorTab tab;
   final ValueChanged<EditorTab> onTab;
@@ -314,7 +435,14 @@ class _Body extends ConsumerWidget {
                 ),
               SizedBox(height: t.space4),
               switch (tab) {
-                EditorTab.general => GeneralTab(recipeId: recipeId),
+                EditorTab.general => Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: t.space4,
+                  children: [
+                    imageArea,
+                    GeneralTab(recipeId: recipeId),
+                  ],
+                ),
                 EditorTab.ingredients => IngredientsTab(recipeId: recipeId),
                 EditorTab.steps => StepsTab(recipeId: recipeId),
               },

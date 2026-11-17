@@ -1596,5 +1596,72 @@
         "type": "String"
       }
     }
+  },
+  "editorImage": "Foto",
+  "@editorImage": {
+    "description": "Heading of the recipe photo area in the Allgemein tab."
+  },
+  "editorImageTakePhoto": "Foto aufnehmen",
+  "@editorImageTakePhoto": {
+    "description": "Button that opens the camera to take the recipe photo (phones and tablets)."
+  },
+  "editorImagePick": "Bild auswählen",
+  "@editorImagePick": {
+    "description": "Button that opens a file picker for the recipe photo."
+  },
+  "editorImageRemove": "Entfernen",
+  "@editorImageRemove": {
+    "description": "Button that removes the recipe photo (on save)."
+  },
+  "editorImageNone": "Noch kein Foto",
+  "@editorImageNone": {
+    "description": "Shown in the empty photo area on phones and tablets."
+  },
+  "editorImageDrop": "Bild hierher ziehen",
+  "@editorImageDrop": {
+    "description": "Shown in the empty photo area on devices with a mouse: an image file can be dropped onto the window."
+  },
+  "editorImageDropRelease": "Loslassen, um das Bild zu verwenden",
+  "@editorImageDropRelease": {
+    "description": "Shown in the photo area while an image file is dragged over the window."
+  },
+  "editorImagePending": "Wird beim Speichern hochgeladen.",
+  "@editorImagePending": {
+    "description": "Under the photo just chosen: it is uploaded when the recipe is saved."
+  },
+  "editorImageRemoved": "Das Foto wird beim Speichern entfernt.",
+  "@editorImageRemoved": {
+    "description": "In the photo area after removing the saved photo: it is removed when the recipe is saved."
+  },
+  "editorImageNotAnImage": "Das ist kein Bild. Es gehen JPEG, PNG, WebP und GIF.",
+  "@editorImageNotAnImage": {
+    "description": "Shown when the chosen or dropped file is not a supported image."
+  },
+  "editorImageTooLarge": "Das Bild ist größer als {megabytes} MB.",
+  "@editorImageTooLarge": {
+    "description": "Shown when the chosen or dropped image is larger than the limit.",
+    "placeholders": {
+      "megabytes": {
+        "type": "int",
+        "example": "20"
+      }
+    }
+  },
+  "editorImageUnreadable": "Die Datei ließ sich nicht lesen.",
+  "@editorImageUnreadable": {
+    "description": "Shown when the chosen or dropped file could not be read (moved, folder, access revoked)."
+  },
+  "editorImageNotSaved": "Rezept gespeichert, das Foto aber nicht. {reason}",
+  "@editorImageNotSaved": {
+    "description": "Snackbar when the recipe was saved but uploading or removing its photo failed; the reason is one of the error messages.",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "editorImageServerTooLarge": "Der Server nimmt so große Bilder nicht an.",
+  "@editorImageServerTooLarge": {
+    "description": "Reason when the server (or a proxy before it) refused the photo as too large (HTTP 413)."
   }
 }

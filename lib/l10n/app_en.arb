@@ -288,5 +288,19 @@
   "ingredientDelete": "Delete",
   "ingredientUnnamed": "No ingredient",
   "pickerCreate": "Create “{name}”",
-  "pickerCreateFailed": "Not created. {reason}"
+  "pickerCreateFailed": "Not created. {reason}",
+  "editorImage": "Photo",
+  "editorImageTakePhoto": "Take photo",
+  "editorImagePick": "Choose image",
+  "editorImageRemove": "Remove",
+  "editorImageNone": "No photo yet",
+  "editorImageDrop": "Drag an image here",
+  "editorImageDropRelease": "Release to use the image",
+  "editorImagePending": "Uploaded when you save.",
+  "editorImageRemoved": "The photo is removed when you save.",
+  "editorImageNotAnImage": "That is not an image. JPEG, PNG, WebP and GIF work.",
+  "editorImageTooLarge": "The image is larger than {megabytes} MB.",
+  "editorImageUnreadable": "The file could not be read.",
+  "editorImageNotSaved": "Recipe saved, but not its photo. {reason}",
+  "editorImageServerTooLarge": "The server does not accept images this large."
 }
