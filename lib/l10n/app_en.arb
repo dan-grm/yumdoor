@@ -323,5 +323,5 @@
   "editorDeleted": "Recipe deleted",
   "editorDeleteFailed": "Not deleted. {reason}",
   "editorDeleteForbidden": "Not deleted: you may not delete this recipe.",
-  "editorDeleteInUse": "Not deleted: the recipe may be used as a step in another recipe. Remove it there first."
+  "editorDeleteInUse": "Not deleted: the recipe may be used as a step in another recipe. Tandoor does not allow deleting it then."
 }

@@ -333,7 +333,7 @@ steps and ingredients) plus `internal: true`.
 - **A recipe used as a step of another recipe** (`Step.step_recipe`, `on_delete=PROTECT`) can't be deleted: the
   server answers **500** (an unhandled `ProtectedError`). Because the steps of a deleted or edited recipe stay in
   the database as orphans, the recipe stays undeletable even after the other recipe is deleted or changed. Yumdoor
-  shows a hint for any 500 on delete.
+  shows a hint for a 500 on delete.
 
 ## Cook log (ratings, comments, feed)
 

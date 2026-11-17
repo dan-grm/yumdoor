@@ -575,14 +575,16 @@ class RecipeEditor extends _$RecipeEditor {
     } on NotFoundFailure {
       // Deleted elsewhere meanwhile: as good as done.
     } on Object catch (error) {
-      if (ref.mounted) state = AsyncData(current._copyWith(saving: false));
+      if (ref.mounted) {
+        state = AsyncData(state.requireValue._copyWith(saving: false));
+      }
       return _asFailure(error);
     }
     await discardChanges();
     if (ref.mounted) {
       // Screens listing or showing the recipe load again.
       ref.invalidate(searchResultsProvider);
-      state = AsyncData(current._copyWith(saving: true, deleted: true));
+      state = AsyncData(state.requireValue._copyWith(deleted: true));
     }
     return null;
   }

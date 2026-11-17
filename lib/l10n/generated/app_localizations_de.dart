@@ -1248,5 +1248,5 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get editorDeleteInUse =>
-      'Nicht gelöscht: Vielleicht wird das Rezept in einem anderen Rezept als Schritt verwendet. Entferne es dort zuerst.';
+      'Nicht gelöscht: Vielleicht wird das Rezept in einem anderen Rezept als Schritt verwendet. Dann lässt Tandoor das Löschen nicht zu.';
 }

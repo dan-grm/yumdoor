@@ -2039,7 +2039,7 @@ abstract class AppLocalizations {
   /// Snackbar when the server errors on deleting; the usual cause is a recipe used as a step of another one.
   ///
   /// In de, this message translates to:
-  /// **'Nicht gelöscht: Vielleicht wird das Rezept in einem anderen Rezept als Schritt verwendet. Entferne es dort zuerst.'**
+  /// **'Nicht gelöscht: Vielleicht wird das Rezept in einem anderen Rezept als Schritt verwendet. Dann lässt Tandoor das Löschen nicht zu.'**
   String get editorDeleteInUse;
 }
 

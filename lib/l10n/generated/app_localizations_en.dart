@@ -1242,5 +1242,5 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get editorDeleteInUse =>
-      'Not deleted: the recipe may be used as a step in another recipe. Remove it there first.';
+      'Not deleted: the recipe may be used as a step in another recipe. Tandoor does not allow deleting it then.';
 }

@@ -89,7 +89,7 @@ Future<void> confirmAndDeleteRecipe(
           // session ends and login takes over.
           UnauthorizedFailure() => l10n.editorDeleteForbidden,
           // Tandoor fails with a 500 for a recipe used as a step.
-          ServerFailure() => l10n.editorDeleteInUse,
+          ServerFailure(statusCode: 500) => l10n.editorDeleteInUse,
           _ => l10n.editorDeleteFailed(failureMessage(context, failure)),
         }),
       ),
@@ -97,6 +97,8 @@ Future<void> confirmAndDeleteRecipe(
     return;
   }
   messenger.showSnackBar(SnackBar(content: Text(l10n.editorDeleted)));
+  // The user left already (the editor is gone, with its locked state).
+  if (!context.mounted) return;
   // Not back: the recipe screen below the editor is gone too.
   router.go('/');
 }
