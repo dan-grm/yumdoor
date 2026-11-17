@@ -260,7 +260,9 @@ is a text, since fuzzy ordering of a short text puts matches anywhere in the lis
   type from the content and sends a matching name (`PickedImage.fileName`).
 - **Size:** Tandoor has no limit of its own; the nginx in the official image allows 512 MB. A reverse proxy in
   front of it often allows less (nginx's default is 1 MB) and answers **413**, which Yumdoor explains as "too large
-  for the server". Yumdoor itself accepts up to 20 MiB (`maxImageBytes`).
+  for the server". Such a proxy may also close the connection while the body is still being sent, so the client
+  sees a reset rather than the 413: uploads don't mark the server unreachable (`ReachabilityInterceptor.uploadKey`),
+  and the editor names the size as the likely cause. Yumdoor itself accepts up to 20 MiB (`maxImageBytes`).
 - **Processing:** files over 500 KB are scaled to **1020 px wide** (aspect kept, also upscaled if narrower; JPEG at
   quality 90, EXIF orientation applied). Smaller ones are re-encoded without metadata. Animated GIFs stay animated.
   A 6 MB 3000×2000 JPEG came back as 1020×680, 360 KB.

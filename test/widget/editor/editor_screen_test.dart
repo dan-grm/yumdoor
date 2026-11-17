@@ -532,6 +532,25 @@ void main() {
       );
     });
 
+    testWidgets('an upload cut off after the save hints at the size', (
+      tester,
+    ) async {
+      await pumpEditor(tester);
+      recipes.imageFailure = const OfflineFailure();
+
+      picker.nextPick = checkImage(name: 'karotten.png', bytes: photo);
+      await tap(tester, find.text('Bild auswählen'));
+      await tap(tester, find.text('Speichern'));
+
+      expect(
+        find.text(
+          'Rezept gespeichert, das Foto aber nicht. Die Verbindung brach beim '
+          'Hochladen ab. Vielleicht ist das Bild zu groß für den Server.',
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('a new recipe gets its photo right after it is created', (
       tester,
     ) async {

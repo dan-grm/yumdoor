@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -108,7 +110,8 @@ class ImageArea extends ConsumerWidget {
         ],
         SizedBox(height: t.space3),
         OfflineDisabled(
-          builder: (context, _) {
+          builder: (context, online) {
+            final canChange = online && !state.saving;
             return Wrap(
               spacing: t.space2,
               runSpacing: t.space2,
@@ -119,14 +122,14 @@ class ImageArea extends ConsumerWidget {
                     icon: Icons.photo_camera_outlined,
                     kind: PillButtonKind.secondary,
                     compact: true,
-                    onPressed: enabled ? onTakePhoto : null,
+                    onPressed: canChange ? onTakePhoto : null,
                   ),
                 PillButton(
                   label: l10n.editorImagePick,
                   icon: Icons.image_outlined,
                   kind: PillButtonKind.secondary,
                   compact: true,
-                  onPressed: enabled ? onPickFile : null,
+                  onPressed: canChange ? onPickFile : null,
                 ),
                 if (state.hasImage)
                   PillButton(
@@ -134,7 +137,7 @@ class ImageArea extends ConsumerWidget {
                     icon: Icons.delete_outline_rounded,
                     kind: PillButtonKind.secondary,
                     compact: true,
-                    onPressed: enabled ? onRemove : null,
+                    onPressed: canChange ? onRemove : null,
                   ),
               ],
             );
@@ -169,16 +172,21 @@ class _Preview extends StatelessWidget {
         child: ColoredBox(
           color: t.sageSoft,
           child: switch (state.newImage) {
-            final image? => Image.memory(
-              image.bytes,
-              // A camera photo decoded at full size takes ~50 MB.
-              cacheWidth:
-                  (MediaQuery.sizeOf(context).width *
+            final image? => LayoutBuilder(
+              builder: (context, constraints) => Image.memory(
+                image.bytes,
+                // Decoded at the width shown: a camera photo at full size
+                // takes ~50 MB.
+                cacheWidth: max(
+                  1,
+                  (constraints.maxWidth *
                           MediaQuery.devicePixelRatioOf(context))
                       .round(),
-              fit: BoxFit.cover,
-              excludeFromSemantics: true,
-              errorBuilder: (_, _, _) => placeholder,
+                ),
+                fit: BoxFit.cover,
+                excludeFromSemantics: true,
+                errorBuilder: (_, _, _) => placeholder,
+              ),
             ),
             null => RecipeImage(
               url: state.savedImage,

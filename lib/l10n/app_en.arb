@@ -302,5 +302,6 @@
   "editorImageTooLarge": "The image is larger than {megabytes} MB.",
   "editorImageUnreadable": "The file could not be read.",
   "editorImageNotSaved": "Recipe saved, but not its photo. {reason}",
-  "editorImageServerTooLarge": "The server does not accept images this large."
+  "editorImageServerTooLarge": "The server does not accept images this large.",
+  "editorImageInterrupted": "The connection broke off during the upload. The image may be too large for the server."
 }

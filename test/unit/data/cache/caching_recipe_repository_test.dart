@@ -400,6 +400,7 @@ void main() {
       await fetch(7);
 
       await repository.removeImage(7);
+      await pumpEventQueue();
 
       expect((await cache.get(7))?.image, isNull);
       expect(await cache.image(_image), isNull);
@@ -407,6 +408,7 @@ void main() {
 
     test('a recipe that is not stored stays so', () async {
       await repository.uploadImage(7, upload);
+      await pumpEventQueue();
 
       expect(await cache.get(7), isNull);
     });

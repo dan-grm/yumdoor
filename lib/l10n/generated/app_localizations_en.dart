@@ -1168,4 +1168,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get editorImageServerTooLarge =>
       'The server does not accept images this large.';
+
+  @override
+  String get editorImageInterrupted =>
+      'The connection broke off during the upload. The image may be too large for the server.';
 }

@@ -108,14 +108,14 @@ class CachingRecipeRepository implements RecipeRepository {
   @override
   Future<Uri> uploadImage(int id, ImageUpload image) async {
     final url = await _forgetIfGone(id, () => _remote.uploadImage(id, image));
-    await _ignoreErrors(_storeImageChange(id, url));
+    unawaited(_ignoreErrors(_storeImageChange(id, url)));
     return url;
   }
 
   @override
   Future<void> removeImage(int id) async {
     await _forgetIfGone(id, () => _remote.removeImage(id));
-    await _ignoreErrors(_storeImageChange(id, null));
+    unawaited(_ignoreErrors(_storeImageChange(id, null)));
   }
 
   /// Gives the stored copy of the recipe [id], if there is one, the image

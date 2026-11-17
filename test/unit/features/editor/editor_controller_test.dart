@@ -457,6 +457,17 @@ void main() {
       expect(recipe.image, isNotNull);
     });
 
+    test('a photo chosen after removing the saved one replaces it', () async {
+      final edit = await editor(7);
+      edit
+        ..removeImage()
+        ..setImage(photo);
+
+      await edit.save();
+
+      expect(recipes.imageChanges.single, (id: 7, image: photo));
+    });
+
     test('removing the saved image removes it on save', () async {
       final edit = await editor(7);
       edit.removeImage();
@@ -480,11 +491,15 @@ void main() {
         expect(state(7).removeImage, isFalse);
         expect(state(7).hasImage, isTrue);
 
-        // A second time removes the saved one; choosing again undoes that.
+        // A second time removes the saved one.
         edit.removeImage();
         expect(state(7).hasImage, isFalse);
+        // Choosing a photo and dropping it again keeps that removal.
         edit.setImage(photo);
-        expect(state(7).removeImage, isFalse);
+        expect(state(7).hasImage, isTrue);
+        edit.removeImage();
+        expect(state(7).removeImage, isTrue);
+        expect(state(7).hasImage, isFalse);
       },
     );
 
@@ -514,8 +529,9 @@ void main() {
         state(7).imageFailure,
         isA<ServerFailure>().having((f) => f.statusCode, 'status', 413),
       );
-      // Still chosen, should the user stay and save again.
-      expect(state(7).newImage, photo);
+      // Dropped: saving again would save the recipe again, not just the
+      // photo.
+      expect(state(7).newImage, isNull);
     });
 
     test('a failed recipe save uploads nothing', () async {

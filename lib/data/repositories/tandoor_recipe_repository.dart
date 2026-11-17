@@ -17,6 +17,7 @@ import '../../domain/repositories/cook_log_repository.dart';
 import '../../domain/repositories/recipe_repository.dart';
 import '../api/api_failures.dart';
 import '../api/extra_query_interceptor.dart';
+import '../api/reachability_interceptor.dart';
 import '../mappers/mapping.dart';
 import '../mappers/recipe_draft_mapper.dart';
 import '../mappers/recipe_mapper.dart';
@@ -374,6 +375,7 @@ class TandoorRecipeRepository implements RecipeRepository {
         // scaling it, takes longer than an ordinary request may. On the
         // web this is the whole request's timeout.
         receiveTimeout: _imageTimeout,
+        extra: {ReachabilityInterceptor.uploadKey: true},
       ),
     );
     return switch (response.data) {

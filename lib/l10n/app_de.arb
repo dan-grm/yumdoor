@@ -1663,5 +1663,9 @@
   "editorImageServerTooLarge": "Der Server nimmt so große Bilder nicht an.",
   "@editorImageServerTooLarge": {
     "description": "Reason when the server (or a proxy before it) refused the photo as too large (HTTP 413)."
+  },
+  "editorImageInterrupted": "Die Verbindung brach beim Hochladen ab. Vielleicht ist das Bild zu groß für den Server.",
+  "@editorImageInterrupted": {
+    "description": "Reason when the photo upload failed without an answer from the server, right after the recipe itself was saved (a proxy refusing the size often resets the connection)."
   }
 }

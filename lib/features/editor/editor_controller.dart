@@ -38,7 +38,8 @@ final class EditorState {
   /// A photo chosen to replace [savedImage], uploaded on save.
   final ImageUpload? newImage;
 
-  /// Whether saving removes [savedImage] (and there is no [newImage]).
+  /// Whether saving removes [savedImage], unless there is a [newImage] to
+  /// replace it.
   final bool removeImage;
 
   /// Why the photo wasn't saved by the last save, which saved the recipe
@@ -125,13 +126,12 @@ class RecipeEditor extends _$RecipeEditor {
 
   /// Makes [image] the recipe's photo when it is saved. Ignored while
   /// loading or saving.
-  void setImage(ImageUpload image) => _change(
-    (state) => state._copyWith(newImage: () => image, removeImage: false),
-  );
+  void setImage(ImageUpload image) =>
+      _change((state) => state._copyWith(newImage: () => image));
 
-  /// Drops the photo chosen with [setImage], back to the saved one; without
-  /// one, removes the saved photo when the recipe is saved. Ignored while
-  /// loading or saving.
+  /// Drops the photo chosen with [setImage], back to what was there before
+  /// (the saved photo, or none if it was removed); without one, removes the
+  /// saved photo when the recipe is saved. Ignored while loading or saving.
   void removeImage() => _change(
     (state) => state.newImage != null
         ? state._copyWith(newImage: () => null)
@@ -336,10 +336,15 @@ class RecipeEditor extends _$RecipeEditor {
                 newImage: () => null,
                 removeImage: false,
               )
+            // The photo change is dropped: the screen leaves and says it
+            // wasn't saved (a new recipe saved again from here would be
+            // created twice).
             : current._copyWith(
                 saving: false,
                 failure: () => null,
                 imageFailure: () => imageFailure,
+                newImage: () => null,
+                removeImage: false,
               ),
       );
     }

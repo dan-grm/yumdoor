@@ -1915,6 +1915,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Der Server nimmt so große Bilder nicht an.'**
   String get editorImageServerTooLarge;
+
+  /// Reason when the photo upload failed without an answer from the server, right after the recipe itself was saved (a proxy refusing the size often resets the connection).
+  ///
+  /// In de, this message translates to:
+  /// **'Die Verbindung brach beim Hochladen ab. Vielleicht ist das Bild zu groß für den Server.'**
+  String get editorImageInterrupted;
 }
 
 class _AppLocalizationsDelegate

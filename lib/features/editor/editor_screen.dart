@@ -125,6 +125,9 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
   String _imageFailureMessage(Failure failure) => switch (failure) {
     // A proxy in front of Tandoor limits the size (docs/TANDOOR_API.md).
     ServerFailure(statusCode: 413) => context.l10n.editorImageServerTooLarge,
+    // The recipe was just saved, so the server was there: a proxy that
+    // refuses the size often just drops the connection.
+    OfflineFailure() => context.l10n.editorImageInterrupted,
     _ => failureMessage(
       context,
       failure,
