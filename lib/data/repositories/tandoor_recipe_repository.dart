@@ -17,7 +17,6 @@ import '../../domain/repositories/cook_log_repository.dart';
 import '../../domain/repositories/recipe_repository.dart';
 import '../api/api_failures.dart';
 import '../api/extra_query_interceptor.dart';
-import '../api/reachability_interceptor.dart';
 import '../mappers/mapping.dart';
 import '../mappers/recipe_draft_mapper.dart';
 import '../mappers/recipe_mapper.dart';
@@ -368,10 +367,9 @@ class TandoorRecipeRepository implements RecipeRepository {
   /// `PUT /api/recipe/{id}/image/` with [form]; returns the path of the
   /// image the recipe has now, `null` for none.
   ///
-  /// An [upload] whose connection breaks fails with
-  /// [UploadInterruptedFailure] and doesn't mark the server unreachable: a
-  /// proxy refusing the size often resets the connection instead of
-  /// answering 413 (docs/TANDOOR_API.md#recipe-images).
+  /// An [upload] that ends without an answer fails with
+  /// [UploadInterruptedFailure]: a proxy refusing the size often resets the
+  /// connection instead of answering 413 (docs/TANDOOR_API.md#recipe-images).
   Future<String?> _putImage(
     int id,
     FormData form, {
@@ -387,11 +385,15 @@ class TandoorRecipeRepository implements RecipeRepository {
           // scaling it, takes longer than an ordinary request may. On the
           // web this is the whole request's timeout.
           receiveTimeout: _imageTimeout,
-          extra: {if (upload) ReachabilityInterceptor.uploadKey: true},
         ),
       );
     } on DioException catch (e) {
-      if (upload && e.type == DioExceptionType.connectionError) {
+      // A reset while sending is `connectionError` on the web, and
+      // `unknown` (a SocketException) on native.
+      if (upload &&
+          e.response == null &&
+          (e.type == DioExceptionType.connectionError ||
+              e.type == DioExceptionType.unknown)) {
         throw const UploadInterruptedFailure();
       }
       throw failureFromDioException(e);

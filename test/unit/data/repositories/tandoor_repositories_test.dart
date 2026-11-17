@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -6,7 +7,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tandoor_api/tandoor_api.dart' as api;
 import 'package:yumdoor/core/cancellation.dart';
 import 'package:yumdoor/core/failures.dart';
-import 'package:yumdoor/data/api/reachability_interceptor.dart';
 import 'package:yumdoor/data/api/tandoor_dio.dart';
 import 'package:yumdoor/data/repositories/tandoor_book_repository.dart';
 import 'package:yumdoor/data/repositories/tandoor_food_repository.dart';
@@ -565,8 +565,6 @@ void main() {
         expect(file.value.length, 4);
         // Longer than the usual 30 s, for large photos on slow connections.
         expect(put.receiveTimeout, greaterThan(const Duration(minutes: 1)));
-        // A reset upload may be a proxy's size limit, not a lost server.
-        expect(put.extra[ReachabilityInterceptor.uploadKey], isTrue);
         expect(
           url,
           Uri.parse('https://example.com/tandoor/media/recipes/a_58.png'),
@@ -617,35 +615,35 @@ void main() {
         );
       });
 
-      test('a broken upload connection is an interrupted upload', () async {
-        final reports = <bool>[];
-        final adapter = FakeHttpAdapter(
-          (request) => throw DioException(
-            requestOptions: request,
-            type: DioExceptionType.connectionError,
-          ),
-        );
-        final dio = createTandoorDio(
-          serverUrl,
-          token: 'tda_test',
-          onReachable: reports.add,
-        )..httpClientAdapter = adapter;
-        final repository = TandoorRecipeRepository(
-          api.TandoorApi(dio: dio, interceptors: const []).getApiApi(),
-          dio: dio,
-        );
+      for (final (type, error) in [
+        // How the web reports a reset connection.
+        (DioExceptionType.connectionError, null),
+        // How native does: a SocketException while sending.
+        (
+          DioExceptionType.unknown,
+          const SocketException('Connection reset by peer'),
+        ),
+      ]) {
+        test('an upload cut off ($type) is an interrupted upload', () async {
+          final adapter = FakeHttpAdapter(
+            (request) => throw DioException(
+              requestOptions: request,
+              type: type,
+              error: error,
+            ),
+          );
 
-        await expectLater(
-          repository.uploadImage(58, upload),
-          throwsA(isA<UploadInterruptedFailure>()),
-        );
-        // A removal sends nothing large: offline as usual.
-        await expectLater(
-          repository.removeImage(58),
-          throwsA(isA<OfflineFailure>()),
-        );
-        expect(reports, [false]);
-      });
+          await expectLater(
+            repository(adapter).uploadImage(58, upload),
+            throwsA(isA<UploadInterruptedFailure>()),
+          );
+          // A removal sends nothing large: it fails like any request.
+          await expectLater(
+            repository(adapter).removeImage(58),
+            throwsA(isNot(isA<UploadInterruptedFailure>())),
+          );
+        });
+      }
     });
 
     test('throws NotFoundFailure for a missing recipe', () {

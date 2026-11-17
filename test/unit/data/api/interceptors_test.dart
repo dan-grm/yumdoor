@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/data/api/api_failures.dart';
 import 'package:yumdoor/data/api/extra_query_interceptor.dart';
-import 'package:yumdoor/data/api/reachability_interceptor.dart';
 import 'package:yumdoor/data/api/tandoor_dio.dart';
 
 import '../../../fakes/fake_http_adapter.dart';
@@ -131,9 +130,8 @@ void main() {
 
   group('onReachable', () {
     Future<List<bool>> reportsFor(
-      FutureOr<ResponseBody> Function(RequestOptions) respond, {
-      Map<String, Object?>? extra,
-    }) async {
+      FutureOr<ResponseBody> Function(RequestOptions) respond,
+    ) async {
       final reports = <bool>[];
       final dio = createTandoorDio(
         serverUrl,
@@ -141,10 +139,7 @@ void main() {
         onReachable: reports.add,
       )..httpClientAdapter = FakeHttpAdapter(respond);
       try {
-        await guardRequest(
-          () =>
-              dio.get<Object?>('/api/recipe/', options: Options(extra: extra)),
-        );
+        await guardRequest(() => dio.get<Object?>('/api/recipe/'));
       } on Failure {
         // Expected for the failing requests here.
       }
@@ -165,29 +160,6 @@ void main() {
       expect(await reportsFor((request) => throw connectionError(request)), [
         false,
       ]);
-    });
-
-    test('an upload whose connection fails reports nothing', () async {
-      const upload = {ReachabilityInterceptor.uploadKey: true};
-      expect(
-        await reportsFor(
-          (request) => throw connectionError(request),
-          extra: upload,
-        ),
-        isEmpty,
-      );
-      expect(await reportsFor((_) => jsonResponse({}), extra: upload), [true]);
-      // Nothing was sent before a connect timeout.
-      expect(
-        await reportsFor(
-          (request) => throw DioException(
-            requestOptions: request,
-            type: DioExceptionType.connectionTimeout,
-          ),
-          extra: upload,
-        ),
-        [false],
-      );
     });
   });
 }
