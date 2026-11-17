@@ -173,6 +173,16 @@ class FakeRecipeRepository implements RecipeRepository {
     return url;
   }
 
+  /// The recipes [deleteRecipe] was called for, in order.
+  final deletions = <int>[];
+
+  @override
+  Future<void> deleteRecipe(int id) async {
+    deletions.add(id);
+    if (failure case final failure?) throw failure;
+    if (recipes.remove(id) == null) throw const NotFoundFailure();
+  }
+
   @override
   Future<void> recordView(int id) async {
     views.add(id);

@@ -314,5 +314,14 @@
   "editorImageUnreadable": "The file could not be read.",
   "editorImageNotSaved": "Recipe saved, but not its photo. {reason}",
   "editorImageServerTooLarge": "The server does not accept images this large.",
-  "editorImageInterrupted": "The connection broke off during the upload. The image may be too large for the server."
+  "editorImageInterrupted": "The connection broke off during the upload. The image may be too large for the server.",
+  "editorDelete": "Delete recipe",
+  "editorDeleteTitle": "Delete recipe?",
+  "editorDeleteBody": "“{name}” will be deleted for good. That includes its entries in the cook log, meal plans, books and shopping lists. This cannot be undone.",
+  "editorDeleteKeep": "Keep",
+  "editorDeleteConfirm": "Delete for good",
+  "editorDeleted": "Recipe deleted",
+  "editorDeleteFailed": "Not deleted. {reason}",
+  "editorDeleteForbidden": "Not deleted: you may not delete this recipe.",
+  "editorDeleteInUse": "Not deleted: the recipe may be used as a step in another recipe. Tandoor does not allow deleting it then."
 }

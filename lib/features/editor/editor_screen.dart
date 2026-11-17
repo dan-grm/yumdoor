@@ -66,6 +66,8 @@ Future<bool> confirmEditorExit(
   }
   final editor = container.read(provider).value;
   if (editor == null) return true;
+  // Deleted from here: nothing left to lose.
+  if (editor.deleted) return true;
   if (editor.saving) return false;
   if (!editor.isDirty && !container.read(provider.notifier).hasUnaddedLine) {
     return true;

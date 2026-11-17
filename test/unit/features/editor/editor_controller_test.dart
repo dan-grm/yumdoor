@@ -202,6 +202,63 @@ void main() {
     expect(state(7).draft.name, 'Ofenkarotten mit Feta');
   });
 
+  group('deleting', () {
+    test(
+      'deletes the recipe, its draft and leaves the editor locked',
+      () async {
+        final controller = await editor(7);
+        controller.edit((draft) => draft.copyWith(name: 'Ofengemüse'));
+        await controller.flushDraft();
+        await drafts.save(
+          7,
+          StoredDraft(
+            draft: RecipeDraft.fromRecipe(ofenkarotten),
+            savedAt: DateTime(2026, 11, 16),
+          ),
+        );
+
+        expect(await controller.deleteRecipe(), isNull);
+
+        expect(recipes.deletions, [7]);
+        expect(recipes.recipes, isEmpty);
+        expect(await drafts.load(7), isNull);
+        expect(state(7).deleted, isTrue);
+        expect(state(7).saving, isTrue);
+      },
+    );
+
+    test('a recipe the server lacks already counts as deleted', () async {
+      final controller = await editor(7);
+      recipes.recipes.remove(7);
+
+      expect(await controller.deleteRecipe(), isNull);
+
+      expect(state(7).deleted, isTrue);
+    });
+
+    test('a refusal is returned and the editor stays usable', () async {
+      final controller = await editor(7);
+      controller.edit((draft) => draft.copyWith(name: 'Ofengemüse'));
+      recipes.failure = const UnauthorizedFailure();
+
+      expect(await controller.deleteRecipe(), isA<UnauthorizedFailure>());
+
+      expect(state(7).deleted, isFalse);
+      expect(state(7).saving, isFalse);
+      expect(state(7).draft.name, 'Ofengemüse');
+      expect(recipes.recipes, isNotEmpty);
+    });
+
+    test('does nothing for a new recipe', () async {
+      final controller = await editor(null);
+
+      expect(await controller.deleteRecipe(), isNull);
+
+      expect(recipes.deletions, isEmpty);
+      expect(state(null).deleted, isFalse);
+    });
+  });
+
   group('ingredients', () {
     List<List<IngredientDraft>> ingredients(int? recipeId) => [
       for (final step in state(recipeId).draft.steps) step.ingredients,

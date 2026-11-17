@@ -137,6 +137,15 @@ class CachingRecipeRepository implements RecipeRepository {
     }
   }
 
+  /// Deletes go to the server only (offline is read-only). The stored copy
+  /// goes with the recipe, and with it its image once no other recipe uses
+  /// it; also when the server says the recipe is gone already.
+  @override
+  Future<void> deleteRecipe(int id) async {
+    await _forgetIfGone(id, () => _remote.deleteRecipe(id));
+    await _ignoreErrors(_cache.remove(id));
+  }
+
   /// Views are only recorded online; offline there is nothing to record
   /// them in (offline is read-only).
   @override

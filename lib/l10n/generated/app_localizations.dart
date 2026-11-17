@@ -1987,6 +1987,60 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Die Verbindung brach beim Hochladen ab. Vielleicht ist das Bild zu groß für den Server.'**
   String get editorImageInterrupted;
+
+  /// Danger button at the end of the editor's General tab, for an existing recipe.
+  ///
+  /// In de, this message translates to:
+  /// **'Rezept löschen'**
+  String get editorDelete;
+
+  /// Title of the confirmation dialog.
+  ///
+  /// In de, this message translates to:
+  /// **'Rezept löschen?'**
+  String get editorDeleteTitle;
+
+  /// Body of the delete confirmation; {name} is the recipe name.
+  ///
+  /// In de, this message translates to:
+  /// **'„{name}“ wird endgültig gelöscht. Dazu gehören auch die Einträge im Kochprotokoll, im Essensplan, in Büchern und in Einkaufslisten. Das lässt sich nicht rückgängig machen.'**
+  String editorDeleteBody(String name);
+
+  /// Dialog button that cancels deleting the recipe.
+  ///
+  /// In de, this message translates to:
+  /// **'Behalten'**
+  String get editorDeleteKeep;
+
+  /// Dialog button that deletes the recipe.
+  ///
+  /// In de, this message translates to:
+  /// **'Endgültig löschen'**
+  String get editorDeleteConfirm;
+
+  /// Snackbar after the recipe was deleted.
+  ///
+  /// In de, this message translates to:
+  /// **'Rezept gelöscht'**
+  String get editorDeleted;
+
+  /// Snackbar when deleting failed; {reason} is a sentence.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht gelöscht. {reason}'**
+  String editorDeleteFailed(String reason);
+
+  /// Snackbar when the server refused deleting (403).
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht gelöscht: Du darfst dieses Rezept nicht löschen.'**
+  String get editorDeleteForbidden;
+
+  /// Snackbar when the server errors on deleting; the usual cause is a recipe used as a step of another one.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht gelöscht: Vielleicht wird das Rezept in einem anderen Rezept als Schritt verwendet. Dann lässt Tandoor das Löschen nicht zu.'**
+  String get editorDeleteInUse;
 }
 
 class _AppLocalizationsDelegate

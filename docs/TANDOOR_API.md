@@ -319,6 +319,22 @@ Everything else of the recipe, its steps and its ingredients is left out and so 
 On create the same without step and ingredient ids (a draft made from another recipe would otherwise share its
 steps and ingredients) plus `internal: true`.
 
+## Deleting a recipe
+
+`DELETE /api/recipe/{id}/` (verified on 2.6.15, models in `cookbook/models.py`):
+
+- **204** on success; **404** for a recipe that doesn't exist; **403** for a user who may not change it.
+- **Deleted with it** (`on_delete=CASCADE`): the recipe's cook log entries, view log, meal plans, book entries
+  (`RecipeBookEntry`), shopping list recipes and the shopping entries built from them (`ShoppingListRecipe`, its
+  `entries`), share links and comments. Checked: after the DELETE a cook log and a meal plan of the recipe are gone
+  (404 / empty list). Dynamic books and saved filters only store a search, so nothing is left to delete there.
+- **Not deleted:** the steps and ingredients (many-to-many, they stay as orphans, like recipe writes), foods, units,
+  keywords, and the image file.
+- **A recipe used as a step of another recipe** (`Step.step_recipe`, `on_delete=PROTECT`) can't be deleted: the
+  server answers **500** (an unhandled `ProtectedError`). Because the steps of a deleted or edited recipe stay in
+  the database as orphans, the recipe stays undeletable even after the other recipe is deleted or changed. Yumdoor
+  shows a hint for a 500 on delete.
+
 ## Cook log (ratings, comments, feed)
 
 - `CookLog` fields: `recipe`, `servings` (integer, nullable), `rating` (integer, nullable), `comment` (text,
