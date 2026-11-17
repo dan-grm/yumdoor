@@ -52,12 +52,12 @@ final class EditorState {
   /// ([RecipeEditor.discardDraft]) it. Not overwritten meanwhile.
   final StoredDraft? offeredDraft;
 
-  /// Whether the offered draft is older than the recipe on the server, which
-  /// was changed after it was stored.
-  bool get offeredDraftIsStale => switch ((offeredDraft, updatedAt)) {
-    (final draft?, final updatedAt?) => draft.savedAt.isBefore(updatedAt),
-    _ => false,
-  };
+  /// Whether the recipe on the server was changed after the offered draft
+  /// started from it: saving the draft would overwrite those changes.
+  bool get offeredDraftIsStale =>
+      recipeId != null &&
+      offeredDraft != null &&
+      !_sameTime(offeredDraft!.baseUpdatedAt, updatedAt);
 
   /// Whether there are changes that saving would send: to the draft or the
   /// photo.
@@ -155,6 +155,13 @@ class RecipeEditor extends _$RecipeEditor {
   /// The state to store as draft when [_draftTimer] fires.
   EditorState? _pendingDraft;
 
+  /// The `Recipe.updatedAt` the changes started from: as loaded, as last
+  /// saved from here, or as a restored draft's.
+  DateTime? _draftBase;
+
+  /// The photo of the stored draft; `null` while none is stored.
+  ({ImageUpload? image})? _storedImage;
+
   @override
   Future<EditorState> build(int? recipeId) async {
     _drafts = ref.read(draftStoreProvider);
@@ -171,6 +178,7 @@ class RecipeEditor extends _$RecipeEditor {
         .read(recipeRepositoryProvider)
         .fetchRecipe(recipeId, allowCached: false);
     final draft = RecipeDraft.fromRecipe(recipe);
+    _draftBase = recipe.updatedAt;
     return _offer(
       EditorState(
         recipeId: recipeId,
@@ -223,6 +231,8 @@ class RecipeEditor extends _$RecipeEditor {
         offeredDraft: () => null,
       ),
     );
+    _draftBase = stored.baseUpdatedAt;
+    _storedImage = (image: stored.newImage);
   }
 
   /// Deletes the offered draft and continues with the recipe as loaded.
@@ -257,10 +267,16 @@ class RecipeEditor extends _$RecipeEditor {
             newImage: pending.newImage,
             removeImage: pending.removeImage,
             savedAt: _clock(),
+            baseUpdatedAt: _draftBase,
           ),
+          // A photo can be many MB; typing shouldn't write it again.
+          imageChanged:
+              _storedImage == null ||
+              !identical(_storedImage!.image, pending.newImage),
         );
+        _storedImage = (image: pending.newImage);
       } else {
-        await _drafts.delete(pending.recipeId);
+        await _deleteDraft(pending.recipeId);
       }
     } on Object {
       // The draft is a safety net; editing goes on without it.
@@ -268,6 +284,7 @@ class RecipeEditor extends _$RecipeEditor {
   }
 
   Future<void> _deleteDraft(int? recipeId) async {
+    _storedImage = null;
     try {
       await _drafts.delete(recipeId);
     } on Object {
@@ -348,12 +365,27 @@ class RecipeEditor extends _$RecipeEditor {
   /// So a line typed right before "Speichern" is saved too, and a line that
   /// can't be added stops the save, with the entry saying why, instead of
   /// being lost.
-  void Function() addPendingLine(Future<bool> Function() finish) {
+  ///
+  /// [hasText] says whether a line is typed in, so leaving the editor asks
+  /// first ([hasUnaddedLine]).
+  void Function() addPendingLine(
+    Future<bool> Function() finish, {
+    bool Function()? hasText,
+  }) {
     _pendingLines.add(finish);
-    return () => _pendingLines.remove(finish);
+    if (hasText != null) _typedLines.add(hasText);
+    return () {
+      _pendingLines.remove(finish);
+      if (hasText != null) _typedLines.remove(hasText);
+    };
   }
 
   final _pendingLines = <Future<bool> Function()>{};
+  final _typedLines = <bool Function()>{};
+
+  /// Whether an ingredient entry holds a line that isn't added yet. It isn't
+  /// in the draft, but leaving would lose it.
+  bool get hasUnaddedLine => _typedLines.any((hasText) => hasText());
 
   /// Adds a section header with [title] at the end of the step at [step],
   /// or of the last step if `null`. A blank title adds nothing.
@@ -484,6 +516,7 @@ class RecipeEditor extends _$RecipeEditor {
     // Saved: the draft has done its job. A failed photo change is dropped
     // with it (see below).
     await discardChanges();
+    _draftBase = saved.updatedAt;
     if (ref.mounted) {
       // Screens showing the recipe load it again, as saved.
       ref
@@ -506,6 +539,9 @@ class RecipeEditor extends _$RecipeEditor {
     return saved;
   }
 }
+
+bool _sameTime(DateTime? a, DateTime? b) =>
+    a?.microsecondsSinceEpoch == b?.microsecondsSinceEpoch;
 
 /// [error] as a [Failure]; anything else as a [ServerFailure].
 Failure _asFailure(Object error) =>

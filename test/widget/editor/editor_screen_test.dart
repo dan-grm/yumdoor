@@ -1,10 +1,12 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/repository_providers.dart';
+import 'package:yumdoor/app/session.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/domain/models/image_upload.dart';
@@ -25,6 +27,7 @@ import '../../fakes/fake_image_picker_service.dart';
 import '../../fakes/fake_offline_cache.dart';
 import '../../fakes/fake_recipe_repository.dart';
 import '../../fakes/fake_unload_guard.dart';
+import '../../fakes/in_memory_token_store.dart';
 import '../../fixtures/images.dart';
 import '../../fixtures/recipes.dart';
 import '../fonts.dart';
@@ -73,6 +76,8 @@ void main() {
         unloadGuardProvider.overrideWithValue(unloadGuard),
         imagePickerServiceProvider.overrideWithValue(picker),
         offlineCacheProvider.overrideWithValue(FakeOfflineCache()),
+        // Nobody logged in, unless a test logs in.
+        tokenStoreProvider.overrideWithValue(InMemoryTokenStore()),
       ],
       routes: [
         GoRoute(
@@ -724,6 +729,57 @@ void main() {
 
       expect(find.byType(EditorScreen), findsOneWidget);
       expect(nameText(tester), 'Ofengemüse');
+    });
+
+    testWidgets('a line typed but not added asks too', (tester) async {
+      await pumpEditor(tester);
+      await tap(tester, find.text('Zutaten'));
+      await tester.enterText(
+        find.widgetWithText(TextField, 'z. B. 200 g Karotten, geschält'),
+        '200 g Mehl',
+      );
+
+      await tap(tester, find.text('Abbrechen'));
+
+      expect(find.text(discardTitle), findsOneWidget);
+    });
+
+    testWidgets('after logout, leaves without asking and keeps no draft', (
+      tester,
+    ) async {
+      final router = await pumpEditor(tester);
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(EditorScreen)),
+      );
+      await tester.runAsync(
+        () => container.read(sessionControllerProvider.future),
+      );
+      await tester.enterText(field('Name'), 'Ofengemüse');
+
+      router.go('/search');
+      await tester.pumpAndSettle();
+
+      expect(find.text(discardTitle), findsNothing);
+      expect(find.text('search'), findsOneWidget);
+      expect(drafts.drafts, isEmpty);
+    });
+
+    testWidgets('a photo dropped while a draft is offered is ignored', (
+      tester,
+    ) async {
+      drafts.drafts[7] = StoredDraft(
+        draft: RecipeDraft.fromRecipe(ofenkarotten)
+            .copyWith(name: 'Ofengemüse'),
+        savedAt: savedAt,
+      );
+      await pumpEditor(tester);
+
+      picker.drop('karotten.png', photo);
+      await tester.pumpAndSettle();
+      await tap(tester, find.text('Verwerfen'));
+
+      expect(find.text('Wird beim Speichern hochgeladen.'), findsNothing);
+      expect(unloadGuard.active, isFalse);
     });
 
     testWidgets('changing a value back to the saved one is no change', (

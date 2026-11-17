@@ -998,6 +998,17 @@ class $EditorDraftsTable extends EditorDrafts
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _baseUpdatedAtMeta = const VerificationMeta(
+    'baseUpdatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> baseUpdatedAt = GeneratedColumn<int>(
+    'base_updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _imageBytesMeta = const VerificationMeta(
     'imageBytes',
   );
@@ -1050,6 +1061,7 @@ class $EditorDraftsTable extends EditorDrafts
     recipeId,
     json,
     savedAt,
+    baseUpdatedAt,
     imageBytes,
     imageFileName,
     imageMimeType,
@@ -1088,6 +1100,15 @@ class $EditorDraftsTable extends EditorDrafts
       );
     } else if (isInserting) {
       context.missing(_savedAtMeta);
+    }
+    if (data.containsKey('base_updated_at')) {
+      context.handle(
+        _baseUpdatedAtMeta,
+        baseUpdatedAt.isAcceptableOrUnknown(
+          data['base_updated_at']!,
+          _baseUpdatedAtMeta,
+        ),
+      );
     }
     if (data.containsKey('image_bytes')) {
       context.handle(
@@ -1145,6 +1166,10 @@ class $EditorDraftsTable extends EditorDrafts
         DriftSqlType.dateTime,
         data['${effectivePrefix}saved_at'],
       )!,
+      baseUpdatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}base_updated_at'],
+      ),
       imageBytes: attachedDatabase.typeMapping.read(
         DriftSqlType.blob,
         data['${effectivePrefix}image_bytes'],
@@ -1178,6 +1203,10 @@ class EditorDraftRow extends DataClass implements Insertable<EditorDraftRow> {
   final String json;
   final DateTime savedAt;
 
+  /// `StoredDraft.baseUpdatedAt` in microseconds since the epoch: exact,
+  /// to compare with the recipe's (a date time column keeps only seconds).
+  final int? baseUpdatedAt;
+
   /// A photo chosen to replace the recipe's, with its name and type.
   final Uint8List? imageBytes;
   final String? imageFileName;
@@ -1187,6 +1216,7 @@ class EditorDraftRow extends DataClass implements Insertable<EditorDraftRow> {
     required this.recipeId,
     required this.json,
     required this.savedAt,
+    this.baseUpdatedAt,
     this.imageBytes,
     this.imageFileName,
     this.imageMimeType,
@@ -1198,6 +1228,9 @@ class EditorDraftRow extends DataClass implements Insertable<EditorDraftRow> {
     map['recipe_id'] = Variable<int>(recipeId);
     map['json'] = Variable<String>(json);
     map['saved_at'] = Variable<DateTime>(savedAt);
+    if (!nullToAbsent || baseUpdatedAt != null) {
+      map['base_updated_at'] = Variable<int>(baseUpdatedAt);
+    }
     if (!nullToAbsent || imageBytes != null) {
       map['image_bytes'] = Variable<Uint8List>(imageBytes);
     }
@@ -1216,6 +1249,9 @@ class EditorDraftRow extends DataClass implements Insertable<EditorDraftRow> {
       recipeId: Value(recipeId),
       json: Value(json),
       savedAt: Value(savedAt),
+      baseUpdatedAt: baseUpdatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(baseUpdatedAt),
       imageBytes: imageBytes == null && nullToAbsent
           ? const Value.absent()
           : Value(imageBytes),
@@ -1238,6 +1274,7 @@ class EditorDraftRow extends DataClass implements Insertable<EditorDraftRow> {
       recipeId: serializer.fromJson<int>(json['recipeId']),
       json: serializer.fromJson<String>(json['json']),
       savedAt: serializer.fromJson<DateTime>(json['savedAt']),
+      baseUpdatedAt: serializer.fromJson<int?>(json['baseUpdatedAt']),
       imageBytes: serializer.fromJson<Uint8List?>(json['imageBytes']),
       imageFileName: serializer.fromJson<String?>(json['imageFileName']),
       imageMimeType: serializer.fromJson<String?>(json['imageMimeType']),
@@ -1251,6 +1288,7 @@ class EditorDraftRow extends DataClass implements Insertable<EditorDraftRow> {
       'recipeId': serializer.toJson<int>(recipeId),
       'json': serializer.toJson<String>(json),
       'savedAt': serializer.toJson<DateTime>(savedAt),
+      'baseUpdatedAt': serializer.toJson<int?>(baseUpdatedAt),
       'imageBytes': serializer.toJson<Uint8List?>(imageBytes),
       'imageFileName': serializer.toJson<String?>(imageFileName),
       'imageMimeType': serializer.toJson<String?>(imageMimeType),
@@ -1262,6 +1300,7 @@ class EditorDraftRow extends DataClass implements Insertable<EditorDraftRow> {
     int? recipeId,
     String? json,
     DateTime? savedAt,
+    Value<int?> baseUpdatedAt = const Value.absent(),
     Value<Uint8List?> imageBytes = const Value.absent(),
     Value<String?> imageFileName = const Value.absent(),
     Value<String?> imageMimeType = const Value.absent(),
@@ -1270,6 +1309,9 @@ class EditorDraftRow extends DataClass implements Insertable<EditorDraftRow> {
     recipeId: recipeId ?? this.recipeId,
     json: json ?? this.json,
     savedAt: savedAt ?? this.savedAt,
+    baseUpdatedAt: baseUpdatedAt.present
+        ? baseUpdatedAt.value
+        : this.baseUpdatedAt,
     imageBytes: imageBytes.present ? imageBytes.value : this.imageBytes,
     imageFileName: imageFileName.present
         ? imageFileName.value
@@ -1284,6 +1326,9 @@ class EditorDraftRow extends DataClass implements Insertable<EditorDraftRow> {
       recipeId: data.recipeId.present ? data.recipeId.value : this.recipeId,
       json: data.json.present ? data.json.value : this.json,
       savedAt: data.savedAt.present ? data.savedAt.value : this.savedAt,
+      baseUpdatedAt: data.baseUpdatedAt.present
+          ? data.baseUpdatedAt.value
+          : this.baseUpdatedAt,
       imageBytes: data.imageBytes.present
           ? data.imageBytes.value
           : this.imageBytes,
@@ -1305,6 +1350,7 @@ class EditorDraftRow extends DataClass implements Insertable<EditorDraftRow> {
           ..write('recipeId: $recipeId, ')
           ..write('json: $json, ')
           ..write('savedAt: $savedAt, ')
+          ..write('baseUpdatedAt: $baseUpdatedAt, ')
           ..write('imageBytes: $imageBytes, ')
           ..write('imageFileName: $imageFileName, ')
           ..write('imageMimeType: $imageMimeType, ')
@@ -1318,6 +1364,7 @@ class EditorDraftRow extends DataClass implements Insertable<EditorDraftRow> {
     recipeId,
     json,
     savedAt,
+    baseUpdatedAt,
     $driftBlobEquality.hash(imageBytes),
     imageFileName,
     imageMimeType,
@@ -1330,6 +1377,7 @@ class EditorDraftRow extends DataClass implements Insertable<EditorDraftRow> {
           other.recipeId == this.recipeId &&
           other.json == this.json &&
           other.savedAt == this.savedAt &&
+          other.baseUpdatedAt == this.baseUpdatedAt &&
           $driftBlobEquality.equals(other.imageBytes, this.imageBytes) &&
           other.imageFileName == this.imageFileName &&
           other.imageMimeType == this.imageMimeType &&
@@ -1340,6 +1388,7 @@ class EditorDraftsCompanion extends UpdateCompanion<EditorDraftRow> {
   final Value<int> recipeId;
   final Value<String> json;
   final Value<DateTime> savedAt;
+  final Value<int?> baseUpdatedAt;
   final Value<Uint8List?> imageBytes;
   final Value<String?> imageFileName;
   final Value<String?> imageMimeType;
@@ -1348,6 +1397,7 @@ class EditorDraftsCompanion extends UpdateCompanion<EditorDraftRow> {
     this.recipeId = const Value.absent(),
     this.json = const Value.absent(),
     this.savedAt = const Value.absent(),
+    this.baseUpdatedAt = const Value.absent(),
     this.imageBytes = const Value.absent(),
     this.imageFileName = const Value.absent(),
     this.imageMimeType = const Value.absent(),
@@ -1357,6 +1407,7 @@ class EditorDraftsCompanion extends UpdateCompanion<EditorDraftRow> {
     this.recipeId = const Value.absent(),
     required String json,
     required DateTime savedAt,
+    this.baseUpdatedAt = const Value.absent(),
     this.imageBytes = const Value.absent(),
     this.imageFileName = const Value.absent(),
     this.imageMimeType = const Value.absent(),
@@ -1368,6 +1419,7 @@ class EditorDraftsCompanion extends UpdateCompanion<EditorDraftRow> {
     Expression<int>? recipeId,
     Expression<String>? json,
     Expression<DateTime>? savedAt,
+    Expression<int>? baseUpdatedAt,
     Expression<Uint8List>? imageBytes,
     Expression<String>? imageFileName,
     Expression<String>? imageMimeType,
@@ -1377,6 +1429,7 @@ class EditorDraftsCompanion extends UpdateCompanion<EditorDraftRow> {
       if (recipeId != null) 'recipe_id': recipeId,
       if (json != null) 'json': json,
       if (savedAt != null) 'saved_at': savedAt,
+      if (baseUpdatedAt != null) 'base_updated_at': baseUpdatedAt,
       if (imageBytes != null) 'image_bytes': imageBytes,
       if (imageFileName != null) 'image_file_name': imageFileName,
       if (imageMimeType != null) 'image_mime_type': imageMimeType,
@@ -1388,6 +1441,7 @@ class EditorDraftsCompanion extends UpdateCompanion<EditorDraftRow> {
     Value<int>? recipeId,
     Value<String>? json,
     Value<DateTime>? savedAt,
+    Value<int?>? baseUpdatedAt,
     Value<Uint8List?>? imageBytes,
     Value<String?>? imageFileName,
     Value<String?>? imageMimeType,
@@ -1397,6 +1451,7 @@ class EditorDraftsCompanion extends UpdateCompanion<EditorDraftRow> {
       recipeId: recipeId ?? this.recipeId,
       json: json ?? this.json,
       savedAt: savedAt ?? this.savedAt,
+      baseUpdatedAt: baseUpdatedAt ?? this.baseUpdatedAt,
       imageBytes: imageBytes ?? this.imageBytes,
       imageFileName: imageFileName ?? this.imageFileName,
       imageMimeType: imageMimeType ?? this.imageMimeType,
@@ -1415,6 +1470,9 @@ class EditorDraftsCompanion extends UpdateCompanion<EditorDraftRow> {
     }
     if (savedAt.present) {
       map['saved_at'] = Variable<DateTime>(savedAt.value);
+    }
+    if (baseUpdatedAt.present) {
+      map['base_updated_at'] = Variable<int>(baseUpdatedAt.value);
     }
     if (imageBytes.present) {
       map['image_bytes'] = Variable<Uint8List>(imageBytes.value);
@@ -1437,6 +1495,7 @@ class EditorDraftsCompanion extends UpdateCompanion<EditorDraftRow> {
           ..write('recipeId: $recipeId, ')
           ..write('json: $json, ')
           ..write('savedAt: $savedAt, ')
+          ..write('baseUpdatedAt: $baseUpdatedAt, ')
           ..write('imageBytes: $imageBytes, ')
           ..write('imageFileName: $imageFileName, ')
           ..write('imageMimeType: $imageMimeType, ')
@@ -2066,6 +2125,7 @@ typedef $$EditorDraftsTableCreateCompanionBuilder =
       Value<int> recipeId,
       required String json,
       required DateTime savedAt,
+      Value<int?> baseUpdatedAt,
       Value<Uint8List?> imageBytes,
       Value<String?> imageFileName,
       Value<String?> imageMimeType,
@@ -2076,6 +2136,7 @@ typedef $$EditorDraftsTableUpdateCompanionBuilder =
       Value<int> recipeId,
       Value<String> json,
       Value<DateTime> savedAt,
+      Value<int?> baseUpdatedAt,
       Value<Uint8List?> imageBytes,
       Value<String?> imageFileName,
       Value<String?> imageMimeType,
@@ -2103,6 +2164,11 @@ class $$EditorDraftsTableFilterComposer
 
   ColumnFilters<DateTime> get savedAt => $composableBuilder(
     column: $table.savedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get baseUpdatedAt => $composableBuilder(
+    column: $table.baseUpdatedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2151,6 +2217,11 @@ class $$EditorDraftsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get baseUpdatedAt => $composableBuilder(
+    column: $table.baseUpdatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<Uint8List> get imageBytes => $composableBuilder(
     column: $table.imageBytes,
     builder: (column) => ColumnOrderings(column),
@@ -2189,6 +2260,11 @@ class $$EditorDraftsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get savedAt =>
       $composableBuilder(column: $table.savedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get baseUpdatedAt => $composableBuilder(
+    column: $table.baseUpdatedAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<Uint8List> get imageBytes => $composableBuilder(
     column: $table.imageBytes,
@@ -2245,6 +2321,7 @@ class $$EditorDraftsTableTableManager
                 Value<int> recipeId = const Value.absent(),
                 Value<String> json = const Value.absent(),
                 Value<DateTime> savedAt = const Value.absent(),
+                Value<int?> baseUpdatedAt = const Value.absent(),
                 Value<Uint8List?> imageBytes = const Value.absent(),
                 Value<String?> imageFileName = const Value.absent(),
                 Value<String?> imageMimeType = const Value.absent(),
@@ -2253,6 +2330,7 @@ class $$EditorDraftsTableTableManager
                 recipeId: recipeId,
                 json: json,
                 savedAt: savedAt,
+                baseUpdatedAt: baseUpdatedAt,
                 imageBytes: imageBytes,
                 imageFileName: imageFileName,
                 imageMimeType: imageMimeType,
@@ -2263,6 +2341,7 @@ class $$EditorDraftsTableTableManager
                 Value<int> recipeId = const Value.absent(),
                 required String json,
                 required DateTime savedAt,
+                Value<int?> baseUpdatedAt = const Value.absent(),
                 Value<Uint8List?> imageBytes = const Value.absent(),
                 Value<String?> imageFileName = const Value.absent(),
                 Value<String?> imageMimeType = const Value.absent(),
@@ -2271,6 +2350,7 @@ class $$EditorDraftsTableTableManager
                 recipeId: recipeId,
                 json: json,
                 savedAt: savedAt,
+                baseUpdatedAt: baseUpdatedAt,
                 imageBytes: imageBytes,
                 imageFileName: imageFileName,
                 imageMimeType: imageMimeType,

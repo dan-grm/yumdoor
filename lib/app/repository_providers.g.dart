@@ -734,20 +734,20 @@ final class OfflineCacheProvider
 
 String _$offlineCacheHash() => r'd9e087a2b51ebfdefd355288b08e352b27943fa0';
 
-/// The recipe editor's unsaved drafts. In the same database as the offline
-/// cache, so logout clears them too.
+/// The recipe editor's unsaved drafts, in the offline cache's database.
+/// Kept across sessions until logout clears them.
 
 @ProviderFor(draftStore)
 final draftStoreProvider = DraftStoreProvider._();
 
-/// The recipe editor's unsaved drafts. In the same database as the offline
-/// cache, so logout clears them too.
+/// The recipe editor's unsaved drafts, in the offline cache's database.
+/// Kept across sessions until logout clears them.
 
 final class DraftStoreProvider
     extends $FunctionalProvider<DraftStore, DraftStore, DraftStore>
     with $Provider<DraftStore> {
-  /// The recipe editor's unsaved drafts. In the same database as the offline
-  /// cache, so logout clears them too.
+  /// The recipe editor's unsaved drafts, in the offline cache's database.
+  /// Kept across sessions until logout clears them.
   DraftStoreProvider._()
     : super(
         from: null,

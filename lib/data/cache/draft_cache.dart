@@ -8,8 +8,7 @@ import '../../domain/models/stored_draft.dart';
 import '../../domain/repositories/draft_store.dart';
 import 'cache_database.dart';
 
-/// Keeps the editor's drafts in the [CacheDatabase], so logout's
-/// `RecipeCache.clear` deletes them too.
+/// Keeps the editor's drafts in the [CacheDatabase]'s `editor_draft` table.
 class DraftCache implements DraftStore {
   DraftCache(this._db);
 
@@ -32,6 +31,13 @@ class DraftCache implements DraftStore {
           jsonDecode(row.json) as Map<String, dynamic>,
         ),
         savedAt: row.savedAt,
+        baseUpdatedAt: switch (row.baseUpdatedAt) {
+          final micros? => DateTime.fromMicrosecondsSinceEpoch(
+            micros,
+            isUtc: true,
+          ),
+          null => null,
+        },
         newImage: bytes != null && fileName != null && mimeType != null
             ? ImageUpload(bytes: bytes, fileName: fileName, mimeType: mimeType)
             : null,
@@ -45,19 +51,34 @@ class DraftCache implements DraftStore {
   }
 
   @override
-  Future<void> save(int? recipeId, StoredDraft draft) => _db
-      .into(_db.editorDrafts)
-      .insertOnConflictUpdate(
-        EditorDraftsCompanion(
-          recipeId: Value(_key(recipeId)),
-          json: Value(jsonEncode(draft.draft.toJson())),
-          savedAt: Value(draft.savedAt),
-          imageBytes: Value(draft.newImage?.bytes),
-          imageFileName: Value(draft.newImage?.fileName),
-          imageMimeType: Value(draft.newImage?.mimeType),
-          removeImage: Value(draft.removeImage),
-        ),
-      );
+  Future<void> save(
+    int? recipeId,
+    StoredDraft draft, {
+    bool imageChanged = true,
+  }) => _db.transaction(() async {
+    final row = EditorDraftsCompanion(
+      recipeId: Value(_key(recipeId)),
+      json: Value(jsonEncode(draft.draft.toJson())),
+      savedAt: Value(draft.savedAt),
+      baseUpdatedAt: Value(draft.baseUpdatedAt?.microsecondsSinceEpoch),
+      removeImage: Value(draft.removeImage),
+    );
+    if (!imageChanged) {
+      final updated = await (_db.update(
+        _db.editorDrafts,
+      )..where((d) => d.recipeId.equals(_key(recipeId)))).write(row);
+      if (updated > 0) return;
+    }
+    await _db
+        .into(_db.editorDrafts)
+        .insertOnConflictUpdate(
+          row.copyWith(
+            imageBytes: Value(draft.newImage?.bytes),
+            imageFileName: Value(draft.newImage?.fileName),
+            imageMimeType: Value(draft.newImage?.mimeType),
+          ),
+        );
+  });
 
   @override
   Future<void> delete(int? recipeId) => (_db.delete(

@@ -49,19 +49,25 @@ Future<bool> confirmEditorExit(
   // The app is being torn down.
   if (!context.mounted) return true;
   final container = ProviderScope.containerOf(context, listen: false);
-  // Logged out: the drafts went with the session, and login takes over.
-  if (container.exists(sessionControllerProvider)) {
-    final session = container.read(sessionControllerProvider);
-    if (session.hasValue && session.value == null) return true;
-  }
   final provider = recipeEditorProvider(
     int.tryParse(state.pathParameters['id'] ?? ''),
   );
   if (!container.exists(provider)) return true;
+  // Logged out: login takes over. Logout deleted the drafts; none may be
+  // stored after it for the next user to find.
+  if (container.exists(sessionControllerProvider)) {
+    final session = container.read(sessionControllerProvider);
+    if (session.hasValue && session.value == null) {
+      await container.read(provider.notifier).discardChanges();
+      return true;
+    }
+  }
   final editor = container.read(provider).value;
   if (editor == null) return true;
   if (editor.saving) return false;
-  if (!editor.isDirty) return true;
+  if (!editor.isDirty && !container.read(provider.notifier).hasUnaddedLine) {
+    return true;
+  }
   final discard = await showDialog<bool>(
     context: context,
     builder: (context) {
@@ -194,10 +200,12 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       ref.read(recipeEditorProvider(widget.recipeId).notifier);
 
   /// [_canChange] now, for event handlers.
-  bool get _canChangeImage => _canChange(
-    ref.read(recipeEditorProvider(widget.recipeId)).value,
-    offline: ref.read(isOfflineProvider),
-  );
+  bool get _canChangeImage =>
+      _canChange(
+        ref.read(recipeEditorProvider(widget.recipeId)).value,
+        offline: ref.read(isOfflineProvider),
+      ) &&
+      !_offering;
 
   /// Whether the photo can be changed: loaded, online and not saving.
   static bool _canChange(EditorState? state, {required bool offline}) =>

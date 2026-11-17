@@ -10,6 +10,7 @@ final class StoredDraft {
   const StoredDraft({
     required this.draft,
     required this.savedAt,
+    this.baseUpdatedAt,
     this.newImage,
     this.removeImage = false,
   });
@@ -24,4 +25,9 @@ final class StoredDraft {
 
   /// When the draft was stored.
   final DateTime savedAt;
+
+  /// When the recipe the draft started from was last changed on the server
+  /// (`Recipe.updatedAt`); `null` for a new recipe. A recipe changed since
+  /// has changes the draft would overwrite.
+  final DateTime? baseUpdatedAt;
 }

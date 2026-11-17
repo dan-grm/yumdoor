@@ -125,7 +125,7 @@ RecipeCache _recipeCache(Ref ref) =>
 @Riverpod(keepAlive: true)
 OfflineCache offlineCache(Ref ref) => ref.watch(_recipeCacheProvider);
 
-/// The recipe editor's unsaved drafts. In the same database as the offline
-/// cache, so logout clears them too.
+/// The recipe editor's unsaved drafts, in the offline cache's database.
+/// Kept across sessions until logout clears them.
 @Riverpod(keepAlive: true)
 DraftStore draftStore(Ref ref) => DraftCache(ref.watch(_cacheDatabaseProvider));

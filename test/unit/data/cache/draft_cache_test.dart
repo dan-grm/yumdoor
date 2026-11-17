@@ -112,12 +112,68 @@ void main() {
     expect(await drafts.load(null), isNull);
   });
 
-  test('clearing the offline cache on logout deletes them too', () async {
+  test('clearing the offline cache leaves them to their own clear', () async {
     await drafts.save(7, draftNamed('Sieben'));
 
     await RecipeCache(db).clear();
 
-    expect(await drafts.load(7), isNull);
+    expect(await drafts.load(7), isNotNull);
+  });
+
+  test('keeps the stored photo unless it changed', () async {
+    final image = ImageUpload(
+      bytes: Uint8List.fromList([1, 2, 3]),
+      fileName: 'a.png',
+      mimeType: 'image/png',
+    );
+    await drafts.save(
+      7,
+      StoredDraft(
+        draft: const RecipeDraft(name: 'A'),
+        newImage: image,
+        savedAt: savedAt,
+      ),
+    );
+
+    await drafts.save(7, draftNamed('B'), imageChanged: false);
+    final kept = (await drafts.load(7))!;
+    expect(kept.draft.name, 'B');
+    expect(kept.newImage!.bytes, image.bytes);
+
+    await drafts.save(7, draftNamed('C'));
+    expect((await drafts.load(7))!.newImage, isNull);
+  });
+
+  test('stores everything if there is no draft yet', () async {
+    await drafts.save(
+      7,
+      StoredDraft(
+        draft: const RecipeDraft(name: 'A'),
+        newImage: ImageUpload(
+          bytes: Uint8List.fromList([1]),
+          fileName: 'a.png',
+          mimeType: 'image/png',
+        ),
+        savedAt: savedAt,
+      ),
+      imageChanged: false,
+    );
+
+    expect((await drafts.load(7))!.newImage, isNotNull);
+  });
+
+  test('keeps the base time exactly', () async {
+    final base = DateTime.utc(2026, 11, 16, 9, 15, 30, 123, 456);
+    await drafts.save(
+      7,
+      StoredDraft(
+        draft: const RecipeDraft(name: 'A'),
+        savedAt: savedAt,
+        baseUpdatedAt: base,
+      ),
+    );
+
+    expect((await drafts.load(7))!.baseUpdatedAt, base);
   });
 
   test('drops a draft that no longer decodes', () async {

@@ -18,9 +18,10 @@ class OfflineBanner extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final offline = ref.watch(isOfflineProvider);
     final t = context.tokens;
-    // The same structure online and offline, with [child] under a key: if
-    // the banner moved it in the tree, the app's navigator would be built
-    // anew and every open screen with it (an editor would lose its form).
+    // The same structure online and offline: if the banner changed the tree
+    // above [child], the app's navigator would be built anew and every open
+    // screen with it (an editor would lose its form). The key keeps [child]
+    // matched when the banner is put before it.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [

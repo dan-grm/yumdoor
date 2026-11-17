@@ -78,6 +78,10 @@ class EditorDrafts extends Table {
   TextColumn get json => text()();
   DateTimeColumn get savedAt => dateTime()();
 
+  /// `StoredDraft.baseUpdatedAt` in microseconds since the epoch: exact,
+  /// to compare with the recipe's (a date time column keeps only seconds).
+  IntColumn get baseUpdatedAt => integer().nullable()();
+
   /// A photo chosen to replace the recipe's, with its name and type.
   BlobColumn get imageBytes => blob().nullable()();
   TextColumn get imageFileName => text().nullable()();

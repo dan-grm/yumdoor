@@ -724,6 +724,68 @@ void main() {
       expect(state(7).offeredDraftIsStale, isTrue);
     });
 
+    test(
+      'a draft from the recipe as it is on the server is not stale',
+      () async {
+        final updatedAt = DateTime.utc(2026, 11, 16, 9, 15, 30, 123, 456);
+        recipes = FakeRecipeRepository([
+          ofenkarotten.copyWith(updatedAt: updatedAt),
+        ]);
+        container = containerWith(recipes);
+        final edit = await editor(7);
+        edit.edit((d) => d.copyWith(name: 'Ofengemüse'));
+        await edit.flushDraft();
+        // Typed after a change on the server: still the version it started
+        // from.
+        expect(drafts.drafts[7]!.baseUpdatedAt, updatedAt);
+        container.dispose();
+
+        container = containerWith(recipes);
+        await editor(7);
+        expect(state(7).offeredDraft, isNotNull);
+        expect(state(7).offeredDraftIsStale, isFalse);
+
+        recipes.recipes[7] = ofenkarotten.copyWith(
+          updatedAt: updatedAt.add(const Duration(minutes: 5)),
+        );
+        container = containerWith(recipes);
+        await editor(7);
+        expect(state(7).offeredDraftIsStale, isTrue);
+      },
+    );
+
+    test('a restored draft keeps the version it started from', () async {
+      final updatedAt = DateTime.utc(2026, 11, 16, 9);
+      recipes = FakeRecipeRepository([
+        ofenkarotten.copyWith(updatedAt: updatedAt),
+      ]);
+      container = containerWith(recipes);
+      drafts.drafts[7] = storedNamed('Ofengemüse');
+      final edit = await editor(7);
+
+      edit
+        ..restoreDraft()
+        ..edit((d) => d.copyWith(description: 'Neu'));
+      await edit.flushDraft();
+
+      expect(drafts.drafts[7]!.baseUpdatedAt, isNull);
+    });
+
+    test('a photo is written once, not with every change', () async {
+      final edit = await editor(7);
+
+      edit.setImage(photo);
+      await edit.flushDraft();
+      edit.edit((d) => d.copyWith(name: 'Ofengemüse'));
+      await edit.flushDraft();
+      edit.edit((d) => d.copyWith(name: 'Ofengemüse 2'));
+      await edit.flushDraft();
+
+      expect(drafts.imageWrites, 1);
+      expect(drafts.drafts[7]!.newImage, photo);
+      expect(drafts.drafts[7]!.draft.name, 'Ofengemüse 2');
+    });
+
     test('a draft without changes is deleted, not offered', () async {
       drafts.drafts[7] = storedNamed(ofenkarotten.name);
       await editor(7);
@@ -780,8 +842,11 @@ class _BrokenDraftStore implements DraftStore {
   Future<StoredDraft?> load(int? recipeId) => Future.error(StateError('db'));
 
   @override
-  Future<void> save(int? recipeId, StoredDraft draft) =>
-      Future.error(StateError('db'));
+  Future<void> save(
+    int? recipeId,
+    StoredDraft draft, {
+    bool imageChanged = true,
+  }) => Future.error(StateError('db'));
 
   @override
   Future<void> delete(int? recipeId) => Future.error(StateError('db'));
