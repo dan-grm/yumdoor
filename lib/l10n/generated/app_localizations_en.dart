@@ -996,6 +996,37 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editorSaved => 'Recipe saved';
 
   @override
+  String get editorDiscardTitle => 'Discard changes?';
+
+  @override
+  String get editorDiscardBody =>
+      'Your changes to this recipe aren\'t saved yet.';
+
+  @override
+  String get editorDiscardKeepEditing => 'Keep editing';
+
+  @override
+  String get editorDiscard => 'Discard';
+
+  @override
+  String get editorDraftTitle => 'Unsaved draft';
+
+  @override
+  String editorDraftBody(String date, String time) {
+    return 'You made changes here on $date at $time that aren\'t saved.';
+  }
+
+  @override
+  String get editorDraftStale =>
+      'The recipe was changed on the server after that. Saving the draft overwrites those changes.';
+
+  @override
+  String get editorDraftRestore => 'Restore draft';
+
+  @override
+  String get editorDraftDiscard => 'Discard';
+
+  @override
   String get keywordPickerTitle => 'Add keyword';
 
   @override

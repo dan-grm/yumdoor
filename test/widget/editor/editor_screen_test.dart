@@ -7,8 +7,11 @@ import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/design/design.dart';
+import 'package:yumdoor/domain/models/image_upload.dart';
 import 'package:yumdoor/domain/models/keyword.dart';
 import 'package:yumdoor/domain/models/recipe_draft.dart';
+import 'package:yumdoor/domain/models/stored_draft.dart';
+import 'package:yumdoor/features/editor/editor_controller.dart';
 import 'package:yumdoor/features/editor/editor_field.dart';
 import 'package:yumdoor/features/editor/editor_screen.dart';
 import 'package:yumdoor/features/recipe/recipe_screen.dart';
@@ -16,10 +19,12 @@ import 'package:yumdoor/features/search/search_providers.dart';
 import 'package:yumdoor/platform/image_picker/image_picker_service.dart';
 
 import '../../fakes/fake_connectivity_service.dart';
+import '../../fakes/fake_draft_store.dart';
 import '../../fakes/fake_food_keyword_repositories.dart';
 import '../../fakes/fake_image_picker_service.dart';
 import '../../fakes/fake_offline_cache.dart';
 import '../../fakes/fake_recipe_repository.dart';
+import '../../fakes/fake_unload_guard.dart';
 import '../../fixtures/images.dart';
 import '../../fixtures/recipes.dart';
 import '../fonts.dart';
@@ -30,6 +35,8 @@ void main() {
   late FakeRecipeRepository recipes;
   late FakeKeywordRepository keywords;
   late FakeConnectivityService connectivity;
+  late FakeDraftStore drafts;
+  late FakeUnloadGuard unloadGuard;
   late FakeImagePickerService picker;
 
   setUpAll(loadBundledFonts);
@@ -42,6 +49,8 @@ void main() {
       Keyword(id: 3, name: 'Schnell'),
     ]);
     connectivity = FakeConnectivityService();
+    drafts = FakeDraftStore();
+    unloadGuard = FakeUnloadGuard();
     picker = FakeImagePickerService();
   });
 
@@ -60,6 +69,8 @@ void main() {
         recipeRepositoryProvider.overrideWithValue(recipes),
         keywordRepositoryProvider.overrideWithValue(keywords),
         connectivityServiceProvider.overrideWithValue(connectivity),
+        draftStoreProvider.overrideWithValue(drafts),
+        unloadGuardProvider.overrideWithValue(unloadGuard),
         imagePickerServiceProvider.overrideWithValue(picker),
         offlineCacheProvider.overrideWithValue(FakeOfflineCache()),
       ],
@@ -71,6 +82,7 @@ void main() {
         GoRoute(
           path: newRecipeLocation,
           builder: (context, state) => const EditorScreen(),
+          onExit: confirmEditorExit,
         ),
         GoRoute(
           path: '/recipe/:id',
@@ -82,6 +94,7 @@ void main() {
               builder: (context, state) => EditorScreen(
                 recipeId: int.parse(state.pathParameters['id']!),
               ),
+              onExit: confirmEditorExit,
             ),
           ],
         ),
@@ -316,15 +329,69 @@ void main() {
     expect(recipes.saves, isEmpty);
   });
 
-  testWidgets('Abbrechen returns without saving', (tester) async {
+  testWidgets('offline, editing goes on; the draft waits to be saved', (
+    tester,
+  ) async {
+    await pumpEditor(tester);
+    await tester.enterText(field('Name'), 'Ofengemüse');
+    await tap(tester, find.text('Schritte'));
+
+    // The offline banner appearing doesn't rebuild the screen.
+    connectivity.isOnline = false;
+    await tester.pumpAndSettle();
+    expect(find.byType(EditorField), findsNothing);
+    await tap(tester, find.text('Allgemein'));
+    expect(
+      tester.widget<TextField>(field('Name')).controller!.text,
+      'Ofengemüse',
+    );
+    await tester.enterText(field('Beschreibung'), 'Offline geschrieben');
+    await tester.pump(RecipeEditor.draftDelay);
+    expect(drafts.drafts[7]!.draft.description, 'Offline geschrieben');
+    expect(saveButton(tester).onPressed, isNull);
+
+    connectivity.isOnline = true;
+    await tester.pumpAndSettle();
+    await tap(tester, find.text('Speichern'));
+    expect(recipes.saves.single.draft.name, 'Ofengemüse');
+    expect(drafts.drafts, isEmpty);
+  });
+
+  testWidgets('Abbrechen without changes returns right away', (tester) async {
+    await pumpEditor(tester);
+
+    await tap(tester, find.text('Abbrechen'));
+
+    expect(find.text('Änderungen verwerfen?'), findsNothing);
+    expect(find.byType(RecipeScreen), findsOneWidget);
+  });
+
+  testWidgets('Abbrechen with changes asks, then returns without saving', (
+    tester,
+  ) async {
     await pumpEditor(tester);
 
     await tester.enterText(field('Name'), 'Ofengemüse');
     await tap(tester, find.text('Abbrechen'));
+    expect(find.text('Änderungen verwerfen?'), findsOneWidget);
+
+    // Staying keeps the changes.
+    await tap(tester, find.text('Weiter bearbeiten'));
+    expect(find.byType(EditorScreen), findsOneWidget);
+    expect(
+      tester.widget<TextField>(field('Name')).controller!.text,
+      'Ofengemüse',
+    );
+
+    await tap(tester, find.text('Abbrechen'));
+    await tap(tester, find.text('Verwerfen'));
 
     expect(recipes.saves, isEmpty);
+    expect(find.byType(EditorScreen), findsNothing);
     expect(find.byType(RecipeScreen), findsOneWidget);
     expect(find.text('Ofenkarotten mit Feta'), findsOneWidget);
+    // Nothing is offered next time.
+    expect(drafts.drafts, isEmpty);
   });
 
   testWidgets('the other tabs keep the draft', (tester) async {
@@ -488,6 +555,8 @@ void main() {
 
       router.pop();
       await tester.pumpAndSettle();
+      // The new photo is a change too.
+      await tap(tester, find.text('Verwerfen'));
       expect(picker.isDropTarget, isFalse);
     });
 
@@ -601,8 +670,233 @@ void main() {
     });
   });
 
+  group('unsaved changes', () {
+    const discardTitle = 'Änderungen verwerfen?';
+    const draftTitle = 'Ungespeicherter Entwurf';
+    final photo = testPng();
+    final preview = find.byWidgetPredicate(
+      (w) => w is Image && w.image is ResizeImage,
+    );
+    final savedAt = DateTime(2026, 11, 16, 18, 30);
+    const staleText =
+        'Das Rezept wurde danach auf dem Server geändert. Speicherst du den '
+        'Entwurf, überschreibt er diese Änderungen.';
+
+    String nameText(WidgetTester tester) =>
+        tester.widget<TextField>(field('Name')).controller!.text;
+
+    testWidgets('back with changes asks; Verwerfen leaves', (tester) async {
+      await pumpEditor(tester);
+      await tester.enterText(field('Name'), 'Ofengemüse');
+      await tester.pump();
+      expect(unloadGuard.active, isTrue);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.text(discardTitle), findsOneWidget);
+      await tap(tester, find.text('Verwerfen'));
+
+      expect(find.byType(EditorScreen), findsNothing);
+      expect(find.byType(RecipeScreen), findsOneWidget);
+      expect(unloadGuard.active, isFalse);
+      expect(drafts.drafts, isEmpty);
+    });
+
+    testWidgets('back without changes leaves right away', (tester) async {
+      await pumpEditor(tester);
+      expect(unloadGuard.active, isFalse);
+
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+
+      expect(find.text(discardTitle), findsNothing);
+      expect(find.byType(RecipeScreen), findsOneWidget);
+    });
+
+    testWidgets('another route asks too, and can be refused', (tester) async {
+      final router = await pumpEditor(tester);
+      await tester.enterText(field('Name'), 'Ofengemüse');
+
+      router.go('/search');
+      await tester.pumpAndSettle();
+      expect(find.text(discardTitle), findsOneWidget);
+      await tap(tester, find.text('Weiter bearbeiten'));
+
+      expect(find.byType(EditorScreen), findsOneWidget);
+      expect(nameText(tester), 'Ofengemüse');
+    });
+
+    testWidgets('changing a value back to the saved one is no change', (
+      tester,
+    ) async {
+      await pumpEditor(tester);
+      await tester.enterText(field('Name'), 'Ofengemüse');
+      await tester.enterText(field('Name'), 'Ofenkarotten mit Feta');
+      await tester.pump(RecipeEditor.draftDelay);
+
+      expect(unloadGuard.active, isFalse);
+      expect(drafts.drafts, isEmpty);
+      await tap(tester, find.text('Abbrechen'));
+      expect(find.text(discardTitle), findsNothing);
+      expect(find.byType(RecipeScreen), findsOneWidget);
+    });
+
+    testWidgets('keeps a draft of every tab and the photo', (tester) async {
+      picker.nextPick = checkImage(name: 'karotten.png', bytes: photo);
+      await pumpEditor(tester);
+
+      await tester.enterText(field('Name'), 'Ofengemüse');
+      await tap(tester, find.text('Bild auswählen'));
+      await tap(tester, find.text('Schritte'));
+      await tap(tester, find.text('Schritt hinzufügen'));
+      await tester.pump(RecipeEditor.draftDelay);
+
+      final stored = drafts.drafts[7]!;
+      expect(stored.draft.name, 'Ofengemüse');
+      expect(stored.draft.steps, hasLength(ofenkarotten.steps.length + 1));
+      expect(stored.newImage!.fileName, 'karotten.png');
+      expect(stored.newImage!.bytes, photo);
+    });
+
+    testWidgets('offers a stored draft and restores it', (tester) async {
+      drafts.drafts[7] = StoredDraft(
+        draft: RecipeDraft.fromRecipe(ofenkarotten)
+            .copyWith(name: 'Ofengemüse'),
+        newImage: ImageUpload(
+          bytes: photo,
+          fileName: 'karotten.png',
+          mimeType: 'image/png',
+        ),
+        savedAt: savedAt,
+      );
+      await pumpEditor(tester);
+
+      expect(find.text(draftTitle), findsOneWidget);
+      expect(
+        find.text(
+          'Du hast hier am 16. Nov. 2026 um 18:30 Änderungen gemacht, die '
+          'nicht gespeichert sind.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('auf dem Server geändert'), findsNothing);
+      await tap(tester, find.text('Entwurf wiederherstellen'));
+
+      expect(nameText(tester), 'Ofengemüse');
+      expect(preview, findsOneWidget);
+      expect(unloadGuard.active, isTrue);
+      // Still there until it is saved.
+      expect(drafts.drafts, contains(7));
+
+      await tap(tester, find.text('Speichern'));
+      expect(recipes.saves.single.draft.name, 'Ofengemüse');
+      expect(recipes.imageChanges.single.id, 7);
+      expect(drafts.drafts, isEmpty);
+      expect(unloadGuard.active, isFalse);
+    });
+
+    testWidgets('a discarded draft is deleted', (tester) async {
+      drafts.drafts[7] = StoredDraft(
+        draft: RecipeDraft.fromRecipe(ofenkarotten)
+            .copyWith(name: 'Ofengemüse'),
+        savedAt: savedAt,
+      );
+      await pumpEditor(tester);
+
+      await tap(tester, find.text('Verwerfen'));
+
+      expect(nameText(tester), 'Ofenkarotten mit Feta');
+      expect(drafts.drafts, isEmpty);
+      await tap(tester, find.text('Abbrechen'));
+      expect(find.byType(RecipeScreen), findsOneWidget);
+    });
+
+    testWidgets('says when the recipe changed after the draft', (tester) async {
+      recipes = FakeRecipeRepository([
+        ofenkarotten.copyWith(updatedAt: savedAt.add(const Duration(hours: 1))),
+      ]);
+      drafts.drafts[7] = StoredDraft(
+        draft: RecipeDraft.fromRecipe(ofenkarotten)
+            .copyWith(name: 'Ofengemüse'),
+        savedAt: savedAt,
+      );
+      await pumpEditor(tester);
+
+      expect(find.textContaining(staleText), findsOneWidget);
+    });
+
+    testWidgets('a draft without changes is not offered', (tester) async {
+      drafts.drafts[7] = StoredDraft(
+        draft: RecipeDraft.fromRecipe(ofenkarotten),
+        savedAt: savedAt,
+      );
+      await pumpEditor(tester);
+
+      expect(find.text(draftTitle), findsNothing);
+      expect(drafts.drafts, isEmpty);
+    });
+
+    testWidgets('a new recipe has its own draft', (tester) async {
+      drafts.drafts[7] = StoredDraft(
+        draft: const RecipeDraft(name: 'Anderes Rezept'),
+        savedAt: savedAt,
+      );
+      await pumpEditor(tester, below: '/search', location: newRecipeLocation);
+      expect(find.text(draftTitle), findsNothing);
+
+      await tester.enterText(field('Name'), 'Linsensuppe');
+      await tester.pump(RecipeEditor.draftDelay);
+      expect(drafts.drafts[null]!.draft.name, 'Linsensuppe');
+
+      await tap(tester, find.text('Speichern'));
+      expect(drafts.drafts.keys, [7]);
+    });
+
+    testWidgets('a draft is kept when the editor closes right away', (
+      tester,
+    ) async {
+      await pumpEditor(tester, below: '/search', location: newRecipeLocation);
+      await tester.enterText(field('Name'), 'Linsensuppe');
+
+      // Like the app being closed: no time for the delay, no question.
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpAndSettle();
+
+      expect(drafts.drafts[null]!.draft.name, 'Linsensuppe');
+    });
+  });
+
   group('goldens', skip: goldenSkip, () {
     for (final (name, theme) in [('light', lightTheme), ('dark', darkTheme)]) {
+      testWidgets('draft offered in $name', tags: goldenTags, (tester) async {
+        recipes = FakeRecipeRepository([
+          ofenkarotten.copyWith(updatedAt: DateTime(2026, 11, 17, 9)),
+        ]);
+        drafts.drafts[7] = StoredDraft(
+          draft: RecipeDraft.fromRecipe(ofenkarotten)
+              .copyWith(name: 'Ofengemüse'),
+          savedAt: DateTime(2026, 11, 16, 18, 30),
+        );
+        await pumpEditor(tester, theme: theme);
+
+        await expectLater(
+          find.byType(MaterialApp),
+          matchesGoldenFile('../goldens/editor_draft_$name.png'),
+        );
+      });
+
+      testWidgets('leaving with changes in $name', tags: goldenTags, (
+        tester,
+      ) async {
+        await pumpEditor(tester, theme: theme);
+        await tester.enterText(field('Name'), 'Ofengemüse');
+        await tap(tester, find.text('Abbrechen'));
+
+        await expectLater(
+          find.byType(MaterialApp),
+          matchesGoldenFile('../goldens/editor_discard_$name.png'),
+        );
+      });
       testWidgets('Allgemein in $name', tags: goldenTags, (tester) async {
         await pumpEditor(tester, theme: theme);
 

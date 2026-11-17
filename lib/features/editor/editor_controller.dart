@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../app/platform_providers.dart';
 import '../../app/repository_providers.dart';
 import '../../core/failures.dart';
 import '../../domain/models/image_upload.dart';
@@ -7,6 +10,8 @@ import '../../domain/models/keyword.dart';
 import '../../domain/models/parsed_ingredient.dart';
 import '../../domain/models/recipe.dart';
 import '../../domain/models/recipe_draft.dart';
+import '../../domain/models/stored_draft.dart';
+import '../../domain/repositories/draft_store.dart';
 import '../../domain/services/recipe_draft_validation.dart';
 import '../recipe/recipe_providers.dart';
 import '../search/search_providers.dart';
@@ -18,8 +23,10 @@ part 'editor_controller.g.dart';
 final class EditorState {
   const EditorState({
     required this.draft,
+    this.original = const RecipeDraft(),
     this.recipeId,
     this.recipeName,
+    this.updatedAt,
     this.saving = false,
     this.failure,
     this.showProblems = false,
@@ -27,10 +34,34 @@ final class EditorState {
     this.newImage,
     this.removeImage = false,
     this.imageFailure,
+    this.offeredDraft,
   });
 
   /// The recipe being edited, `null` for a new one.
   final int? recipeId;
+
+  /// The draft as the recipe is saved: as loaded, or as last saved from
+  /// here. An empty draft for a new recipe.
+  final RecipeDraft original;
+
+  /// When the recipe was last changed on the server, as loaded.
+  final DateTime? updatedAt;
+
+  /// A draft from an earlier visit with changes that weren't saved, until
+  /// the user restores ([RecipeEditor.restoreDraft]) or discards
+  /// ([RecipeEditor.discardDraft]) it. Not overwritten meanwhile.
+  final StoredDraft? offeredDraft;
+
+  /// Whether the offered draft is older than the recipe on the server, which
+  /// was changed after it was stored.
+  bool get offeredDraftIsStale => switch ((offeredDraft, updatedAt)) {
+    (final draft?, final updatedAt?) => draft.savedAt.isBefore(updatedAt),
+    _ => false,
+  };
+
+  /// Whether there are changes that saving would send: to the draft or the
+  /// photo.
+  bool get isDirty => draft != original || newImage != null || removeImage;
 
   /// The recipe's photo as it was loaded.
   final Uri? savedImage;
@@ -70,6 +101,7 @@ final class EditorState {
 
   EditorState _copyWith({
     RecipeDraft? draft,
+    RecipeDraft? original,
     bool? saving,
     Failure? Function()? failure,
     bool? showProblems,
@@ -77,10 +109,14 @@ final class EditorState {
     ImageUpload? Function()? newImage,
     bool? removeImage,
     Failure? Function()? imageFailure,
+    StoredDraft? Function()? offeredDraft,
   }) => EditorState(
     recipeId: recipeId,
     recipeName: recipeName,
+    updatedAt: updatedAt,
     draft: draft ?? this.draft,
+    original: original ?? this.original,
+    offeredDraft: offeredDraft != null ? offeredDraft() : this.offeredDraft,
     saving: saving ?? this.saving,
     failure: failure != null ? failure() : this.failure,
     showProblems: showProblems ?? this.showProblems,
@@ -101,22 +137,142 @@ final class EditorState {
 /// Saving overwrites the recipe as it is on the server: the last save wins,
 /// without checking for changes made elsewhere meanwhile, like Tandoor's own
 /// editor (decided in M3, docs/ROADMAP.md).
+///
+/// Unsaved changes are kept in the [DraftStore] ([draftDelay] after the last
+/// change, and when the editor closes), one draft per recipe and one for a
+/// new recipe. Loading offers a stored draft that differs from the recipe
+/// ([EditorState.offeredDraft]); saving deletes it, and so does
+/// [discardChanges].
 @Riverpod(retry: _noRetry)
 class RecipeEditor extends _$RecipeEditor {
+  /// How long after the last change the draft is stored.
+  static const draftDelay = Duration(seconds: 1);
+
+  late DraftStore _drafts;
+  late DateTime Function() _clock;
+  Timer? _draftTimer;
+
+  /// The state to store as draft when [_draftTimer] fires.
+  EditorState? _pendingDraft;
+
   @override
   Future<EditorState> build(int? recipeId) async {
-    if (recipeId == null) return const EditorState(draft: RecipeDraft());
+    _drafts = ref.read(draftStoreProvider);
+    _clock = ref.read(clockProvider);
+    // Leaving the editor right after a change keeps it all the same.
+    ref.onDispose(() => unawaited(flushDraft()));
+    final stored = _loadDraft(recipeId);
+    if (recipeId == null) {
+      return _offer(const EditorState(draft: RecipeDraft()), await stored);
+    }
     // Not the offline copy: it may be old, and saving it later would undo
     // newer changes on the server.
     final recipe = await ref
         .read(recipeRepositoryProvider)
         .fetchRecipe(recipeId, allowCached: false);
-    return EditorState(
-      recipeId: recipeId,
-      recipeName: recipe.name,
-      draft: RecipeDraft.fromRecipe(recipe),
-      savedImage: recipe.image,
+    final draft = RecipeDraft.fromRecipe(recipe);
+    return _offer(
+      EditorState(
+        recipeId: recipeId,
+        recipeName: recipe.name,
+        updatedAt: recipe.updatedAt,
+        draft: draft,
+        original: draft,
+        savedImage: recipe.image,
+      ),
+      await stored,
     );
+  }
+
+  /// The stored draft for [recipeId]; `null` if it can't be read, which
+  /// mustn't keep the editor from opening.
+  Future<StoredDraft?> _loadDraft(int? recipeId) async {
+    try {
+      return await _drafts.load(recipeId);
+    } on Object {
+      return null;
+    }
+  }
+
+  /// [state] offering [stored] if it has changes; a draft without any is
+  /// deleted.
+  EditorState _offer(EditorState state, StoredDraft? stored) {
+    if (stored == null) return state;
+    final changed =
+        stored.draft != state.original ||
+        stored.newImage != null ||
+        (stored.removeImage && state.savedImage != null);
+    if (!changed) {
+      unawaited(_deleteDraft(state.recipeId));
+      return state;
+    }
+    return state._copyWith(offeredDraft: () => stored);
+  }
+
+  /// Continues with the offered draft: its changes replace the loaded
+  /// recipe's.
+  void restoreDraft() {
+    final current = state.value;
+    final stored = current?.offeredDraft;
+    if (current == null || stored == null || current.saving) return;
+    state = AsyncData(
+      current._copyWith(
+        draft: stored.draft,
+        newImage: () => stored.newImage,
+        removeImage: stored.removeImage && current.savedImage != null,
+        offeredDraft: () => null,
+      ),
+    );
+  }
+
+  /// Deletes the offered draft and continues with the recipe as loaded.
+  void discardDraft() {
+    final current = state.value;
+    if (current?.offeredDraft == null) return;
+    state = AsyncData(current!._copyWith(offeredDraft: () => null));
+    unawaited(_deleteDraft(recipeId));
+  }
+
+  /// Deletes the draft of the changes made here, for leaving without
+  /// saving them. Changes made afterwards are stored again.
+  Future<void> discardChanges() async {
+    _draftTimer?.cancel();
+    _pendingDraft = null;
+    await _deleteDraft(recipeId);
+  }
+
+  /// Stores the draft now if a change is waiting for [draftDelay], e.g.
+  /// when the app is hidden and may be closed.
+  Future<void> flushDraft() async {
+    _draftTimer?.cancel();
+    final pending = _pendingDraft;
+    _pendingDraft = null;
+    if (pending == null || pending.offeredDraft != null) return;
+    try {
+      if (pending.isDirty) {
+        await _drafts.save(
+          pending.recipeId,
+          StoredDraft(
+            draft: pending.draft,
+            newImage: pending.newImage,
+            removeImage: pending.removeImage,
+            savedAt: _clock(),
+          ),
+        );
+      } else {
+        await _drafts.delete(pending.recipeId);
+      }
+    } on Object {
+      // The draft is a safety net; editing goes on without it.
+    }
+  }
+
+  Future<void> _deleteDraft(int? recipeId) async {
+    try {
+      await _drafts.delete(recipeId);
+    } on Object {
+      // A draft left behind is offered again, and can be discarded then.
+    }
   }
 
   /// Changes the draft. Ignored while loading or saving; returns whether
@@ -143,7 +299,11 @@ class RecipeEditor extends _$RecipeEditor {
   bool _change(EditorState Function(EditorState state) change) {
     final current = state.value;
     if (current == null || current.saving) return false;
-    state = AsyncData(change(current));
+    final changed = change(current);
+    state = AsyncData(changed);
+    _pendingDraft = changed;
+    _draftTimer?.cancel();
+    _draftTimer = Timer(draftDelay, () => unawaited(flushDraft()));
     return true;
   }
 
@@ -263,7 +423,8 @@ class RecipeEditor extends _$RecipeEditor {
   ///
   /// Then uploads or removes the photo ([setImage], [removeImage]). If that
   /// fails, the recipe is saved all the same and returned, and
-  /// [EditorState.imageFailure] says why the photo isn't.
+  /// [EditorState.imageFailure] says why the photo isn't. Once the recipe is
+  /// saved, its stored draft is deleted.
   ///
   /// Adds the lines typed into ingredient entries first
   /// ([addPendingLine]); returns `null` without saving if one can't be
@@ -320,6 +481,9 @@ class RecipeEditor extends _$RecipeEditor {
       // The recipe is saved all the same; the screen says the photo isn't.
       imageFailure = _asFailure(error);
     }
+    // Saved: the draft has done its job. A failed photo change is dropped
+    // with it (see below).
+    await discardChanges();
     if (ref.mounted) {
       // Screens showing the recipe load it again, as saved.
       ref
@@ -331,6 +495,7 @@ class RecipeEditor extends _$RecipeEditor {
       state = AsyncData(
         base._copyWith(
           saving: false,
+          original: current.draft,
           imageFailure: () => imageFailure,
           savedImage: () => saved.image,
           newImage: () => null,

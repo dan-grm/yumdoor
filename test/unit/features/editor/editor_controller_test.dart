@@ -11,10 +11,13 @@ import 'package:yumdoor/domain/models/keyword.dart';
 import 'package:yumdoor/domain/models/parsed_ingredient.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
 import 'package:yumdoor/domain/models/recipe_draft.dart';
+import 'package:yumdoor/domain/models/stored_draft.dart';
+import 'package:yumdoor/domain/repositories/draft_store.dart';
 import 'package:yumdoor/domain/services/recipe_draft_validation.dart';
 import 'package:yumdoor/features/editor/editor_controller.dart';
 
 import '../../../fakes/fake_connectivity_service.dart';
+import '../../../fakes/fake_draft_store.dart';
 import '../../../fakes/fake_ingredient_parser.dart';
 import '../../../fakes/fake_recipe_repository.dart';
 import '../../../fixtures/recipes.dart';
@@ -22,6 +25,7 @@ import '../../../fixtures/recipes.dart';
 void main() {
   late FakeRecipeRepository recipes;
   late FakeConnectivityService connectivity;
+  late FakeDraftStore drafts;
   late FakeIngredientParser parser;
   late ProviderContainer container;
 
@@ -30,7 +34,9 @@ void main() {
       overrides: [
         recipeRepositoryProvider.overrideWithValue(recipes),
         connectivityServiceProvider.overrideWithValue(connectivity),
+        draftStoreProvider.overrideWithValue(drafts),
         ingredientParserProvider.overrideWithValue(parser),
+        clockProvider.overrideWithValue(() => DateTime(2026, 11, 16, 18, 30)),
       ],
     );
     addTearDown(container.dispose);
@@ -40,6 +46,7 @@ void main() {
   setUp(() {
     recipes = FakeRecipeRepository([ofenkarotten]);
     connectivity = FakeConnectivityService();
+    drafts = FakeDraftStore();
     parser = FakeIngredientParser({
       '200 g Karotten': const ParsedIngredient(
         originalText: '200 g Karotten',
@@ -566,6 +573,221 @@ void main() {
       await save;
     });
   });
+
+  group('unsaved changes', () {
+    final savedAt = DateTime(2026, 11, 16, 18, 30);
+    final photo = ImageUpload(
+      bytes: Uint8List.fromList([1, 2, 3]),
+      fileName: 'a.png',
+      mimeType: 'image/png',
+    );
+    StoredDraft storedNamed(String name) => StoredDraft(
+      draft: RecipeDraft.fromRecipe(ofenkarotten).copyWith(name: name),
+      savedAt: savedAt,
+    );
+
+    test('a loaded recipe has no changes', () async {
+      await editor(7);
+      expect(state(7).isDirty, isFalse);
+      await editor(null);
+      expect(state(null).isDirty, isFalse);
+    });
+
+    test('an edit is a change until it is undone', () async {
+      final edit = await editor(7);
+
+      edit.edit((d) => d.copyWith(name: 'Ofengemüse'));
+      expect(state(7).isDirty, isTrue);
+      edit.edit((d) => d.copyWith(name: ofenkarotten.name));
+      expect(state(7).isDirty, isFalse);
+
+      edit.addStep();
+      expect(state(7).isDirty, isTrue);
+      edit.removeStep(ofenkarotten.steps.length);
+      expect(state(7).isDirty, isFalse);
+    });
+
+    test('a new or removed photo is a change', () async {
+      recipes = FakeRecipeRepository([
+        ofenkarotten.copyWith(image: Uri.parse('https://e.com/a.jpg')),
+      ]);
+      container = containerWith(recipes);
+      final edit = await editor(7);
+
+      edit.setImage(photo);
+      expect(state(7).isDirty, isTrue);
+      edit.removeImage();
+      expect(state(7).isDirty, isFalse);
+      edit.removeImage();
+      expect(state(7).isDirty, isTrue);
+    });
+
+    test('stores the changes as draft; undone, deletes it', () async {
+      final edit = await editor(7);
+
+      edit
+        ..edit((d) => d.copyWith(name: 'Ofengemüse'))
+        ..setImage(photo);
+      await edit.flushDraft();
+      final stored = drafts.drafts[7]!;
+      expect(stored.draft.name, 'Ofengemüse');
+      expect(stored.newImage, photo);
+      expect(stored.savedAt, savedAt);
+
+      edit
+        ..edit((d) => d.copyWith(name: ofenkarotten.name))
+        ..removeImage();
+      await edit.flushDraft();
+      expect(drafts.drafts, isEmpty);
+    });
+
+    test('stores the draft after a delay', () async {
+      final edit = await editor(null);
+      edit.edit((d) => d.copyWith(name: 'Linsensuppe'));
+      expect(drafts.drafts, isEmpty);
+
+      await Future<void>.delayed(
+        RecipeEditor.draftDelay + const Duration(milliseconds: 50),
+      );
+      expect(drafts.drafts[null]!.draft.name, 'Linsensuppe');
+    });
+
+    test('a successful save deletes the draft', () async {
+      final edit = await editor(7);
+      edit.edit((d) => d.copyWith(name: 'Ofengemüse'));
+      await edit.flushDraft();
+
+      await edit.save();
+
+      expect(drafts.drafts, isEmpty);
+      expect(state(7).isDirty, isFalse);
+      // Nothing is stored afterwards either.
+      await edit.flushDraft();
+      expect(drafts.drafts, isEmpty);
+    });
+
+    test('a failed save keeps the draft', () async {
+      final edit = await editor(7);
+      edit.edit((d) => d.copyWith(name: 'Ofengemüse'));
+      recipes.failure = const OfflineFailure();
+
+      await edit.save();
+      await edit.flushDraft();
+
+      expect(drafts.drafts[7]!.draft.name, 'Ofengemüse');
+      expect(state(7).isDirty, isTrue);
+    });
+
+    test('offers a draft with changes and restores it', () async {
+      drafts.drafts[7] = StoredDraft(
+        draft: RecipeDraft.fromRecipe(ofenkarotten)
+            .copyWith(name: 'Ofengemüse'),
+        newImage: photo,
+        savedAt: savedAt,
+      );
+      final edit = await editor(7);
+
+      expect(state(7).offeredDraft, isNotNull);
+      expect(state(7).draft.name, ofenkarotten.name);
+      expect(state(7).offeredDraftIsStale, isFalse);
+      // Not overwritten while it is offered.
+      await edit.flushDraft();
+      expect(drafts.drafts[7]!.draft.name, 'Ofengemüse');
+
+      edit.restoreDraft();
+      expect(state(7).offeredDraft, isNull);
+      expect(state(7).draft.name, 'Ofengemüse');
+      expect(state(7).newImage, photo);
+      expect(state(7).isDirty, isTrue);
+    });
+
+    test('a discarded draft is deleted', () async {
+      drafts.drafts[7] = storedNamed('Ofengemüse');
+      final edit = await editor(7);
+
+      edit.discardDraft();
+      await pumpEventQueue();
+
+      expect(state(7).offeredDraft, isNull);
+      expect(state(7).draft.name, ofenkarotten.name);
+      expect(drafts.drafts, isEmpty);
+    });
+
+    test('a draft older than the recipe on the server is stale', () async {
+      recipes = FakeRecipeRepository([
+        ofenkarotten.copyWith(updatedAt: savedAt.add(const Duration(hours: 1))),
+      ]);
+      container = containerWith(recipes);
+      drafts.drafts[7] = storedNamed('Ofengemüse');
+      await editor(7);
+
+      expect(state(7).offeredDraftIsStale, isTrue);
+    });
+
+    test('a draft without changes is deleted, not offered', () async {
+      drafts.drafts[7] = storedNamed(ofenkarotten.name);
+      await editor(7);
+      await pumpEventQueue();
+
+      expect(state(7).offeredDraft, isNull);
+      expect(drafts.drafts, isEmpty);
+    });
+
+    test('discardChanges deletes the draft', () async {
+      final edit = await editor(7);
+      edit.edit((d) => d.copyWith(name: 'Ofengemüse'));
+      await edit.flushDraft();
+
+      await edit.discardChanges();
+      await edit.flushDraft();
+
+      expect(drafts.drafts, isEmpty);
+    });
+
+    test('closing the editor stores a waiting change', () async {
+      final edit = await editor(7);
+      edit.edit((d) => d.copyWith(name: 'Ofengemüse'));
+
+      container.dispose();
+      await pumpEventQueue();
+
+      expect(drafts.drafts[7]!.draft.name, 'Ofengemüse');
+    });
+
+    test('a draft that cannot be read does not keep the editor shut', () async {
+      container = ProviderContainer(
+        overrides: [
+          recipeRepositoryProvider.overrideWithValue(recipes),
+          connectivityServiceProvider.overrideWithValue(connectivity),
+          draftStoreProvider.overrideWithValue(_BrokenDraftStore()),
+          clockProvider.overrideWithValue(() => savedAt),
+        ],
+      );
+      addTearDown(container.dispose);
+      final edit = await editor(7);
+
+      expect(state(7).offeredDraft, isNull);
+      edit.edit((d) => d.copyWith(name: 'Ofengemüse'));
+      await edit.flushDraft();
+      expect(state(7).draft.name, 'Ofengemüse');
+    });
+  });
+}
+
+/// Fails at everything.
+class _BrokenDraftStore implements DraftStore {
+  @override
+  Future<StoredDraft?> load(int? recipeId) => Future.error(StateError('db'));
+
+  @override
+  Future<void> save(int? recipeId, StoredDraft draft) =>
+      Future.error(StateError('db'));
+
+  @override
+  Future<void> delete(int? recipeId) => Future.error(StateError('db'));
+
+  @override
+  Future<void> clear() => Future.error(StateError('db'));
 }
 
 /// Saves through [_inner] once [_gate] completes, or throws [_error].

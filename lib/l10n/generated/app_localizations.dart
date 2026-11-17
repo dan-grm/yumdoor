@@ -1610,6 +1610,60 @@ abstract class AppLocalizations {
   /// **'Rezept gespeichert'**
   String get editorSaved;
 
+  /// Title of the dialog when leaving the editor with unsaved changes.
+  ///
+  /// In de, this message translates to:
+  /// **'Änderungen verwerfen?'**
+  String get editorDiscardTitle;
+
+  /// Body of the dialog when leaving the editor with unsaved changes.
+  ///
+  /// In de, this message translates to:
+  /// **'Deine Änderungen an diesem Rezept sind noch nicht gespeichert.'**
+  String get editorDiscardBody;
+
+  /// Button: stay in the editor instead of leaving.
+  ///
+  /// In de, this message translates to:
+  /// **'Weiter bearbeiten'**
+  String get editorDiscardKeepEditing;
+
+  /// Button: leave the editor and throw the unsaved changes away.
+  ///
+  /// In de, this message translates to:
+  /// **'Verwerfen'**
+  String get editorDiscard;
+
+  /// Title of the dialog offering a draft kept on the device from an earlier visit to the editor.
+  ///
+  /// In de, this message translates to:
+  /// **'Ungespeicherter Entwurf'**
+  String get editorDraftTitle;
+
+  /// Body of the draft dialog: when the draft was kept.
+  ///
+  /// In de, this message translates to:
+  /// **'Du hast hier am {date} um {time} Änderungen gemacht, die nicht gespeichert sind.'**
+  String editorDraftBody(String date, String time);
+
+  /// Added to the draft dialog when the recipe on the server is newer than the draft.
+  ///
+  /// In de, this message translates to:
+  /// **'Das Rezept wurde danach auf dem Server geändert. Speicherst du den Entwurf, überschreibt er diese Änderungen.'**
+  String get editorDraftStale;
+
+  /// Button of the draft dialog: continue with the draft.
+  ///
+  /// In de, this message translates to:
+  /// **'Entwurf wiederherstellen'**
+  String get editorDraftRestore;
+
+  /// Button of the draft dialog: delete the draft and edit the recipe as saved.
+  ///
+  /// In de, this message translates to:
+  /// **'Verwerfen'**
+  String get editorDraftDiscard;
+
   /// Title of the sheet that adds a keyword to the recipe.
   ///
   /// In de, this message translates to:
