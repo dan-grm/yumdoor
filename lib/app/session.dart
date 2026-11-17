@@ -61,7 +61,7 @@ class SessionController extends _$SessionController {
   }
 
   /// Deletes Yumdoor's device token on the server if online, then forgets
-  /// the token and clears the offline cache.
+  /// the token and clears the offline cache and the editor's drafts.
   ///
   /// Logging out never fails: if the server can't be reached, the device
   /// token stays valid on the server until it expires or the user deletes it
@@ -103,9 +103,11 @@ class SessionController extends _$SessionController {
     // Someone logged in again meanwhile.
     if (state.value != session) return;
     // The server URL stays, so login can prefill it. The offline cache goes:
-    // the next login may be someone else, or another server.
+    // the next login may be someone else, or another server. So do the
+    // editor's drafts.
     ref.read(cookingProgressStoreProvider).clear();
     await ref.read(offlineCacheProvider).clear();
+    await ref.read(draftStoreProvider).clear();
     await ref.read(tokenStoreProvider).clearToken();
     state = const AsyncData(null);
   }

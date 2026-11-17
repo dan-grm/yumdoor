@@ -10,6 +10,7 @@ import 'package:yumdoor/platform/token_store/token_store.dart';
 import '../../fakes/app_overrides.dart';
 import '../../fakes/fake_auth_repository.dart';
 import '../../fakes/fake_connectivity_service.dart';
+import '../../fakes/fake_draft_store.dart';
 import '../../fakes/fake_offline_cache.dart';
 import '../../fakes/in_memory_token_store.dart';
 import '../../fakes/in_memory_local_store.dart';
@@ -19,6 +20,7 @@ void main() {
   late FakeAuthRepository auth;
   late FakeConnectivityService connectivity;
   late FakeOfflineCache offlineCache;
+  late FakeDraftStore drafts;
   late InMemoryLocalStore localStore;
   late ProviderContainer container;
 
@@ -30,6 +32,7 @@ void main() {
         auth: auth,
         connectivity: connectivity,
         offlineCache: offlineCache,
+        drafts: drafts,
         localStore: localStore,
       ),
     );
@@ -46,6 +49,7 @@ void main() {
     auth = FakeAuthRepository();
     connectivity = FakeConnectivityService();
     offlineCache = FakeOfflineCache();
+    drafts = FakeDraftStore();
     localStore = InMemoryLocalStore();
   });
 
@@ -149,6 +153,7 @@ void main() {
       expect(store.token, isNull);
       expect(store.serverUrl, testServerUrl);
       expect(offlineCache.clearCount, 1);
+      expect(drafts.clearCount, 1);
     });
 
     test('still logs out when offline, without revoking', () async {
@@ -187,6 +192,7 @@ void main() {
       expect(store.token, isNull);
       expect(store.serverUrl, testServerUrl);
       expect(offlineCache.clearCount, 1);
+      expect(drafts.clearCount, 1);
     });
 
     test('keeps the session when the token still works', () async {

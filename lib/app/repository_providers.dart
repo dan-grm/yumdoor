@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../data/api/tandoor_dio.dart';
 import '../data/cache/cache_database.dart';
+import '../data/cache/draft_cache.dart';
 import '../data/cache/recipe_cache.dart';
 import '../data/cache/saved_filter_cache.dart';
 import '../data/repositories/tandoor_auth_repository.dart';
@@ -12,6 +13,7 @@ import '../data/repositories/tandoor_server_repository.dart';
 import '../domain/repositories/auth_repository.dart';
 import '../domain/repositories/book_repository.dart';
 import '../domain/repositories/cook_log_repository.dart';
+import '../domain/repositories/draft_store.dart';
 import '../domain/repositories/food_repository.dart';
 import '../domain/repositories/ingredient_parser.dart';
 import '../domain/repositories/keyword_repository.dart';
@@ -122,3 +124,8 @@ RecipeCache _recipeCache(Ref ref) =>
 /// logout clears it.
 @Riverpod(keepAlive: true)
 OfflineCache offlineCache(Ref ref) => ref.watch(_recipeCacheProvider);
+
+/// The recipe editor's unsaved drafts. In the same database as the offline
+/// cache, so logout clears them too.
+@Riverpod(keepAlive: true)
+DraftStore draftStore(Ref ref) => DraftCache(ref.watch(_cacheDatabaseProvider));

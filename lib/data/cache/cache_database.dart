@@ -61,9 +61,41 @@ class CachedSavedFilters extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
-/// The offline cache. Everything in it can be fetched again, so migrations
-/// start over instead of converting rows.
-@DriftDatabase(tables: [CachedRecipes, CachedImages, CachedSavedFilters])
+/// The recipe editor's unsaved drafts (`DraftStore`), one per recipe.
+///
+/// Unlike the other tables, these are the user's own work and can't be
+/// fetched again: [CacheDatabase.migration] keeps them when the cache's
+/// version changes. Changing this table needs a real migration.
+@DataClassName('EditorDraftRow')
+class EditorDrafts extends Table {
+  @override
+  String get tableName => 'editor_draft';
+
+  /// The recipe's id; [newRecipeDraftId] for a new recipe.
+  IntColumn get recipeId => integer()();
+
+  /// The `RecipeDraft` as JSON.
+  TextColumn get json => text()();
+  DateTimeColumn get savedAt => dateTime()();
+
+  /// A photo chosen to replace the recipe's, with its name and type.
+  BlobColumn get imageBytes => blob().nullable()();
+  TextColumn get imageFileName => text().nullable()();
+  TextColumn get imageMimeType => text().nullable()();
+  BoolColumn get removeImage => boolean()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {recipeId};
+}
+
+/// The [EditorDrafts] key of a new recipe's draft; Tandoor's ids start at 1.
+const newRecipeDraftId = 0;
+
+/// The offline cache, and the editor's drafts. Everything but the drafts can
+/// be fetched again, so migrations start over instead of converting rows.
+@DriftDatabase(
+  tables: [CachedRecipes, CachedImages, CachedSavedFilters, EditorDrafts],
+)
 class CacheDatabase extends _$CacheDatabase {
   CacheDatabase(super.executor);
 
@@ -82,15 +114,26 @@ class CacheDatabase extends _$CacheDatabase {
   );
 
   /// Bump this whenever a cached domain model (`Recipe` and the models in
-  /// it) or a table changes; opening the database then drops all rows.
+  /// it) or a table changes; opening the database then drops all rows but
+  /// the drafts.
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
+
+  /// The first version with [EditorDrafts].
+  static const _draftsSince = 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     // Drift calls this for downgrades too, e.g. after rolling back the app.
     onUpgrade: (migrator, from, to) async {
       for (final table in allTables) {
+        // Drafts can't be fetched again. One that no longer decodes is
+        // dropped when it is read (DraftCache).
+        if (table.actualTableName == editorDrafts.actualTableName &&
+            from >= _draftsSince &&
+            to >= _draftsSince) {
+          continue;
+        }
         await migrator.deleteTable(table.actualTableName);
         await migrator.createTable(table);
       }

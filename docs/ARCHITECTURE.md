@@ -197,7 +197,15 @@ shows the origin and explains the constraint.
   connect sets it, any answer from the server (errors included) or the network coming back clears it. When offline,
   a banner is shown on every screen (`MaterialApp.builder`) and write actions are disabled (not hidden) through
   `OfflineDisabled`, with a tooltip explaining why. No writes are queued.
-- Logout (and so switching servers or users) clears the database. Cache size is capped at 100 recipes (LRU by
+- The recipe editor keeps unsaved changes as drafts in the same database (`editor_draft`, `DraftStore`): one per
+  recipe and one for a new recipe, the `RecipeDraft` as JSON plus a chosen photo's bytes, written a second after the
+  last change and when the editor closes or the app is hidden. Reopening the editor offers a draft that differs from
+  the recipe (and says if the recipe changed on the server after it); saving or discarding deletes it. Drafts can't
+  be fetched again, so a cache version change keeps their table (changing it needs a real migration). Offline,
+  editing and drafts go on; saving waits until the app is online. Leaving the editor with changes asks first
+  (`GoRoute.onExit`, so back, "Abbrechen" and any other navigation), and `UnloadGuard` makes the browser ask
+  before the tab is closed or reloaded.
+- Logout (and so switching servers or users) clears the database, drafts included. Cache size is capped at 100 recipes (LRU by
   `lastOpenedAt`); images no cached recipe uses are dropped with them.
 - Starting the PWA offline also needs the app shell from the service worker (#17); the data side doesn't depend on it.
 - Web: `web/drift_worker.js` and `web/sqlite3.wasm` are vendored and must match `pubspec.lock`. After bumping
@@ -218,6 +226,7 @@ Each service is an abstract class in `lib/platform/<name>/` with implementations
 | `ConnectivityService` | `navigator.onLine` + request failures | `connectivity_plus` + request failures |
 | `LinkOpener` | A temporary `<a target="_blank" rel="noopener noreferrer">`, clicked | `url_launcher` (system browser) |
 | `LocalStore` | `localStorage`, keys prefixed `yumdoor.state.` (the token store uses `yumdoor.` too); small non-sensitive state such as ticked-off ingredients | `shared_preferences` |
+| `UnloadGuard` | A `beforeunload` listener that cancels the event while the editor has unsaved changes, so the browser asks before closing or reloading the tab (its own text) | Nothing to ask; the draft is kept |
 | `ImagePickerService` | A hidden `<input type="file">` (with `capture="environment"` for the camera, offered on touch devices); the window is a drop target (`dragover`/`drop`) while the editor listens. Files are checked by content (JPEG, PNG, WebP, GIF) and size (`maxImageBytes`) before the UI sees them; rejections are typed. | `image_picker` + `desktop_drop` |
 
 ## Domain services
