@@ -26,6 +26,11 @@ class AppShell extends StatelessWidget {
 
   final StatefulNavigationShell shell;
 
+  /// Opens tab [index] where the user left it; tapping the open tab again
+  /// goes back to its start.
+  void _select(int index) =>
+      shell.goBranch(index, initialLocation: index == shell.currentIndex);
+
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
@@ -61,7 +66,7 @@ class AppShell extends StatelessWidget {
               ),
               child: NavigationRail(
                 selectedIndex: shell.currentIndex,
-                onDestinationSelected: shell.goBranch,
+                onDestinationSelected: _select,
                 destinations: [
                   for (final tab in tabs)
                     NavigationRailDestination(
@@ -93,7 +98,7 @@ class AppShell extends StatelessWidget {
         decoration: BoxDecoration(border: Border(top: border)),
         child: NavigationBar(
           selectedIndex: shell.currentIndex,
-          onDestinationSelected: shell.goBranch,
+          onDestinationSelected: _select,
           destinations: [
             for (final tab in tabs)
               NavigationDestination(
@@ -106,6 +111,35 @@ class AppShell extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The tabs' navigators, only [currentIndex] shown. The others keep their
+/// state but don't animate, and can't hold the keyboard focus: typing into a
+/// hidden search field would change a tab the user can't see.
+class TabStack extends StatelessWidget {
+  const TabStack({
+    super.key,
+    required this.currentIndex,
+    required this.children,
+  });
+
+  final int currentIndex;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) => IndexedStack(
+    index: currentIndex,
+    children: [
+      for (final (index, child) in children.indexed)
+        Offstage(
+          offstage: index != currentIndex,
+          child: TickerMode(
+            enabled: index == currentIndex,
+            child: ExcludeFocus(excluding: index != currentIndex, child: child),
+          ),
+        ),
+    ],
+  );
 }
 
 /// Stands in for a tab whose screen isn't built yet: its [title] and a line

@@ -45,6 +45,25 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   late final _text = TextEditingController(text: widget.query.text);
   Timer? _debounce;
 
+  /// Whether this screen is in front: not behind another tab of the main
+  /// navigation, nor below a screen opened from it.
+  bool _inFront = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // The screen stays alive behind other tabs and screens. Typing that is
+    // still waiting must not navigate back here; it is searched for once
+    // the screen is in front again.
+    final inFront = TickerMode.valuesOf(context).enabled;
+    if (inFront == _inFront) return;
+    _inFront = inFront;
+    _debounce?.cancel();
+    if (inFront && _text.text.trim() != widget.query.text) {
+      _onTextChanged(_text.text);
+    }
+  }
+
   @override
   void didUpdateWidget(SearchScreen oldWidget) {
     super.didUpdateWidget(oldWidget);

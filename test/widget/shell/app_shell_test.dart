@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:yumdoor/app/router.dart';
 import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
+import 'package:yumdoor/features/search/search_providers.dart';
 import 'package:yumdoor/features/search/search_screen.dart';
 import 'package:yumdoor/features/shell/app_shell.dart';
 
@@ -92,6 +93,42 @@ void main() {
 
     expect(location(router), '/search?q=Rezept');
     expect(tester.state<ScrollableState>(resultList()).position.pixels, offset);
+  });
+
+  testWidgets('tapping the open tab goes back to its start', (tester) async {
+    final router = await pumpShell(tester, location: '/search?q=Rezept');
+
+    await tester.tap(find.text('Suchen').last);
+    await tester.pumpAndSettle();
+
+    expect(location(router), '/search');
+  });
+
+  testWidgets('typing before a tab switch stays on the new tab', (
+    tester,
+  ) async {
+    final router = await pumpShell(tester);
+
+    await tester.enterText(find.byType(TextField), 'Suppe');
+    await tester.tap(find.text('Planer'));
+    await tester.pump();
+    await tester.pump(searchDebounce * 2);
+    await tester.pumpAndSettle();
+    expect(location(router), '/plan');
+    // The hidden field can't take the keyboard focus (e.g. by Tab).
+    final field = tester
+        .widget<EditableText>(find.byType(EditableText, skipOffstage: false))
+        .focusNode;
+    field.requestFocus();
+    await tester.pump();
+    expect(field.hasFocus, isFalse);
+
+    await tester.tap(find.text('Suchen').last);
+    await tester.pump();
+    expect(location(router), '/search');
+    await tester.pump(searchDebounce);
+    await tester.pumpAndSettle();
+    expect(location(router), '/search?q=Suppe');
   });
 
   for (final (path, index, title) in [

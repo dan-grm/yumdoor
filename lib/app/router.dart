@@ -90,8 +90,10 @@ GoRouter router(Ref ref) {
 /// The tabs of the main navigation (Suchen, Planer, Einkauf) in [AppShell],
 /// each with its own navigator. Routes outside it, like the recipe, cover the
 /// whole screen; back from them returns to the tab they were opened from.
-StatefulShellRoute tabsRoute() => StatefulShellRoute.indexedStack(
+StatefulShellRoute tabsRoute() => StatefulShellRoute(
   builder: (context, state, shell) => AppShell(shell: shell),
+  navigatorContainerBuilder: (context, shell, children) =>
+      TabStack(currentIndex: shell.currentIndex, children: children),
   branches: [
     StatefulShellBranch(
       routes: [
