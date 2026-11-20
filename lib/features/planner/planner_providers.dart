@@ -70,9 +70,10 @@ const _mealTypeKey = 'planner.meal-type';
 const _addToShoppingKey = 'planner.add-to-shopping';
 
 /// What the plan sheet chose last time on this device, to start with next
-/// time: the meal type's id (`null` if none yet) and whether the missing
+/// time: the meal type's name (`null` if none yet; a name, not an id, so it
+/// also fits after logging in to another server) and whether the missing
 /// ingredients went on the shopping list (`true` at first).
-typedef PlanSheetDefaults = ({int? mealTypeId, bool addToShopping});
+typedef PlanSheetDefaults = ({String? mealTypeName, bool addToShopping});
 
 @Riverpod(keepAlive: true)
 class PlanSheetChoices extends _$PlanSheetChoices {
@@ -80,16 +81,16 @@ class PlanSheetChoices extends _$PlanSheetChoices {
   PlanSheetDefaults build() {
     final store = ref.watch(localStoreProvider);
     return (
-      mealTypeId: int.tryParse(store.read(_mealTypeKey) ?? ''),
+      mealTypeName: store.read(_mealTypeKey),
       addToShopping: store.read(_addToShoppingKey) != 'false',
     );
   }
 
   /// Remembers the choices of a saved plan.
-  void remember({required int mealTypeId, required bool addToShopping}) {
-    state = (mealTypeId: mealTypeId, addToShopping: addToShopping);
+  void remember({required String mealTypeName, required bool addToShopping}) {
+    state = (mealTypeName: mealTypeName, addToShopping: addToShopping);
     ref.read(localStoreProvider)
-      ..write(_mealTypeKey, '$mealTypeId')
+      ..write(_mealTypeKey, mealTypeName)
       ..write(_addToShoppingKey, '$addToShopping');
   }
 }

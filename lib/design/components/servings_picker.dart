@@ -7,7 +7,7 @@ import '../design.dart';
 /// (docs/design/components/ServingsPicker.md).
 ///
 /// A `sage-soft` pill with − and + around [label]. The minus button is
-/// disabled, not hidden, at [min].
+/// disabled, not hidden, at [min], and the plus button at [max] if given.
 class ServingsPicker extends StatelessWidget {
   const ServingsPicker({
     super.key,
@@ -15,6 +15,7 @@ class ServingsPicker extends StatelessWidget {
     required this.label,
     required this.onChanged,
     this.min = 1,
+    this.max,
   });
 
   final int servings;
@@ -23,6 +24,7 @@ class ServingsPicker extends StatelessWidget {
   final String label;
   final ValueChanged<int> onChanged;
   final int min;
+  final int? max;
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +60,11 @@ class ServingsPicker extends StatelessWidget {
             liveRegion: true,
             child: Text(label, style: t.label.copyWith(color: t.ink)),
           ),
-          button(Icons.add_rounded, l10n.servingsIncrease, servings + 1),
+          button(
+            Icons.add_rounded,
+            l10n.servingsIncrease,
+            max == null || servings < max! ? servings + 1 : null,
+          ),
         ],
       ),
     );

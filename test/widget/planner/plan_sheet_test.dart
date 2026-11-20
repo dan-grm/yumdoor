@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -273,6 +275,65 @@ void main() {
     expect(find.text('Für Mittwoch, 18. Nov. eingeplant.'), findsOneWidget);
   });
 
+  testWidgets('adds what is missing according to the recipe read at save', (
+    tester,
+  ) async {
+    await openSheet(tester);
+    recipes.recipes[7] = _withFoods(
+      ofenkarotten,
+      (food) => food.copyWith(onHand: true),
+    );
+
+    await tap(tester, inSheet(find.text('Für heute einplanen')));
+
+    expect(shopping.added, hasLength(1));
+    // Nothing was missing any more, so nothing went on the list.
+    expect(find.text('Für Mittwoch, 18. Nov. eingeplant.'), findsOneWidget);
+  });
+
+  testWidgets('a sheet dragged away while saving still reports', (
+    tester,
+  ) async {
+    final gate = plans.gate = Completer<void>();
+    await openSheet(tester);
+    await tester.tap(inSheet(find.text('Für heute einplanen')));
+    await tester.pump();
+
+    await tester.fling(
+      inSheet(find.text('Einplanen')),
+      const Offset(0, 600),
+      2000,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(PlanSheet), findsNothing);
+
+    gate.complete();
+    await tester.pumpAndSettle();
+    expect(plans.created, hasLength(1));
+    expect(shopping.added, hasLength(1));
+    expect(
+      find.text(
+        'Für Mittwoch, 18. Nov. eingeplant, Fehlendes steht auf der '
+        'Einkaufsliste.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('remembers the meal type by name', (tester) async {
+    store.write('planner.meal-type', 'abendessen');
+    await openSheet(tester);
+
+    expectSelected(tester, inSheet(find.text('Abendessen')));
+  });
+
+  testWidgets('a recipe counted in pieces says so', (tester) async {
+    recipes.recipes[7] = _recipe.copyWith(servings: 12, servingsText: 'Stück');
+    await openSheet(tester);
+
+    expect(inSheet(find.text('12 Stück')), findsOneWidget);
+  });
+
   testWidgets('browses the weeks, keeping the weekday', (tester) async {
     await openSheet(tester);
 
@@ -406,7 +467,7 @@ void main() {
   group('goldens', skip: goldenSkip, () {
     for (final (name, theme) in [('light', lightTheme), ('dark', darkTheme)]) {
       testWidgets('mockup 11 in $name', tags: goldenTags, (tester) async {
-        store.write('planner.meal-type', '3');
+        store.write('planner.meal-type', 'Abendessen');
         await pumpRecipe(tester, theme: theme);
         await tap(tester, find.text('Planen'));
 

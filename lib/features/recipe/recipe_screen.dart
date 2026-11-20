@@ -124,6 +124,7 @@ class _RecipeViewState extends State<_RecipeView> {
                                 recipeId: recipe.id,
                                 recipeName: recipe.name,
                                 servings: _servings,
+                                servingsText: recipe.servingsText,
                               ),
                               onEdit: () =>
                                   context.push(editLocation(recipe.id)),

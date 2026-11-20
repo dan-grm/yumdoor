@@ -21,6 +21,7 @@ import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import '../common/offline_disabled.dart';
 import '../editor/editor_field.dart';
+import '../recipe/ingredient_lines.dart';
 import '../recipe/recipe_providers.dart';
 import '../shell/app_shell.dart';
 import 'planner_providers.dart';
@@ -36,35 +37,26 @@ const _failureSnackBarDuration = Duration(seconds: 8);
 /// saved plan, `null` if the sheet was closed without saving.
 ///
 /// [servings] is where the servings start, usually what the recipe screen
-/// shows; [day] presets the day (today if `null`).
+/// shows, counted in [servingsText] ("Stück") if the recipe has one; [day]
+/// presets the day (today if `null`).
 Future<MealPlan?> showPlanSheet(
   BuildContext context, {
   required int recipeId,
   required String recipeName,
   required int servings,
+  String servingsText = '',
   CalendarDay? day,
 }) async {
   final t = context.tokens;
   final messenger = ScaffoldMessenger.of(context);
   final router = GoRouter.of(context);
-  final result = await showModalBottomSheet<PlanSheetResult>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    useSafeArea: true,
-    backgroundColor: t.surface,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(t.radiusL)),
-    ),
-    builder: (context) => PlanSheet(
-      recipeId: recipeId,
-      recipeName: recipeName,
-      servings: servings,
-      day: day,
-    ),
-  );
-  if (result == null) return null;
-  if (context.mounted) {
+  MealPlan? saved;
+
+  // Confirms through this context, which outlives the sheet: a sheet that is
+  // dragged away while saving still reports how it went.
+  void confirm(PlanSheetResult result) {
+    saved = result.plan;
+    if (!context.mounted) return;
     final l10n = context.l10n;
     final plan = result.plan;
     final day = dayLabel(context, plan.fromDay);
@@ -91,7 +83,26 @@ Future<MealPlan?> showPlanSheet(
       ),
     );
   }
-  return result.plan;
+
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    useSafeArea: true,
+    backgroundColor: t.surface,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(t.radiusL)),
+    ),
+    builder: (context) => PlanSheet(
+      recipeId: recipeId,
+      recipeName: recipeName,
+      servings: servings,
+      servingsText: servingsText,
+      day: day,
+      onSaved: confirm,
+    ),
+  );
+  return saved;
 }
 
 /// What the [PlanSheet] saved.
@@ -114,7 +125,7 @@ class PlanSheetResult {
 
 /// The sheet that plans a recipe (mockup 11-einplanen): a day of a week, a
 /// meal type of the space, servings, and whether to put what's missing on
-/// the shopping list. Pops a [PlanSheetResult] once the plan is saved.
+/// the shopping list. Once the plan is saved, it calls [onSaved] and closes.
 ///
 /// The parts (the [PlanDayPicker], the meal types with [MealTypePicker] and
 /// the servings) don't depend on creating a plan, so editing one can reuse
@@ -125,7 +136,9 @@ class PlanSheet extends ConsumerStatefulWidget {
     required this.recipeId,
     required this.recipeName,
     required this.servings,
+    this.servingsText = '',
     this.day,
+    required this.onSaved,
   });
 
   final int recipeId;
@@ -134,45 +147,63 @@ class PlanSheet extends ConsumerStatefulWidget {
   /// The servings to start with.
   final int servings;
 
+  /// The recipe's own word for servings ("Stück"), empty if it has none.
+  final String servingsText;
+
   /// The day to start with; today if `null`.
   final CalendarDay? day;
+
+  /// Called once the plan is saved, also if the sheet was closed meanwhile.
+  final ValueChanged<PlanSheetResult> onSaved;
 
   @override
   ConsumerState<PlanSheet> createState() => _PlanSheetState();
 }
 
+/// The most servings a plan can have; Tandoor stores less than 10000.
+const _maxServings = 9999;
+
 class _PlanSheetState extends ConsumerState<PlanSheet> {
   late CalendarDay _day =
       widget.day ?? CalendarDay.of(ref.read(clockProvider)());
-  late int _servings = widget.servings < 1 ? 1 : widget.servings;
+  late int _servings = widget.servings.clamp(1, _maxServings);
 
-  /// The chosen meal type; the one used last time, or else the first.
-  late int? _mealTypeId = ref.read(planSheetChoicesProvider).mealTypeId;
+  /// The meal type the user chose here, `null` until they do.
+  int? _mealTypeId;
+  late final String? _lastMealType = ref
+      .read(planSheetChoicesProvider)
+      .mealTypeName;
   late bool _addToShopping = ref.read(planSheetChoicesProvider).addToShopping;
 
   bool _saving = false;
   String? _error;
 
-  /// [_mealTypeId] if [types] has it, else the first of [types].
-  MealType? _selectedType(List<MealType> types) =>
-      types.where((type) => type.id == _mealTypeId).firstOrNull ??
-      types.firstOrNull;
+  /// The meal type of [types] the user chose here, else the one used last
+  /// time, else the first.
+  MealType? _selectedType(List<MealType> types) {
+    final lastName = _lastMealType?.toLowerCase();
+    return types.where((type) => type.id == _mealTypeId).firstOrNull ??
+        types
+            .where((type) => type.name.toLowerCase() == lastName)
+            .firstOrNull ??
+        types.firstOrNull;
+  }
 
   /// Saves the plan and, if [shopping] has something to add, puts it on the
   /// shopping list. A failure of the plan keeps the sheet open to retry; a
   /// failure of the shopping list doesn't undo the plan.
-  Future<void> _save(
-    MealType mealType,
-    Recipe? recipe,
-    RecipeShopping? shopping,
-  ) async {
+  Future<void> _save(MealType mealType, RecipeShopping? shopping) async {
     // Read before the first await: the sheet may be dragged away meanwhile,
-    // and the plan is saved all the same.
+    // and the plan is saved and reported all the same.
     final container = ProviderScope.containerOf(context, listen: false);
     final mealPlans = ref.read(mealPlanRepositoryProvider);
+    final recipes = ref.read(recipeRepositoryProvider);
     final shoppingList = ref.read(shoppingRepositoryProvider);
+    final onSaved = widget.onSaved;
+    final recipeId = widget.recipeId;
     final servings = _servings.toDouble();
-    final addToShopping = _addToShopping;
+    final addToShopping =
+        _addToShopping && shopping != null && !shopping.isEmpty;
     setState(() {
       _saving = true;
       _error = null;
@@ -182,7 +213,7 @@ class _PlanSheetState extends ConsumerState<PlanSheet> {
     try {
       plan = await mealPlans.create(
         NewMealPlan(
-          recipeId: widget.recipeId,
+          recipeId: recipeId,
           servings: servings,
           day: _day,
           mealType: mealType,
@@ -201,26 +232,32 @@ class _PlanSheetState extends ConsumerState<PlanSheet> {
     container
       ..invalidate(weekPlansProvider)
       ..read(planSheetChoicesProvider.notifier)
-          .remember(mealTypeId: mealType.id, addToShopping: addToShopping);
+          .remember(mealTypeName: mealType.name, addToShopping: _addToShopping);
 
     var added = false;
     Failure? shoppingFailure;
-    if (addToShopping && recipe != null && !(shopping?.isEmpty ?? true)) {
+    if (addToShopping) {
       try {
-        await shoppingList.addRecipe(recipe, servings, mealPlanId: plan.id);
-        added = true;
+        // Freshly read: what is on hand may have changed since the recipe
+        // was opened.
+        final recipe = await recipes.fetchRecipe(recipeId);
+        added = !(await shoppingList.addRecipe(
+          recipe,
+          servings,
+          mealPlanId: plan.id,
+        )).isEmpty;
       } on Failure catch (failure) {
         shoppingFailure = failure;
       }
     }
-    if (!mounted) return;
-    Navigator.of(context).pop(
+    onSaved(
       PlanSheetResult(
         plan: plan,
         addedToShopping: added,
         shoppingFailure: shoppingFailure,
       ),
     );
+    if (mounted) Navigator.of(context).pop();
   }
 
   @override
@@ -294,7 +331,14 @@ class _PlanSheetState extends ConsumerState<PlanSheet> {
                     ),
                     ServingsPicker(
                       servings: _servings,
-                      label: format.integer(_servings),
+                      max: _maxServings,
+                      label: widget.servingsText.trim().isEmpty
+                          ? format.integer(_servings)
+                          : servingsLabel(
+                              context,
+                              _servings,
+                              widget.servingsText,
+                            ),
                       onChanged: (value) => setState(() => _servings = value),
                     ),
                   ],
@@ -338,7 +382,7 @@ class _PlanSheetState extends ConsumerState<PlanSheet> {
                   builder: (context, enabled) => PillButton(
                     label: _submitLabel(context, today),
                     onPressed: enabled && !_saving && mealType != null
-                        ? () => _save(mealType, recipe.value, shopping)
+                        ? () => _save(mealType, shopping)
                         : null,
                   ),
                 ),

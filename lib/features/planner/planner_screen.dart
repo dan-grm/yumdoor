@@ -13,68 +13,44 @@ import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import '../common/recipe_image.dart';
+import '../shell/app_shell.dart';
 import 'planner_providers.dart';
 import 'week_labels.dart';
 
 /// The week planner (mockup 10-wochenplan): the days of one week with their
 /// planned meals, and buttons to browse the weeks.
 ///
-/// It opens on the current week, or on the week of [day] if given.
-class PlannerScreen extends ConsumerStatefulWidget {
+/// It shows the week of [day], the current week if `null`. Browsing changes
+/// the location ([planLocation]), so going to a day always shows its week,
+/// even one shown before.
+class PlannerScreen extends ConsumerWidget {
   const PlannerScreen({super.key, this.day});
 
-  /// A day whose week to show, such as a day just planned.
+  /// A day whose week to show.
   final CalendarDay? day;
 
   @override
-  ConsumerState<PlannerScreen> createState() => _PlannerScreenState();
-}
-
-class _PlannerScreenState extends ConsumerState<PlannerScreen> {
-  /// How many weeks the shown week is after the current one.
-  int _offset = 0;
-
-  /// The day whose week to show at the next build, when [PlannerScreen.day]
-  /// is new.
-  late CalendarDay? _showDay = widget.day;
-
-  @override
-  void didUpdateWidget(PlannerScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.day != oldWidget.day) _showDay = widget.day;
-  }
-
-  /// Loads the week at [start] again, for pull to refresh.
-  Future<void> _refresh(CalendarDay start) async {
-    ref.invalidate(weekPlansProvider(start));
-    try {
-      await ref.read(weekPlansProvider(start).future);
-    } on Object {
-      // The screen shows the failure.
-    }
-  }
-
-  void _browse(int weeks) => setState(() => _offset += weeks);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
     final l10n = context.l10n;
     final today = CalendarDay.of(ref.watch(clockProvider)());
     final firstWeekday = firstWeekdayOf(context);
-    if (_showDay case final day?) {
-      _showDay = null;
-      _offset =
-          startOfWeek(
-            day,
-            firstWeekday,
-          ).differenceInDays(startOfWeek(today, firstWeekday)) ~/
-          daysInWeek;
+    final thisWeek = startOfWeek(today, firstWeekday);
+    final start = startOfWeek(day ?? today, firstWeekday);
+
+    void show(CalendarDay week) =>
+        context.go(week == thisWeek ? planPath : planLocation(week));
+
+    /// Loads the week again, for pull to refresh.
+    Future<void> refresh() async {
+      ref.invalidate(weekPlansProvider(start));
+      try {
+        await ref.read(weekPlansProvider(start).future);
+      } on Object {
+        // The screen shows the failure.
+      }
     }
-    final start = startOfWeek(
-      today,
-      firstWeekday,
-    ).addDays(_offset * daysInWeek);
+
     final plans = ref.watch(weekPlansProvider(start));
     final onlyMine = ref.watch(plannerOnlyMineProvider);
     final people = ref.watch(plannerPeopleProvider).value;
@@ -102,10 +78,10 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
               child: _WeekBar(
                 start: start,
                 today: today,
-                isCurrent: _offset == 0,
-                onPrevious: () => _browse(-1),
-                onNext: () => _browse(1),
-                onCurrent: () => setState(() => _offset = 0),
+                isCurrent: start == thisWeek,
+                onPrevious: () => show(start.addDays(-daysInWeek)),
+                onNext: () => show(start.addDays(daysInWeek)),
+                onCurrent: () => show(thisWeek),
               ),
             ),
             _HouseholdBar(
@@ -124,7 +100,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                   ],
                   me: me,
                   names: names,
-                  onRefresh: () => _refresh(start),
+                  onRefresh: refresh,
                 ),
                 AsyncError(:final error) => FailureView(
                   error: error,
