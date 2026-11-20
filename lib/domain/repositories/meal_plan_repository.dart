@@ -9,9 +9,8 @@ abstract interface class MealPlanRepository {
   /// on at least one day from [from] to [to] (both included), sorted by first
   /// day, meal type and id.
   ///
-  /// A plan that starts before [from] and ends in the range is included. One
-  /// that starts in the range but ends more than [maxPlanDays] days after it
-  /// is not found.
+  /// A plan that starts before [from] is included. A plan that ends more
+  /// than [maxPlanDays] days after [to] is not found.
   Future<List<MealPlan>> list(CalendarDay from, CalendarDay to);
 
   /// Saves [plan] as the current user's.
@@ -28,5 +27,5 @@ abstract interface class MealPlanRepository {
 }
 
 /// How many days after the end of a [MealPlanRepository.list] range a plan
-/// that starts in it may end and still be found.
+/// may end and still be found.
 const maxPlanDays = 31;

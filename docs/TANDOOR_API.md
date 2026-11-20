@@ -381,8 +381,8 @@ Yumdoor's side is `lib/data/repositories/tandoor_meal_plan_repository.dart` and 
 - **The date filter only looks at `to_date`**, as the server's calendar day (`to_date__date__gte=from_date` and
   `to_date__date__lte=to_date`). Defaults without the parameters: today − 90 days to today + 360 days. A plan over
   several days is therefore returned only by a query whose range contains its **last** day: a plan from Saturday
-  to Sunday is missing from a query for Saturday alone. Yumdoor asks for one more day before the range and 32 more
-  after it, then keeps the plans that overlap the range on the device's calendar.
+  to Sunday is missing from a query for Saturday alone. Yumdoor asks for two more days before the range (time zones can
+  differ by up to 26 hours) and 33 more after it, then keeps the plans that overlap the range on the device's calendar.
 - **Time zones:** datetimes are stored with a time zone and returned in the server's `TIME_ZONE`
   (default `Europe/Berlin`, `TZ`/`TIMEZONE` env), e.g. `2026-11-16T18:30:00+01:00`. A datetime without an offset is
   read as server time. On **create** only, a datetime that is exactly midnight in server time gets the meal type's
@@ -390,6 +390,8 @@ Yumdoor's side is `lib/data/repositories/tandoor_meal_plan_repository.dart` and 
   "Mittagessen" at 12:30. Midnight UTC is 01:00 in Berlin, so it is kept as 01:00. Update never applies a time.
   Tandoor's own frontend works in the browser's time zone: it puts the meal type's time on the chosen day locally
   and sends UTC. Yumdoor does the same, and a plan is on the day its datetime falls on in the device's time zone.
+  If that local time happens to be midnight on the server, the create moves it to another day; Yumdoor then PATCHes
+  the dates it sent.
   The generated client parses datetimes to UTC and can only send UTC, so the server's offset is not kept.
 - `to_date` is optional on create (defaults to `from_date`), `meal_type` is required (400 without it). Recipe and
   meal type may be sent as plain ids (`"recipe": 12, "meal_type": 3`) on create and update; a nested recipe needs

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:tandoor_api/tandoor_api.dart' as api;
 
 import '../../domain/models/meal_type.dart';
@@ -40,21 +41,35 @@ class TandoorMealTypeRepository implements MealTypeRepository {
     return guardRequest(() async {
       final existing = await _list();
       final lower = trimmed.toLowerCase();
-      for (final type in existing) {
-        if (type.name.trim().toLowerCase() == lower) return type;
-      }
+      if (_named(existing, lower) case final type?) return type;
       final last = existing.fold<int?>(
         null,
         (max, type) => max == null || type.order > max ? type.order : max,
       );
-      final response = await _api.apiMealTypeCreate(
-        mealType: api.MealType(
-          (b) => b
-            ..name = trimmed
-            ..order = last == null ? 0 : last + 1,
-        ),
-      );
-      return requireBody(response.data).toDomain();
+      try {
+        final response = await _api.apiMealTypeCreate(
+          mealType: api.MealType(
+            (b) => b
+              ..name = trimmed
+              ..order = last == null ? 0 : last + 1,
+          ),
+        );
+        return requireBody(response.data).toDomain();
+      } on DioException catch (e) {
+        // Someone else created the same name meanwhile: Tandoor's unique
+        // constraint fails with 500.
+        if (e.response?.statusCode != 500) rethrow;
+        final match = _named(await _list(), lower);
+        if (match == null) rethrow;
+        return match;
+      }
     });
+  }
+
+  static MealType? _named(List<MealType> types, String lowerName) {
+    for (final type in types) {
+      if (type.name.trim().toLowerCase() == lowerName) return type;
+    }
+    return null;
   }
 }

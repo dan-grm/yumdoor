@@ -18,7 +18,9 @@ void main() {
   late TandoorRepositories anna;
   late TandoorRepositories ben;
 
-  // The seed plans the current week, Monday to Sunday.
+  // The seed plans the current week, Monday to Sunday, at the meal types'
+  // times in the server's time zone (Europe/Berlin). The weekday checks below
+  // hold on a device within a few hours of it, such as CI (UTC).
   final today = CalendarDay.today();
   final monday = today.addDays(1 - today.weekday);
   final sunday = monday.addDays(6);

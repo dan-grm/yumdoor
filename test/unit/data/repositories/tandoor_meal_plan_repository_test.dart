@@ -98,8 +98,8 @@ void main() {
       return expectLater(
         plans(adapter).list(monday, sunday).then((list) {
           final query = adapter.requests.first.uri.queryParameters;
-          expect(query['from_date'], '2026-11-15');
-          expect(query['to_date'], '2026-12-24');
+          expect(query['from_date'], '2026-11-14');
+          expect(query['to_date'], '2026-12-25');
           expect(query['page_size'], '200');
           expect(adapter.requests, hasLength(2));
           return [for (final plan in list) plan.id];
@@ -160,6 +160,35 @@ void main() {
     expect(body['recipe'], 140);
     expect(body['meal_type'], 3);
     expect(saved.id, 11);
+    expect(saved.fromDay, monday);
+  });
+
+  test('create moves a plan back that Tandoor put on another day', () async {
+    final adapter = FakeHttpAdapter(
+      (request) => switch (request.method) {
+        'POST' => jsonResponse(plan(11, monday.addDays(1)), status: 201),
+        _ => jsonResponse(plan(11, monday)),
+      },
+    );
+
+    final saved = await plans(adapter).create(
+      NewMealPlan(
+        title: 'Pizza',
+        servings: 2,
+        day: monday,
+        mealType: const MealType(id: 3, name: 'Abendessen'),
+      ),
+    );
+
+    final post = adapter.requests.first.data as Map<String, Object?>;
+    final patch = adapter.requests.last;
+    expect(patch.method, 'PATCH');
+    expect(patch.uri.path, '/tandoor/api/meal-plan/11/');
+    expect(patch.data, {
+      'servings': 2.0,
+      'from_date': post['from_date'],
+      'to_date': post['to_date'],
+    });
     expect(saved.fromDay, monday);
   });
 
@@ -277,6 +306,37 @@ void main() {
       expect(post.data, containsPair('name', 'Snack'));
       expect(post.data, containsPair('order', 3));
       expect(created, const MealType(id: 4, name: 'Snack', order: 3));
+    });
+
+    test('create returns the type someone else created meanwhile', () async {
+      var lists = 0;
+      final adapter = FakeHttpAdapter(
+        (request) => switch (request.method) {
+          'GET' => jsonResponse(
+            page([if (lists++ > 0) type(4, 'Snack', order: 3)]),
+          ),
+          _ => htmlResponse('<h1>Server Error (500)</h1>', status: 500),
+        },
+      );
+
+      final created = await types(adapter).create('snack');
+
+      expect(created.id, 4);
+      expect(
+        [for (final r in adapter.requests) r.method],
+        ['GET', 'POST', 'GET'],
+      );
+    });
+
+    test('create fails on a server error without a matching type', () {
+      final adapter = FakeHttpAdapter(
+        (request) => switch (request.method) {
+          'GET' => jsonResponse(page([])),
+          _ => htmlResponse('<h1>Server Error (500)</h1>', status: 500),
+        },
+      );
+
+      expect(types(adapter).create('Snack'), throwsA(isA<ServerFailure>()));
     });
 
     test('create rejects a blank name without a request', () {

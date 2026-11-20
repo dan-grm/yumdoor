@@ -92,7 +92,7 @@ Future<void> main() async {
       // without a recipe, one over two days, some on the shopping list.
       'meal_plan_list.json':
           '/api/meal-plan/?from_date=${_day(monday)}'
-          '&to_date=${_day(monday.add(const Duration(days: 6)))}',
+          '&to_date=${_day(DateTime(monday.year, monday.month, monday.day + 6))}',
       'meal_type_list.json': '/api/meal-type/',
     };
 

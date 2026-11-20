@@ -12,6 +12,9 @@ import '../mappers/meal_plan_mapper.dart';
 /// Meal plans per request page: `DefaultPagination.max_page_size`.
 const _pageSize = 200;
 
+/// Days that cover any difference between two time zones.
+const _timeZoneDays = 2;
+
 /// Writes go through [Dio] directly: Tandoor needs the meal type as a plain
 /// id (see [NewMealPlanMapper.toJson]), which the generated client can't
 /// send.
@@ -22,10 +25,10 @@ class TandoorMealPlanRepository implements MealPlanRepository {
   final Dio _dio;
 
   /// Tandoor filters by the server's calendar day of a plan's **last** day
-  /// only (docs/TANDOOR_API.md#meal-plans). The query reaches a day further
-  /// on both sides for the time zone difference, and [maxPlanDays] further
-  /// for plans that start in the range and end after it; the rest is
-  /// filtered here.
+  /// only (docs/TANDOOR_API.md#meal-plans). The query reaches
+  /// [_timeZoneDays] further on both sides for the difference between the
+  /// device's and the server's time zone (up to 26 hours), and [maxPlanDays]
+  /// further for plans that end after the range; the rest is filtered here.
   @override
   Future<List<MealPlan>> list(CalendarDay from, CalendarDay to) =>
       guardRequest(() async {
@@ -33,8 +36,8 @@ class TandoorMealPlanRepository implements MealPlanRepository {
         for (var page = 1; ; page++) {
           final response = requireBody(
             (await _api.apiMealPlanList(
-              fromDate: from.addDays(-1).toString(),
-              toDate: to.addDays(maxPlanDays + 1).toString(),
+              fromDate: from.addDays(-_timeZoneDays).toString(),
+              toDate: to.addDays(maxPlanDays + _timeZoneDays).toString(),
               page: page,
               pageSize: _pageSize,
             )).data,
@@ -58,13 +61,26 @@ class TandoorMealPlanRepository implements MealPlanRepository {
     return a.id.compareTo(b.id);
   }
 
+  /// On create, Tandoor moves a datetime that is exactly midnight in the
+  /// server's time zone to the meal type's time on the server's day
+  /// (docs/TANDOOR_API.md#meal-plans). If the device's time for the plan is
+  /// such a midnight, the plan can land on another day here; it is then
+  /// moved back. Update never changes the time.
   @override
   Future<MealPlan> create(NewMealPlan plan) => guardRequest(() async {
-    final response = await _dio.post<Object?>(
-      '/api/meal-plan/',
-      data: plan.toJson(),
+    final body = plan.toJson();
+    final response = await _dio.post<Object?>('/api/meal-plan/', data: body);
+    final saved = _parse(response.data).toDomain();
+    if (saved.fromDay == plan.day && saved.toDay == plan.day) return saved;
+    final fixed = await _dio.patch<Object?>(
+      '/api/meal-plan/${saved.id}/',
+      data: {
+        'servings': body['servings'],
+        'from_date': body['from_date'],
+        'to_date': body['to_date'],
+      },
     );
-    return _parse(response.data).toDomain();
+    return _parse(fixed.data).toDomain();
   });
 
   @override
