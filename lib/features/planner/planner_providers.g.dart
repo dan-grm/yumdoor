@@ -139,7 +139,7 @@ final class PlannerPeopleProvider
   }
 }
 
-String _$plannerPeopleHash() => r'f29d495ae58d5bbc26994f03a3f13a0b47122f73';
+String _$plannerPeopleHash() => r'a08951f3bf4d82aebc0c6a486ed7ca8e73307cf9';
 
 /// Whether the planner shows only the meals the current user planned,
 /// remembered on this device.
