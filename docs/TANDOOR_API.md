@@ -423,8 +423,9 @@ Yumdoor's side is `lib/data/repositories/tandoor_meal_plan_repository.dart` and 
 ## On-hand foods
 
 - `Food.food_onhand` is a boolean that is true if **any household member** has marked the food on hand
-  (`CustomOnHandField`, `cookbook/serializer.py:152`). Writing it via `PATCH /api/food/{id}/` sets or clears it for
-  the whole household.
+  (`CustomOnHandField`, `cookbook/serializer.py:152`). Writing it via `PATCH /api/food/{id}/ {food_onhand}` (no
+  other field needed) sets or clears it for the whole household; checked on 2.6.15, the other member sees the
+  change at once. Clearing removes every household member, whoever set it. An unknown food gets 404.
 - `Food.ignore_shopping` marks foods that never go on the list (salt, water).
 - Side effect: if the user preference `shopping_add_onhand` is on, checking a shopping entry marks its food on hand
   for the household, and unchecking clears it. **Gotcha:** `ShoppingListEntrySerializer.update` clears on-hand
@@ -453,12 +454,34 @@ amounts across recipes; merging per food and unit for display is our job. "Add t
 
 ## Shopping list
 
-- `GET /api/shopping-list-entry/`: unchecked entries plus entries completed within the user's
-  `shopping_recent_days` (max 14), **capped at 1000 rows**. `updated_after` (ISO timestamp) for incremental sync.
-  Each entry embeds `food` (with `supermarket_category`), `unit`, `list_recipe_data`.
-- Check off: `POST /api/shopping-list-entry/bulk/ {ids, checked}`.
+- `GET /api/shopping-list-entry/`: entries created by the user or anyone in their household
+  (`ShoppingListEntryViewSet.get_queryset`, `cookbook/views/api.py:2293`), unchecked ones plus those completed
+  within the user's `shopping_recent_days` (max 14), ordered by id. Each entry embeds `food` (with
+  `supermarket_category`, no on-hand flag), `unit` (`null` for none), `created_by` and `list_recipe_data`: `null`
+  for an item added by hand, else the `ShoppingListRecipe` with `recipe_data`, `servings` and `meal_plan_data`
+  (its `name` is empty; the recipe has the name). A user without a household, like the seed's `admin`, sees only
+  their own entries.
+- **Capped at 1000 rows**, before pagination (`queryset[:1000]`, `max_page_size` 200): `count` is then exactly
+  1000 and the **oldest** 1000 entries come back, so the newest are missing. Checked on 2.6.15 with 1024 entries.
+  Yumdoor reports such a list as truncated.
+- The page response has a `timestamp` (server time, taken after the query ran).
+- `updated_after` (incremental sync) filters `updated_at >= value`, on top of the filters above. Checked on 2.6.15:
+  - It returns entries created, changed, checked or unchecked by **anyone in the household** since then (the bulk
+    endpoint sets `updated_at`).
+  - **Deleted entries are not reported** (they are deleted from the database), and neither are checked entries
+    that drop out of the recent days. A client needs a full read now and then.
+  - Format: Django's `parse_datetime`, ISO 8601 with an offset: `2026-11-20T09:27:06.742162Z`, `…+00:00`, or with
+    milliseconds. **A time without an offset is read in the server's time zone** (`TIME_ZONE`, Europe/Berlin by
+    default); a date alone works as midnight there. Send UTC with `Z`.
+  - **An unparsable value is ignored silently** (the exception is caught and printed) and the full list comes back.
+    That includes an unencoded `+` in the offset, which arrives as a space. URL-encode the value.
+  - Yumdoor passes the first page's `timestamp` minus one second as the next `updated_after`, so a change between
+    the query and the timestamp isn't missed. An entry may come twice.
+- Check off: `POST /api/shopping-list-entry/bulk/ {ids, checked}`. It sets `checked`, `updated_at` and
+  `completed_at` (cleared on uncheck) for the ids the household has; unknown ids, and an empty list, are ignored
+  with 200. The response echoes the request with a `timestamp`. Any household member can check off anyone's entries.
 - Supermarket categories: `Food.supermarket_category`. Per-store ordering:
-  `GET /api/supermarket/` → each supermarket has `category_to_supermarket` relations with an `order`.
+  `GET /api/supermarket/` (all of the space's) → each has `category_to_supermarket` relations with an `order`.
   Group by category, order by the chosen supermarket, uncategorized last.
 - v2 also has named lists (`/api/shopping-list/`, `ShoppingListEntry.shopping_lists` many-to-many). A food can
   have default lists. Yumdoor shows all entries in M3 and adds list filtering later.
