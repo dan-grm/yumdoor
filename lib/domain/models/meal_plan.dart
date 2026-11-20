@@ -1,0 +1,163 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+import 'calendar_day.dart';
+import 'meal_type.dart';
+import 'recipe_summary.dart';
+
+part 'meal_plan.freezed.dart';
+
+/// A planned meal: a recipe or just a title, for one or more days. Everyone
+/// in the creator's household sees and can change it.
+@freezed
+abstract class MealPlan with _$MealPlan {
+  const factory MealPlan({
+    required int id,
+
+    /// `null` for a plan with only a [title], such as "Pizza bestellen".
+    RecipeSummary? recipe,
+
+    /// Empty if not set; plans with a recipe usually have none.
+    @Default('') String title,
+    required double servings,
+
+    /// Plain text or Markdown, empty if there is none.
+    @Default('') String note,
+
+    /// The first day, on this device's calendar.
+    required CalendarDay fromDay,
+
+    /// The last day, the same as [fromDay] for a plan of one day.
+    required CalendarDay toDay,
+    required MealType mealType,
+
+    /// Whether its ingredients are on the shopping list.
+    @Default(false) bool onShoppingList,
+
+    /// The id of the user who planned it.
+    required int createdBy,
+  }) = _MealPlan;
+
+  const MealPlan._();
+
+  /// What to call the plan: its title, or else its recipe's name.
+  String get label => switch (title.trim()) {
+    '' => recipe?.name ?? '',
+    final title => title,
+  };
+
+  /// Whether the plan is on [day].
+  bool isOn(CalendarDay day) => !day.isBefore(fromDay) && !day.isAfter(toDay);
+
+  /// The number of days the plan spans, at least 1.
+  int get days => toDay.differenceInDays(fromDay) + 1;
+}
+
+/// A meal plan to create, for one day.
+class NewMealPlan {
+  /// Throws an [ArgumentError] for [servings] that aren't above 0, or for a
+  /// plan with neither [recipeId] nor a [title]. [title] and [note] are
+  /// trimmed.
+  factory NewMealPlan({
+    int? recipeId,
+    String title = '',
+    required double servings,
+    String note = '',
+    required CalendarDay day,
+    required MealType mealType,
+  }) {
+    checkMealPlanServings(servings);
+    final trimmedTitle = title.trim();
+    if (recipeId == null && trimmedTitle.isEmpty) {
+      throw ArgumentError('A meal plan needs a recipe or a title.');
+    }
+    return NewMealPlan._(
+      recipeId,
+      trimmedTitle,
+      servings,
+      note.trim(),
+      day,
+      mealType,
+    );
+  }
+
+  const NewMealPlan._(
+    this.recipeId,
+    this.title,
+    this.servings,
+    this.note,
+    this.day,
+    this.mealType,
+  );
+
+  final int? recipeId;
+  final String title;
+  final double servings;
+  final String note;
+  final CalendarDay day;
+  final MealType mealType;
+
+  @override
+  bool operator ==(Object other) =>
+      other is NewMealPlan &&
+      other.recipeId == recipeId &&
+      other.title == title &&
+      other.servings == servings &&
+      other.note == note &&
+      other.day == day &&
+      other.mealType == mealType;
+
+  @override
+  int get hashCode =>
+      Object.hash(recipeId, title, servings, note, day, mealType);
+
+  @override
+  String toString() =>
+      'NewMealPlan(recipeId: $recipeId, title: $title, servings: $servings, '
+      'note: $note, day: $day, mealType: ${mealType.name})';
+}
+
+/// Changes to a meal plan; `null` leaves a field as it is.
+class MealPlanChanges {
+  /// Throws an [ArgumentError] for [servings] that aren't above 0. [note] is
+  /// trimmed.
+  factory MealPlanChanges({
+    CalendarDay? day,
+    MealType? mealType,
+    double? servings,
+    String? note,
+  }) {
+    if (servings != null) checkMealPlanServings(servings);
+    return MealPlanChanges._(day, mealType, servings, note?.trim());
+  }
+
+  const MealPlanChanges._(this.day, this.mealType, this.servings, this.note);
+
+  /// The new first day. A plan of several days keeps its length.
+  final CalendarDay? day;
+  final MealType? mealType;
+  final double? servings;
+  final String? note;
+
+  @override
+  bool operator ==(Object other) =>
+      other is MealPlanChanges &&
+      other.day == day &&
+      other.mealType == mealType &&
+      other.servings == servings &&
+      other.note == note;
+
+  @override
+  int get hashCode => Object.hash(day, mealType, servings, note);
+
+  @override
+  String toString() =>
+      'MealPlanChanges(day: $day, mealType: ${mealType?.name}, '
+      'servings: $servings, note: $note)';
+}
+
+/// Throws an [ArgumentError] unless [servings] is a number above 0.
+void checkMealPlanServings(double servings) {
+  if (!(servings > 0) || servings.isInfinite) {
+    throw ArgumentError.value(servings, 'servings', 'must be above 0');
+  }
+}
