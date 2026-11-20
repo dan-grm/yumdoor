@@ -1,0 +1,105 @@
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "timestamp": "2026-11-20T09:31:28.499308+00:00",
+  "results": [
+    {
+      "id": 6,
+      "name": "Nachbarschaftsmarkt",
+      "description": null,
+      "shopping_lists": [],
+      "category_to_supermarket": [
+        {
+          "id": 41,
+          "category": {
+            "id": 41,
+            "name": "Obst & Gemüse",
+            "description": null,
+            "open_data_slug": null
+          },
+          "supermarket": 6,
+          "order": 0
+        },
+        {
+          "id": 42,
+          "category": {
+            "id": 42,
+            "name": "Brot & Backwaren",
+            "description": null,
+            "open_data_slug": null
+          },
+          "supermarket": 6,
+          "order": 1
+        },
+        {
+          "id": 43,
+          "category": {
+            "id": 43,
+            "name": "Kühlregal",
+            "description": null,
+            "open_data_slug": null
+          },
+          "supermarket": 6,
+          "order": 2
+        },
+        {
+          "id": 44,
+          "category": {
+            "id": 44,
+            "name": "Fleisch & Fisch",
+            "description": null,
+            "open_data_slug": null
+          },
+          "supermarket": 6,
+          "order": 3
+        },
+        {
+          "id": 45,
+          "category": {
+            "id": 45,
+            "name": "Trockenwaren",
+            "description": null,
+            "open_data_slug": null
+          },
+          "supermarket": 6,
+          "order": 4
+        },
+        {
+          "id": 46,
+          "category": {
+            "id": 46,
+            "name": "Konserven",
+            "description": null,
+            "open_data_slug": null
+          },
+          "supermarket": 6,
+          "order": 5
+        },
+        {
+          "id": 47,
+          "category": {
+            "id": 47,
+            "name": "Gewürze & Öle",
+            "description": null,
+            "open_data_slug": null
+          },
+          "supermarket": 6,
+          "order": 6
+        },
+        {
+          "id": 48,
+          "category": {
+            "id": 48,
+            "name": "Tiefkühl",
+            "description": null,
+            "open_data_slug": null
+          },
+          "supermarket": 6,
+          "order": 7
+        }
+      ],
+      "open_data_slug": null
+    }
+  ]
+}

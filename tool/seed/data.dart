@@ -82,7 +82,8 @@ const _dry = 'Trockenwaren';
 const _cans = 'Konserven';
 const _spice = 'Gewürze & Öle';
 
-/// Every food used by a recipe, in creation order (parents before children).
+/// Every food used by a recipe or the shopping list, in creation order
+/// (parents before children).
 const seedFoods = <SeedFood>[
   // Tree roots (no category; they are only for filtering).
   SeedFood('Gemüse'),
@@ -202,6 +203,9 @@ const seedFoods = <SeedFood>[
   SeedFood('thyme', category: _spice),
   SeedFood('salt', category: _spice, ignoreShopping: true),
   SeedFood('pepper', category: _spice, ignoreShopping: true),
+
+  // Only on the shopping list; no category, so it is grouped as uncategorized.
+  SeedFood('Küchenrolle'),
 ];
 
 /// Meal types of the space, created by Anna (meal types are space-wide).
@@ -1166,9 +1170,12 @@ const seedMealPlans = <SeedMealPlan>[
   SeedMealPlan(7, 'Frühstück', by: 'anna', servings: 2, recipe: 'Shakshuka'),
 ];
 
-/// Extra shopping entries not tied to a recipe: food, amount, unit, creator.
+/// Extra shopping entries not tied to a recipe: food, amount, unit (`null`
+/// for none), creator.
 const seedLooseShopping = <(String, num, String?, String)>[
   ('Milch', 2, 'l', 'anna'),
   ('Haferflocken', 500, 'g', 'ben'),
   ('Zitrone', 3, 'Stück', 'anna'),
+  ('Basilikum', 1, null, 'ben'),
+  ('Küchenrolle', 2, 'Stück', 'ben'),
 ];

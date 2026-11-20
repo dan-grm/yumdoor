@@ -94,6 +94,11 @@ Future<void> main() async {
           '/api/meal-plan/?from_date=${_day(monday)}'
           '&to_date=${_day(DateTime(monday.year, monday.month, monday.day + 6))}',
       'meal_type_list.json': '/api/meal-type/',
+      // The household's list: entries for Ben's and Anna's meal plans, items
+      // added by hand (one checked, one without a unit, one whose food has no
+      // category).
+      'shopping_list_entry_list.json': '/api/shopping-list-entry/',
+      'supermarket_list.json': '/api/supermarket/',
     };
 
     for (final MapEntry(key: file, value: path) in fixtures.entries) {

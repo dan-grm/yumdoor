@@ -1,0 +1,3583 @@
+{
+  "count": 26,
+  "next": null,
+  "previous": null,
+  "timestamp": "2026-11-20T09:31:28.458752+00:00",
+  "results": [
+    {
+      "id": 1122,
+      "list_recipe": 17,
+      "shopping_lists": [],
+      "food": {
+        "id": 524,
+        "name": "Ingwer",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 41,
+          "name": "Obst & Gemüse",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 126,
+        "name": "g",
+        "plural_name": "g",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 15.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1144,
+      "list_recipe_data": {
+        "id": 17,
+        "name": "",
+        "recipe": 201,
+        "recipe_data": {
+          "id": 201,
+          "name": "Linsen-Dal mit Karotten",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 178,
+              "label": "Vegan"
+            },
+            {
+              "id": 179,
+              "label": "Hauptgericht"
+            },
+            {
+              "id": 180,
+              "label": "Winter"
+            }
+          ],
+          "working_time": 15,
+          "waiting_time": 25,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:15.115009+01:00",
+          "updated_at": "2026-11-20T10:31:15.117758+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 64,
+          "title": "",
+          "recipe": {
+            "id": 201,
+            "name": "Linsen-Dal mit Karotten",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 178,
+                "label": "Vegan"
+              },
+              {
+                "id": 179,
+                "label": "Hauptgericht"
+              },
+              {
+                "id": 180,
+                "label": "Winter"
+              }
+            ],
+            "working_time": 15,
+            "waiting_time": 25,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:15.115009+01:00",
+            "updated_at": "2026-11-20T10:31:15.117758+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 4.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-17T18:30:00+01:00",
+          "to_date": "2026-11-17T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Linsen-Dal mit Karotten",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 64,
+        "servings": 4.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:25.743997+01:00",
+      "updated_at": "2026-11-20T10:31:25.744028+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1123,
+      "list_recipe": 17,
+      "shopping_lists": [],
+      "food": {
+        "id": 520,
+        "name": "Karotte",
+        "plural_name": "Karotten",
+        "supermarket_category": {
+          "id": 41,
+          "name": "Obst & Gemüse",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 127,
+        "name": "Stück",
+        "plural_name": "Stück",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 2.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1145,
+      "list_recipe_data": {
+        "id": 17,
+        "name": "",
+        "recipe": 201,
+        "recipe_data": {
+          "id": 201,
+          "name": "Linsen-Dal mit Karotten",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 178,
+              "label": "Vegan"
+            },
+            {
+              "id": 179,
+              "label": "Hauptgericht"
+            },
+            {
+              "id": 180,
+              "label": "Winter"
+            }
+          ],
+          "working_time": 15,
+          "waiting_time": 25,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:15.115009+01:00",
+          "updated_at": "2026-11-20T10:31:15.117758+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 64,
+          "title": "",
+          "recipe": {
+            "id": 201,
+            "name": "Linsen-Dal mit Karotten",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 178,
+                "label": "Vegan"
+              },
+              {
+                "id": 179,
+                "label": "Hauptgericht"
+              },
+              {
+                "id": 180,
+                "label": "Winter"
+              }
+            ],
+            "working_time": 15,
+            "waiting_time": 25,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:15.115009+01:00",
+            "updated_at": "2026-11-20T10:31:15.117758+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 4.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-17T18:30:00+01:00",
+          "to_date": "2026-11-17T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Linsen-Dal mit Karotten",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 64,
+        "servings": 4.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:25.744075+01:00",
+      "updated_at": "2026-11-20T10:31:25.744081+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1124,
+      "list_recipe": 17,
+      "shopping_lists": [],
+      "food": {
+        "id": 563,
+        "name": "Rapsöl",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 47,
+          "name": "Gewürze & Öle",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 128,
+        "name": "EL",
+        "plural_name": "EL",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 2.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1146,
+      "list_recipe_data": {
+        "id": 17,
+        "name": "",
+        "recipe": 201,
+        "recipe_data": {
+          "id": 201,
+          "name": "Linsen-Dal mit Karotten",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 178,
+              "label": "Vegan"
+            },
+            {
+              "id": 179,
+              "label": "Hauptgericht"
+            },
+            {
+              "id": 180,
+              "label": "Winter"
+            }
+          ],
+          "working_time": 15,
+          "waiting_time": 25,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:15.115009+01:00",
+          "updated_at": "2026-11-20T10:31:15.117758+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 64,
+          "title": "",
+          "recipe": {
+            "id": 201,
+            "name": "Linsen-Dal mit Karotten",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 178,
+                "label": "Vegan"
+              },
+              {
+                "id": 179,
+                "label": "Hauptgericht"
+              },
+              {
+                "id": 180,
+                "label": "Winter"
+              }
+            ],
+            "working_time": 15,
+            "waiting_time": 25,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:15.115009+01:00",
+            "updated_at": "2026-11-20T10:31:15.117758+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 4.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-17T18:30:00+01:00",
+          "to_date": "2026-11-17T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Linsen-Dal mit Karotten",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 64,
+        "servings": 4.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:25.744109+01:00",
+      "updated_at": "2026-11-20T10:31:25.744114+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1125,
+      "list_recipe": 17,
+      "shopping_lists": [],
+      "food": {
+        "id": 567,
+        "name": "Currypulver",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 47,
+          "name": "Gewürze & Öle",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 131,
+        "name": "TL",
+        "plural_name": "TL",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 2.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1147,
+      "list_recipe_data": {
+        "id": 17,
+        "name": "",
+        "recipe": 201,
+        "recipe_data": {
+          "id": 201,
+          "name": "Linsen-Dal mit Karotten",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 178,
+              "label": "Vegan"
+            },
+            {
+              "id": 179,
+              "label": "Hauptgericht"
+            },
+            {
+              "id": 180,
+              "label": "Winter"
+            }
+          ],
+          "working_time": 15,
+          "waiting_time": 25,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:15.115009+01:00",
+          "updated_at": "2026-11-20T10:31:15.117758+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 64,
+          "title": "",
+          "recipe": {
+            "id": 201,
+            "name": "Linsen-Dal mit Karotten",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 178,
+                "label": "Vegan"
+              },
+              {
+                "id": 179,
+                "label": "Hauptgericht"
+              },
+              {
+                "id": 180,
+                "label": "Winter"
+              }
+            ],
+            "working_time": 15,
+            "waiting_time": 25,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:15.115009+01:00",
+            "updated_at": "2026-11-20T10:31:15.117758+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 4.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-17T18:30:00+01:00",
+          "to_date": "2026-11-17T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Linsen-Dal mit Karotten",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 64,
+        "servings": 4.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:25.744214+01:00",
+      "updated_at": "2026-11-20T10:31:25.744222+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1126,
+      "list_recipe": 17,
+      "shopping_lists": [],
+      "food": {
+        "id": 568,
+        "name": "Kreuzkümmel",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 47,
+          "name": "Gewürze & Öle",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 131,
+        "name": "TL",
+        "plural_name": "TL",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 1.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1148,
+      "list_recipe_data": {
+        "id": 17,
+        "name": "",
+        "recipe": 201,
+        "recipe_data": {
+          "id": 201,
+          "name": "Linsen-Dal mit Karotten",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 178,
+              "label": "Vegan"
+            },
+            {
+              "id": 179,
+              "label": "Hauptgericht"
+            },
+            {
+              "id": 180,
+              "label": "Winter"
+            }
+          ],
+          "working_time": 15,
+          "waiting_time": 25,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:15.115009+01:00",
+          "updated_at": "2026-11-20T10:31:15.117758+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 64,
+          "title": "",
+          "recipe": {
+            "id": 201,
+            "name": "Linsen-Dal mit Karotten",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 178,
+                "label": "Vegan"
+              },
+              {
+                "id": 179,
+                "label": "Hauptgericht"
+              },
+              {
+                "id": 180,
+                "label": "Winter"
+              }
+            ],
+            "working_time": 15,
+            "waiting_time": 25,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:15.115009+01:00",
+            "updated_at": "2026-11-20T10:31:15.117758+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 4.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-17T18:30:00+01:00",
+          "to_date": "2026-11-17T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Linsen-Dal mit Karotten",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 64,
+        "servings": 4.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:25.744259+01:00",
+      "updated_at": "2026-11-20T10:31:25.744264+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1127,
+      "list_recipe": 17,
+      "shopping_lists": [],
+      "food": {
+        "id": 553,
+        "name": "rote Linsen",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 45,
+          "name": "Trockenwaren",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 126,
+        "name": "g",
+        "plural_name": "g",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 250.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1149,
+      "list_recipe_data": {
+        "id": 17,
+        "name": "",
+        "recipe": 201,
+        "recipe_data": {
+          "id": 201,
+          "name": "Linsen-Dal mit Karotten",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 178,
+              "label": "Vegan"
+            },
+            {
+              "id": 179,
+              "label": "Hauptgericht"
+            },
+            {
+              "id": 180,
+              "label": "Winter"
+            }
+          ],
+          "working_time": 15,
+          "waiting_time": 25,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:15.115009+01:00",
+          "updated_at": "2026-11-20T10:31:15.117758+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 64,
+          "title": "",
+          "recipe": {
+            "id": 201,
+            "name": "Linsen-Dal mit Karotten",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 178,
+                "label": "Vegan"
+              },
+              {
+                "id": 179,
+                "label": "Hauptgericht"
+              },
+              {
+                "id": 180,
+                "label": "Winter"
+              }
+            ],
+            "working_time": 15,
+            "waiting_time": 25,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:15.115009+01:00",
+            "updated_at": "2026-11-20T10:31:15.117758+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 4.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-17T18:30:00+01:00",
+          "to_date": "2026-11-17T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Linsen-Dal mit Karotten",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 64,
+        "servings": 4.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:25.744295+01:00",
+      "updated_at": "2026-11-20T10:31:25.744300+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1128,
+      "list_recipe": 17,
+      "shopping_lists": [],
+      "food": {
+        "id": 559,
+        "name": "gehackte Tomaten",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 46,
+          "name": "Konserven",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 132,
+        "name": "Dose",
+        "plural_name": "Dose",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 1.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1150,
+      "list_recipe_data": {
+        "id": 17,
+        "name": "",
+        "recipe": 201,
+        "recipe_data": {
+          "id": 201,
+          "name": "Linsen-Dal mit Karotten",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 178,
+              "label": "Vegan"
+            },
+            {
+              "id": 179,
+              "label": "Hauptgericht"
+            },
+            {
+              "id": 180,
+              "label": "Winter"
+            }
+          ],
+          "working_time": 15,
+          "waiting_time": 25,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:15.115009+01:00",
+          "updated_at": "2026-11-20T10:31:15.117758+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 64,
+          "title": "",
+          "recipe": {
+            "id": 201,
+            "name": "Linsen-Dal mit Karotten",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 178,
+                "label": "Vegan"
+              },
+              {
+                "id": 179,
+                "label": "Hauptgericht"
+              },
+              {
+                "id": 180,
+                "label": "Winter"
+              }
+            ],
+            "working_time": 15,
+            "waiting_time": 25,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:15.115009+01:00",
+            "updated_at": "2026-11-20T10:31:15.117758+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 4.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-17T18:30:00+01:00",
+          "to_date": "2026-11-17T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Linsen-Dal mit Karotten",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 64,
+        "servings": 4.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:25.744331+01:00",
+      "updated_at": "2026-11-20T10:31:25.744336+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1129,
+      "list_recipe": 17,
+      "shopping_lists": [],
+      "food": {
+        "id": 558,
+        "name": "Kokosmilch",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 46,
+          "name": "Konserven",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 129,
+        "name": "ml",
+        "plural_name": "ml",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 400.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1152,
+      "list_recipe_data": {
+        "id": 17,
+        "name": "",
+        "recipe": 201,
+        "recipe_data": {
+          "id": 201,
+          "name": "Linsen-Dal mit Karotten",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 178,
+              "label": "Vegan"
+            },
+            {
+              "id": 179,
+              "label": "Hauptgericht"
+            },
+            {
+              "id": 180,
+              "label": "Winter"
+            }
+          ],
+          "working_time": 15,
+          "waiting_time": 25,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:15.115009+01:00",
+          "updated_at": "2026-11-20T10:31:15.117758+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 64,
+          "title": "",
+          "recipe": {
+            "id": 201,
+            "name": "Linsen-Dal mit Karotten",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 178,
+                "label": "Vegan"
+              },
+              {
+                "id": 179,
+                "label": "Hauptgericht"
+              },
+              {
+                "id": 180,
+                "label": "Winter"
+              }
+            ],
+            "working_time": 15,
+            "waiting_time": 25,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:15.115009+01:00",
+            "updated_at": "2026-11-20T10:31:15.117758+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 4.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-17T18:30:00+01:00",
+          "to_date": "2026-11-17T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Linsen-Dal mit Karotten",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 64,
+        "servings": 4.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:25.744366+01:00",
+      "updated_at": "2026-11-20T10:31:25.744371+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1130,
+      "list_recipe": 17,
+      "shopping_lists": [],
+      "food": {
+        "id": 556,
+        "name": "Basmatireis",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 45,
+          "name": "Trockenwaren",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 126,
+        "name": "g",
+        "plural_name": "g",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 250.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1153,
+      "list_recipe_data": {
+        "id": 17,
+        "name": "",
+        "recipe": 201,
+        "recipe_data": {
+          "id": 201,
+          "name": "Linsen-Dal mit Karotten",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 178,
+              "label": "Vegan"
+            },
+            {
+              "id": 179,
+              "label": "Hauptgericht"
+            },
+            {
+              "id": 180,
+              "label": "Winter"
+            }
+          ],
+          "working_time": 15,
+          "waiting_time": 25,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:15.115009+01:00",
+          "updated_at": "2026-11-20T10:31:15.117758+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 64,
+          "title": "",
+          "recipe": {
+            "id": 201,
+            "name": "Linsen-Dal mit Karotten",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 178,
+                "label": "Vegan"
+              },
+              {
+                "id": 179,
+                "label": "Hauptgericht"
+              },
+              {
+                "id": 180,
+                "label": "Winter"
+              }
+            ],
+            "working_time": 15,
+            "waiting_time": 25,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:15.115009+01:00",
+            "updated_at": "2026-11-20T10:31:15.117758+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 4.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-17T18:30:00+01:00",
+          "to_date": "2026-11-17T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Linsen-Dal mit Karotten",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 64,
+        "servings": 4.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:25.744402+01:00",
+      "updated_at": "2026-11-20T10:31:25.744407+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1131,
+      "list_recipe": 18,
+      "shopping_lists": [],
+      "food": {
+        "id": 520,
+        "name": "Karotte",
+        "plural_name": "Karotten",
+        "supermarket_category": {
+          "id": 41,
+          "name": "Obst & Gemüse",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 126,
+        "name": "g",
+        "plural_name": "g",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 600.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1134,
+      "list_recipe_data": {
+        "id": 18,
+        "name": "",
+        "recipe": 200,
+        "recipe_data": {
+          "id": 200,
+          "name": "Karottensuppe mit Ingwer",
+          "description": "Cremig, wärmend und in einer halben Stunde fertig.",
+          "image": null,
+          "keywords": [
+            {
+              "id": 175,
+              "label": "Suppe"
+            },
+            {
+              "id": 176,
+              "label": "Vegetarisch"
+            },
+            {
+              "id": 177,
+              "label": "Herbst"
+            }
+          ],
+          "working_time": 15,
+          "waiting_time": 20,
+          "created_by": {
+            "id": 17,
+            "username": "anna",
+            "first_name": "Anna",
+            "last_name": "",
+            "display_name": "Anna ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:14.635979+01:00",
+          "updated_at": "2026-11-20T10:31:14.639009+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 65,
+          "title": "",
+          "recipe": {
+            "id": 200,
+            "name": "Karottensuppe mit Ingwer",
+            "description": "Cremig, wärmend und in einer halben Stunde fertig.",
+            "image": null,
+            "keywords": [
+              {
+                "id": 175,
+                "label": "Suppe"
+              },
+              {
+                "id": 176,
+                "label": "Vegetarisch"
+              },
+              {
+                "id": 177,
+                "label": "Herbst"
+              }
+            ],
+            "working_time": 15,
+            "waiting_time": 20,
+            "created_by": {
+              "id": 17,
+              "username": "anna",
+              "first_name": "Anna",
+              "last_name": "",
+              "display_name": "Anna ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:14.635979+01:00",
+            "updated_at": "2026-11-20T10:31:14.639009+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 4.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-18T18:30:00+01:00",
+          "to_date": "2026-11-18T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 17,
+          "recipe_name": "Karottensuppe mit Ingwer",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 65,
+        "servings": 4.0,
+        "created_by": {
+          "id": 17,
+          "username": "anna",
+          "first_name": "Anna",
+          "last_name": "",
+          "display_name": "Anna ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 17,
+        "username": "anna",
+        "first_name": "Anna",
+        "last_name": "",
+        "display_name": "Anna ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:25.911018+01:00",
+      "updated_at": "2026-11-20T10:31:25.911031+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1132,
+      "list_recipe": 18,
+      "shopping_lists": [],
+      "food": {
+        "id": 524,
+        "name": "Ingwer",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 41,
+          "name": "Obst & Gemüse",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 126,
+        "name": "g",
+        "plural_name": "g",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 20.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1136,
+      "list_recipe_data": {
+        "id": 18,
+        "name": "",
+        "recipe": 200,
+        "recipe_data": {
+          "id": 200,
+          "name": "Karottensuppe mit Ingwer",
+          "description": "Cremig, wärmend und in einer halben Stunde fertig.",
+          "image": null,
+          "keywords": [
+            {
+              "id": 175,
+              "label": "Suppe"
+            },
+            {
+              "id": 176,
+              "label": "Vegetarisch"
+            },
+            {
+              "id": 177,
+              "label": "Herbst"
+            }
+          ],
+          "working_time": 15,
+          "waiting_time": 20,
+          "created_by": {
+            "id": 17,
+            "username": "anna",
+            "first_name": "Anna",
+            "last_name": "",
+            "display_name": "Anna ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:14.635979+01:00",
+          "updated_at": "2026-11-20T10:31:14.639009+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 65,
+          "title": "",
+          "recipe": {
+            "id": 200,
+            "name": "Karottensuppe mit Ingwer",
+            "description": "Cremig, wärmend und in einer halben Stunde fertig.",
+            "image": null,
+            "keywords": [
+              {
+                "id": 175,
+                "label": "Suppe"
+              },
+              {
+                "id": 176,
+                "label": "Vegetarisch"
+              },
+              {
+                "id": 177,
+                "label": "Herbst"
+              }
+            ],
+            "working_time": 15,
+            "waiting_time": 20,
+            "created_by": {
+              "id": 17,
+              "username": "anna",
+              "first_name": "Anna",
+              "last_name": "",
+              "display_name": "Anna ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:14.635979+01:00",
+            "updated_at": "2026-11-20T10:31:14.639009+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 4.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-18T18:30:00+01:00",
+          "to_date": "2026-11-18T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 17,
+          "recipe_name": "Karottensuppe mit Ingwer",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 65,
+        "servings": 4.0,
+        "created_by": {
+          "id": 17,
+          "username": "anna",
+          "first_name": "Anna",
+          "last_name": "",
+          "display_name": "Anna ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 17,
+        "username": "anna",
+        "first_name": "Anna",
+        "last_name": "",
+        "display_name": "Anna ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:25.911063+01:00",
+      "updated_at": "2026-11-20T10:31:25.911067+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1133,
+      "list_recipe": 18,
+      "shopping_lists": [],
+      "food": {
+        "id": 536,
+        "name": "Butter",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 43,
+          "name": "Kühlregal",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 128,
+        "name": "EL",
+        "plural_name": "EL",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 2.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1137,
+      "list_recipe_data": {
+        "id": 18,
+        "name": "",
+        "recipe": 200,
+        "recipe_data": {
+          "id": 200,
+          "name": "Karottensuppe mit Ingwer",
+          "description": "Cremig, wärmend und in einer halben Stunde fertig.",
+          "image": null,
+          "keywords": [
+            {
+              "id": 175,
+              "label": "Suppe"
+            },
+            {
+              "id": 176,
+              "label": "Vegetarisch"
+            },
+            {
+              "id": 177,
+              "label": "Herbst"
+            }
+          ],
+          "working_time": 15,
+          "waiting_time": 20,
+          "created_by": {
+            "id": 17,
+            "username": "anna",
+            "first_name": "Anna",
+            "last_name": "",
+            "display_name": "Anna ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:14.635979+01:00",
+          "updated_at": "2026-11-20T10:31:14.639009+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 65,
+          "title": "",
+          "recipe": {
+            "id": 200,
+            "name": "Karottensuppe mit Ingwer",
+            "description": "Cremig, wärmend und in einer halben Stunde fertig.",
+            "image": null,
+            "keywords": [
+              {
+                "id": 175,
+                "label": "Suppe"
+              },
+              {
+                "id": 176,
+                "label": "Vegetarisch"
+              },
+              {
+                "id": 177,
+                "label": "Herbst"
+              }
+            ],
+            "working_time": 15,
+            "waiting_time": 20,
+            "created_by": {
+              "id": 17,
+              "username": "anna",
+              "first_name": "Anna",
+              "last_name": "",
+              "display_name": "Anna ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:14.635979+01:00",
+            "updated_at": "2026-11-20T10:31:14.639009+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 4.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-18T18:30:00+01:00",
+          "to_date": "2026-11-18T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 17,
+          "recipe_name": "Karottensuppe mit Ingwer",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 65,
+        "servings": 4.0,
+        "created_by": {
+          "id": 17,
+          "username": "anna",
+          "first_name": "Anna",
+          "last_name": "",
+          "display_name": "Anna ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 17,
+        "username": "anna",
+        "first_name": "Anna",
+        "last_name": "",
+        "display_name": "Anna ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:25.911092+01:00",
+      "updated_at": "2026-11-20T10:31:25.911096+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1134,
+      "list_recipe": 18,
+      "shopping_lists": [],
+      "food": {
+        "id": 557,
+        "name": "Gemüsebrühe",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 45,
+          "name": "Trockenwaren",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 129,
+        "name": "ml",
+        "plural_name": "ml",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 800.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1138,
+      "list_recipe_data": {
+        "id": 18,
+        "name": "",
+        "recipe": 200,
+        "recipe_data": {
+          "id": 200,
+          "name": "Karottensuppe mit Ingwer",
+          "description": "Cremig, wärmend und in einer halben Stunde fertig.",
+          "image": null,
+          "keywords": [
+            {
+              "id": 175,
+              "label": "Suppe"
+            },
+            {
+              "id": 176,
+              "label": "Vegetarisch"
+            },
+            {
+              "id": 177,
+              "label": "Herbst"
+            }
+          ],
+          "working_time": 15,
+          "waiting_time": 20,
+          "created_by": {
+            "id": 17,
+            "username": "anna",
+            "first_name": "Anna",
+            "last_name": "",
+            "display_name": "Anna ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:14.635979+01:00",
+          "updated_at": "2026-11-20T10:31:14.639009+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 65,
+          "title": "",
+          "recipe": {
+            "id": 200,
+            "name": "Karottensuppe mit Ingwer",
+            "description": "Cremig, wärmend und in einer halben Stunde fertig.",
+            "image": null,
+            "keywords": [
+              {
+                "id": 175,
+                "label": "Suppe"
+              },
+              {
+                "id": 176,
+                "label": "Vegetarisch"
+              },
+              {
+                "id": 177,
+                "label": "Herbst"
+              }
+            ],
+            "working_time": 15,
+            "waiting_time": 20,
+            "created_by": {
+              "id": 17,
+              "username": "anna",
+              "first_name": "Anna",
+              "last_name": "",
+              "display_name": "Anna ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:14.635979+01:00",
+            "updated_at": "2026-11-20T10:31:14.639009+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 4.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-18T18:30:00+01:00",
+          "to_date": "2026-11-18T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 17,
+          "recipe_name": "Karottensuppe mit Ingwer",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 65,
+        "servings": 4.0,
+        "created_by": {
+          "id": 17,
+          "username": "anna",
+          "first_name": "Anna",
+          "last_name": "",
+          "display_name": "Anna ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 17,
+        "username": "anna",
+        "first_name": "Anna",
+        "last_name": "",
+        "display_name": "Anna ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:25.911120+01:00",
+      "updated_at": "2026-11-20T10:31:25.911123+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1135,
+      "list_recipe": 18,
+      "shopping_lists": [],
+      "food": {
+        "id": 558,
+        "name": "Kokosmilch",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 46,
+          "name": "Konserven",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 129,
+        "name": "ml",
+        "plural_name": "ml",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 200.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1139,
+      "list_recipe_data": {
+        "id": 18,
+        "name": "",
+        "recipe": 200,
+        "recipe_data": {
+          "id": 200,
+          "name": "Karottensuppe mit Ingwer",
+          "description": "Cremig, wärmend und in einer halben Stunde fertig.",
+          "image": null,
+          "keywords": [
+            {
+              "id": 175,
+              "label": "Suppe"
+            },
+            {
+              "id": 176,
+              "label": "Vegetarisch"
+            },
+            {
+              "id": 177,
+              "label": "Herbst"
+            }
+          ],
+          "working_time": 15,
+          "waiting_time": 20,
+          "created_by": {
+            "id": 17,
+            "username": "anna",
+            "first_name": "Anna",
+            "last_name": "",
+            "display_name": "Anna ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:14.635979+01:00",
+          "updated_at": "2026-11-20T10:31:14.639009+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 65,
+          "title": "",
+          "recipe": {
+            "id": 200,
+            "name": "Karottensuppe mit Ingwer",
+            "description": "Cremig, wärmend und in einer halben Stunde fertig.",
+            "image": null,
+            "keywords": [
+              {
+                "id": 175,
+                "label": "Suppe"
+              },
+              {
+                "id": 176,
+                "label": "Vegetarisch"
+              },
+              {
+                "id": 177,
+                "label": "Herbst"
+              }
+            ],
+            "working_time": 15,
+            "waiting_time": 20,
+            "created_by": {
+              "id": 17,
+              "username": "anna",
+              "first_name": "Anna",
+              "last_name": "",
+              "display_name": "Anna ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:14.635979+01:00",
+            "updated_at": "2026-11-20T10:31:14.639009+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 4.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-18T18:30:00+01:00",
+          "to_date": "2026-11-18T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 17,
+          "recipe_name": "Karottensuppe mit Ingwer",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 65,
+        "servings": 4.0,
+        "created_by": {
+          "id": 17,
+          "username": "anna",
+          "first_name": "Anna",
+          "last_name": "",
+          "display_name": "Anna ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 17,
+        "username": "anna",
+        "first_name": "Anna",
+        "last_name": "",
+        "display_name": "Anna ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:25.911148+01:00",
+      "updated_at": "2026-11-20T10:31:25.911152+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1136,
+      "list_recipe": 19,
+      "shopping_lists": [],
+      "food": {
+        "id": 577,
+        "name": "mushroom",
+        "plural_name": "mushrooms",
+        "supermarket_category": {
+          "id": 41,
+          "name": "Obst & Gemüse",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 126,
+        "name": "g",
+        "plural_name": "g",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 300.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1315,
+      "list_recipe_data": {
+        "id": 19,
+        "name": "",
+        "recipe": 223,
+        "recipe_data": {
+          "id": 223,
+          "name": "Mushroom Stroganoff",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 189,
+              "label": "Vegetarian"
+            },
+            {
+              "id": 195,
+              "label": "Main"
+            }
+          ],
+          "working_time": 30,
+          "waiting_time": 0,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:23.455360+01:00",
+          "updated_at": "2026-11-20T10:31:23.457517+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 67,
+          "title": "",
+          "recipe": {
+            "id": 223,
+            "name": "Mushroom Stroganoff",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 189,
+                "label": "Vegetarian"
+              },
+              {
+                "id": 195,
+                "label": "Main"
+              }
+            ],
+            "working_time": 30,
+            "waiting_time": 0,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:23.455360+01:00",
+            "updated_at": "2026-11-20T10:31:23.457517+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 2.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-19T18:30:00+01:00",
+          "to_date": "2026-11-19T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Mushroom Stroganoff",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 67,
+        "servings": 2.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:26.070290+01:00",
+      "updated_at": "2026-11-20T10:31:26.070302+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1137,
+      "list_recipe": 19,
+      "shopping_lists": [],
+      "food": {
+        "id": 574,
+        "name": "onion",
+        "plural_name": "onions",
+        "supermarket_category": {
+          "id": 41,
+          "name": "Obst & Gemüse",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 140,
+        "name": "piece",
+        "plural_name": "piece",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 0.5,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1316,
+      "list_recipe_data": {
+        "id": 19,
+        "name": "",
+        "recipe": 223,
+        "recipe_data": {
+          "id": 223,
+          "name": "Mushroom Stroganoff",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 189,
+              "label": "Vegetarian"
+            },
+            {
+              "id": 195,
+              "label": "Main"
+            }
+          ],
+          "working_time": 30,
+          "waiting_time": 0,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:23.455360+01:00",
+          "updated_at": "2026-11-20T10:31:23.457517+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 67,
+          "title": "",
+          "recipe": {
+            "id": 223,
+            "name": "Mushroom Stroganoff",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 189,
+                "label": "Vegetarian"
+              },
+              {
+                "id": 195,
+                "label": "Main"
+              }
+            ],
+            "working_time": 30,
+            "waiting_time": 0,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:23.455360+01:00",
+            "updated_at": "2026-11-20T10:31:23.457517+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 2.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-19T18:30:00+01:00",
+          "to_date": "2026-11-19T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Mushroom Stroganoff",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 67,
+        "servings": 2.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:26.070330+01:00",
+      "updated_at": "2026-11-20T10:31:26.070333+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1138,
+      "list_recipe": 19,
+      "shopping_lists": [],
+      "food": {
+        "id": 598,
+        "name": "olive oil",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 47,
+          "name": "Gewürze & Öle",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 142,
+        "name": "tbsp",
+        "plural_name": "tbsp",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 1.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1317,
+      "list_recipe_data": {
+        "id": 19,
+        "name": "",
+        "recipe": 223,
+        "recipe_data": {
+          "id": 223,
+          "name": "Mushroom Stroganoff",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 189,
+              "label": "Vegetarian"
+            },
+            {
+              "id": 195,
+              "label": "Main"
+            }
+          ],
+          "working_time": 30,
+          "waiting_time": 0,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:23.455360+01:00",
+          "updated_at": "2026-11-20T10:31:23.457517+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 67,
+          "title": "",
+          "recipe": {
+            "id": 223,
+            "name": "Mushroom Stroganoff",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 189,
+                "label": "Vegetarian"
+              },
+              {
+                "id": 195,
+                "label": "Main"
+              }
+            ],
+            "working_time": 30,
+            "waiting_time": 0,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:23.455360+01:00",
+            "updated_at": "2026-11-20T10:31:23.457517+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 2.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-19T18:30:00+01:00",
+          "to_date": "2026-11-19T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Mushroom Stroganoff",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 67,
+        "servings": 2.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:26.070353+01:00",
+      "updated_at": "2026-11-20T10:31:26.070355+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1139,
+      "list_recipe": 19,
+      "shopping_lists": [],
+      "food": {
+        "id": 575,
+        "name": "garlic",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 41,
+          "name": "Obst & Gemüse",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 144,
+        "name": "clove",
+        "plural_name": "clove",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 1.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1318,
+      "list_recipe_data": {
+        "id": 19,
+        "name": "",
+        "recipe": 223,
+        "recipe_data": {
+          "id": 223,
+          "name": "Mushroom Stroganoff",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 189,
+              "label": "Vegetarian"
+            },
+            {
+              "id": 195,
+              "label": "Main"
+            }
+          ],
+          "working_time": 30,
+          "waiting_time": 0,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:23.455360+01:00",
+          "updated_at": "2026-11-20T10:31:23.457517+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 67,
+          "title": "",
+          "recipe": {
+            "id": 223,
+            "name": "Mushroom Stroganoff",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 189,
+                "label": "Vegetarian"
+              },
+              {
+                "id": 195,
+                "label": "Main"
+              }
+            ],
+            "working_time": 30,
+            "waiting_time": 0,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:23.455360+01:00",
+            "updated_at": "2026-11-20T10:31:23.457517+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 2.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-19T18:30:00+01:00",
+          "to_date": "2026-11-19T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Mushroom Stroganoff",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 67,
+        "servings": 2.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:26.070373+01:00",
+      "updated_at": "2026-11-20T10:31:26.070376+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1140,
+      "list_recipe": 19,
+      "shopping_lists": [],
+      "food": {
+        "id": 597,
+        "name": "stock",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 45,
+          "name": "Trockenwaren",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 129,
+        "name": "ml",
+        "plural_name": "ml",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 100.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1319,
+      "list_recipe_data": {
+        "id": 19,
+        "name": "",
+        "recipe": 223,
+        "recipe_data": {
+          "id": 223,
+          "name": "Mushroom Stroganoff",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 189,
+              "label": "Vegetarian"
+            },
+            {
+              "id": 195,
+              "label": "Main"
+            }
+          ],
+          "working_time": 30,
+          "waiting_time": 0,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:23.455360+01:00",
+          "updated_at": "2026-11-20T10:31:23.457517+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 67,
+          "title": "",
+          "recipe": {
+            "id": 223,
+            "name": "Mushroom Stroganoff",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 189,
+                "label": "Vegetarian"
+              },
+              {
+                "id": 195,
+                "label": "Main"
+              }
+            ],
+            "working_time": 30,
+            "waiting_time": 0,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:23.455360+01:00",
+            "updated_at": "2026-11-20T10:31:23.457517+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 2.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-19T18:30:00+01:00",
+          "to_date": "2026-11-19T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Mushroom Stroganoff",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 67,
+        "servings": 2.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:26.070395+01:00",
+      "updated_at": "2026-11-20T10:31:26.070397+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1141,
+      "list_recipe": 19,
+      "shopping_lists": [],
+      "food": {
+        "id": 585,
+        "name": "sour cream",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 43,
+          "name": "Kühlregal",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 126,
+        "name": "g",
+        "plural_name": "g",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 75.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1320,
+      "list_recipe_data": {
+        "id": 19,
+        "name": "",
+        "recipe": 223,
+        "recipe_data": {
+          "id": 223,
+          "name": "Mushroom Stroganoff",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 189,
+              "label": "Vegetarian"
+            },
+            {
+              "id": 195,
+              "label": "Main"
+            }
+          ],
+          "working_time": 30,
+          "waiting_time": 0,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:23.455360+01:00",
+          "updated_at": "2026-11-20T10:31:23.457517+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 67,
+          "title": "",
+          "recipe": {
+            "id": 223,
+            "name": "Mushroom Stroganoff",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 189,
+                "label": "Vegetarian"
+              },
+              {
+                "id": 195,
+                "label": "Main"
+              }
+            ],
+            "working_time": 30,
+            "waiting_time": 0,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:23.455360+01:00",
+            "updated_at": "2026-11-20T10:31:23.457517+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 2.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-19T18:30:00+01:00",
+          "to_date": "2026-11-19T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Mushroom Stroganoff",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 67,
+        "servings": 2.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:26.070416+01:00",
+      "updated_at": "2026-11-20T10:31:26.070419+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1142,
+      "list_recipe": 19,
+      "shopping_lists": [],
+      "food": {
+        "id": 593,
+        "name": "egg noodles",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 45,
+          "name": "Trockenwaren",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 126,
+        "name": "g",
+        "plural_name": "g",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 150.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": 1321,
+      "list_recipe_data": {
+        "id": 19,
+        "name": "",
+        "recipe": 223,
+        "recipe_data": {
+          "id": 223,
+          "name": "Mushroom Stroganoff",
+          "description": "",
+          "image": null,
+          "keywords": [
+            {
+              "id": 189,
+              "label": "Vegetarian"
+            },
+            {
+              "id": 195,
+              "label": "Main"
+            }
+          ],
+          "working_time": 30,
+          "waiting_time": 0,
+          "created_by": {
+            "id": 18,
+            "username": "ben",
+            "first_name": "Ben",
+            "last_name": "",
+            "display_name": "Ben ",
+            "is_staff": false,
+            "is_superuser": false,
+            "is_active": true
+          },
+          "created_at": "2026-11-20T10:31:23.455360+01:00",
+          "updated_at": "2026-11-20T10:31:23.457517+01:00",
+          "internal": true,
+          "private": false,
+          "servings": 4,
+          "servings_text": "",
+          "rating": null,
+          "last_cooked": null,
+          "new": true
+        },
+        "meal_plan_data": {
+          "id": 67,
+          "title": "",
+          "recipe": {
+            "id": 223,
+            "name": "Mushroom Stroganoff",
+            "description": "",
+            "image": null,
+            "keywords": [
+              {
+                "id": 189,
+                "label": "Vegetarian"
+              },
+              {
+                "id": 195,
+                "label": "Main"
+              }
+            ],
+            "working_time": 30,
+            "waiting_time": 0,
+            "created_by": {
+              "id": 18,
+              "username": "ben",
+              "first_name": "Ben",
+              "last_name": "",
+              "display_name": "Ben ",
+              "is_staff": false,
+              "is_superuser": false,
+              "is_active": true
+            },
+            "created_at": "2026-11-20T10:31:23.455360+01:00",
+            "updated_at": "2026-11-20T10:31:23.457517+01:00",
+            "internal": true,
+            "private": false,
+            "servings": 4,
+            "servings_text": "",
+            "rating": null,
+            "last_cooked": null,
+            "new": true
+          },
+          "servings": 2.0,
+          "note": "",
+          "note_markdown": "",
+          "from_date": "2026-11-19T18:30:00+01:00",
+          "to_date": "2026-11-19T18:30:00+01:00",
+          "meal_type": {
+            "id": 21,
+            "name": "Abendessen",
+            "order": 2,
+            "time": "18:30:00",
+            "color": "#c26a4a",
+            "created_by": 17
+          },
+          "created_by": 18,
+          "recipe_name": "Mushroom Stroganoff",
+          "meal_type_name": "Abendessen",
+          "shopping": true
+        },
+        "mealplan": 67,
+        "servings": 2.0,
+        "created_by": {
+          "id": 18,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        }
+      },
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:26.070437+01:00",
+      "updated_at": "2026-11-20T10:31:26.070440+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1143,
+      "list_recipe": null,
+      "shopping_lists": [],
+      "food": {
+        "id": 537,
+        "name": "Milch",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 43,
+          "name": "Kühlregal",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 137,
+        "name": "l",
+        "plural_name": "l",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 2.0,
+      "order": 0,
+      "checked": true,
+      "ingredient": null,
+      "list_recipe_data": null,
+      "created_by": {
+        "id": 17,
+        "username": "anna",
+        "first_name": "Anna",
+        "last_name": "",
+        "display_name": "Anna ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:26.287832+01:00",
+      "updated_at": "2026-11-20T10:31:26.598071+01:00",
+      "completed_at": "2026-11-20T10:31:26.598071+01:00",
+      "delay_until": null
+    },
+    {
+      "id": 1144,
+      "list_recipe": null,
+      "shopping_lists": [],
+      "food": {
+        "id": 552,
+        "name": "Haferflocken",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 45,
+          "name": "Trockenwaren",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 126,
+        "name": "g",
+        "plural_name": "g",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 500.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": null,
+      "list_recipe_data": null,
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:26.334352+01:00",
+      "updated_at": "2026-11-20T10:31:26.334364+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1145,
+      "list_recipe": null,
+      "shopping_lists": [],
+      "food": {
+        "id": 532,
+        "name": "Zitrone",
+        "plural_name": "Zitronen",
+        "supermarket_category": {
+          "id": 41,
+          "name": "Obst & Gemüse",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 127,
+        "name": "Stück",
+        "plural_name": "Stück",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 3.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": null,
+      "list_recipe_data": null,
+      "created_by": {
+        "id": 17,
+        "username": "anna",
+        "first_name": "Anna",
+        "last_name": "",
+        "display_name": "Anna ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:26.371006+01:00",
+      "updated_at": "2026-11-20T10:31:26.371017+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1146,
+      "list_recipe": null,
+      "shopping_lists": [],
+      "food": {
+        "id": 535,
+        "name": "Basilikum",
+        "plural_name": null,
+        "supermarket_category": {
+          "id": 41,
+          "name": "Obst & Gemüse",
+          "description": null,
+          "open_data_slug": null
+        },
+        "shopping_lists": []
+      },
+      "unit": null,
+      "amount": 1.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": null,
+      "list_recipe_data": null,
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:26.406130+01:00",
+      "updated_at": "2026-11-20T10:31:26.406145+01:00",
+      "completed_at": null,
+      "delay_until": null
+    },
+    {
+      "id": 1147,
+      "list_recipe": null,
+      "shopping_lists": [],
+      "food": {
+        "id": 604,
+        "name": "Küchenrolle",
+        "plural_name": null,
+        "supermarket_category": null,
+        "shopping_lists": []
+      },
+      "unit": {
+        "id": 127,
+        "name": "Stück",
+        "plural_name": "Stück",
+        "description": null,
+        "base_unit": null,
+        "open_data_slug": null
+      },
+      "amount": 2.0,
+      "order": 0,
+      "checked": false,
+      "ingredient": null,
+      "list_recipe_data": null,
+      "created_by": {
+        "id": 18,
+        "username": "ben",
+        "first_name": "Ben",
+        "last_name": "",
+        "display_name": "Ben ",
+        "is_staff": false,
+        "is_superuser": false,
+        "is_active": true
+      },
+      "created_at": "2026-11-20T10:31:26.451459+01:00",
+      "updated_at": "2026-11-20T10:31:26.451475+01:00",
+      "completed_at": null,
+      "delay_until": null
+    }
+  ]
+}
