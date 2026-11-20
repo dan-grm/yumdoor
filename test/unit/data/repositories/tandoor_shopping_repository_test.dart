@@ -471,6 +471,39 @@ void main() {
       expect(adapter.requests.last.method, 'DELETE');
     });
 
+    test("cleans up the plan when the recipe's answer is lost", () async {
+      var checks = 0;
+      final adapter = FakeHttpAdapter((request) {
+        if (planCheck(request, listRecipes: [checks++ < 2 ? 40 : 42])
+            case final response?) {
+          return response;
+        }
+        if (request.method == 'DELETE') return jsonResponse(null, status: 204);
+        throw DioException.receiveTimeout(
+          timeout: const Duration(seconds: 30),
+          requestOptions: request,
+        );
+      });
+
+      await expectLater(
+        shopping(adapter).addRecipe(salad, 4, mealPlanId: 9),
+        throwsA(isA<OfflineFailure>()),
+      );
+
+      expect(
+        [for (final r in adapter.requests) describe(r)],
+        [
+          'GET /shopping-list-entry/?mealplan=9',
+          'GET /shopping-list-recipe/?mealplan=9',
+          'DELETE /shopping-list-recipe/40/',
+          'POST /shopping-list-recipe/',
+          'GET /shopping-list-entry/?mealplan=9',
+          'GET /shopping-list-recipe/?mealplan=9',
+          'DELETE /shopping-list-recipe/42/',
+        ],
+      );
+    });
+
     test('creates no entries when the recipe fails', () async {
       final adapter = FakeHttpAdapter(
         (_) => jsonResponse({'recipe': 'Invalid'}, status: 400),
@@ -602,7 +635,7 @@ void main() {
       expect(adapter.requests, isEmpty);
     });
 
-    test("deletes a meal plan's recipes when no entries are left", () async {
+    test("deletes the entries' recipe when the plan has none left", () async {
       final adapter = FakeHttpAdapter(
         (request) =>
             planCheck(request, listRecipes: [42, 43]) ??
@@ -620,11 +653,26 @@ void main() {
           'DELETE /shopping-list-entry/1/',
           'DELETE /shopping-list-entry/2/',
           'GET /shopping-list-entry/?mealplan=9',
-          'GET /shopping-list-recipe/?mealplan=9',
+          // Not 43: someone may be adding it right now.
           'DELETE /shopping-list-recipe/42/',
-          'DELETE /shopping-list-recipe/43/',
         ],
       );
+    });
+
+    test('skips the cleanup when offline', () async {
+      final adapter = FakeHttpAdapter(
+        (request) => throw DioException.connectionError(
+          requestOptions: request,
+          reason: 'offline',
+        ),
+      );
+
+      await expectLater(
+        shopping(adapter)
+            .deleteEntries([domainEntry(1, mealPlan: plan, listRecipe: 42)]),
+        throwsA(isA<OfflineFailure>()),
+      );
+      expect(adapter.requests, hasLength(1));
     });
 
     test("keeps a meal plan's recipes with entries left", () async {

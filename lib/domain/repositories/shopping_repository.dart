@@ -30,11 +30,14 @@ abstract interface class ShoppingRepository {
   /// Returns what was added and how many ingredients were on hand. When
   /// there is nothing to add ([RecipeShopping.isEmpty]), nothing is created
   /// and the plan is not marked. If adding fails, the recipe is taken off the
-  /// list again, so a retry doesn't add it twice.
+  /// list again where the server can be reached, so a retry doesn't add it
+  /// twice; read the list again before retrying.
   ///
   /// For a meal plan, pass its servings: Tandoor rescales the entries to
-  /// them whenever the plan is saved. Skip plans already
-  /// [MealPlan.onShoppingList]; adding one again adds its ingredients twice.
+  /// them whenever the plan is saved. Skip plans that have entries on the
+  /// list; adding one again adds its ingredients twice. A plan that is
+  /// [MealPlan.onShoppingList] without entries (after a failed add) can be
+  /// added: the empty recipe is removed first.
   /// The on-hand flags come from [recipe], so pass a freshly read one.
   Future<RecipeShopping> addRecipe(
     Recipe recipe,

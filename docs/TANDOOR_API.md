@@ -455,8 +455,11 @@ Checked on 2.6.15 (Yumdoor's side is `TandoorShoppingRepository.addRecipe`):
   `ShoppingListRecipe` remains, invisible in the list). Deleting the `ShoppingListRecipe`
   (`DELETE /api/shopping-list-recipe/{id}/`, household members may) deletes its entries and clears the flag.
   So Yumdoor deletes the `ShoppingListRecipe` again when `bulk_create_entries` fails. After deleting entries of a
-  meal plan, and before adding a meal plan's recipe, it checks `GET /api/shopping-list-entry/?mealplan=<id>` and,
-  when nothing is left, deletes the plan's `ShoppingListRecipe`s (`GET /api/shopping-list-recipe/?mealplan=<id>`). A recipe added without a meal plan keeps an empty `ShoppingListRecipe`; it does no harm.
+  meal plan it checks `GET /api/shopping-list-entry/?mealplan=<id>` and, when nothing is left, deletes the deleted
+  entries' `ShoppingListRecipe`s. Before adding a meal plan's recipe (and when creating the `ShoppingListRecipe`
+  fails), it does the same for all of the plan's (`GET /api/shopping-list-recipe/?mealplan=<id>`), so a plan left
+  marked without entries can be added again. The entry count only covers what the caller's list shows: checked
+  entries older than their `shopping_recent_days` are deleted with the `ShoppingListRecipe` (cascade). A recipe added without a meal plan keeps an empty `ShoppingListRecipe`; it does no harm.
 - `bulk_create_entries` answers 200 with the request echoed, not the created entries. An unknown `food_id` gets
   a 500 (HTML), and the `ShoppingListRecipe` stays.
 - `servings` and entry `amount`s are rounded to 4 decimal places by the server; more is not an error.

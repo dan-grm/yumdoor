@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:tandoor_api/tandoor_api.dart' as api;
 
+import '../../core/failures.dart';
+import '../../domain/models/meal_plan.dart';
 import '../../domain/models/recipe.dart';
 import '../../domain/models/shopping.dart';
 import '../../domain/repositories/shopping_repository.dart';
@@ -132,9 +134,12 @@ class TandoorShoppingRepository implements ShoppingRepository {
   /// The client path of docs/TANDOOR_API.md#meal-plan--shopping-list: a
   /// `ShoppingListRecipe`, then its entries in bulk. The recipe alone already
   /// marks the meal plan as on the list, so it is deleted again if the
-  /// entries fail; that also removes any entries the server did create.
-  /// Recipes a plan has without entries, left over from a failed add whose
-  /// cleanup failed, too, are deleted first.
+  /// entries fail; that also removes any entries the server did create. If
+  /// the recipe's own create fails, it may still have reached the server, so
+  /// the plan is cleaned up as before an add.
+  ///
+  /// Before adding, recipes the plan has without entries (left over from an
+  /// add whose cleanup failed, too) are deleted.
   @override
   Future<RecipeShopping> addRecipe(
     Recipe recipe,
@@ -146,19 +151,20 @@ class TandoorShoppingRepository implements ShoppingRepository {
     if (shopping.isEmpty) return shopping;
     await guardRequest(() async {
       if (mealPlanId != null) await _removeEmptyListRecipes(mealPlanId);
-      final created = await _dio.post<Object?>(
-        '/api/shopping-list-recipe/',
-        data: {
-          'recipe': recipe.id,
-          'servings': scaledTo,
-          'mealplan': mealPlanId,
-        },
-      );
-      final listRecipeId = switch (created.data) {
-        {'id': final int id} => id,
-        _ => throw const FormatException('Shopping list recipe without id'),
-      };
+      int? listRecipeId;
       try {
+        final created = await _dio.post<Object?>(
+          '/api/shopping-list-recipe/',
+          data: {
+            'recipe': recipe.id,
+            'servings': scaledTo,
+            'mealplan': mealPlanId,
+          },
+        );
+        listRecipeId = switch (created.data) {
+          {'id': final int id} => id,
+          _ => throw const FormatException('Shopping list recipe without id'),
+        };
         await _dio.post<Object?>(
           '/api/shopping-list-recipe/$listRecipeId/bulk_create_entries/',
           data: {
@@ -177,10 +183,14 @@ class TandoorShoppingRepository implements ShoppingRepository {
         );
       } on Object {
         try {
-          await _dio.delete<Object?>(
-            '/api/shopping-list-recipe/$listRecipeId/',
-          );
-        } on DioException {
+          if (listRecipeId != null) {
+            await _dio.delete<Object?>(
+              '/api/shopping-list-recipe/$listRecipeId/',
+            );
+          } else if (mealPlanId != null) {
+            await _removeEmptyListRecipes(mealPlanId);
+          }
+        } on Object {
           // It stays until the plan is added again.
         }
         rethrow;
@@ -204,10 +214,12 @@ class TandoorShoppingRepository implements ShoppingRepository {
   /// bulk delete. All are tried; the first failure is thrown at the end.
   ///
   /// Deleting a plan's last entries leaves its `ShoppingListRecipe`, and
-  /// with it the plan's `shopping` flag, so the recipes of a meal plan that
-  /// has no entries left are deleted, too. "No entries left" is what the
-  /// household's list shows, so checked entries older than the recent days
-  /// go with them. That cleanup is best effort.
+  /// with it the plan's `shopping` flag, so the recipes of the deleted
+  /// entries are deleted, too, when their meal plan has no entries left.
+  /// "No entries left" is what this user's list shows: checked entries older
+  /// than their recent days go with the recipe, even if another household
+  /// member with more recent days still sees them. That cleanup is best
+  /// effort, and skipped when the device seems to be offline.
   @override
   Future<void> deleteEntries(Iterable<ShoppingEntry> entries) async {
     final list = entries.toList();
@@ -223,15 +235,26 @@ class TandoorShoppingRepository implements ShoppingRepository {
           }),
       ]);
     }
-    final plans = {
-      for (final entry in list)
-        if (entry.source?.mealPlan case final plan?) plan.id,
+    final offline = switch (failure) {
+      (final DioException e, _) => failureFromDioException(e) is OfflineFailure,
+      _ => false,
     };
-    for (final planId in plans) {
-      try {
-        await _removeEmptyListRecipes(planId);
-      } on Object {
-        // The plan stays marked as on the list until it is added again.
+    if (!offline) {
+      final plans = <int, Set<int>>{};
+      for (final entry in list) {
+        if (entry.source case ShoppingEntrySource(
+          :final listRecipeId,
+          mealPlan: MealPlan(id: final planId),
+        )) {
+          (plans[planId] ??= {}).add(listRecipeId);
+        }
+      }
+      for (final MapEntry(key: planId, value: ids) in plans.entries) {
+        try {
+          await _removeEmptyListRecipes(planId, only: ids);
+        } on Object {
+          // The plan stays marked as on the list until it is added again.
+        }
       }
     }
     if (failure case (final error, final stack)) {
@@ -240,8 +263,10 @@ class TandoorShoppingRepository implements ShoppingRepository {
   }
 
   /// Deletes the `ShoppingListRecipe`s of the meal plan [mealPlanId] if it
-  /// has no entries on the list, so the plan is no longer marked.
-  Future<void> _removeEmptyListRecipes(int mealPlanId) async {
+  /// has no entries on the list, so the plan is no longer marked. With
+  /// [only], just those of them; a recipe another device is adding right now
+  /// has no entries yet either.
+  Future<void> _removeEmptyListRecipes(int mealPlanId, {Set<int>? only}) async {
     final left = requireBody(
       (await _api.apiShoppingListEntryList(
         mealplan: mealPlanId,
@@ -249,14 +274,22 @@ class TandoorShoppingRepository implements ShoppingRepository {
       )).data,
     );
     if (left.count > 0) return;
-    final recipes = requireBody(
-      (await _api.apiShoppingListRecipeList(
-        mealplan: mealPlanId,
-        pageSize: _pageSize,
-      )).data,
-    );
-    for (final listRecipe in recipes.results) {
-      final id = requireId(listRecipe.id, 'ShoppingListRecipe');
+    final Iterable<int> ids;
+    if (only != null) {
+      ids = only;
+    } else {
+      final recipes = requireBody(
+        (await _api.apiShoppingListRecipeList(
+          mealplan: mealPlanId,
+          pageSize: _pageSize,
+        )).data,
+      );
+      ids = [
+        for (final listRecipe in recipes.results)
+          requireId(listRecipe.id, 'ShoppingListRecipe'),
+      ];
+    }
+    for (final id in ids) {
       await _ignoreNotFound(
         () => _dio.delete<Object?>('/api/shopping-list-recipe/$id/'),
       );
