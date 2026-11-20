@@ -699,6 +699,54 @@ final class MealTypeRepositoryProvider
 String _$mealTypeRepositoryHash() =>
     r'7acc0db1a92994a4b53e39a7a56291cdd635356b';
 
+@ProviderFor(shoppingRepository)
+final shoppingRepositoryProvider = ShoppingRepositoryProvider._();
+
+final class ShoppingRepositoryProvider
+    extends
+        $FunctionalProvider<
+          ShoppingRepository,
+          ShoppingRepository,
+          ShoppingRepository
+        >
+    with $Provider<ShoppingRepository> {
+  ShoppingRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'shoppingRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$shoppingRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<ShoppingRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ShoppingRepository create(Ref ref) {
+    return shoppingRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ShoppingRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ShoppingRepository>(value),
+    );
+  }
+}
+
+String _$shoppingRepositoryHash() =>
+    r'5d05d45776533afdcf8a609af6c0275763fc727a';
+
 @ProviderFor(_cacheDatabase)
 final _cacheDatabaseProvider = _CacheDatabaseProvider._();
 

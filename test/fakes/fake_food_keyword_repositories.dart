@@ -51,6 +51,14 @@ class FakeFoodRepository implements FoodRepository {
       (f) => f.id,
     );
   }
+
+  @override
+  Future<Food> setOnHand(int foodId, {required bool onHand}) async {
+    if (failure case final failure?) throw failure;
+    final index = foods.indexWhere((f) => f.id == foodId);
+    if (index < 0) throw const NotFoundFailure();
+    return foods[index] = foods[index].copyWith(onHand: onHand);
+  }
 }
 
 /// [KeywordRepository] for tests, like [FakeFoodRepository].
