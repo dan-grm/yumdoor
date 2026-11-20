@@ -11,7 +11,7 @@ class ScalingService {
     : _recipeServings = recipeServings < 1 ? 1 : recipeServings;
 
   final int _recipeServings;
-  final int _servings;
+  final num _servings;
 
   /// What every amount is multiplied by.
   double get factor => _servings / _recipeServings;

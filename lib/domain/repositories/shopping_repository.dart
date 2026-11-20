@@ -34,10 +34,10 @@ abstract interface class ShoppingRepository {
   /// twice; read the list again before retrying.
   ///
   /// For a meal plan, pass its servings: Tandoor rescales the entries to
-  /// them whenever the plan is saved. Skip plans that have entries on the
-  /// list; adding one again adds its ingredients twice. A plan that is
-  /// [MealPlan.onShoppingList] without entries (after a failed add) can be
-  /// added: the empty recipe is removed first.
+  /// them whenever the plan is saved. Skip plans that are
+  /// [MealPlan.onShoppingList]; adding one again adds its ingredients twice.
+  /// Rarely (a failed add whose cleanup failed, too) a plan is marked
+  /// without entries on the list; adding it again is fine then.
   /// The on-hand flags come from [recipe], so pass a freshly read one.
   Future<RecipeShopping> addRecipe(
     Recipe recipe,

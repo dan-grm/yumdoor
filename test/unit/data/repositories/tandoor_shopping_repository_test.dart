@@ -292,7 +292,6 @@ void main() {
 
     test('creates the recipe for the plan, then its entries', () async {
       final adapter = FakeHttpAdapter((request) {
-        if (planCheck(request) case final response?) return response;
         if (request.uri.path.endsWith('/shopping-list-recipe/')) {
           return jsonResponse({'id': 42, 'servings': 3.0}, status: 201);
         }
@@ -306,13 +305,11 @@ void main() {
       expect(
         [for (final r in adapter.requests) describe(r)],
         [
-          'GET /shopping-list-entry/?mealplan=9',
-          'GET /shopping-list-recipe/?mealplan=9',
           'POST /shopping-list-recipe/',
           'POST /shopping-list-recipe/42/bulk_create_entries/',
         ],
       );
-      final [..., listRecipe, entries] = adapter.requests;
+      final [listRecipe, entries] = adapter.requests;
       expect(jsonDecode(jsonEncode(listRecipe.data)), {
         'recipe': 7,
         'servings': 3.0,
@@ -342,53 +339,6 @@ void main() {
       expect(
         (jsonDecode(jsonEncode(entries.data))['entries'] as List).first,
         containsPair('amount', 225.0),
-      );
-    });
-
-    test('deletes recipes a plan has without entries first', () async {
-      final adapter = FakeHttpAdapter((request) {
-        if (planCheck(request, listRecipes: [40, 41]) case final response?) {
-          return response;
-        }
-        if (request.method == 'DELETE') return jsonResponse(null, status: 204);
-        if (request.uri.path.endsWith('/shopping-list-recipe/')) {
-          return jsonResponse({'id': 42}, status: 201);
-        }
-        return jsonResponse(request.data);
-      });
-
-      await shopping(adapter).addRecipe(salad, 2, mealPlanId: 9);
-
-      expect(
-        [for (final r in adapter.requests) describe(r)],
-        [
-          'GET /shopping-list-entry/?mealplan=9',
-          'GET /shopping-list-recipe/?mealplan=9',
-          'DELETE /shopping-list-recipe/40/',
-          'DELETE /shopping-list-recipe/41/',
-          'POST /shopping-list-recipe/',
-          'POST /shopping-list-recipe/42/bulk_create_entries/',
-        ],
-      );
-    });
-
-    test('keeps the recipes of a plan with entries', () async {
-      final adapter = FakeHttpAdapter((request) {
-        if (planCheck(request, entriesLeft: 1, listRecipes: [40])
-            case final response?) {
-          return response;
-        }
-        if (request.uri.path.endsWith('/shopping-list-recipe/')) {
-          return jsonResponse({'id': 42}, status: 201);
-        }
-        return jsonResponse(request.data);
-      });
-
-      await shopping(adapter).addRecipe(salad, 2, mealPlanId: 9);
-
-      expect(
-        [for (final r in adapter.requests) r.method],
-        ['GET', 'POST', 'POST'],
       );
     });
 
@@ -434,7 +384,6 @@ void main() {
 
     test('deletes the recipe again when its entries fail', () async {
       final adapter = FakeHttpAdapter((request) {
-        if (planCheck(request) case final response?) return response;
         if (request.method == 'DELETE') return jsonResponse(null, status: 204);
         if (request.uri.path.endsWith('/bulk_create_entries/')) {
           return htmlResponse('<h1>Server Error (500)</h1>', status: 500);
@@ -469,39 +418,6 @@ void main() {
         throwsA(isA<OfflineFailure>()),
       );
       expect(adapter.requests.last.method, 'DELETE');
-    });
-
-    test("cleans up the plan when the recipe's answer is lost", () async {
-      var checks = 0;
-      final adapter = FakeHttpAdapter((request) {
-        if (planCheck(request, listRecipes: [checks++ < 2 ? 40 : 42])
-            case final response?) {
-          return response;
-        }
-        if (request.method == 'DELETE') return jsonResponse(null, status: 204);
-        throw DioException.receiveTimeout(
-          timeout: const Duration(seconds: 30),
-          requestOptions: request,
-        );
-      });
-
-      await expectLater(
-        shopping(adapter).addRecipe(salad, 4, mealPlanId: 9),
-        throwsA(isA<OfflineFailure>()),
-      );
-
-      expect(
-        [for (final r in adapter.requests) describe(r)],
-        [
-          'GET /shopping-list-entry/?mealplan=9',
-          'GET /shopping-list-recipe/?mealplan=9',
-          'DELETE /shopping-list-recipe/40/',
-          'POST /shopping-list-recipe/',
-          'GET /shopping-list-entry/?mealplan=9',
-          'GET /shopping-list-recipe/?mealplan=9',
-          'DELETE /shopping-list-recipe/42/',
-        ],
-      );
     });
 
     test('creates no entries when the recipe fails', () async {
@@ -635,11 +551,13 @@ void main() {
       expect(adapter.requests, isEmpty);
     });
 
-    test("deletes the entries' recipe when the plan has none left", () async {
+    test('unlinks the recipes of a plan with no entries left', () async {
       final adapter = FakeHttpAdapter(
         (request) =>
             planCheck(request, listRecipes: [42, 43]) ??
-            jsonResponse(null, status: 204),
+            (request.method == 'PATCH'
+                ? jsonResponse({'id': 42, 'servings': 4.0})
+                : jsonResponse(null, status: 204)),
       );
 
       await shopping(adapter).deleteEntries([
@@ -653,13 +571,18 @@ void main() {
           'DELETE /shopping-list-entry/1/',
           'DELETE /shopping-list-entry/2/',
           'GET /shopping-list-entry/?mealplan=9',
-          // Not 43: someone may be adding it right now.
-          'DELETE /shopping-list-recipe/42/',
+          'GET /shopping-list-recipe/?mealplan=9',
+          'PATCH /shopping-list-recipe/42/',
+          'PATCH /shopping-list-recipe/43/',
         ],
       );
+      // Not deleted: that would delete their checked entries, too.
+      expect(jsonDecode(jsonEncode(adapter.requests.last.data)), {
+        'mealplan': null,
+      });
     });
 
-    test('skips the cleanup when offline', () async {
+    test('skips the cleanup for a plan whose entries failed', () async {
       final adapter = FakeHttpAdapter(
         (request) => throw DioException.connectionError(
           requestOptions: request,
@@ -688,12 +611,14 @@ void main() {
       expect([for (final r in adapter.requests) r.method], ['DELETE', 'GET']);
     });
 
-    test('cleans up after a failed delete, then reports it', () async {
+    test('cleans up the other plans after a failed delete', () async {
       final adapter = FakeHttpAdapter(
         (request) =>
             planCheck(request, listRecipes: [42]) ??
             (request.uri.path.endsWith('/shopping-list-entry/5/')
                 ? jsonResponse({'detail': 'Fehler'}, status: 500)
+                : request.method == 'PATCH'
+                ? jsonResponse({'id': 42, 'servings': 4.0})
                 : jsonResponse(null, status: 204)),
       );
 
@@ -707,7 +632,7 @@ void main() {
 
       expect(
         describe(adapter.requests.last),
-        'DELETE /shopping-list-recipe/42/',
+        'PATCH /shopping-list-recipe/42/',
       );
     });
 
