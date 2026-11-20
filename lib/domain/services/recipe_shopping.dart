@@ -13,15 +13,15 @@ import 'scaling_service.dart';
 ///   [RecipeShopping.onHandCount].
 ///
 /// `noAmount` ingredients ("Salz und Pfeffer") are added with amount 0.
-/// [servings] below 1 count as 1.
+/// [servings] may be fractional, as a meal plan's are; 0 or less counts as
+/// 1. A recipe without a yield counts as 1 serving, as in [ScalingService].
 ///
 /// Limitation: a step that is another recipe is not expanded; only the
 /// ingredients listed in this recipe's own steps are added.
-RecipeShopping buildRecipeShopping(Recipe recipe, {required int servings}) {
-  final scaling = ScalingService(
-    recipeServings: recipe.servings,
-    servings: servings < 1 ? 1 : servings,
-  );
+RecipeShopping buildRecipeShopping(Recipe recipe, {required num servings}) {
+  final factor =
+      (servings > 0 ? servings : 1) /
+      (recipe.servings < 1 ? 1 : recipe.servings);
   final entries = <ShoppingEntryDraft>[];
   var onHand = 0;
   for (final step in recipe.steps) {
@@ -39,7 +39,7 @@ RecipeShopping buildRecipeShopping(Recipe recipe, {required int servings}) {
           unitId: ingredient.unit?.id,
           amount: ingredient.noAmount || ingredient.amount <= 0
               ? 0
-              : ingredient.amount * scaling.factor,
+              : ingredient.amount * factor,
         ),
       );
     }

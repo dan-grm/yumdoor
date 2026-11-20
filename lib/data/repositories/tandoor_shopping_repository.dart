@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:tandoor_api/tandoor_api.dart' as api;
 
+import '../../domain/models/recipe.dart';
 import '../../domain/models/shopping.dart';
 import '../../domain/repositories/shopping_repository.dart';
+import '../../domain/services/recipe_shopping.dart';
 import '../api/api_failures.dart';
 import '../mappers/mapping.dart';
 import '../mappers/shopping_mapper.dart';
@@ -21,9 +23,14 @@ const _syncMargin = Duration(minutes: 1);
 /// it changes while the pages are read.
 const _attempts = 3;
 
-/// Checking off goes through [Dio] directly: the generated
-/// `ShoppingListEntryBulk` takes the ids as `JsonObject`s from a package the
-/// app doesn't depend on.
+/// How many entries [TandoorShoppingRepository.deleteEntries] deletes at
+/// once, so a long list doesn't flood a small server.
+const _parallelDeletes = 4;
+
+/// Writes go through [Dio] directly: the generated `ShoppingListEntryBulk`
+/// takes the ids as `JsonObject`s from a package the app doesn't depend on,
+/// and the generated `ShoppingListEntry` sends its food and unit as nested
+/// objects, which rename them (docs/TANDOOR_API.md#shopping-list).
 class TandoorShoppingRepository implements ShoppingRepository {
   TandoorShoppingRepository(this._api, this._dio);
 
@@ -121,4 +128,164 @@ class TandoorShoppingRepository implements ShoppingRepository {
     }
     return supermarkets;
   });
+
+  /// The client path of docs/TANDOOR_API.md#meal-plan--shopping-list: a
+  /// `ShoppingListRecipe`, then its entries in bulk. The recipe alone already
+  /// marks the meal plan as on the list, so it is deleted again if the
+  /// entries fail; that also removes any entries the server did create.
+  /// Recipes a plan has without entries, left over from a failed add whose
+  /// cleanup failed, too, are deleted first.
+  @override
+  Future<RecipeShopping> addRecipe(
+    Recipe recipe,
+    double servings, {
+    int? mealPlanId,
+  }) async {
+    final scaledTo = servings > 0 ? servings : 1.0;
+    final shopping = buildRecipeShopping(recipe, servings: scaledTo);
+    if (shopping.isEmpty) return shopping;
+    await guardRequest(() async {
+      if (mealPlanId != null) await _removeEmptyListRecipes(mealPlanId);
+      final created = await _dio.post<Object?>(
+        '/api/shopping-list-recipe/',
+        data: {
+          'recipe': recipe.id,
+          'servings': scaledTo,
+          'mealplan': mealPlanId,
+        },
+      );
+      final listRecipeId = switch (created.data) {
+        {'id': final int id} => id,
+        _ => throw const FormatException('Shopping list recipe without id'),
+      };
+      try {
+        await _dio.post<Object?>(
+          '/api/shopping-list-recipe/$listRecipeId/bulk_create_entries/',
+          data: {
+            'entries': [
+              for (final entry in shopping.entries)
+                {
+                  'amount': entry.amount,
+                  'food_id': entry.foodId,
+                  'unit_id': entry.unitId,
+                  'ingredient_id': entry.ingredientId,
+                },
+            ],
+            // Optional in the schema, but the view needs it.
+            'shopping_lists_ids': <int>[],
+          },
+        );
+      } on Object {
+        try {
+          await _dio.delete<Object?>(
+            '/api/shopping-list-recipe/$listRecipeId/',
+          );
+        } on DioException {
+          // It stays until the plan is added again.
+        }
+        rethrow;
+      }
+    });
+    return shopping;
+  }
+
+  /// Food and unit go as plain ids; nested objects would rename them.
+  @override
+  Future<ShoppingEntry> addItem(int foodId, double amount, {int? unitId}) =>
+      guardRequest(() async {
+        final response = await _dio.post<Object?>(
+          '/api/shopping-list-entry/',
+          data: {'food': foodId, 'unit': unitId, 'amount': amount},
+        );
+        return _parseEntry(response.data).toDomain();
+      });
+
+  /// One request per entry, [_parallelDeletes] at a time: Tandoor has no
+  /// bulk delete. All are tried; the first failure is thrown at the end.
+  ///
+  /// Deleting a plan's last entries leaves its `ShoppingListRecipe`, and
+  /// with it the plan's `shopping` flag, so the recipes of a meal plan that
+  /// has no entries left are deleted, too. "No entries left" is what the
+  /// household's list shows, so checked entries older than the recent days
+  /// go with them. That cleanup is best effort.
+  @override
+  Future<void> deleteEntries(Iterable<ShoppingEntry> entries) async {
+    final list = entries.toList();
+    if (list.isEmpty) return;
+    (Object, StackTrace)? failure;
+    for (var i = 0; i < list.length; i += _parallelDeletes) {
+      await Future.wait([
+        for (final entry in list.skip(i).take(_parallelDeletes))
+          _ignoreNotFound(
+            () => _dio.delete<Object?>('/api/shopping-list-entry/${entry.id}/'),
+          ).catchError((Object e, StackTrace s) {
+            failure ??= (e, s);
+          }),
+      ]);
+    }
+    final plans = {
+      for (final entry in list)
+        if (entry.source?.mealPlan case final plan?) plan.id,
+    };
+    for (final planId in plans) {
+      try {
+        await _removeEmptyListRecipes(planId);
+      } on Object {
+        // The plan stays marked as on the list until it is added again.
+      }
+    }
+    if (failure case (final error, final stack)) {
+      await guardRequest<void>(() => Error.throwWithStackTrace(error, stack));
+    }
+  }
+
+  /// Deletes the `ShoppingListRecipe`s of the meal plan [mealPlanId] if it
+  /// has no entries on the list, so the plan is no longer marked.
+  Future<void> _removeEmptyListRecipes(int mealPlanId) async {
+    final left = requireBody(
+      (await _api.apiShoppingListEntryList(
+        mealplan: mealPlanId,
+        pageSize: 1,
+      )).data,
+    );
+    if (left.count > 0) return;
+    final recipes = requireBody(
+      (await _api.apiShoppingListRecipeList(
+        mealplan: mealPlanId,
+        pageSize: _pageSize,
+      )).data,
+    );
+    for (final listRecipe in recipes.results) {
+      final id = requireId(listRecipe.id, 'ShoppingListRecipe');
+      await _ignoreNotFound(
+        () => _dio.delete<Object?>('/api/shopping-list-recipe/$id/'),
+      );
+    }
+  }
+
+  static Future<void> _ignoreNotFound(
+    Future<Object?> Function() request,
+  ) async {
+    try {
+      await request();
+    } on DioException catch (e) {
+      if (e.response?.statusCode != 404) rethrow;
+    }
+  }
+
+  static api.ShoppingListEntry _parseEntry(Object? json) {
+    try {
+      return requireBody(
+        api.standardSerializers.deserializeWith(
+          api.ShoppingListEntry.serializer,
+          requireBody(json),
+        ),
+      );
+    } on FormatException {
+      rethrow;
+    } on Object catch (e) {
+      // built_value throws its own error types for unexpected JSON.
+      throw FormatException('Unexpected shopping list entry: $e');
+    }
+  }
 }

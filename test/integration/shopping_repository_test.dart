@@ -4,6 +4,10 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/data/api/tandoor_dio.dart';
 import 'package:yumdoor/data/repositories/tandoor_repositories.dart';
+import 'package:yumdoor/domain/models/calendar_day.dart';
+import 'package:yumdoor/domain/models/meal_plan.dart';
+import 'package:yumdoor/domain/models/recipe.dart';
+import 'package:yumdoor/domain/models/recipe_query.dart';
 import 'package:yumdoor/domain/models/shopping.dart';
 
 import '../../tool/seed/data.dart';
@@ -162,4 +166,149 @@ void main() {
       await anna.foods.setOnHand(paper.id, onHand: false);
     }
   });
+
+  /// The seeded salad, read fresh: 2 servings, Olivenöl on hand, Salz and
+  /// Pfeffer ignored.
+  Future<Recipe> salad() async {
+    final page = await anna.recipes.search(
+      const RecipeQuery(text: 'Tomaten-Mozzarella-Salat'),
+    );
+    final summary = page.items.singleWhere(
+      (r) => r.name == 'Tomaten-Mozzarella-Salat',
+    );
+    return anna.recipes.fetchRecipe(summary.id, allowCached: false);
+  }
+
+  test('adds a recipe for a new meal plan and removes it again', () async {
+    final recipe = await salad();
+    final lunch = (await anna.mealTypes.list()).firstWhere(
+      (t) => t.name == 'Mittagessen',
+    );
+    // Far from the seeded week, so the meal plan tests don't see it.
+    final plan = await anna.mealPlans.create(
+      NewMealPlan(
+        recipeId: recipe.id,
+        servings: 4,
+        day: CalendarDay.today().addDays(200),
+        mealType: lunch,
+      ),
+    );
+    try {
+      expect(plan.onShoppingList, isFalse);
+
+      final added = await anna.shopping.addRecipe(
+        recipe,
+        4,
+        mealPlanId: plan.id,
+      );
+
+      expect(added.onHandCount, 1);
+      // Ben sees them, scaled from 2 to 4 servings.
+      final entries = (await ben.shopping.fetch()).entries
+          .where((e) => e.source?.mealPlan?.id == plan.id)
+          .toList();
+      expect(
+        [for (final e in entries) (e.food.name, e.amount, e.unit?.name)],
+        unorderedEquals([
+          ('Tomate', 8.0, 'Stück'),
+          ('Mozzarella', 2.0, 'Stück'),
+          ('Basilikum', 1.0, 'Bund'),
+        ]),
+      );
+      expect(added.neededCount, entries.length);
+      final source = entries.first.source!;
+      expect(source.recipeId, recipe.id);
+      expect(source.servings, 4);
+      expect(source.mealPlan?.onShoppingList, isTrue);
+      expect({for (final e in entries) e.source?.listRecipeId}, hasLength(1));
+      expect(await onShoppingList(anna, plan), isTrue);
+
+      // Deleting a few keeps the plan on the list, deleting the rest not.
+      await ben.shopping.deleteEntries(entries.take(2));
+      expect(await onShoppingList(anna, plan), isTrue);
+      await anna.shopping.deleteEntries(entries);
+
+      expect(
+        (await anna.shopping.fetch()).entries.where(
+          (e) => e.source?.mealPlan?.id == plan.id,
+        ),
+        isEmpty,
+      );
+      expect(await onShoppingList(anna, plan), isFalse);
+    } finally {
+      await anna.mealPlans.delete(plan.id);
+    }
+  });
+
+  test('adds a recipe without a meal plan', () async {
+    final recipe = await salad();
+    // Entries of the salad without a plan come from this test only; other
+    // test files may change other entries meanwhile.
+    bool ours(ShoppingEntry e) =>
+        e.source?.recipeId == recipe.id && e.source?.mealPlan == null;
+    expect((await anna.shopping.fetch()).entries.where(ours), isEmpty);
+
+    final added = await anna.shopping.addRecipe(recipe, 2);
+
+    final entries = (await anna.shopping.fetch()).entries.where(ours).toList();
+    try {
+      expect(added.neededCount, 3);
+      expect(
+        [for (final e in entries) (e.food.name, e.amount)],
+        unorderedEquals([
+          ('Tomate', 4.0),
+          ('Mozzarella', 1.0),
+          ('Basilikum', 0.5),
+        ]),
+      );
+      expect(entries.first.source?.recipeName, 'Tomaten-Mozzarella-Salat');
+    } finally {
+      await anna.shopping.deleteEntries(entries);
+    }
+  });
+
+  test('adds an item by hand and deletes it', () async {
+    final recipe = await salad();
+    final mozzarella = recipe.steps
+        .expand((s) => s.ingredients)
+        .singleWhere((i) => i.food?.name == 'Mozzarella');
+
+    final item = await ben.shopping.addItem(
+      mozzarella.food!.id,
+      3,
+      unitId: mozzarella.unit!.id,
+    );
+    try {
+      expect(item.source, isNull);
+      expect(item.food.name, 'Mozzarella');
+      expect(item.unit?.name, 'Stück');
+      expect(item.amount, 3);
+      expect(item.createdBy.name, 'Ben');
+      expect(
+        (await anna.shopping.fetch()).entries.map((e) => e.id),
+        contains(item.id),
+      );
+      // Sending the ids leaves the food and unit as they were.
+      final again = await anna.recipes.fetchRecipe(
+        recipe.id,
+        allowCached: false,
+      );
+      expect(again.steps, recipe.steps);
+    } finally {
+      await anna.shopping.deleteEntries([item]);
+    }
+
+    expect(
+      (await anna.shopping.fetch()).entries.map((e) => e.id),
+      isNot(contains(item.id)),
+    );
+    // Gone already: ignored.
+    await anna.shopping.deleteEntries([item]);
+  });
+}
+
+/// Whether [plan] is on the shopping list, as the meal plan list says.
+Future<bool> onShoppingList(TandoorRepositories as, MealPlan plan) async {
+  final plans = await as.mealPlans.list(plan.fromDay, plan.toDay);
+  return plans.singleWhere((p) => p.id == plan.id).onShoppingList;
 }
