@@ -502,6 +502,8 @@ amounts across recipes; merging per food and unit for display is our job. "Add t
 - Check off: `POST /api/shopping-list-entry/bulk/ {ids, checked}`. It sets `checked`, `updated_at` and
   `completed_at` (cleared on uncheck) for the ids the household has; unknown ids, and an empty list, are ignored
   with 200. The response echoes the request with a `timestamp`. Any household member can check off anyone's entries.
+  All entries of one call get the **same** `completed_at` (one queryset `update`, `cookbook/views/api.py:2361`);
+  Yumdoor's done section merges checked entries of a food and unit only when it matches.
 - Add an item by hand: `POST /api/shopping-list-entry/ {food: <id>, unit: <id or null>, amount}` (201, the new
   entry). `amount` is required (0 for none). **Gotcha: nested `food`/`unit` objects rename them.**
   `{"food": {"id": 711, "name": "x"}}` saves "x" as that food's name for the whole space (writable nested
