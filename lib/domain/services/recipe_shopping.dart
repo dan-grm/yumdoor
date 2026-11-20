@@ -13,13 +13,14 @@ import 'scaling_service.dart';
 ///   [RecipeShopping.onHandCount].
 ///
 /// `noAmount` ingredients ("Salz und Pfeffer") are added with amount 0.
+/// [servings] below 1 count as 1.
 ///
 /// Limitation: a step that is another recipe is not expanded; only the
 /// ingredients listed in this recipe's own steps are added.
 RecipeShopping buildRecipeShopping(Recipe recipe, {required int servings}) {
   final scaling = ScalingService(
     recipeServings: recipe.servings,
-    servings: servings,
+    servings: servings < 1 ? 1 : servings,
   );
   final entries = <ShoppingEntryDraft>[];
   var onHand = 0;
@@ -57,6 +58,8 @@ class RecipeShopping {
   final List<ShoppingEntryDraft> entries;
 
   /// Ingredients left out because their food is on hand ("hast du schon").
+  /// Counted per ingredient line, like [neededCount], so a food used twice
+  /// counts twice.
   final int onHandCount;
 
   /// Ingredients that go on the list.
