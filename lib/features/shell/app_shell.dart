@@ -87,12 +87,16 @@ class AppShell extends StatelessWidget {
               ),
             ),
             Expanded(
-              // The rail keeps the side insets (notch) clear.
-              child: MediaQuery.removePadding(
-                context: context,
-                removeLeft: ltr,
-                removeRight: !ltr,
-                child: shell,
+              // The rail keeps the side insets (notch) clear. From the
+              // body's context, which the Scaffold has taken the keyboard
+              // out of.
+              child: Builder(
+                builder: (context) => MediaQuery.removePadding(
+                  context: context,
+                  removeLeft: ltr,
+                  removeRight: !ltr,
+                  child: shell,
+                ),
               ),
             ),
           ],

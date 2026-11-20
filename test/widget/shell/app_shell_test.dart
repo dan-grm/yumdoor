@@ -204,6 +204,16 @@ void main() {
     );
   });
 
+  testWidgets('the keyboard shrinks a tab once next to the rail', (
+    tester,
+  ) async {
+    await pumpShell(tester, size: tabletSize);
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    await tester.pumpAndSettle();
+
+    expect(tester.getBottomLeft(resultList()).dy, tabletSize.height - 300);
+  });
+
   group('goldens', skip: goldenSkip, () {
     for (final (name, theme) in [('light', lightTheme), ('dark', darkTheme)]) {
       testWidgets('bar in $name', tags: goldenTags, (tester) async {
