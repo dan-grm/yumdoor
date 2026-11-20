@@ -17,6 +17,8 @@ import '../domain/repositories/draft_store.dart';
 import '../domain/repositories/food_repository.dart';
 import '../domain/repositories/ingredient_parser.dart';
 import '../domain/repositories/keyword_repository.dart';
+import '../domain/repositories/meal_plan_repository.dart';
+import '../domain/repositories/meal_type_repository.dart';
 import '../domain/repositories/offline_cache.dart';
 import '../domain/repositories/recipe_repository.dart';
 import '../domain/repositories/saved_filter_repository.dart';
@@ -108,6 +110,14 @@ UserRepository userRepository(Ref ref) =>
 @Riverpod(keepAlive: true)
 SavedFilterRepository savedFilterRepository(Ref ref) =>
     ref.watch(_tandoorRepositoriesProvider).savedFilters;
+
+@Riverpod(keepAlive: true)
+MealPlanRepository mealPlanRepository(Ref ref) =>
+    ref.watch(_tandoorRepositoriesProvider).mealPlans;
+
+@Riverpod(keepAlive: true)
+MealTypeRepository mealTypeRepository(Ref ref) =>
+    ref.watch(_tandoorRepositoriesProvider).mealTypes;
 
 @Riverpod(keepAlive: true)
 CacheDatabase _cacheDatabase(Ref ref) {

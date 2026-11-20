@@ -47,6 +47,13 @@ Future<void> main() async {
     stdout.writeln('$fixturesDir/$file ← $request');
   }
 
+  final today = DateTime.now();
+  final monday = DateTime(
+    today.year,
+    today.month,
+    today.day - today.weekday + 1,
+  );
+
   try {
     Future<int> recipeId(String name) async {
       final page = await client.get(
@@ -81,6 +88,12 @@ Future<void> main() async {
       'custom_filter_list.json': '/api/custom-filter/',
       // Not paginated; `display_name` with a trailing space.
       'user_list.json': '/api/user/',
+      // The seeded week of Anna's household: plans by Anna and Ben, with and
+      // without a recipe, one over two days, some on the shopping list.
+      'meal_plan_list.json':
+          '/api/meal-plan/?from_date=${_day(monday)}'
+          '&to_date=${_day(monday.add(const Duration(days: 6)))}',
+      'meal_type_list.json': '/api/meal-type/',
     };
 
     for (final MapEntry(key: file, value: path) in fixtures.entries) {
@@ -126,3 +139,7 @@ Future<void> main() async {
     client.close();
   }
 }
+
+String _day(DateTime day) =>
+    '${day.year}-${day.month.toString().padLeft(2, '0')}-'
+    '${day.day.toString().padLeft(2, '0')}';

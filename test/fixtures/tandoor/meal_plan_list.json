@@ -1,0 +1,472 @@
+{
+  "count": 9,
+  "next": null,
+  "previous": null,
+  "timestamp": "2026-11-20T08:49:11.724609+00:00",
+  "results": [
+    {
+      "id": 37,
+      "title": "",
+      "recipe": {
+        "id": 143,
+        "name": "Gemüsepfanne mit Reis",
+        "description": "",
+        "image": null,
+        "keywords": [
+          {
+            "id": 124,
+            "label": "Vegetarisch"
+          },
+          {
+            "id": 130,
+            "label": "Sommer"
+          },
+          {
+            "id": 131,
+            "label": "Schnell"
+          }
+        ],
+        "working_time": 25,
+        "waiting_time": 0,
+        "created_by": {
+          "id": 11,
+          "username": "anna",
+          "first_name": "Anna",
+          "last_name": "",
+          "display_name": "Anna ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        },
+        "created_at": "2026-11-20T09:49:00.566388+01:00",
+        "updated_at": "2026-11-20T09:49:00.568321+01:00",
+        "internal": true,
+        "private": false,
+        "servings": 2,
+        "servings_text": "",
+        "rating": null,
+        "last_cooked": null,
+        "new": true
+      },
+      "servings": 2.0,
+      "note": "",
+      "note_markdown": "",
+      "from_date": "2026-11-16T18:30:00+01:00",
+      "to_date": "2026-11-16T18:30:00+01:00",
+      "meal_type": {
+        "id": 14,
+        "name": "Abendessen",
+        "order": 2,
+        "time": "18:30:00",
+        "color": "#c26a4a",
+        "created_by": 11
+      },
+      "created_by": 11,
+      "recipe_name": "Gemüsepfanne mit Reis",
+      "meal_type_name": "Abendessen",
+      "shopping": false
+    },
+    {
+      "id": 38,
+      "title": "",
+      "recipe": {
+        "id": 139,
+        "name": "Linsen-Dal mit Karotten",
+        "description": "",
+        "image": null,
+        "keywords": [
+          {
+            "id": 126,
+            "label": "Vegan"
+          },
+          {
+            "id": 127,
+            "label": "Hauptgericht"
+          },
+          {
+            "id": 128,
+            "label": "Winter"
+          }
+        ],
+        "working_time": 15,
+        "waiting_time": 25,
+        "created_by": {
+          "id": 12,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        },
+        "created_at": "2026-11-20T09:48:58.640496+01:00",
+        "updated_at": "2026-11-20T09:48:58.643928+01:00",
+        "internal": true,
+        "private": false,
+        "servings": 4,
+        "servings_text": "",
+        "rating": null,
+        "last_cooked": null,
+        "new": true
+      },
+      "servings": 4.0,
+      "note": "",
+      "note_markdown": "",
+      "from_date": "2026-11-17T18:30:00+01:00",
+      "to_date": "2026-11-17T18:30:00+01:00",
+      "meal_type": {
+        "id": 14,
+        "name": "Abendessen",
+        "order": 2,
+        "time": "18:30:00",
+        "color": "#c26a4a",
+        "created_by": 11
+      },
+      "created_by": 12,
+      "recipe_name": "Linsen-Dal mit Karotten",
+      "meal_type_name": "Abendessen",
+      "shopping": true
+    },
+    {
+      "id": 39,
+      "title": "",
+      "recipe": {
+        "id": 138,
+        "name": "Karottensuppe mit Ingwer",
+        "description": "Cremig, wärmend und in einer halben Stunde fertig.",
+        "image": null,
+        "keywords": [
+          {
+            "id": 123,
+            "label": "Suppe"
+          },
+          {
+            "id": 124,
+            "label": "Vegetarisch"
+          },
+          {
+            "id": 125,
+            "label": "Herbst"
+          }
+        ],
+        "working_time": 15,
+        "waiting_time": 20,
+        "created_by": {
+          "id": 11,
+          "username": "anna",
+          "first_name": "Anna",
+          "last_name": "",
+          "display_name": "Anna ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        },
+        "created_at": "2026-11-20T09:48:58.172498+01:00",
+        "updated_at": "2026-11-20T09:48:58.175632+01:00",
+        "internal": true,
+        "private": false,
+        "servings": 4,
+        "servings_text": "",
+        "rating": null,
+        "last_cooked": null,
+        "new": true
+      },
+      "servings": 4.0,
+      "note": "",
+      "note_markdown": "",
+      "from_date": "2026-11-18T18:30:00+01:00",
+      "to_date": "2026-11-18T18:30:00+01:00",
+      "meal_type": {
+        "id": 14,
+        "name": "Abendessen",
+        "order": 2,
+        "time": "18:30:00",
+        "color": "#c26a4a",
+        "created_by": 11
+      },
+      "created_by": 11,
+      "recipe_name": "Karottensuppe mit Ingwer",
+      "meal_type_name": "Abendessen",
+      "shopping": true
+    },
+    {
+      "id": 40,
+      "title": "Reste vom Mittwoch",
+      "recipe": null,
+      "servings": 2.0,
+      "note": "Suppe aufwärmen",
+      "note_markdown": "Suppe aufwärmen",
+      "from_date": "2026-11-19T12:30:00+01:00",
+      "to_date": "2026-11-19T12:30:00+01:00",
+      "meal_type": {
+        "id": 13,
+        "name": "Mittagessen",
+        "order": 1,
+        "time": "12:30:00",
+        "color": "#6f9a5b",
+        "created_by": 11
+      },
+      "created_by": 11,
+      "meal_type_name": "Mittagessen",
+      "shopping": false
+    },
+    {
+      "id": 41,
+      "title": "",
+      "recipe": {
+        "id": 161,
+        "name": "Mushroom Stroganoff",
+        "description": "",
+        "image": null,
+        "keywords": [
+          {
+            "id": 137,
+            "label": "Vegetarian"
+          },
+          {
+            "id": 143,
+            "label": "Main"
+          }
+        ],
+        "working_time": 30,
+        "waiting_time": 0,
+        "created_by": {
+          "id": 12,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        },
+        "created_at": "2026-11-20T09:49:07.274832+01:00",
+        "updated_at": "2026-11-20T09:49:07.276814+01:00",
+        "internal": true,
+        "private": false,
+        "servings": 4,
+        "servings_text": "",
+        "rating": null,
+        "last_cooked": null,
+        "new": true
+      },
+      "servings": 2.0,
+      "note": "",
+      "note_markdown": "",
+      "from_date": "2026-11-19T18:30:00+01:00",
+      "to_date": "2026-11-19T18:30:00+01:00",
+      "meal_type": {
+        "id": 14,
+        "name": "Abendessen",
+        "order": 2,
+        "time": "18:30:00",
+        "color": "#c26a4a",
+        "created_by": 11
+      },
+      "created_by": 12,
+      "recipe_name": "Mushroom Stroganoff",
+      "meal_type_name": "Abendessen",
+      "shopping": true
+    },
+    {
+      "id": 42,
+      "title": "Pizza bestellen",
+      "recipe": null,
+      "servings": 2.0,
+      "note": "",
+      "note_markdown": "",
+      "from_date": "2026-11-20T18:30:00+01:00",
+      "to_date": "2026-11-20T18:30:00+01:00",
+      "meal_type": {
+        "id": 14,
+        "name": "Abendessen",
+        "order": 2,
+        "time": "18:30:00",
+        "color": "#c26a4a",
+        "created_by": 11
+      },
+      "created_by": 12,
+      "meal_type_name": "Abendessen",
+      "shopping": false
+    },
+    {
+      "id": 43,
+      "title": "",
+      "recipe": {
+        "id": 144,
+        "name": "Pfannkuchen",
+        "description": "",
+        "image": null,
+        "keywords": [
+          {
+            "id": 124,
+            "label": "Vegetarisch"
+          },
+          {
+            "id": 131,
+            "label": "Schnell"
+          },
+          {
+            "id": 132,
+            "label": "Frühstück"
+          }
+        ],
+        "working_time": 30,
+        "waiting_time": 0,
+        "created_by": {
+          "id": 12,
+          "username": "ben",
+          "first_name": "Ben",
+          "last_name": "",
+          "display_name": "Ben ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        },
+        "created_at": "2026-11-20T09:49:00.944123+01:00",
+        "updated_at": "2026-11-20T09:49:00.946561+01:00",
+        "internal": true,
+        "private": false,
+        "servings": 4,
+        "servings_text": "",
+        "rating": null,
+        "last_cooked": null,
+        "new": true
+      },
+      "servings": 2.0,
+      "note": "",
+      "note_markdown": "",
+      "from_date": "2026-11-21T08:00:00+01:00",
+      "to_date": "2026-11-21T08:00:00+01:00",
+      "meal_type": {
+        "id": 12,
+        "name": "Frühstück",
+        "order": 0,
+        "time": "08:00:00",
+        "color": "#e8b04a",
+        "created_by": 11
+      },
+      "created_by": 12,
+      "recipe_name": "Pfannkuchen",
+      "meal_type_name": "Frühstück",
+      "shopping": false
+    },
+    {
+      "id": 44,
+      "title": "",
+      "recipe": {
+        "id": 140,
+        "name": "Rindergulasch",
+        "description": "Am besten am Vortag kochen.",
+        "image": null,
+        "keywords": [
+          {
+            "id": 127,
+            "label": "Hauptgericht"
+          },
+          {
+            "id": 128,
+            "label": "Winter"
+          }
+        ],
+        "working_time": 30,
+        "waiting_time": 150,
+        "created_by": {
+          "id": 11,
+          "username": "anna",
+          "first_name": "Anna",
+          "last_name": "",
+          "display_name": "Anna ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        },
+        "created_at": "2026-11-20T09:48:59.254260+01:00",
+        "updated_at": "2026-11-20T09:48:59.256606+01:00",
+        "internal": true,
+        "private": false,
+        "servings": 6,
+        "servings_text": "",
+        "rating": null,
+        "last_cooked": null,
+        "new": true
+      },
+      "servings": 6.0,
+      "note": "Besuch von Freunden, Reste am Sonntag",
+      "note_markdown": "Besuch von Freunden, Reste am Sonntag",
+      "from_date": "2026-11-21T18:30:00+01:00",
+      "to_date": "2026-11-22T18:30:00+01:00",
+      "meal_type": {
+        "id": 14,
+        "name": "Abendessen",
+        "order": 2,
+        "time": "18:30:00",
+        "color": "#c26a4a",
+        "created_by": 11
+      },
+      "created_by": 11,
+      "recipe_name": "Rindergulasch",
+      "meal_type_name": "Abendessen",
+      "shopping": false
+    },
+    {
+      "id": 45,
+      "title": "",
+      "recipe": {
+        "id": 158,
+        "name": "Shakshuka",
+        "description": "",
+        "image": null,
+        "keywords": [
+          {
+            "id": 137,
+            "label": "Vegetarian"
+          },
+          {
+            "id": 141,
+            "label": "Breakfast"
+          }
+        ],
+        "working_time": 30,
+        "waiting_time": 0,
+        "created_by": {
+          "id": 11,
+          "username": "anna",
+          "first_name": "Anna",
+          "last_name": "",
+          "display_name": "Anna ",
+          "is_staff": false,
+          "is_superuser": false,
+          "is_active": true
+        },
+        "created_at": "2026-11-20T09:49:06.296956+01:00",
+        "updated_at": "2026-11-20T09:49:06.299096+01:00",
+        "internal": true,
+        "private": false,
+        "servings": 2,
+        "servings_text": "",
+        "rating": null,
+        "last_cooked": null,
+        "new": true
+      },
+      "servings": 2.0,
+      "note": "",
+      "note_markdown": "",
+      "from_date": "2026-11-22T08:00:00+01:00",
+      "to_date": "2026-11-22T08:00:00+01:00",
+      "meal_type": {
+        "id": 12,
+        "name": "Frühstück",
+        "order": 0,
+        "time": "08:00:00",
+        "color": "#e8b04a",
+        "created_by": 11
+      },
+      "created_by": 11,
+      "recipe_name": "Shakshuka",
+      "meal_type_name": "Frühstück",
+      "shopping": false
+    }
+  ]
+}

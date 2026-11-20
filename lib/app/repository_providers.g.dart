@@ -603,6 +603,102 @@ final class SavedFilterRepositoryProvider
 String _$savedFilterRepositoryHash() =>
     r'd932d3f3f8dbec3fc907798f61bb04d84b877ffe';
 
+@ProviderFor(mealPlanRepository)
+final mealPlanRepositoryProvider = MealPlanRepositoryProvider._();
+
+final class MealPlanRepositoryProvider
+    extends
+        $FunctionalProvider<
+          MealPlanRepository,
+          MealPlanRepository,
+          MealPlanRepository
+        >
+    with $Provider<MealPlanRepository> {
+  MealPlanRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'mealPlanRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$mealPlanRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<MealPlanRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  MealPlanRepository create(Ref ref) {
+    return mealPlanRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(MealPlanRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<MealPlanRepository>(value),
+    );
+  }
+}
+
+String _$mealPlanRepositoryHash() =>
+    r'52c0ae0eec3fe5e4b263b635a35b27b16d6b6ece';
+
+@ProviderFor(mealTypeRepository)
+final mealTypeRepositoryProvider = MealTypeRepositoryProvider._();
+
+final class MealTypeRepositoryProvider
+    extends
+        $FunctionalProvider<
+          MealTypeRepository,
+          MealTypeRepository,
+          MealTypeRepository
+        >
+    with $Provider<MealTypeRepository> {
+  MealTypeRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'mealTypeRepositoryProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$mealTypeRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<MealTypeRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  MealTypeRepository create(Ref ref) {
+    return mealTypeRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(MealTypeRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<MealTypeRepository>(value),
+    );
+  }
+}
+
+String _$mealTypeRepositoryHash() =>
+    r'7acc0db1a92994a4b53e39a7a56291cdd635356b';
+
 @ProviderFor(_cacheDatabase)
 final _cacheDatabaseProvider = _CacheDatabaseProvider._();
 

@@ -1,0 +1,32 @@
+{
+  "count": 3,
+  "next": null,
+  "previous": null,
+  "timestamp": "2026-11-20T08:49:11.745479+00:00",
+  "results": [
+    {
+      "id": 12,
+      "name": "Frühstück",
+      "order": 0,
+      "time": "08:00:00",
+      "color": "#e8b04a",
+      "created_by": 11
+    },
+    {
+      "id": 13,
+      "name": "Mittagessen",
+      "order": 1,
+      "time": "12:30:00",
+      "color": "#6f9a5b",
+      "created_by": 11
+    },
+    {
+      "id": 14,
+      "name": "Abendessen",
+      "order": 2,
+      "time": "18:30:00",
+      "color": "#c26a4a",
+      "created_by": 11
+    }
+  ]
+}
