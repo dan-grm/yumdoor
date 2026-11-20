@@ -81,7 +81,7 @@ void main() {
       }
       expect(find.byTooltip(_writeDisabled), findsNWidgets(4));
       expect(find.text(_writeDisabled), findsOneWidget);
-      expect(find.textContaining('kommen bald'), findsNothing);
+      expect(find.textContaining('kommt bald'), findsNothing);
 
       await tester.tap(find.text('Planen'));
       await tester.pump(const Duration(seconds: 1));
@@ -97,7 +97,7 @@ void main() {
 
       expect(find.text(_banner), findsNothing);
       expect(find.byTooltip(_writeDisabled), findsNothing);
-      expect(find.text('Planen und Einkaufen kommen bald.'), findsOneWidget);
+      expect(find.text('Einkaufen kommt bald.'), findsOneWidget);
     });
 
     testWidgets('shows the image from the offline cache', (tester) async {

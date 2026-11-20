@@ -404,11 +404,11 @@ abstract class AppLocalizations {
   /// **'Bearbeiten'**
   String get recipeEdit;
 
-  /// Explains why the plan and shop buttons are disabled.
+  /// Explains why the shop button on the recipe screen is disabled.
   ///
   /// In de, this message translates to:
-  /// **'Planen und Einkaufen kommen bald.'**
-  String get recipeActionsComingSoon;
+  /// **'Einkaufen kommt bald.'**
+  String get recipeShopComingSoon;
 
   /// Heading of the ingredient list.
   ///
@@ -2167,6 +2167,138 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Von jemand anderem geplant'**
   String get planPlannedByOther;
+
+  /// Title of the sheet that plans a recipe for a day and meal.
+  ///
+  /// In de, this message translates to:
+  /// **'Einplanen'**
+  String get planSheetTitle;
+
+  /// Section label in the plan sheet above the days of the week.
+  ///
+  /// In de, this message translates to:
+  /// **'Tag'**
+  String get planSheetDay;
+
+  /// Section label in the plan sheet above the meal types (breakfast, dinner, ...).
+  ///
+  /// In de, this message translates to:
+  /// **'Mahlzeit'**
+  String get planSheetMealType;
+
+  /// Label of the servings picker in the plan sheet.
+  ///
+  /// In de, this message translates to:
+  /// **'Portionen'**
+  String get planSheetServings;
+
+  /// Screen reader label of a day in the plan sheet that already has planned meals.
+  ///
+  /// In de, this message translates to:
+  /// **'{day}, schon etwas geplant'**
+  String planSheetDayHasPlans(String day);
+
+  /// Switch in the plan sheet: put the ingredients that aren't on hand on the shopping list.
+  ///
+  /// In de, this message translates to:
+  /// **'Fehlendes auf die Einkaufsliste'**
+  String get planSheetAddMissing;
+
+  /// Under the shopping switch in the plan sheet: how many ingredients aren't on hand.
+  ///
+  /// In de, this message translates to:
+  /// **'{missing, plural, =1{1 von {total} Zutaten fehlt noch} other{{missing} von {total} Zutaten fehlen noch}}'**
+  String planSheetMissing(int missing, int total);
+
+  /// Under the disabled shopping switch in the plan sheet: every ingredient is on hand.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle Zutaten sind schon da.'**
+  String get planSheetNothingMissing;
+
+  /// Under the disabled shopping switch in the plan sheet: the recipe has nothing to buy.
+  ///
+  /// In de, this message translates to:
+  /// **'Das Rezept hat keine Zutaten für die Einkaufsliste.'**
+  String get planSheetNoIngredients;
+
+  /// Under the disabled shopping switch in the plan sheet: loading the recipe failed.
+  ///
+  /// In de, this message translates to:
+  /// **'Die Zutaten konnten nicht geladen werden.'**
+  String get planSheetIngredientsFailed;
+
+  /// In the plan sheet when the space has no meal types yet.
+  ///
+  /// In de, this message translates to:
+  /// **'Auf diesem Server gibt es noch keine Mahlzeiten wie Frühstück oder Abendessen. Leg die erste an.'**
+  String get planSheetNoMealTypes;
+
+  /// Label of the field for a new meal type's name in the plan sheet.
+  ///
+  /// In de, this message translates to:
+  /// **'Name der Mahlzeit'**
+  String get planSheetMealTypeName;
+
+  /// Hint in the field for a new meal type's name.
+  ///
+  /// In de, this message translates to:
+  /// **'z. B. Abendessen'**
+  String get planSheetMealTypeHint;
+
+  /// Button in the plan sheet that creates a meal type.
+  ///
+  /// In de, this message translates to:
+  /// **'Mahlzeit anlegen'**
+  String get planSheetMealTypeCreate;
+
+  /// Error in the plan sheet when creating a meal type failed.
+  ///
+  /// In de, this message translates to:
+  /// **'Die Mahlzeit wurde nicht angelegt. {reason}'**
+  String planSheetMealTypeCreateFailed(String reason);
+
+  /// Button in the plan sheet that saves the plan. The day is a weekday (Mittwoch) or a short date (Mi, 2. Dez.).
+  ///
+  /// In de, this message translates to:
+  /// **'Für {day} einplanen'**
+  String planSheetSubmit(String day);
+
+  /// Button in the plan sheet that saves the plan for today.
+  ///
+  /// In de, this message translates to:
+  /// **'Für heute einplanen'**
+  String get planSheetSubmitToday;
+
+  /// Error in the plan sheet when saving the plan failed.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht eingeplant. {reason}'**
+  String planSheetSaveFailed(String reason);
+
+  /// Snackbar after planning a recipe.
+  ///
+  /// In de, this message translates to:
+  /// **'Für {day} eingeplant.'**
+  String planSaved(String day);
+
+  /// Snackbar after planning a recipe and adding its missing ingredients to the shopping list.
+  ///
+  /// In de, this message translates to:
+  /// **'Für {day} eingeplant, Fehlendes steht auf der Einkaufsliste.'**
+  String planSavedWithShopping(String day);
+
+  /// Snackbar when the plan was saved but adding its ingredients to the shopping list failed.
+  ///
+  /// In de, this message translates to:
+  /// **'Für {day} eingeplant, aber nicht auf die Einkaufsliste gesetzt. {reason}'**
+  String planSavedShoppingFailed(String day, String reason);
+
+  /// Snackbar action after planning: opens the planner at that week.
+  ///
+  /// In de, this message translates to:
+  /// **'Zum Plan'**
+  String get planSavedOpen;
 }
 
 class _AppLocalizationsDelegate

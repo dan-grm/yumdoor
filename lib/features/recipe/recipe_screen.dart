@@ -21,6 +21,7 @@ import '../common/recipe_image.dart';
 import '../common/step_text.dart';
 import '../cook_log/cook_log_screen.dart';
 import '../editor/editor_screen.dart';
+import '../planner/plan_sheet.dart';
 import 'ingredient_lines.dart';
 import 'recipe_meta.dart';
 import 'recipe_providers.dart';
@@ -117,6 +118,12 @@ class _RecipeViewState extends State<_RecipeView> {
                             _WriteActions(
                               onCooked: () => context.push(
                                 cookLogLocation(recipe.id, _servings),
+                              ),
+                              onPlan: () => showPlanSheet(
+                                context,
+                                recipeId: recipe.id,
+                                recipeName: recipe.name,
+                                servings: _servings,
                               ),
                               onEdit: () =>
                                   context.push(editLocation(recipe.id)),
@@ -345,14 +352,20 @@ class _TitleBlock extends StatelessWidget {
   }
 }
 
-/// "Als gekocht eintragen", then plan, shop and edit. Plan and shop are
-/// visible but disabled until their milestones. All of them are disabled
-/// while offline.
+/// "Als gekocht eintragen", then plan, shop and edit. Shop is visible but
+/// disabled until it is built. All of them are disabled while offline.
 class _WriteActions extends ConsumerWidget {
-  const _WriteActions({required this.onCooked, required this.onEdit});
+  const _WriteActions({
+    required this.onCooked,
+    required this.onPlan,
+    required this.onEdit,
+  });
 
   /// Opens the cook log screen for the chosen servings.
   final VoidCallback onCooked;
+
+  /// Opens the plan sheet for the chosen servings.
+  final VoidCallback onPlan;
 
   /// Opens the editor.
   final VoidCallback onEdit;
@@ -362,9 +375,9 @@ class _WriteActions extends ConsumerWidget {
     final t = context.tokens;
     final l10n = context.l10n;
     final offline = ref.watch(isOfflineProvider);
-    // Plan and shop aren't built yet, so they are disabled online too.
+    // Shop isn't built yet, so it is disabled online too.
     final actions = [
-      (Icons.calendar_today_outlined, l10n.recipePlan, null),
+      (Icons.calendar_today_outlined, l10n.recipePlan, onPlan),
       (Icons.shopping_cart_outlined, l10n.recipeShop, null),
       (Icons.edit_outlined, l10n.recipeEdit, onEdit),
     ];
@@ -403,7 +416,7 @@ class _WriteActions extends ConsumerWidget {
         ),
         SizedBox(height: t.space2),
         Text(
-          offline ? l10n.offlineWriteDisabled : l10n.recipeActionsComingSoon,
+          offline ? l10n.offlineWriteDisabled : l10n.recipeShopComingSoon,
           style: t.caption.copyWith(color: t.inkMuted),
         ),
       ],

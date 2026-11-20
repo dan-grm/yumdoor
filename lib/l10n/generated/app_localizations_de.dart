@@ -213,7 +213,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get recipeEdit => 'Bearbeiten';
 
   @override
-  String get recipeActionsComingSoon => 'Planen und Einkaufen kommen bald.';
+  String get recipeShopComingSoon => 'Einkaufen kommt bald.';
 
   @override
   String get recipeIngredients => 'Zutaten';
@@ -1323,4 +1323,95 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get planPlannedByOther => 'Von jemand anderem geplant';
+
+  @override
+  String get planSheetTitle => 'Einplanen';
+
+  @override
+  String get planSheetDay => 'Tag';
+
+  @override
+  String get planSheetMealType => 'Mahlzeit';
+
+  @override
+  String get planSheetServings => 'Portionen';
+
+  @override
+  String planSheetDayHasPlans(String day) {
+    return '$day, schon etwas geplant';
+  }
+
+  @override
+  String get planSheetAddMissing => 'Fehlendes auf die Einkaufsliste';
+
+  @override
+  String planSheetMissing(int missing, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      missing,
+      locale: localeName,
+      other: '$missing von $total Zutaten fehlen noch',
+      one: '1 von $total Zutaten fehlt noch',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planSheetNothingMissing => 'Alle Zutaten sind schon da.';
+
+  @override
+  String get planSheetNoIngredients =>
+      'Das Rezept hat keine Zutaten für die Einkaufsliste.';
+
+  @override
+  String get planSheetIngredientsFailed =>
+      'Die Zutaten konnten nicht geladen werden.';
+
+  @override
+  String get planSheetNoMealTypes =>
+      'Auf diesem Server gibt es noch keine Mahlzeiten wie Frühstück oder Abendessen. Leg die erste an.';
+
+  @override
+  String get planSheetMealTypeName => 'Name der Mahlzeit';
+
+  @override
+  String get planSheetMealTypeHint => 'z. B. Abendessen';
+
+  @override
+  String get planSheetMealTypeCreate => 'Mahlzeit anlegen';
+
+  @override
+  String planSheetMealTypeCreateFailed(String reason) {
+    return 'Die Mahlzeit wurde nicht angelegt. $reason';
+  }
+
+  @override
+  String planSheetSubmit(String day) {
+    return 'Für $day einplanen';
+  }
+
+  @override
+  String get planSheetSubmitToday => 'Für heute einplanen';
+
+  @override
+  String planSheetSaveFailed(String reason) {
+    return 'Nicht eingeplant. $reason';
+  }
+
+  @override
+  String planSaved(String day) {
+    return 'Für $day eingeplant.';
+  }
+
+  @override
+  String planSavedWithShopping(String day) {
+    return 'Für $day eingeplant, Fehlendes steht auf der Einkaufsliste.';
+  }
+
+  @override
+  String planSavedShoppingFailed(String day, String reason) {
+    return 'Für $day eingeplant, aber nicht auf die Einkaufsliste gesetzt. $reason';
+  }
+
+  @override
+  String get planSavedOpen => 'Zum Plan';
 }

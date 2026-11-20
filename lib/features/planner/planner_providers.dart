@@ -4,6 +4,7 @@ import '../../app/platform_providers.dart';
 import '../../app/repository_providers.dart';
 import '../../domain/models/calendar_day.dart';
 import '../../domain/models/meal_plan.dart';
+import '../../domain/models/meal_type.dart';
 import '../../domain/models/user_ref.dart';
 import '../../domain/services/week_plan.dart';
 
@@ -18,6 +19,13 @@ Future<List<MealPlan>> weekPlans(Ref ref, CalendarDay start) => ref
     .list(start, start.addDays(daysInWeek - 1));
 
 Duration? _noRetry(int retryCount, Object error) => null;
+
+/// The meal types of the space, for the plan sheet.
+///
+/// Failures are shown with a retry button instead of retrying on their own.
+@Riverpod(retry: _noRetry)
+Future<List<MealType>> mealTypes(Ref ref) =>
+    ref.watch(mealTypeRepositoryProvider).list();
 
 /// Who is who in the planner: the current user's id and the names of the
 /// space's users by id. Either is missing if the server doesn't tell; the
@@ -55,5 +63,33 @@ class PlannerOnlyMine extends _$PlannerOnlyMine {
   void set(bool value) {
     state = value;
     ref.read(localStoreProvider).write(_onlyMineKey, '$value');
+  }
+}
+
+const _mealTypeKey = 'planner.meal-type';
+const _addToShoppingKey = 'planner.add-to-shopping';
+
+/// What the plan sheet chose last time on this device, to start with next
+/// time: the meal type's id (`null` if none yet) and whether the missing
+/// ingredients went on the shopping list (`true` at first).
+typedef PlanSheetDefaults = ({int? mealTypeId, bool addToShopping});
+
+@Riverpod(keepAlive: true)
+class PlanSheetChoices extends _$PlanSheetChoices {
+  @override
+  PlanSheetDefaults build() {
+    final store = ref.watch(localStoreProvider);
+    return (
+      mealTypeId: int.tryParse(store.read(_mealTypeKey) ?? ''),
+      addToShopping: store.read(_addToShoppingKey) != 'false',
+    );
+  }
+
+  /// Remembers the choices of a saved plan.
+  void remember({required int mealTypeId, required bool addToShopping}) {
+    state = (mealTypeId: mealTypeId, addToShopping: addToShopping);
+    ref.read(localStoreProvider)
+      ..write(_mealTypeKey, '$mealTypeId')
+      ..write(_addToShoppingKey, '$addToShopping');
   }
 }

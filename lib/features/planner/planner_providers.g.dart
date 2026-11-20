@@ -102,6 +102,56 @@ final class WeekPlansFamily extends $Family
   String toString() => r'weekPlansProvider';
 }
 
+/// The meal types of the space, for the plan sheet.
+///
+/// Failures are shown with a retry button instead of retrying on their own.
+
+@ProviderFor(mealTypes)
+final mealTypesProvider = MealTypesProvider._();
+
+/// The meal types of the space, for the plan sheet.
+///
+/// Failures are shown with a retry button instead of retrying on their own.
+
+final class MealTypesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<MealType>>,
+          List<MealType>,
+          FutureOr<List<MealType>>
+        >
+    with $FutureModifier<List<MealType>>, $FutureProvider<List<MealType>> {
+  /// The meal types of the space, for the plan sheet.
+  ///
+  /// Failures are shown with a retry button instead of retrying on their own.
+  MealTypesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: _noRetry,
+        name: r'mealTypesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$mealTypesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<MealType>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<MealType>> create(Ref ref) {
+    return mealTypes(ref);
+  }
+}
+
+String _$mealTypesHash() => r'1bf596c0e90d788d688c9d012fca4a9f4a1e4afb';
+
 @ProviderFor(plannerPeople)
 final plannerPeopleProvider = PlannerPeopleProvider._();
 
@@ -196,6 +246,58 @@ abstract class _$PlannerOnlyMine extends $Notifier<bool> {
             as $ClassProviderElement<
               AnyNotifier<bool, bool>,
               bool,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(PlanSheetChoices)
+final planSheetChoicesProvider = PlanSheetChoicesProvider._();
+
+final class PlanSheetChoicesProvider
+    extends $NotifierProvider<PlanSheetChoices, PlanSheetDefaults> {
+  PlanSheetChoicesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'planSheetChoicesProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$planSheetChoicesHash();
+
+  @$internal
+  @override
+  PlanSheetChoices create() => PlanSheetChoices();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(PlanSheetDefaults value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<PlanSheetDefaults>(value),
+    );
+  }
+}
+
+String _$planSheetChoicesHash() => r'be2513f61c9e65f646787c630cc03e7b3e7be96b';
+
+abstract class _$PlanSheetChoices extends $Notifier<PlanSheetDefaults> {
+  PlanSheetDefaults build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<PlanSheetDefaults, PlanSheetDefaults>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<PlanSheetDefaults, PlanSheetDefaults>,
+              PlanSheetDefaults,
               Object?,
               Object?
             >;

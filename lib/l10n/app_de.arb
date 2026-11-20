@@ -256,9 +256,9 @@
   "@recipeEdit": {
     "description": "Button on the recipe screen: edit the recipe."
   },
-  "recipeActionsComingSoon": "Planen und Einkaufen kommen bald.",
-  "@recipeActionsComingSoon": {
-    "description": "Explains why the plan and shop buttons are disabled."
+  "recipeShopComingSoon": "Einkaufen kommt bald.",
+  "@recipeShopComingSoon": {
+    "description": "Explains why the shop button on the recipe screen is disabled."
   },
   "recipeIngredients": "Zutaten",
   "@recipeIngredients": {
@@ -1893,5 +1893,147 @@
   "planPlannedByOther": "Von jemand anderem geplant",
   "@planPlannedByOther": {
     "description": "On a planned meal of another household member whose name is unknown."
+  },
+  "planSheetTitle": "Einplanen",
+  "@planSheetTitle": {
+    "description": "Title of the sheet that plans a recipe for a day and meal."
+  },
+  "planSheetDay": "Tag",
+  "@planSheetDay": {
+    "description": "Section label in the plan sheet above the days of the week."
+  },
+  "planSheetMealType": "Mahlzeit",
+  "@planSheetMealType": {
+    "description": "Section label in the plan sheet above the meal types (breakfast, dinner, ...)."
+  },
+  "planSheetServings": "Portionen",
+  "@planSheetServings": {
+    "description": "Label of the servings picker in the plan sheet."
+  },
+  "planSheetDayHasPlans": "{day}, schon etwas geplant",
+  "@planSheetDayHasPlans": {
+    "description": "Screen reader label of a day in the plan sheet that already has planned meals.",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Mittwoch, 25. Nov."
+      }
+    }
+  },
+  "planSheetAddMissing": "Fehlendes auf die Einkaufsliste",
+  "@planSheetAddMissing": {
+    "description": "Switch in the plan sheet: put the ingredients that aren't on hand on the shopping list."
+  },
+  "planSheetMissing": "{missing, plural, =1{1 von {total} Zutaten fehlt noch} other{{missing} von {total} Zutaten fehlen noch}}",
+  "@planSheetMissing": {
+    "description": "Under the shopping switch in the plan sheet: how many ingredients aren't on hand.",
+    "placeholders": {
+      "missing": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "planSheetNothingMissing": "Alle Zutaten sind schon da.",
+  "@planSheetNothingMissing": {
+    "description": "Under the disabled shopping switch in the plan sheet: every ingredient is on hand."
+  },
+  "planSheetNoIngredients": "Das Rezept hat keine Zutaten für die Einkaufsliste.",
+  "@planSheetNoIngredients": {
+    "description": "Under the disabled shopping switch in the plan sheet: the recipe has nothing to buy."
+  },
+  "planSheetIngredientsFailed": "Die Zutaten konnten nicht geladen werden.",
+  "@planSheetIngredientsFailed": {
+    "description": "Under the disabled shopping switch in the plan sheet: loading the recipe failed."
+  },
+  "planSheetNoMealTypes": "Auf diesem Server gibt es noch keine Mahlzeiten wie Frühstück oder Abendessen. Leg die erste an.",
+  "@planSheetNoMealTypes": {
+    "description": "In the plan sheet when the space has no meal types yet."
+  },
+  "planSheetMealTypeName": "Name der Mahlzeit",
+  "@planSheetMealTypeName": {
+    "description": "Label of the field for a new meal type's name in the plan sheet."
+  },
+  "planSheetMealTypeHint": "z. B. Abendessen",
+  "@planSheetMealTypeHint": {
+    "description": "Hint in the field for a new meal type's name."
+  },
+  "planSheetMealTypeCreate": "Mahlzeit anlegen",
+  "@planSheetMealTypeCreate": {
+    "description": "Button in the plan sheet that creates a meal type."
+  },
+  "planSheetMealTypeCreateFailed": "Die Mahlzeit wurde nicht angelegt. {reason}",
+  "@planSheetMealTypeCreateFailed": {
+    "description": "Error in the plan sheet when creating a meal type failed.",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "Der Server hat einen Fehler gemeldet."
+      }
+    }
+  },
+  "planSheetSubmit": "Für {day} einplanen",
+  "@planSheetSubmit": {
+    "description": "Button in the plan sheet that saves the plan. The day is a weekday (Mittwoch) or a short date (Mi, 2. Dez.).",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Mittwoch"
+      }
+    }
+  },
+  "planSheetSubmitToday": "Für heute einplanen",
+  "@planSheetSubmitToday": {
+    "description": "Button in the plan sheet that saves the plan for today."
+  },
+  "planSheetSaveFailed": "Nicht eingeplant. {reason}",
+  "@planSheetSaveFailed": {
+    "description": "Error in the plan sheet when saving the plan failed.",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "Der Server hat einen Fehler gemeldet."
+      }
+    }
+  },
+  "planSaved": "Für {day} eingeplant.",
+  "@planSaved": {
+    "description": "Snackbar after planning a recipe.",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Mittwoch, 25. Nov."
+      }
+    }
+  },
+  "planSavedWithShopping": "Für {day} eingeplant, Fehlendes steht auf der Einkaufsliste.",
+  "@planSavedWithShopping": {
+    "description": "Snackbar after planning a recipe and adding its missing ingredients to the shopping list.",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Mittwoch, 25. Nov."
+      }
+    }
+  },
+  "planSavedShoppingFailed": "Für {day} eingeplant, aber nicht auf die Einkaufsliste gesetzt. {reason}",
+  "@planSavedShoppingFailed": {
+    "description": "Snackbar when the plan was saved but adding its ingredients to the shopping list failed.",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Mittwoch, 25. Nov."
+      },
+      "reason": {
+        "type": "String",
+        "example": "Der Server hat einen Fehler gemeldet."
+      }
+    }
+  },
+  "planSavedOpen": "Zum Plan",
+  "@planSavedOpen": {
+    "description": "Snackbar action after planning: opens the planner at that week."
   }
 }

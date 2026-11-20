@@ -148,16 +148,15 @@ void main() {
     expect(find.text('cooked /recipe/7/cooked?servings=3'), findsOneWidget);
   });
 
-  testWidgets('plan and shop are visible but disabled', (tester) async {
+  testWidgets('shop is visible but disabled, plan is enabled', (tester) async {
     await pumpRecipe(tester, ofenkarotten.id);
 
-    for (final label in ['Planen', 'Einkaufen']) {
-      final button = tester.widget<TextButton>(
-        find.ancestor(of: find.text(label), matching: find.byType(TextButton)),
-      );
-      expect(button.onPressed, isNull, reason: label);
-    }
-    expect(find.text('Planen und Einkaufen kommen bald.'), findsOneWidget);
+    TextButton button(String label) => tester.widget<TextButton>(
+      find.ancestor(of: find.text(label), matching: find.byType(TextButton)),
+    );
+    expect(button('Einkaufen').onPressed, isNull);
+    expect(button('Planen').onPressed, isNotNull);
+    expect(find.text('Einkaufen kommt bald.'), findsOneWidget);
   });
 
   testWidgets('"Bearbeiten" opens the editor', (tester) async {

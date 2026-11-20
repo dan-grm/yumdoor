@@ -210,8 +210,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recipeEdit => 'Edit';
 
   @override
-  String get recipeActionsComingSoon =>
-      'Planning and shopping are coming soon.';
+  String get recipeShopComingSoon => 'Shopping is coming soon.';
 
   @override
   String get recipeIngredients => 'Ingredients';
@@ -1317,4 +1316,95 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planPlannedByOther => 'Planned by someone else';
+
+  @override
+  String get planSheetTitle => 'Plan';
+
+  @override
+  String get planSheetDay => 'Day';
+
+  @override
+  String get planSheetMealType => 'Meal';
+
+  @override
+  String get planSheetServings => 'Servings';
+
+  @override
+  String planSheetDayHasPlans(String day) {
+    return '$day, something planned';
+  }
+
+  @override
+  String get planSheetAddMissing => 'Add what\'s missing to the shopping list';
+
+  @override
+  String planSheetMissing(int missing, int total) {
+    String _temp0 = intl.Intl.pluralLogic(
+      missing,
+      locale: localeName,
+      other: '$missing of $total ingredients are missing',
+      one: '1 of $total ingredients is missing',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planSheetNothingMissing => 'You have all the ingredients.';
+
+  @override
+  String get planSheetNoIngredients =>
+      'The recipe has no ingredients for the shopping list.';
+
+  @override
+  String get planSheetIngredientsFailed =>
+      'The ingredients couldn\'t be loaded.';
+
+  @override
+  String get planSheetNoMealTypes =>
+      'There are no meals like breakfast or dinner on this server yet. Create the first one.';
+
+  @override
+  String get planSheetMealTypeName => 'Name of the meal';
+
+  @override
+  String get planSheetMealTypeHint => 'e.g. Dinner';
+
+  @override
+  String get planSheetMealTypeCreate => 'Create meal';
+
+  @override
+  String planSheetMealTypeCreateFailed(String reason) {
+    return 'The meal wasn\'t created. $reason';
+  }
+
+  @override
+  String planSheetSubmit(String day) {
+    return 'Plan for $day';
+  }
+
+  @override
+  String get planSheetSubmitToday => 'Plan for today';
+
+  @override
+  String planSheetSaveFailed(String reason) {
+    return 'Not planned. $reason';
+  }
+
+  @override
+  String planSaved(String day) {
+    return 'Planned for $day.';
+  }
+
+  @override
+  String planSavedWithShopping(String day) {
+    return 'Planned for $day, what\'s missing is on the shopping list.';
+  }
+
+  @override
+  String planSavedShoppingFailed(String day, String reason) {
+    return 'Planned for $day, but not added to the shopping list. $reason';
+  }
+
+  @override
+  String get planSavedOpen => 'Open plan';
 }
