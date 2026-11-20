@@ -80,7 +80,7 @@ extension NewMealPlanMapper on NewMealPlan {
     return {
       'recipe': recipeId,
       'title': title,
-      'servings': servings,
+      'servings': _decimal(servings),
       'note': note,
       'from_date': at,
       'to_date': at,
@@ -102,7 +102,7 @@ extension MealPlanChangesMapper on MealPlanChanges {
       _ => null,
     };
     final body = <String, Object?>{
-      'servings': servings ?? current.servings,
+      'servings': _decimal(servings ?? current.servings),
       'note': ?note,
       if (newType != null) 'meal_type': newType.id,
     };
@@ -123,6 +123,9 @@ extension MealPlanChangesMapper on MealPlanChanges {
     };
   }
 }
+
+/// Tandoor stores servings with 4 decimal places and rejects more.
+double _decimal(double value) => (value * 10000).round() / 10000;
 
 Duration _timeOfDay(DateTime local) =>
     Duration(hours: local.hour, minutes: local.minute, seconds: local.second);

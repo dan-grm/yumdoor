@@ -189,6 +189,24 @@ void main() {
       expect(DateTime.parse(from).toLocal(), DateTime(2026, 11, 23, 18, 30));
     });
 
+    test('rounds servings to the 4 decimal places Tandoor stores', () {
+      NewMealPlan make(double servings) => NewMealPlan(
+        recipeId: 1,
+        servings: servings,
+        day: CalendarDay(2026, 11, 23),
+        mealType: dinner,
+      );
+
+      expect(make(2 / 3).toJson()['servings'], 0.6667);
+      expect(make(0.1 + 0.2).toJson()['servings'], 0.3);
+      expect(
+        MealPlanChanges(servings: 1 / 3).toJson(
+          _dto(from: DateTime.utc(2026, 11, 20, 12), to: null),
+        )['servings'],
+        0.3333,
+      );
+    });
+
     test('plans at noon for a meal type without a time', () {
       final body = NewMealPlan(
         title: 'Pizza',

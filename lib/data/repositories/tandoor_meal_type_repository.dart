@@ -38,6 +38,13 @@ class TandoorMealTypeRepository implements MealTypeRepository {
   @override
   Future<MealType> create(String name) async {
     final trimmed = requireName(name);
+    if (trimmed.runes.length > maxMealTypeNameLength) {
+      throw ArgumentError.value(
+        name,
+        'name',
+        'is longer than $maxMealTypeNameLength characters',
+      );
+    }
     return guardRequest(() async {
       final existing = await _list();
       final lower = trimmed.toLowerCase();

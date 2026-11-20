@@ -64,23 +64,31 @@ class TandoorMealPlanRepository implements MealPlanRepository {
   /// On create, Tandoor moves a datetime that is exactly midnight in the
   /// server's time zone to the meal type's time on the server's day
   /// (docs/TANDOOR_API.md#meal-plans). If the device's time for the plan is
-  /// such a midnight, the plan can land on another day here; it is then
-  /// moved back. Update never changes the time.
+  /// such a midnight, the plan lands at another time, maybe on another day;
+  /// it is then moved back. Update never changes the time. If that fails,
+  /// the plan as Tandoor saved it is returned: it exists either way.
   @override
   Future<MealPlan> create(NewMealPlan plan) => guardRequest(() async {
     final body = plan.toJson();
     final response = await _dio.post<Object?>('/api/meal-plan/', data: body);
-    final saved = _parse(response.data).toDomain();
-    if (saved.fromDay == plan.day && saved.toDay == plan.day) return saved;
-    final fixed = await _dio.patch<Object?>(
-      '/api/meal-plan/${saved.id}/',
-      data: {
-        'servings': body['servings'],
-        'from_date': body['from_date'],
-        'to_date': body['to_date'],
-      },
-    );
-    return _parse(fixed.data).toDomain();
+    final saved = _parse(response.data);
+    final sent = DateTime.parse(body['from_date']! as String);
+    if (saved.fromDate.isAtSameMomentAs(sent)) return saved.toDomain();
+    try {
+      final fixed = await _dio.patch<Object?>(
+        '/api/meal-plan/${saved.id}/',
+        data: {
+          'servings': body['servings'],
+          'from_date': body['from_date'],
+          'to_date': body['to_date'],
+        },
+      );
+      return _parse(fixed.data).toDomain();
+    } on DioException {
+      return saved.toDomain();
+    } on FormatException {
+      return saved.toDomain();
+    }
   });
 
   @override

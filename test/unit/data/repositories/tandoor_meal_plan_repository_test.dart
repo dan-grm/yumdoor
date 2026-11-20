@@ -192,6 +192,31 @@ void main() {
     expect(saved.fromDay, monday);
   });
 
+  test('create returns the saved plan if moving it back fails', () async {
+    final adapter = FakeHttpAdapter(
+      (request) => switch (request.method) {
+        'POST' => jsonResponse(plan(11, monday.addDays(1)), status: 201),
+        _ => throw DioException.connectionError(
+          requestOptions: request,
+          reason: 'offline',
+        ),
+      },
+    );
+
+    final saved = await plans(adapter).create(
+      NewMealPlan(
+        title: 'Pizza',
+        servings: 2,
+        day: monday,
+        mealType: const MealType(id: 3, name: 'Abendessen'),
+      ),
+    );
+
+    expect(adapter.requests.last.method, 'PATCH');
+    expect(saved.id, 11);
+    expect(saved.fromDay, monday.addDays(1));
+  });
+
   group('update', () {
     test('reads the plan, then patches it', () async {
       final adapter = FakeHttpAdapter(
@@ -339,10 +364,11 @@ void main() {
       expect(types(adapter).create('Snack'), throwsA(isA<ServerFailure>()));
     });
 
-    test('create rejects a blank name without a request', () {
+    test('create rejects a blank or long name without a request', () {
       final adapter = FakeHttpAdapter((_) => jsonResponse(page([])));
 
       expect(() => types(adapter).create('  '), throwsArgumentError);
+      expect(() => types(adapter).create('x' * 129), throwsArgumentError);
       expect(adapter.requests, isEmpty);
     });
   });

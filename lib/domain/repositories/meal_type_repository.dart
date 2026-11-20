@@ -8,6 +8,7 @@ abstract interface class MealTypeRepository {
 
   /// Creates a meal type called [name] (trimmed), after the existing ones. If
   /// one with that name already exists (ignoring case), returns it unchanged
-  /// instead. Fails with an [ArgumentError] if [name] is blank.
+  /// instead. Fails with an [ArgumentError] if [name] is blank or longer than
+  /// [maxMealTypeNameLength].
   Future<MealType> create(String name);
 }

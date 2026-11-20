@@ -22,6 +22,9 @@ abstract class MealType with _$MealType {
   }) = _MealType;
 }
 
+/// The most characters (code points) Tandoor stores in a meal type's name.
+const maxMealTypeNameLength = 128;
+
 /// Sorts meal types by [MealType.order], then by name (ignoring case), then
 /// by id.
 int compareMealTypes(MealType a, MealType b) {

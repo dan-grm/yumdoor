@@ -79,6 +79,20 @@ void main() {
       );
     });
 
+    test('allows a title of up to 64 characters', () {
+      NewMealPlan make(String title) => NewMealPlan(
+        title: title,
+        servings: 2,
+        day: saturday,
+        mealType: dinner,
+      );
+
+      expect(make('ü' * 64).title, hasLength(64));
+      expect(() => make('ü' * 65), throwsArgumentError);
+      // Characters, not UTF-16 code units.
+      expect(make('🍕' * 64).title.runes, hasLength(64));
+    });
+
     test('needs servings above 0', () {
       for (final servings in [0.0, -1.0, double.nan, double.infinity]) {
         expect(

@@ -54,9 +54,9 @@ abstract class MealPlan with _$MealPlan {
 
 /// A meal plan to create, for one day.
 class NewMealPlan {
-  /// Throws an [ArgumentError] for [servings] that aren't above 0, or for a
-  /// plan with neither [recipeId] nor a [title]. [title] and [note] are
-  /// trimmed.
+  /// Throws an [ArgumentError] for [servings] that aren't above 0, for a
+  /// plan with neither [recipeId] nor a [title], or for a [title] longer than
+  /// [maxMealPlanTitleLength]. [title] and [note] are trimmed.
   factory NewMealPlan({
     int? recipeId,
     String title = '',
@@ -69,6 +69,13 @@ class NewMealPlan {
     final trimmedTitle = title.trim();
     if (recipeId == null && trimmedTitle.isEmpty) {
       throw ArgumentError('A meal plan needs a recipe or a title.');
+    }
+    if (trimmedTitle.runes.length > maxMealPlanTitleLength) {
+      throw ArgumentError.value(
+        title,
+        'title',
+        'is longer than $maxMealPlanTitleLength characters',
+      );
     }
     return NewMealPlan._(
       recipeId,
@@ -154,6 +161,9 @@ class MealPlanChanges {
       'MealPlanChanges(day: $day, mealType: ${mealType?.name}, '
       'servings: $servings, note: $note)';
 }
+
+/// The most characters (code points) Tandoor stores in a meal plan's title.
+const maxMealPlanTitleLength = 64;
 
 /// Throws an [ArgumentError] unless [servings] is a number above 0.
 void checkMealPlanServings(double servings) {

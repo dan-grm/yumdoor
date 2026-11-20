@@ -374,7 +374,9 @@ Checked on 2.6.15 (`MealPlanViewSet` in `cookbook/views/api.py`, `MealPlanSerial
 Yumdoor's side is `lib/data/repositories/tandoor_meal_plan_repository.dart` and `lib/data/mappers/meal_plan_mapper.dart`.
 
 - `GET /api/meal-plan/?from_date=&to_date=&meal_type=` (paginated: `{count, results}`, `page_size` up to 200).
-  Fields: `recipe` (a `RecipeOverview` or `null`), `title` (`""` if not set), `servings` (decimal, 4 places),
+  Ordered by id, so paging is stable.
+  Fields: `recipe` (a `RecipeOverview` or `null`), `title` (`""` if not set, at most 64 characters), `servings`
+  (decimal: at most 4 decimal places and 8 digits, more gets 400),
   `note`, `from_date`, `to_date` (datetimes), `meal_type` (nested), `created_by` (a user **id**, not an object),
   `shopping` (read-only: it has a `ShoppingListRecipe`), `addshopping` (write-only). `recipe_name` is left out
   entirely for a plan without a recipe.
@@ -411,7 +413,8 @@ Yumdoor's side is `lib/data/repositories/tandoor_meal_plan_repository.dart` and 
 
 - `GET /api/meal-type/` (paginated) returns **every meal type of the space**, whoever created it, ordered by
   `time`, then id; Yumdoor sorts by `order`, then name. Fields: `name`, `order` (int, default 0), `color`
-  (`#rrggbb` or `null`), `time` (`HH:MM:SS` or `null`), `created_by` (id). Any member can use any type.
+  (`#rrggbb` or `null`), `time` (`HH:MM:SS` or `null`), `created_by` (id). `name` has at most 128 characters. Any
+  member can use any type.
 - `POST /api/meal-type/ {name}` trims the name and returns an existing type only if **the same user** created one
   with that name (case-insensitive). Names are unique per space, but case-sensitively: Ben creating "abendessen"
   next to Anna's "Abendessen" gets a second type, and creating "Abendessen" fails with 500 (unique constraint).
