@@ -89,6 +89,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     // A filter sheet may answer after the screen has gone.
     if (!mounted) return;
     _debounce?.cancel();
+    // Typing still waiting when the user opened a recipe or another tab must
+    // not pull them back (didChangeDependencies searches for it on return).
+    if (GoRouter.of(context).state.uri.path != searchPath) return;
     final location = searchLocation(query.copyWith(text: _text.text.trim()));
     Router.neglect(context, () => context.go(location));
   }

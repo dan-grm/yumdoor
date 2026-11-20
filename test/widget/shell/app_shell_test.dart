@@ -42,8 +42,8 @@ void main() {
     ],
   );
 
-  String location(GoRouter router) =>
-      router.routerDelegate.currentConfiguration.uri.toString();
+  /// The location on top, including pushed screens.
+  String location(GoRouter router) => router.state.uri.toString();
 
   /// The vertical list of search results.
   Finder resultList() => find.byWidgetPredicate(
@@ -129,6 +129,34 @@ void main() {
     await tester.pump(searchDebounce);
     await tester.pumpAndSettle();
     expect(location(router), '/search?q=Suppe');
+  });
+
+  testWidgets('back on another tab returns to search', (tester) async {
+    final router = await pumpShell(tester, location: '/shopping');
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(location(router), '/search');
+  });
+
+  testWidgets('typing before opening a recipe keeps the recipe open', (
+    tester,
+  ) async {
+    final router = await pumpShell(tester, location: '/search?q=Rezept');
+
+    await tester.enterText(find.byType(TextField), 'Rezept 1');
+    await tester.tap(find.text('Rezept 2'));
+    await tester.pump();
+    await tester.pump(searchDebounce * 2);
+    await tester.pumpAndSettle();
+    expect(location(router), '/recipe/2');
+
+    router.pop();
+    await tester.pumpAndSettle();
+    await tester.pump(searchDebounce);
+    await tester.pumpAndSettle();
+    expect(location(router), '/search?q=Rezept+1');
   });
 
   for (final (path, index, title) in [

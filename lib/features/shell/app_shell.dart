@@ -32,7 +32,16 @@ class AppShell extends StatelessWidget {
       shell.goBranch(index, initialLocation: index == shell.currentIndex);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => PopScope(
+    // Back (Android) on another tab returns to search before leaving the app.
+    canPop: shell.currentIndex == 0,
+    onPopInvokedWithResult: (didPop, _) {
+      if (!didPop) shell.goBranch(0);
+    },
+    child: _navigation(context),
+  );
+
+  Widget _navigation(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
     final List<_Tab> tabs = [
