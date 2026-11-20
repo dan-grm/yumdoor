@@ -59,6 +59,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     if (inFront == _inFront) return;
     _inFront = inFront;
     _debounce?.cancel();
+    if (!inFront) {
+      // Browser back can change the tab while a search sheet is open, which
+      // would leave it over the other tab; close it like the barrier would.
+      final navigator = Navigator.of(context, rootNavigator: true);
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => navigator.popUntil((route) => route is! PopupRoute),
+      );
+    }
     if (inFront && _text.text.trim() != widget.query.text) {
       _onTextChanged(_text.text);
     }

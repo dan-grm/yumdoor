@@ -214,6 +214,27 @@ void main() {
     expect(tester.getBottomLeft(resultList()).dy, tabletSize.height - 300);
   });
 
+  testWidgets('a search sheet closes when back changes the tab', (
+    tester,
+  ) async {
+    final router = await pumpShell(tester);
+    router.go('/plan');
+    await tester.pumpAndSettle();
+    router.go('/search');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Zutat'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BottomSheet), findsOneWidget);
+
+    // As browser back does.
+    router.go('/plan');
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(find.text('Wochenplan'), findsOneWidget);
+  });
+
   group('goldens', skip: goldenSkip, () {
     for (final (name, theme) in [('light', lightTheme), ('dark', darkTheme)]) {
       testWidgets('bar in $name', tags: goldenTags, (tester) async {
