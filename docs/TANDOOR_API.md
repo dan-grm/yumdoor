@@ -478,7 +478,10 @@ amounts across recipes; merging per food and unit for display is our job. "Add t
   - Yumdoor passes the first page's `timestamp` minus a minute as the next `updated_after`, so a change between
     the query and the timestamp (serializing a page can take a while) isn't missed. An entry may come twice.
 - Pages are offsets into the list ordered by id: an entry deleted between two page requests shifts the later pages
-  and one entry is skipped. Yumdoor starts the read over when `count` changes between pages.
+  and one entry is skipped. Yumdoor starts the read over when `count` changes between pages. That misses a delete
+  plus an add between two pages, and any delete in a list at the cap (`count` stays 1000).
+- An incremental read can hit the cap, too, and then leaves out the changed entries with the highest ids, not the
+  newest changes. Yumdoor then keeps the old `updated_after` for the next read.
 - Check off: `POST /api/shopping-list-entry/bulk/ {ids, checked}`. It sets `checked`, `updated_at` and
   `completed_at` (cleared on uncheck) for the ids the household has; unknown ids, and an empty list, are ignored
   with 200. The response echoes the request with a `timestamp`. Any household member can check off anyone's entries.

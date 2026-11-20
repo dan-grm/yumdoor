@@ -149,6 +149,18 @@ void main() {
       expect((await shopping(adapter).fetch()).truncated, isTrue);
     });
 
+    test('keeps updatedAfter after a truncated incremental read', () async {
+      final adapter = FakeHttpAdapter(
+        (_) => jsonResponse(page([entry(1)], count: maxShoppingEntries)),
+      );
+      final since = DateTime.utc(2026, 11, 20, 8);
+
+      final changes = await shopping(adapter).fetch(updatedAfter: since);
+
+      expect(changes.truncated, isTrue);
+      expect(changes.syncedAt, since);
+    });
+
     test('maps a response without timestamp to a ServerFailure', () {
       final adapter = FakeHttpAdapter(
         (_) => jsonResponse(page([entry(1)])..remove('timestamp')),

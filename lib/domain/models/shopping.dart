@@ -99,7 +99,8 @@ abstract class ShoppingListSnapshot with _$ShoppingListSnapshot {
 
     /// Pass this as `updatedAfter` to the next read to get only what changed
     /// since this one. A minute before the read, so nothing is missed;
-    /// entries may come again.
+    /// entries may come again. A [truncated] incremental read keeps its
+    /// `updatedAfter`.
     required DateTime syncedAt,
 
     /// Whether the list reached [maxShoppingEntries], where the server cuts

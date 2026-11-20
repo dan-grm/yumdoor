@@ -1,5 +1,6 @@
 import 'package:tandoor_api/tandoor_api.dart' as api;
 
+import '../../domain/models/meal_plan.dart';
 import '../../domain/models/shopping.dart';
 import 'food_mapper.dart';
 import 'mapping.dart';
@@ -49,8 +50,18 @@ extension ShoppingEntrySourceMapper on api.ShoppingListRecipe {
     // `name` is empty for entries added for a recipe; the recipe has it.
     recipeName: optionalText(recipeData?.name) ?? name ?? '',
     servings: servings,
-    mealPlan: mealPlanData?.toDomain(),
+    mealPlan: _mealPlan,
   );
+
+  /// The entry still loads if its meal plan can't be mapped; only the link
+  /// to the plan is lost.
+  MealPlan? get _mealPlan {
+    try {
+      return mealPlanData?.toDomain();
+    } on FormatException {
+      return null;
+    }
+  }
 }
 
 extension ShoppingEntryMapper on api.ShoppingListEntry {

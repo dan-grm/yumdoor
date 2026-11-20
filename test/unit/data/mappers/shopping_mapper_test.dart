@@ -103,6 +103,19 @@ void main() {
       expect(paper.source, isNull);
     });
 
+    test('drops a meal plan it cannot map, but keeps the entry', () {
+      final ginger = recordedEntries().firstWhere(
+        (e) => e.food?.name == 'Ingwer' && e.listRecipeData != null,
+      );
+
+      final mapped = ginger
+          .rebuild((b) => b.listRecipeData.mealPlanData.createdBy = null)
+          .toDomain();
+
+      expect(mapped.source?.recipeName, 'Linsen-Dal mit Karotten');
+      expect(mapped.source?.mealPlan, isNull);
+    });
+
     test('fails on an entry without food or owner', () {
       final milk = recordedEntries().firstWhere((e) => e.food?.name == 'Milch');
 

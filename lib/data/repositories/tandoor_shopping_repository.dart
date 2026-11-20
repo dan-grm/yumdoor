@@ -37,7 +37,13 @@ class TandoorShoppingRepository implements ShoppingRepository {
   /// Pages are offsets into the list ordered by id. If an entry is deleted
   /// (or a checked one ages out) between two pages, the later pages shift and
   /// an entry is skipped; a changed `count` shows that, and the read starts
-  /// over. The last of [_attempts] reads is kept as it is.
+  /// over. The last of [_attempts] reads is kept as it is. Not noticed: a
+  /// delete and an add between two pages, or a delete in a list at the cap
+  /// (its `count` stays 1000). Lists rarely have more than one page.
+  ///
+  /// A truncated incremental read keeps [updatedAfter] as `syncedAt`: the
+  /// entries it left out are ordered by id, not by time, so moving on would
+  /// lose them for good.
   @override
   Future<ShoppingListSnapshot> fetch({DateTime? updatedAfter}) =>
       guardRequest(() async {
@@ -46,7 +52,11 @@ class TandoorShoppingRepository implements ShoppingRepository {
             updatedAfter?.toUtc(),
             strict: attempt < _attempts,
           );
-          if (snapshot != null) return snapshot;
+          if (snapshot == null) continue;
+          if (snapshot.truncated && updatedAfter != null) {
+            return snapshot.copyWith(syncedAt: updatedAfter.toUtc());
+          }
+          return snapshot;
         }
       });
 
