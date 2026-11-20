@@ -90,7 +90,7 @@ class TandoorRepositories {
       ingredientParser: TandoorIngredientParser(apiClient),
       cookLogs: cookLogs,
       books: TandoorBookRepository(apiClient),
-      users: TandoorUserRepository(apiClient),
+      users: TandoorUserRepository(apiClient, currentUser: currentUser),
       savedFilters: switch (savedFilterCache) {
         final cache? => CachingSavedFilterRepository(savedFilters, cache),
         null => savedFilters,

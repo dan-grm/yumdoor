@@ -5,4 +5,7 @@ import '../models/user_ref.dart';
 abstract interface class UserRepository {
   /// Every member of the space, the current user included.
   Future<List<UserRef>> users();
+
+  /// The id of the user logged in on this device.
+  Future<int> currentUserId();
 }

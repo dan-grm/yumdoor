@@ -5,11 +5,17 @@ import '../../domain/repositories/user_repository.dart';
 import '../api/api_failures.dart';
 import '../mappers/mapping.dart';
 import '../mappers/user_mapper.dart';
+import 'current_user.dart';
 
 class TandoorUserRepository implements UserRepository {
-  TandoorUserRepository(this._api);
+  TandoorUserRepository(this._api, {CurrentUser? currentUser})
+    : _currentUser = currentUser ?? CurrentUser(_api);
 
   final api.ApiApi _api;
+  final CurrentUser _currentUser;
+
+  @override
+  Future<int> currentUserId() => guardRequest(_currentUser.id);
 
   @override
   Future<List<UserRef>> users() => guardRequest(() async {

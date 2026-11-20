@@ -20,14 +20,21 @@ class FakeBookRepository implements BookRepository {
 
 /// [UserRepository] for tests. Set [failure] to make it throw.
 class FakeUserRepository implements UserRepository {
-  FakeUserRepository([this.list = const []]);
+  FakeUserRepository([this.list = const [], this.currentId = 1]);
 
   final List<UserRef> list;
+  final int currentId;
   Failure? failure;
 
   @override
   Future<List<UserRef>> users() async {
     if (failure case final failure?) throw failure;
     return list;
+  }
+
+  @override
+  Future<int> currentUserId() async {
+    if (failure case final failure?) throw failure;
+    return currentId;
   }
 }
