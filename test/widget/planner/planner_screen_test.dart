@@ -59,7 +59,7 @@ void main() {
 
   late FakeMealPlanRepository repository;
 
-  setUp(() => repository = FakeMealPlanRepository(plans));
+  setUp(() => repository = FakeMealPlanRepository([...plans]));
 
   Future<GoRouter> pumpPlanner(WidgetTester tester, {ThemeData? theme}) =>
       pumpRoutes(
@@ -193,6 +193,22 @@ void main() {
 
     expect(find.text('Nochmal versuchen'), findsNothing);
     expect(find.text('Linsen-Bolognese'), findsOneWidget);
+  });
+
+  testWidgets('pull to refresh loads the week again', (tester) async {
+    await pumpPlanner(tester);
+    expect(repository.listCalls, hasLength(1));
+
+    repository.plans.add(_plan(8, 22, _dinner, recipe: 'Neues Rezept'));
+    await tester.fling(
+      find.text('Linsen-Bolognese'),
+      const Offset(0, 300),
+      1000,
+    );
+    await tester.pumpAndSettle();
+
+    expect(repository.listCalls, hasLength(2));
+    expect(find.text('Neues Rezept'), findsOneWidget);
   });
 
   group('goldens', skip: goldenSkip, () {

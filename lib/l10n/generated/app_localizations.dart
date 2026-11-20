@@ -2131,6 +2131,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{weekday}, {date}'**
   String planDayLabel(String weekday, String date);
+
+  /// Accessible label of today in the planner.
+  ///
+  /// In de, this message translates to:
+  /// **'Heute, {day}'**
+  String planToday(String day);
 }
 
 class _AppLocalizationsDelegate

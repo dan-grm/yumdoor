@@ -14,12 +14,6 @@ import '../common/failure_view.dart';
 import '../common/recipe_image.dart';
 import 'planner_providers.dart';
 
-/// Width of the column with a day's name and number.
-const _dayColumnWidth = 36.0;
-
-/// Size of a planned meal's picture.
-const _pictureSize = 40.0;
-
 /// The week planner (mockup 10-wochenplan): the days of one week with their
 /// planned meals, and buttons to browse the weeks.
 class PlannerScreen extends ConsumerStatefulWidget {
@@ -32,6 +26,16 @@ class PlannerScreen extends ConsumerStatefulWidget {
 class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   /// How many weeks the shown week is after the current one.
   int _offset = 0;
+
+  /// Loads the week at [start] again, for pull to refresh.
+  Future<void> _refresh(CalendarDay start) async {
+    ref.invalidate(weekPlansProvider(start));
+    try {
+      await ref.read(weekPlansProvider(start).future);
+    } on Object {
+      // The screen shows the failure.
+    }
+  }
 
   void _browse(int weeks) => setState(() => _offset += weeks);
 
@@ -83,6 +87,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                   start: start,
                   today: today,
                   plans: value,
+                  onRefresh: () => _refresh(start),
                 ),
                 AsyncError(:final error) => FailureView(
                   error: error,
@@ -181,37 +186,53 @@ class _WeekBar extends StatelessWidget {
 
 /// The seven days from [start], with the [plans] on each.
 class _Days extends StatelessWidget {
-  const _Days({required this.start, required this.today, required this.plans});
+  const _Days({
+    required this.start,
+    required this.today,
+    required this.plans,
+    required this.onRefresh,
+  });
 
   final CalendarDay start;
   final CalendarDay today;
   final List<MealPlan> plans;
+  final Future<void> Function() onRefresh;
 
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
-    return ListView(
-      padding: EdgeInsets.fromLTRB(t.space5, 0, t.space5, t.space5),
-      children: [
-        if (plans.isEmpty)
-          Padding(
-            padding: EdgeInsets.only(bottom: t.space3),
-            child: Text(
-              l10n.planEmptyWeek,
-              style: t.body.copyWith(color: t.inkMuted),
-            ),
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: t.sizeWide),
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(t.space5, 0, t.space5, t.space5),
+            children: [
+              if (plans.isEmpty)
+                Padding(
+                  padding: EdgeInsets.only(bottom: t.space3),
+                  child: Text(
+                    l10n.planEmptyWeek,
+                    style: t.body.copyWith(color: t.inkMuted),
+                  ),
+                ),
+              for (var i = 0; i < daysInWeek; i++)
+                Padding(
+                  padding: EdgeInsets.only(bottom: t.space2),
+                  child: _DayRow(
+                    day: start.addDays(i),
+                    isToday: start.addDays(i) == today,
+                    plans: plansOnDay(plans, start.addDays(i)),
+                  ),
+                ),
+            ],
           ),
-        for (var i = 0; i < daysInWeek; i++)
-          Padding(
-            padding: EdgeInsets.only(bottom: t.space2),
-            child: _DayRow(
-              day: start.addDays(i),
-              isToday: start.addDays(i) == today,
-              plans: plansOnDay(plans, start.addDays(i)),
-            ),
-          ),
-      ],
+        ),
+      ),
     );
   }
 }
@@ -233,10 +254,11 @@ class _DayRow extends StatelessWidget {
     final l10n = context.l10n;
     final format = LocaleFormat.of(context);
     final date = day.atLocalTime();
-    final label = l10n.planDayLabel(
+    final name = l10n.planDayLabel(
       format.weekdayLong(date),
       format.dayMonth(date),
     );
+    final label = isToday ? l10n.planToday(name) : name;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -257,7 +279,7 @@ class _DayRow extends StatelessWidget {
               : Column(
                   children: [
                     for (final (i, plan) in plans.indexed) ...[
-                      if (i > 0) SizedBox(height: t.space2 - 2),
+                      if (i > 0) SizedBox(height: t.space2),
                       _PlanCard(plan: plan),
                     ],
                   ],
@@ -283,7 +305,7 @@ class _DayLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.tokens;
     return SizedBox(
-      width: _dayColumnWidth,
+      width: context.tokens.sizeTouch,
       child: Padding(
         padding: EdgeInsets.only(top: t.space1),
         child: DecoratedBox(
@@ -332,7 +354,7 @@ class _EmptyDay extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(t.radiusM),
-          border: Border.all(color: t.line, width: 2),
+          border: Border.all(color: t.line),
         ),
         child: Text(
           context.l10n.planAddRecipe,
@@ -385,7 +407,7 @@ class _PlanCard extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(t.radiusS),
                   child: SizedBox.square(
-                    dimension: _pictureSize,
+                    dimension: t.sizeTouch,
                     child: ColoredBox(
                       color: t.sageSoft,
                       child: RecipeImage(

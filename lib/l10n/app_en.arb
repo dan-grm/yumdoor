@@ -338,5 +338,6 @@
   "planEmptyWeek": "Nothing is planned for this week yet.",
   "planRange": "{from} – {to}",
   "planMealLine": "{meal} · {servings} serv.",
-  "planDayLabel": "{weekday}, {date}"
+  "planDayLabel": "{weekday}, {date}",
+  "planToday": "Today, {day}"
 }

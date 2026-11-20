@@ -1857,5 +1857,15 @@
         "example": "19. Okt."
       }
     }
+  },
+  "planToday": "Heute, {day}",
+  "@planToday": {
+    "description": "Accessible label of today in the planner.",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Mittwoch, 18. Nov."
+      }
+    }
   }
 }

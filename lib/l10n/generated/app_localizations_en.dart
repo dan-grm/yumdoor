@@ -1295,4 +1295,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String planDayLabel(String weekday, String date) {
     return '$weekday, $date';
   }
+
+  @override
+  String planToday(String day) {
+    return 'Today, $day';
+  }
 }
