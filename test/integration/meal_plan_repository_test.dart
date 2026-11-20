@@ -18,12 +18,30 @@ void main() {
   late TandoorRepositories anna;
   late TandoorRepositories ben;
 
-  // The seed plans the current week, Monday to Sunday, at the meal types'
+  // The seed plans the week it runs in, Monday to Sunday, at the meal types'
   // times in the server's time zone (Europe/Berlin). The weekday checks below
   // hold on a device within a few hours of it, such as CI (UTC).
-  final today = CalendarDay.today();
-  final monday = today.addDays(1 - today.weekday);
-  final sunday = monday.addDays(6);
+  late CalendarDay monday;
+  late CalendarDay sunday;
+
+  setUpAll(() async {
+    // Found from the seeded goulash, so an older seed works, too.
+    final repositories = TandoorRepositories(
+      TandoorConnection(tandoor.baseUrl, tandoor.token('anna')),
+    );
+    try {
+      final today = CalendarDay.today();
+      final plans = await repositories.mealPlans.list(
+        today.addDays(-366),
+        today.addDays(7),
+      );
+      final goulash = plans.lastWhere((p) => p.label == 'Rindergulasch');
+      monday = goulash.fromDay.addDays(1 - goulash.fromDay.weekday);
+      sunday = monday.addDays(6);
+    } finally {
+      repositories.close();
+    }
+  });
 
   /// Plans the test created, deleted again afterwards.
   final created = <int>[];

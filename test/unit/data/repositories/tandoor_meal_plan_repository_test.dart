@@ -192,29 +192,34 @@ void main() {
     expect(saved.fromDay, monday);
   });
 
-  test('create returns the saved plan if moving it back fails', () async {
+  test('create deletes the plan again if moving it back fails', () async {
     final adapter = FakeHttpAdapter(
       (request) => switch (request.method) {
         'POST' => jsonResponse(plan(11, monday.addDays(1)), status: 201),
-        _ => throw DioException.connectionError(
+        'PATCH' => throw DioException.connectionError(
           requestOptions: request,
           reason: 'offline',
         ),
+        _ => jsonResponse(null, status: 204),
       },
     );
 
-    final saved = await plans(adapter).create(
-      NewMealPlan(
-        title: 'Pizza',
-        servings: 2,
-        day: monday,
-        mealType: const MealType(id: 3, name: 'Abendessen'),
+    await expectLater(
+      plans(adapter).create(
+        NewMealPlan(
+          title: 'Pizza',
+          servings: 2,
+          day: monday,
+          mealType: const MealType(id: 3, name: 'Abendessen'),
+        ),
       ),
+      throwsA(isA<OfflineFailure>()),
     );
-
-    expect(adapter.requests.last.method, 'PATCH');
-    expect(saved.id, 11);
-    expect(saved.fromDay, monday.addDays(1));
+    expect(
+      [for (final r in adapter.requests) r.method],
+      ['POST', 'PATCH', 'DELETE'],
+    );
+    expect(adapter.requests.last.uri.path, '/tandoor/api/meal-plan/11/');
   });
 
   group('update', () {

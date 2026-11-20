@@ -66,7 +66,7 @@ class TandoorMealPlanRepository implements MealPlanRepository {
   /// (docs/TANDOOR_API.md#meal-plans). If the device's time for the plan is
   /// such a midnight, the plan lands at another time, maybe on another day;
   /// it is then moved back. Update never changes the time. If that fails,
-  /// the plan as Tandoor saved it is returned: it exists either way.
+  /// the plan is deleted again, so trying again doesn't plan it twice.
   @override
   Future<MealPlan> create(NewMealPlan plan) => guardRequest(() async {
     final body = plan.toJson();
@@ -84,10 +84,13 @@ class TandoorMealPlanRepository implements MealPlanRepository {
         },
       );
       return _parse(fixed.data).toDomain();
-    } on DioException {
-      return saved.toDomain();
-    } on FormatException {
-      return saved.toDomain();
+    } on Object {
+      try {
+        await _api.apiMealPlanDestroy(id: requireId(saved.id, 'MealPlan'));
+      } on DioException {
+        // It stays, on the day Tandoor chose.
+      }
+      rethrow;
     }
   });
 

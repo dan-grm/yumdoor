@@ -54,7 +54,8 @@ abstract class MealPlan with _$MealPlan {
 
 /// A meal plan to create, for one day.
 class NewMealPlan {
-  /// Throws an [ArgumentError] for [servings] that aren't above 0, for a
+  /// Throws an [ArgumentError] for [servings] [checkMealPlanServings]
+  /// rejects, for a
   /// plan with neither [recipeId] nor a [title], or for a [title] longer than
   /// [maxMealPlanTitleLength]. [title] and [note] are trimmed.
   factory NewMealPlan({
@@ -125,8 +126,8 @@ class NewMealPlan {
 
 /// Changes to a meal plan; `null` leaves a field as it is.
 class MealPlanChanges {
-  /// Throws an [ArgumentError] for [servings] that aren't above 0. [note] is
-  /// trimmed.
+  /// Throws an [ArgumentError] for [servings] [checkMealPlanServings]
+  /// rejects. [note] is trimmed.
   factory MealPlanChanges({
     CalendarDay? day,
     MealType? mealType,
@@ -165,9 +166,15 @@ class MealPlanChanges {
 /// The most characters (code points) Tandoor stores in a meal plan's title.
 const maxMealPlanTitleLength = 64;
 
-/// Throws an [ArgumentError] unless [servings] is a number above 0.
+/// Throws an [ArgumentError] unless [servings] is a number Tandoor can store
+/// as servings: above 0 and below 10000.
 void checkMealPlanServings(double servings) {
-  if (!(servings > 0) || servings.isInfinite) {
-    throw ArgumentError.value(servings, 'servings', 'must be above 0');
+  // Tandoor stores up to 9999.9999 with 4 decimal places.
+  if (!(servings >= 0.0001 && servings < 10000)) {
+    throw ArgumentError.value(
+      servings,
+      'servings',
+      'must be from 0.0001 to below 10000',
+    );
   }
 }

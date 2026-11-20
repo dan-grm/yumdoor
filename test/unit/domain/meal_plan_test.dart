@@ -93,8 +93,15 @@ void main() {
       expect(make('🍕' * 64).title.runes, hasLength(64));
     });
 
-    test('needs servings above 0', () {
-      for (final servings in [0.0, -1.0, double.nan, double.infinity]) {
+    test('needs servings Tandoor can store', () {
+      for (final servings in [
+        0.0,
+        0.00001,
+        -1.0,
+        10000.0,
+        double.nan,
+        double.infinity,
+      ]) {
         expect(
           () => NewMealPlan(
             recipeId: 4,
