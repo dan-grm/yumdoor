@@ -339,5 +339,10 @@
   "planRange": "{from} – {to}",
   "planMealLine": "{meal} · {servings} serv.",
   "planDayLabel": "{weekday}, {date}",
-  "planToday": "Today, {day}"
+  "planToday": "Today, {day}",
+  "planSharedWithHousehold": "Shared with your household",
+  "planFilterAll": "All",
+  "planFilterMine": "Only mine",
+  "planPlannedBy": "Planned by {name}",
+  "planPlannedByOther": "Planned by someone else"
 }

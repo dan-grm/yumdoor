@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/platform_providers.dart';
 import '../../design/components/buttons.dart';
+import '../../design/components/filter_chips.dart';
 import '../../design/design.dart';
 import '../../domain/models/calendar_day.dart';
 import '../../domain/models/meal_plan.dart';
@@ -51,6 +52,10 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
     ).addDays(_offset * daysInWeek);
     final end = start.addDays(daysInWeek - 1);
     final plans = ref.watch(weekPlansProvider(start));
+    final onlyMine = ref.watch(plannerOnlyMineProvider);
+    final people = ref.watch(plannerPeopleProvider).value;
+    final me = people?.me;
+    final names = people?.names ?? const <int, String>{};
 
     return Scaffold(
       body: SafeArea(
@@ -80,13 +85,22 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                 onCurrent: () => setState(() => _offset = 0),
               ),
             ),
+            _HouseholdBar(
+              onlyMine: onlyMine,
+              onChanged: ref.read(plannerOnlyMineProvider.notifier).set,
+            ),
             SizedBox(height: t.space3),
             Expanded(
               child: switch (plans) {
                 AsyncData(:final value) => _Days(
                   start: start,
                   today: today,
-                  plans: value,
+                  plans: [
+                    for (final plan in value)
+                      if (!onlyMine || me == null || plan.createdBy == me) plan,
+                  ],
+                  me: me,
+                  names: names,
                   onRefresh: () => _refresh(start),
                 ),
                 AsyncError(:final error) => FailureView(
@@ -98,6 +112,45 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The note that plans are shared with the household, and the choice between
+/// all plans and the current user's own.
+class _HouseholdBar extends StatelessWidget {
+  const _HouseholdBar({required this.onlyMine, required this.onChanged});
+
+  final bool onlyMine;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final l10n = context.l10n;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(t.space5, t.space2, t.space5, 0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              l10n.planSharedWithHousehold,
+              style: t.caption.copyWith(color: t.inkMuted),
+            ),
+          ),
+          ChoiceFilterChip(
+            label: l10n.planFilterAll,
+            selected: !onlyMine,
+            onSelected: () => onChanged(false),
+          ),
+          SizedBox(width: t.space2),
+          ChoiceFilterChip(
+            label: l10n.planFilterMine,
+            selected: onlyMine,
+            onSelected: () => onChanged(true),
+          ),
+        ],
       ),
     );
   }
@@ -190,12 +243,18 @@ class _Days extends StatelessWidget {
     required this.start,
     required this.today,
     required this.plans,
+    required this.me,
+    required this.names,
     required this.onRefresh,
   });
 
   final CalendarDay start;
   final CalendarDay today;
   final List<MealPlan> plans;
+
+  /// The current user's id and the users' names, to mark the meals of others.
+  final int? me;
+  final Map<int, String> names;
   final Future<void> Function() onRefresh;
 
   @override
@@ -227,6 +286,8 @@ class _Days extends StatelessWidget {
                     day: start.addDays(i),
                     isToday: start.addDays(i) == today,
                     plans: plansOnDay(plans, start.addDays(i)),
+                    me: me,
+                    names: names,
                   ),
                 ),
             ],
@@ -242,11 +303,15 @@ class _DayRow extends StatelessWidget {
     required this.day,
     required this.isToday,
     required this.plans,
+    required this.me,
+    required this.names,
   });
 
   final CalendarDay day;
   final bool isToday;
   final List<MealPlan> plans;
+  final int? me;
+  final Map<int, String> names;
 
   @override
   Widget build(BuildContext context) {
@@ -280,7 +345,12 @@ class _DayRow extends StatelessWidget {
                   children: [
                     for (final (i, plan) in plans.indexed) ...[
                       if (i > 0) SizedBox(height: t.space2),
-                      _PlanCard(plan: plan),
+                      _PlanCard(
+                        plan: plan,
+                        plannedBy: me == null || plan.createdBy == me
+                            ? null
+                            : names[plan.createdBy] ?? '',
+                      ),
                     ],
                   ],
                 ),
@@ -367,9 +437,13 @@ class _EmptyDay extends StatelessWidget {
 
 /// One planned meal. Opens its recipe if it has one.
 class _PlanCard extends StatelessWidget {
-  const _PlanCard({required this.plan});
+  const _PlanCard({required this.plan, this.plannedBy});
 
   final MealPlan plan;
+
+  /// The name of the household member who planned it, empty if unknown;
+  /// `null` for the current user's own plans.
+  final String? plannedBy;
 
   @override
   Widget build(BuildContext context) {
@@ -434,6 +508,15 @@ class _PlanCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         style: t.label.copyWith(color: t.ink),
                       ),
+                      if (plannedBy case final name?)
+                        Text(
+                          name.isEmpty
+                              ? l10n.planPlannedByOther
+                              : l10n.planPlannedBy(name),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: t.caption.copyWith(color: t.inkMuted),
+                        ),
                     ],
                   ),
                 ),

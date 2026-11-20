@@ -9,9 +9,12 @@ import 'package:yumdoor/domain/models/calendar_day.dart';
 import 'package:yumdoor/domain/models/meal_plan.dart';
 import 'package:yumdoor/domain/models/meal_type.dart';
 import 'package:yumdoor/domain/models/recipe_summary.dart';
+import 'package:yumdoor/domain/models/user_ref.dart';
 import 'package:yumdoor/features/planner/planner_screen.dart';
 
 import '../../fakes/app_overrides.dart';
+import '../../fakes/fake_book_user_repositories.dart';
+import '../../fakes/in_memory_local_store.dart';
 import '../../fakes/fake_meal_plan_repository.dart';
 import '../fonts.dart';
 import '../golden.dart';
@@ -29,6 +32,7 @@ MealPlan _plan(
   String title = '',
   double servings = 4,
   int? toDay,
+  int createdBy = 1,
 }) => MealPlan(
   id: id,
   recipe: recipe == null ? null : RecipeSummary(id: id + 100, name: recipe),
@@ -37,7 +41,7 @@ MealPlan _plan(
   fromDay: CalendarDay(2026, 11, day),
   toDay: CalendarDay(2026, 11, toDay ?? day),
   mealType: type,
-  createdBy: 1,
+  createdBy: createdBy,
 );
 
 void main() {
@@ -49,7 +53,7 @@ void main() {
   final plans = [
     _plan(1, 16, _dinner, recipe: 'Linsen-Bolognese'),
     _plan(2, 18, _dinner, recipe: 'Ofenkarotten mit Feta'),
-    _plan(3, 19, _dinner, recipe: 'Flammkuchen'),
+    _plan(3, 19, _dinner, recipe: 'Flammkuchen', createdBy: 2),
     _plan(4, 19, _lunch, recipe: 'Karotten-Ingwer-Suppe', servings: 2),
     _plan(5, 21, _dinner, title: 'Pizza bestellen'),
     _plan(6, 20, _lunch, title: 'Reste', toDay: 21),
@@ -61,24 +65,37 @@ void main() {
 
   setUp(() => repository = FakeMealPlanRepository([...plans]));
 
-  Future<GoRouter> pumpPlanner(WidgetTester tester, {ThemeData? theme}) =>
-      pumpRoutes(
-        tester,
-        location: '/plan',
-        theme: theme,
-        overrides: [
-          ...appOverrides(mealPlans: repository),
-          clockProvider.overrideWithValue(() => now),
-        ],
-        routes: [
-          tabsRoute(),
-          GoRoute(
-            path: '/recipe/:id',
-            builder: (context, state) =>
-                Scaffold(body: Text('recipe ${state.pathParameters['id']}')),
-          ),
-        ],
-      );
+  Future<GoRouter> pumpPlanner(
+    WidgetTester tester, {
+    ThemeData? theme,
+    FakeUserRepository? users,
+    InMemoryLocalStore? store,
+  }) => pumpRoutes(
+    tester,
+    location: '/plan',
+    theme: theme,
+    overrides: [
+      ...appOverrides(
+        mealPlans: repository,
+        users:
+            users ??
+            FakeUserRepository(const [
+              UserRef(id: 1, name: 'Anna'),
+              UserRef(id: 2, name: 'Ben'),
+            ]),
+        localStore: store,
+      ),
+      clockProvider.overrideWithValue(() => now),
+    ],
+    routes: [
+      tabsRoute(),
+      GoRoute(
+        path: '/recipe/:id',
+        builder: (context, state) =>
+            Scaffold(body: Text('recipe ${state.pathParameters['id']}')),
+      ),
+    ],
+  );
 
   testWidgets('shows the week with its meals by day', (tester) async {
     await pumpPlanner(tester);
@@ -209,6 +226,79 @@ void main() {
 
     expect(repository.listCalls, hasLength(2));
     expect(find.text('Neues Rezept'), findsOneWidget);
+  });
+
+  group('household', () {
+    final users = FakeUserRepository(const [
+      UserRef(id: 1, name: 'Anna'),
+      UserRef(id: 2, name: 'Ben'),
+    ]);
+
+    setUp(() {
+      repository.plans
+        ..clear()
+        ..addAll([
+          _plan(1, 18, _dinner, recipe: 'Eigenes Gericht'),
+          _plan(2, 19, _dinner, recipe: 'Bens Gericht', createdBy: 2),
+          _plan(3, 20, _dinner, recipe: 'Fremdes Gericht', createdBy: 9),
+        ]);
+    });
+
+    testWidgets('says the plans are shared and names who planned', (
+      tester,
+    ) async {
+      await pumpPlanner(tester, users: users);
+
+      expect(find.text('Geteilt mit deinem Haushalt'), findsOneWidget);
+      expect(find.text('Geplant von Ben'), findsOneWidget);
+      expect(find.text('Von jemand anderem geplant'), findsOneWidget);
+      // Own plans have no note.
+      expect(find.textContaining('Geplant von Anna'), findsNothing);
+      expect(find.text('Eigenes Gericht'), findsOneWidget);
+    });
+
+    testWidgets('"Nur meine" hides the plans of others', (tester) async {
+      await pumpPlanner(tester, users: users);
+
+      await tester.tap(find.text('Nur meine'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Eigenes Gericht'), findsOneWidget);
+      expect(find.text('Bens Gericht'), findsNothing);
+      expect(find.text('Fremdes Gericht'), findsNothing);
+
+      await tester.tap(find.text('Alle'));
+      await tester.pumpAndSettle();
+      expect(find.text('Bens Gericht'), findsOneWidget);
+    });
+
+    testWidgets('remembers the filter on this device', (tester) async {
+      final store = InMemoryLocalStore();
+      await pumpPlanner(tester, users: users, store: store);
+      await tester.tap(find.text('Nur meine'));
+      await tester.pumpAndSettle();
+
+      // A reload with the same storage.
+      await tester.pumpWidget(const SizedBox());
+      await pumpPlanner(tester, users: users, store: store);
+
+      expect(find.text('Bens Gericht'), findsNothing);
+      expect(find.text('Eigenes Gericht'), findsOneWidget);
+    });
+
+    testWidgets('shows everything without notes if users are unknown', (
+      tester,
+    ) async {
+      await pumpPlanner(
+        tester,
+        users: FakeUserRepository()..failure = const ServerFailure(),
+      );
+      await tester.tap(find.text('Nur meine'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bens Gericht'), findsOneWidget);
+      expect(find.textContaining('Geplant von'), findsNothing);
+    });
   });
 
   group('goldens', skip: goldenSkip, () {

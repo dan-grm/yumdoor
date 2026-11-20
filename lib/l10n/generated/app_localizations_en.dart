@@ -1300,4 +1300,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String planToday(String day) {
     return 'Today, $day';
   }
+
+  @override
+  String get planSharedWithHousehold => 'Shared with your household';
+
+  @override
+  String get planFilterAll => 'All';
+
+  @override
+  String get planFilterMine => 'Only mine';
+
+  @override
+  String planPlannedBy(String name) {
+    return 'Planned by $name';
+  }
+
+  @override
+  String get planPlannedByOther => 'Planned by someone else';
 }

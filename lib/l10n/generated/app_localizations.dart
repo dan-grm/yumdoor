@@ -2137,6 +2137,36 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Heute, {day}'**
   String planToday(String day);
+
+  /// Under the planner title: plans are visible to the whole household.
+  ///
+  /// In de, this message translates to:
+  /// **'Geteilt mit deinem Haushalt'**
+  String get planSharedWithHousehold;
+
+  /// Planner filter chip: show the meals of the whole household.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle'**
+  String get planFilterAll;
+
+  /// Planner filter chip: show only the meals the user planned.
+  ///
+  /// In de, this message translates to:
+  /// **'Nur meine'**
+  String get planFilterMine;
+
+  /// On a planned meal that another household member planned.
+  ///
+  /// In de, this message translates to:
+  /// **'Geplant von {name}'**
+  String planPlannedBy(String name);
+
+  /// On a planned meal of another household member whose name is unknown.
+  ///
+  /// In de, this message translates to:
+  /// **'Von jemand anderem geplant'**
+  String get planPlannedByOther;
 }
 
 class _AppLocalizationsDelegate

@@ -928,6 +928,21 @@ void main() {
     );
   });
 
+  test('TandoorUserRepository reads the current user id', () async {
+    final adapter = FakeHttpAdapter(
+      (_) => jsonResponse([
+        {
+          'user': {'id': 7, 'username': 'anna', 'display_name': 'Anna'},
+        },
+      ]),
+    );
+
+    final id = await TandoorUserRepository(client(adapter)).currentUserId();
+
+    expect(adapter.requests.single.uri.path, '/tandoor/api/user-preference/');
+    expect(id, 7);
+  });
+
   test('TandoorUserRepository lists the space members', () async {
     final adapter = FakeHttpAdapter(
       (_) => jsonResponse(tandoorFixture('user_list.json')),

@@ -1867,5 +1867,31 @@
         "example": "Mittwoch, 18. Nov."
       }
     }
+  },
+  "planSharedWithHousehold": "Geteilt mit deinem Haushalt",
+  "@planSharedWithHousehold": {
+    "description": "Under the planner title: plans are visible to the whole household."
+  },
+  "planFilterAll": "Alle",
+  "@planFilterAll": {
+    "description": "Planner filter chip: show the meals of the whole household."
+  },
+  "planFilterMine": "Nur meine",
+  "@planFilterMine": {
+    "description": "Planner filter chip: show only the meals the user planned."
+  },
+  "planPlannedBy": "Geplant von {name}",
+  "@planPlannedBy": {
+    "description": "On a planned meal that another household member planned.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Anna"
+      }
+    }
+  },
+  "planPlannedByOther": "Von jemand anderem geplant",
+  "@planPlannedByOther": {
+    "description": "On a planned meal of another household member whose name is unknown."
   }
 }

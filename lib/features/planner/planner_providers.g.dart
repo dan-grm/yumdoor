@@ -101,3 +101,104 @@ final class WeekPlansFamily extends $Family
   @override
   String toString() => r'weekPlansProvider';
 }
+
+@ProviderFor(plannerPeople)
+final plannerPeopleProvider = PlannerPeopleProvider._();
+
+final class PlannerPeopleProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<PlannerPeople>,
+          PlannerPeople,
+          FutureOr<PlannerPeople>
+        >
+    with $FutureModifier<PlannerPeople>, $FutureProvider<PlannerPeople> {
+  PlannerPeopleProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: _noRetry,
+        name: r'plannerPeopleProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$plannerPeopleHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<PlannerPeople> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<PlannerPeople> create(Ref ref) {
+    return plannerPeople(ref);
+  }
+}
+
+String _$plannerPeopleHash() => r'f29d495ae58d5bbc26994f03a3f13a0b47122f73';
+
+/// Whether the planner shows only the meals the current user planned,
+/// remembered on this device.
+
+@ProviderFor(PlannerOnlyMine)
+final plannerOnlyMineProvider = PlannerOnlyMineProvider._();
+
+/// Whether the planner shows only the meals the current user planned,
+/// remembered on this device.
+final class PlannerOnlyMineProvider
+    extends $NotifierProvider<PlannerOnlyMine, bool> {
+  /// Whether the planner shows only the meals the current user planned,
+  /// remembered on this device.
+  PlannerOnlyMineProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'plannerOnlyMineProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$plannerOnlyMineHash();
+
+  @$internal
+  @override
+  PlannerOnlyMine create() => PlannerOnlyMine();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$plannerOnlyMineHash() => r'f678854fd1d6db541dd1f00b633c5b6680d10574';
+
+/// Whether the planner shows only the meals the current user planned,
+/// remembered on this device.
+
+abstract class _$PlannerOnlyMine extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
