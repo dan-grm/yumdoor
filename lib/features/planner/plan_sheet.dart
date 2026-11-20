@@ -33,13 +33,13 @@ const _snackBarDuration = Duration(seconds: 4);
 const _failureSnackBarDuration = Duration(seconds: 8);
 
 /// Opens the [PlanSheet] for the recipe [recipeId] and, once a plan is
-/// saved, confirms it in a snackbar with a way to the planner. Returns the
-/// saved plan, `null` if the sheet was closed without saving.
+/// saved, confirms it in a snackbar with a way to the planner. Completes
+/// when the sheet is closed; the planner's weeks reload on their own.
 ///
 /// [servings] is where the servings start, usually what the recipe screen
 /// shows, counted in [servingsText] ("Stück") if the recipe has one; [day]
 /// presets the day (today if `null`).
-Future<MealPlan?> showPlanSheet(
+Future<void> showPlanSheet(
   BuildContext context, {
   required int recipeId,
   required String recipeName,
@@ -50,13 +50,13 @@ Future<MealPlan?> showPlanSheet(
   final t = context.tokens;
   final messenger = ScaffoldMessenger.of(context);
   final router = GoRouter.of(context);
-  MealPlan? saved;
 
-  // Confirms through this context, which outlives the sheet: a sheet that is
-  // dragged away while saving still reports how it went.
+  // Confirms through the messenger, which outlives the sheet and the screen
+  // that opened it: a sheet that is dragged away while saving still reports
+  // how it went.
   void confirm(PlanSheetResult result) {
-    saved = result.plan;
-    if (!context.mounted) return;
+    if (!messenger.mounted) return;
+    final context = messenger.context;
     final l10n = context.l10n;
     final plan = result.plan;
     final day = dayLabel(context, plan.fromDay);
@@ -102,7 +102,6 @@ Future<MealPlan?> showPlanSheet(
       onSaved: confirm,
     ),
   );
-  return saved;
 }
 
 /// What the [PlanSheet] saved.
@@ -257,7 +256,10 @@ class _PlanSheetState extends ConsumerState<PlanSheet> {
         shoppingFailure: shoppingFailure,
       ),
     );
-    if (mounted) Navigator.of(context).pop();
+    // Unless it was dragged away meanwhile; it may still be closing then.
+    if (mounted && (ModalRoute.of(context)?.isCurrent ?? false)) {
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -598,6 +600,11 @@ class MealTypePicker extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
     return switch (mealTypes) {
+      // Also while they load again, after a retry or a new meal type.
+      AsyncValue(isLoading: true) => SizedBox(
+        height: t.sizeTouch,
+        child: const Center(child: CircularProgressIndicator()),
+      ),
       AsyncData(value: []) => _NewMealType(onCreated: onSelected),
       AsyncData(:final value) => Wrap(
         spacing: t.space2,
@@ -624,10 +631,7 @@ class MealTypePicker extends ConsumerWidget {
           ),
         ],
       ),
-      _ => SizedBox(
-        height: t.sizeTouch,
-        child: const Center(child: CircularProgressIndicator()),
-      ),
+      AsyncLoading() => const SizedBox.shrink(),
     };
   }
 }

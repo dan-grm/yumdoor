@@ -311,6 +311,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(plans.created, hasLength(1));
     expect(shopping.added, hasLength(1));
+    expect(find.byType(RecipeScreen), findsOneWidget);
     expect(
       find.text(
         'Für Mittwoch, 18. Nov. eingeplant, Fehlendes steht auf der '
