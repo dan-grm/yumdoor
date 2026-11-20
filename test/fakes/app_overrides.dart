@@ -13,6 +13,7 @@ import 'fake_draft_store.dart';
 import 'fake_food_keyword_repositories.dart';
 import 'fake_ingredient_parser.dart';
 import 'fake_link_opener.dart';
+import 'fake_meal_plan_repository.dart';
 import 'fake_offline_cache.dart';
 import 'fake_recipe_repository.dart';
 import 'fake_saved_filter_repository.dart';
@@ -47,6 +48,7 @@ List<Override> appOverrides({
   FakeBookRepository? books,
   FakeUserRepository? users,
   FakeSavedFilterRepository? savedFilters,
+  FakeMealPlanRepository? mealPlans,
   FakeOfflineCache? offlineCache,
   FakeDraftStore? drafts,
   FakeUnloadGuard? unloadGuard,
@@ -76,6 +78,9 @@ List<Override> appOverrides({
   userRepositoryProvider.overrideWithValue(users ?? FakeUserRepository()),
   savedFilterRepositoryProvider.overrideWithValue(
     savedFilters ?? FakeSavedFilterRepository(),
+  ),
+  mealPlanRepositoryProvider.overrideWithValue(
+    mealPlans ?? FakeMealPlanRepository([]),
   ),
   offlineCacheProvider.overrideWithValue(offlineCache ?? FakeOfflineCache()),
   draftStoreProvider.overrideWithValue(drafts ?? FakeDraftStore()),

@@ -2077,6 +2077,66 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Dieser Bereich kommt mit einer der nächsten Versionen.'**
   String get navComingSoon;
+
+  /// Accessible label of the button that shows the week before.
+  ///
+  /// In de, this message translates to:
+  /// **'Vorherige Woche'**
+  String get planWeekPrevious;
+
+  /// Accessible label of the button that shows the week after.
+  ///
+  /// In de, this message translates to:
+  /// **'Nächste Woche'**
+  String get planWeekNext;
+
+  /// Under the date range of the planner while it shows the current week.
+  ///
+  /// In de, this message translates to:
+  /// **'Diese Woche'**
+  String get planThisWeek;
+
+  /// Button under the date range that returns the planner to the current week.
+  ///
+  /// In de, this message translates to:
+  /// **'Zu dieser Woche'**
+  String get planBackToThisWeek;
+
+  /// Disabled placeholder on a day of the planner that has no meals yet.
+  ///
+  /// In de, this message translates to:
+  /// **'Rezept planen'**
+  String get planAddRecipe;
+
+  /// Shown above the days of the planner when the week has no meals.
+  ///
+  /// In de, this message translates to:
+  /// **'In dieser Woche ist noch nichts geplant.'**
+  String get planEmptyWeek;
+
+  /// Date range of the week shown in the planner, e.g. '19. Okt. – 25. Okt.'.
+  ///
+  /// In de, this message translates to:
+  /// **'{from} – {to}'**
+  String planRange(String from, String to);
+
+  /// Meal type and servings of a planned meal, e.g. 'Abendessen · 4 Port.'.
+  ///
+  /// In de, this message translates to:
+  /// **'{meal} · {servings} Port.'**
+  String planMealLine(String meal, String servings);
+
+  /// Accessible label of a day in the planner, e.g. 'Montag, 19. Okt.'.
+  ///
+  /// In de, this message translates to:
+  /// **'{weekday}, {date}'**
+  String planDayLabel(String weekday, String date);
+
+  /// Accessible label of today in the planner.
+  ///
+  /// In de, this message translates to:
+  /// **'Heute, {day}'**
+  String planToday(String day);
 }
 
 class _AppLocalizationsDelegate

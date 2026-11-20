@@ -9,6 +9,7 @@ import '../features/auth/login_screen.dart';
 import '../features/cook_log/cook_log_screen.dart';
 import '../features/cooking/cooking_screen.dart';
 import '../features/editor/editor_screen.dart';
+import '../features/planner/planner_screen.dart';
 import '../features/recipe/recipe_screen.dart';
 import '../features/search/search_location.dart';
 import '../features/search/search_screen.dart';
@@ -108,8 +109,7 @@ StatefulShellRoute tabsRoute() => StatefulShellRoute(
       routes: [
         GoRoute(
           path: planPath,
-          builder: (context, state) =>
-              TabPlaceholder(title: context.l10n.navPlanTitle),
+          builder: (context, state) => const PlannerScreen(),
         ),
       ],
     ),

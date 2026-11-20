@@ -1268,4 +1268,42 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get navComingSoon =>
       'Dieser Bereich kommt mit einer der nächsten Versionen.';
+
+  @override
+  String get planWeekPrevious => 'Vorherige Woche';
+
+  @override
+  String get planWeekNext => 'Nächste Woche';
+
+  @override
+  String get planThisWeek => 'Diese Woche';
+
+  @override
+  String get planBackToThisWeek => 'Zu dieser Woche';
+
+  @override
+  String get planAddRecipe => 'Rezept planen';
+
+  @override
+  String get planEmptyWeek => 'In dieser Woche ist noch nichts geplant.';
+
+  @override
+  String planRange(String from, String to) {
+    return '$from – $to';
+  }
+
+  @override
+  String planMealLine(String meal, String servings) {
+    return '$meal · $servings Port.';
+  }
+
+  @override
+  String planDayLabel(String weekday, String date) {
+    return '$weekday, $date';
+  }
+
+  @override
+  String planToday(String day) {
+    return 'Heute, $day';
+  }
 }
