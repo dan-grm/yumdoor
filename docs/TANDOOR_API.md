@@ -448,6 +448,23 @@ There are two server paths and one client path:
    `shopping_lists_ids` is optional in the schema, but the view reads it unconditionally
    (`cookbook/views/api.py:2251`), so always send it (`[]` for none).
 
+Checked on 2.6.15 (Yumdoor's side is `TandoorShoppingRepository.addRecipe`):
+
+- The meal plan's `shopping` flag means "has a `ShoppingListRecipe`", nothing more. It is true as soon as the
+  `ShoppingListRecipe` exists, before any entries, and **stays true when all its entries are deleted** (the
+  `ShoppingListRecipe` remains, invisible in the list). Deleting the `ShoppingListRecipe`
+  (`DELETE /api/shopping-list-recipe/{id}/`, household members may) deletes its entries and clears the flag.
+  `PATCH /api/shopping-list-recipe/{id}/ {mealplan: null}` unlinks it instead: the flag clears and its entries
+  stay (as entries of the recipe without a plan).
+  Yumdoor deletes the `ShoppingListRecipe` again when `bulk_create_entries` fails. After deleting entries of a meal
+  plan it checks `GET /api/shopping-list-entry/?mealplan=<id>` and, when nothing is left, unlinks the plan's
+  `ShoppingListRecipe`s (`GET /api/shopping-list-recipe/?mealplan=<id>`). Unlinking, not deleting, because the
+  count only covers what the caller's list shows: checked entries older than their `shopping_recent_days` may still
+  be on another household member's list, and a delete would take them along. A recipe added without a meal plan keeps an empty `ShoppingListRecipe`; it does no harm.
+- `bulk_create_entries` answers 200 with the request echoed, not the created entries. An unknown `food_id` gets
+  a 500 (HTML), and the `ShoppingListRecipe` stays.
+- `servings` and entry `amount`s are rounded to 4 decimal places by the server; more is not an error.
+
 Each meal plan becomes its own `ShoppingListRecipe` with one entry per ingredient. The server does **not** merge
 amounts across recipes; merging per food and unit for display is our job. "Add the week" skips meal plans whose
 `shopping` flag is already true, to avoid duplicates.
@@ -485,6 +502,12 @@ amounts across recipes; merging per food and unit for display is our job. "Add t
 - Check off: `POST /api/shopping-list-entry/bulk/ {ids, checked}`. It sets `checked`, `updated_at` and
   `completed_at` (cleared on uncheck) for the ids the household has; unknown ids, and an empty list, are ignored
   with 200. The response echoes the request with a `timestamp`. Any household member can check off anyone's entries.
+- Add an item by hand: `POST /api/shopping-list-entry/ {food: <id>, unit: <id or null>, amount}` (201, the new
+  entry). `amount` is required (0 for none). **Gotcha: nested `food`/`unit` objects rename them.**
+  `{"food": {"id": 711, "name": "x"}}` saves "x" as that food's name for the whole space (writable nested
+  serializer), and `name` is required in the nested form. Plain ids work and change nothing; that is what Yumdoor
+  sends. An unknown food id gets a 500.
+- Delete: `DELETE /api/shopping-list-entry/{id}/` (204; 404 when already gone). There is no bulk delete.
 - Supermarket categories: `Food.supermarket_category`. Per-store ordering:
   `GET /api/supermarket/` (all of the space's) → each has `category_to_supermarket` relations with an `order`.
   Group by category, order by the chosen supermarket, uncategorized last.

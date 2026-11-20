@@ -67,7 +67,17 @@ void main() {
     expect(result.entries.single.amount, 200);
   });
 
-  test('servings below 1 count as 1', () {
+  test("scales to a meal plan's fractional servings", () {
+    final result = buildRecipeShopping(
+      recipe([
+        const Ingredient(id: 100, food: carrot, unit: gram, amount: 100),
+      ]),
+      servings: 0.5,
+    );
+    expect(result.entries.single.amount, 25);
+  });
+
+  test('servings of 0 count as 1', () {
     final result = buildRecipeShopping(
       recipe([
         const Ingredient(id: 100, food: carrot, unit: gram, amount: 100),
