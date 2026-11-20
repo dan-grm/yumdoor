@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:tandoor_api/tandoor_api.dart' as api;
 
+import '../../core/failures.dart';
 import '../../domain/models/recipe.dart';
 import '../../domain/models/shopping.dart';
 import '../../domain/repositories/shopping_repository.dart';
@@ -151,6 +152,8 @@ class TandoorShoppingRepository implements ShoppingRepository {
           'mealplan': mealPlanId,
         },
       );
+      // Without an id, the recipe can't be deleted again; the plan then
+      // stays marked until it is added again and its entries deleted.
       final listRecipeId = switch (created.data) {
         {'id': final int id} => id,
         _ => throw const FormatException('Shopping list recipe without id'),
@@ -239,7 +242,13 @@ class TandoorShoppingRepository implements ShoppingRepository {
       }
     }
     if (failure case (final error, final stack)) {
-      await guardRequest<void>(() => Error.throwWithStackTrace(error, stack));
+      if (error is DioException) {
+        Error.throwWithStackTrace(failureFromDioException(error), stack);
+      }
+      Error.throwWithStackTrace(
+        error is Failure ? error : ServerFailure(cause: error),
+        stack,
+      );
     }
   }
 

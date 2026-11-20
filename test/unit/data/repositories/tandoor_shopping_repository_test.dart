@@ -636,6 +636,15 @@ void main() {
       );
     });
 
+    test('reports other errors as a ServerFailure', () {
+      final adapter = FakeHttpAdapter((_) => throw StateError('closed'));
+
+      expect(
+        shopping(adapter).deleteEntries([domainEntry(1)]),
+        throwsA(isA<ServerFailure>()),
+      );
+    });
+
     test('succeeds when the cleanup fails', () async {
       final adapter = FakeHttpAdapter(
         (request) => request.method == 'GET'

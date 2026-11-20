@@ -248,10 +248,11 @@ void main() {
         e.source?.recipeId == recipe.id && e.source?.mealPlan == null;
     expect((await anna.shopping.fetch()).entries.where(ours), isEmpty);
 
-    final added = await anna.shopping.addRecipe(recipe, 2);
-
-    final entries = (await anna.shopping.fetch()).entries.where(ours).toList();
+    var entries = <ShoppingEntry>[];
     try {
+      final added = await anna.shopping.addRecipe(recipe, 2);
+      entries = (await anna.shopping.fetch()).entries.where(ours).toList();
+
       expect(added.neededCount, 3);
       expect(
         [for (final e in entries) (e.food.name, e.amount)],
@@ -263,6 +264,9 @@ void main() {
       );
       expect(entries.first.source?.recipeName, 'Tomaten-Mozzarella-Salat');
     } finally {
+      if (entries.isEmpty) {
+        entries = (await anna.shopping.fetch()).entries.where(ours).toList();
+      }
       await anna.shopping.deleteEntries(entries);
     }
   });
