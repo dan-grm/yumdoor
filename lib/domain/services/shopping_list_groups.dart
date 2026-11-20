@@ -19,9 +19,10 @@ import 'text_match.dart';
 /// a check-off doesn't bring back what was bought days earlier.
 ///
 /// An entry id that comes more than once (an incremental read appended to a
-/// full one) counts once, as its most recently updated copy (on a tie, the later
-/// one), at the place it first came. A food's name and category come from its most recently
-/// updated entry, so all rows of a food share one section.
+/// full one) counts once, as its most recently updated copy (on a tie, the
+/// later one), at the place it first came. A food's name and category come
+/// from its most recently updated entry, so all rows of a food share one
+/// section.
 ShoppingListGroups groupShoppingList(
   List<ShoppingEntry> entries, {
   Supermarket? store,
