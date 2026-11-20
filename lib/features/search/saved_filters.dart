@@ -245,6 +245,8 @@ Future<void> showSavedFilterManager(BuildContext context) {
   final t = context.tokens;
   return showModalBottomSheet<void>(
     context: context,
+    // Above the main navigation, which the barrier covers too.
+    useRootNavigator: true,
     showDragHandle: true,
     isScrollControlled: true,
     backgroundColor: t.surface,

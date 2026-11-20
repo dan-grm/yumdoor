@@ -26,6 +26,8 @@ Future<int?> showFilterPicker(
   final t = context.tokens;
   return showModalBottomSheet<int>(
     context: context,
+    // Above the main navigation, which the barrier covers too.
+    useRootNavigator: true,
     isScrollControlled: true,
     showDragHandle: true,
     backgroundColor: t.surface,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yumdoor/app/platform_providers.dart';
+import 'package:yumdoor/app/router.dart';
 import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/design/components/filter_chips.dart';
@@ -86,11 +87,8 @@ void main() {
         connectivityServiceProvider.overrideWithValue(connectivity),
     ],
     routes: [
-      GoRoute(
-        path: searchPath,
-        builder: (context, state) =>
-            SearchScreen(query: searchQueryFromUri(state.uri)),
-      ),
+      // The real tabs, so the goldens show the bottom navigation.
+      tabsRoute(),
       GoRoute(
         path: '/recipe/:id',
         builder: (context, state) => Text('recipe ${state.uri}'),
@@ -150,7 +148,13 @@ void main() {
   testWidgets('lists all recipes without a query', (tester) async {
     await pumpSearch(tester);
 
-    expect(find.text('Suchen'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(SearchScreen),
+        matching: find.text('Suchen'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('2 Rezepte'), findsOneWidget);
     expect(find.text('Ofenkarotten mit Feta'), findsOneWidget);
     expect(find.text('35 Min · 4,5 ￼', findRichText: true), findsOneWidget);
@@ -1067,7 +1071,7 @@ void main() {
         );
 
         await expectLater(
-          find.byType(SearchScreen),
+          find.byType(MaterialApp),
           matchesGoldenFile('../goldens/search_reasons_$name.png'),
         );
       });

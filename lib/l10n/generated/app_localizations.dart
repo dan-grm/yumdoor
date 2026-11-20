@@ -2041,6 +2041,42 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Nicht gelöscht: Vielleicht wird das Rezept in einem anderen Rezept als Schritt verwendet. Dann lässt Tandoor das Löschen nicht zu.'**
   String get editorDeleteInUse;
+
+  /// Main navigation tab for recipe search (bottom bar or side rail).
+  ///
+  /// In de, this message translates to:
+  /// **'Suchen'**
+  String get navSearch;
+
+  /// Main navigation tab for the week planner.
+  ///
+  /// In de, this message translates to:
+  /// **'Planer'**
+  String get navPlan;
+
+  /// Main navigation tab for the shopping list.
+  ///
+  /// In de, this message translates to:
+  /// **'Einkauf'**
+  String get navShopping;
+
+  /// Heading of the week planner tab.
+  ///
+  /// In de, this message translates to:
+  /// **'Wochenplan'**
+  String get navPlanTitle;
+
+  /// Heading of the shopping list tab.
+  ///
+  /// In de, this message translates to:
+  /// **'Einkaufsliste'**
+  String get navShoppingTitle;
+
+  /// Shown on a navigation tab whose screen isn't built yet.
+  ///
+  /// In de, this message translates to:
+  /// **'Dieser Bereich kommt mit einer der nächsten Versionen.'**
+  String get navComingSoon;
 }
 
 class _AppLocalizationsDelegate

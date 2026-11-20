@@ -45,6 +45,33 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   late final _text = TextEditingController(text: widget.query.text);
   Timer? _debounce;
 
+  /// Whether this screen is in front: not behind another tab of the main
+  /// navigation, nor below a screen opened from it.
+  bool _inFront = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // The screen stays alive behind other tabs and screens. Typing that is
+    // still waiting must not navigate back here; it is searched for once
+    // the screen is in front again.
+    final inFront = TickerMode.valuesOf(context).enabled;
+    if (inFront == _inFront) return;
+    _inFront = inFront;
+    _debounce?.cancel();
+    if (!inFront) {
+      // Browser back can change the tab while a search sheet is open, which
+      // would leave it over the other tab; close it like the barrier would.
+      final navigator = Navigator.of(context, rootNavigator: true);
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => navigator.popUntil((route) => route is! PopupRoute),
+      );
+    }
+    if (inFront && _text.text.trim() != widget.query.text) {
+      _onTextChanged(_text.text);
+    }
+  }
+
   @override
   void didUpdateWidget(SearchScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -70,6 +97,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     // A filter sheet may answer after the screen has gone.
     if (!mounted) return;
     _debounce?.cancel();
+    // Typing still waiting when the user opened a recipe or another tab must
+    // not pull them back. While a screen above is still moving (a back
+    // swipe), try again later; once hidden, didChangeDependencies cancels
+    // the wait and searches on return.
+    if (GoRouter.of(context).state.uri.path != searchPath) {
+      if (_inFront) _debounce = Timer(searchDebounce, () => _show(query));
+      return;
+    }
     final location = searchLocation(query.copyWith(text: _text.text.trim()));
     Router.neglect(context, () => context.go(location));
   }

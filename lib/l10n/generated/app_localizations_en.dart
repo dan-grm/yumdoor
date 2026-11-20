@@ -1243,4 +1243,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get editorDeleteInUse =>
       'Not deleted: the recipe may be used as a step in another recipe. Tandoor does not allow deleting it then.';
+
+  @override
+  String get navSearch => 'Search';
+
+  @override
+  String get navPlan => 'Planner';
+
+  @override
+  String get navShopping => 'Shopping';
+
+  @override
+  String get navPlanTitle => 'Meal plan';
+
+  @override
+  String get navShoppingTitle => 'Shopping list';
+
+  @override
+  String get navComingSoon =>
+      'This part is coming in one of the next versions.';
 }

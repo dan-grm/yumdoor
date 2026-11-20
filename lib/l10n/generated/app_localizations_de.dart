@@ -1249,4 +1249,23 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get editorDeleteInUse =>
       'Nicht gelöscht: Vielleicht wird das Rezept in einem anderen Rezept als Schritt verwendet. Dann lässt Tandoor das Löschen nicht zu.';
+
+  @override
+  String get navSearch => 'Suchen';
+
+  @override
+  String get navPlan => 'Planer';
+
+  @override
+  String get navShopping => 'Einkauf';
+
+  @override
+  String get navPlanTitle => 'Wochenplan';
+
+  @override
+  String get navShoppingTitle => 'Einkaufsliste';
+
+  @override
+  String get navComingSoon =>
+      'Dieser Bereich kommt mit einer der nächsten Versionen.';
 }

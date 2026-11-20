@@ -39,6 +39,8 @@ Future<T?> showLoadingOptionSheet<T>(
   final t = context.tokens;
   return showModalBottomSheet<T>(
     context: context,
+    // Above the main navigation, which the barrier covers too.
+    useRootNavigator: true,
     showDragHandle: true,
     backgroundColor: t.surface,
     shape: RoundedRectangleBorder(

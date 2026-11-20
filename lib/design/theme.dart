@@ -57,6 +57,13 @@ ThemeData themeFrom(YumdoorTokens tokens, Brightness brightness) {
     labelMedium: t.caption,
     labelSmall: t.overline,
   ).apply(bodyColor: t.ink, displayColor: t.ink);
+  // The main navigation (mockup 10): muted tabs, the active one in sage on
+  // a sage-soft pill with a bold ink label.
+  final navLabel = t.caption.copyWith(color: t.inkMuted);
+  final navLabelSelected = t.caption.copyWith(
+    color: t.ink,
+    fontWeight: t.label.fontWeight,
+  );
 
   return ThemeData(
     brightness: brightness,
@@ -67,6 +74,32 @@ ThemeData themeFrom(YumdoorTokens tokens, Brightness brightness) {
     focusColor: t.focus,
     fontFamily: t.body.fontFamily,
     textTheme: textTheme,
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: t.surface,
+      elevation: 0,
+      indicatorColor: t.sageSoft,
+      indicatorShape: const StadiumBorder(),
+      iconTheme: WidgetStateProperty.resolveWith(
+        (states) => IconThemeData(
+          color: states.contains(WidgetState.selected) ? t.sage : t.inkMuted,
+        ),
+      ),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (states) =>
+            states.contains(WidgetState.selected) ? navLabelSelected : navLabel,
+      ),
+    ),
+    navigationRailTheme: NavigationRailThemeData(
+      backgroundColor: t.surface,
+      elevation: 0,
+      indicatorColor: t.sageSoft,
+      indicatorShape: const StadiumBorder(),
+      labelType: NavigationRailLabelType.all,
+      selectedIconTheme: IconThemeData(color: t.sage),
+      unselectedIconTheme: IconThemeData(color: t.inkMuted),
+      selectedLabelTextStyle: navLabelSelected,
+      unselectedLabelTextStyle: navLabel,
+    ),
     extensions: [t],
   );
 }

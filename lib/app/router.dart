@@ -12,6 +12,8 @@ import '../features/editor/editor_screen.dart';
 import '../features/recipe/recipe_screen.dart';
 import '../features/search/search_location.dart';
 import '../features/search/search_screen.dart';
+import '../features/shell/app_shell.dart';
+import '../l10n/l10n.dart';
 import 'session.dart';
 
 part 'router.g.dart';
@@ -31,11 +33,7 @@ GoRouter router(Ref ref) {
     routes: [
       // The start screen (M2) will live here; until then search is home.
       GoRoute(path: '/', redirect: (context, state) => searchPath),
-      GoRoute(
-        path: searchPath,
-        builder: (context, state) =>
-            SearchScreen(query: searchQueryFromUri(state.uri)),
-      ),
+      tabsRoute(),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: loadingPath, builder: (context, state) => const Scaffold()),
       // Before '/recipe/:id', which would take "new" for an id.
@@ -88,6 +86,44 @@ GoRouter router(Ref ref) {
   });
   return router;
 }
+
+/// The tabs of the main navigation (Suchen, Planer, Einkauf) in [AppShell],
+/// each with its own navigator. Routes outside it, like the recipe, cover the
+/// whole screen; back from them returns to the tab they were opened from.
+StatefulShellRoute tabsRoute() => StatefulShellRoute(
+  builder: (context, state, shell) => AppShell(shell: shell),
+  navigatorContainerBuilder: (context, shell, children) =>
+      TabStack(currentIndex: shell.currentIndex, children: children),
+  branches: [
+    StatefulShellBranch(
+      routes: [
+        GoRoute(
+          path: searchPath,
+          builder: (context, state) =>
+              SearchScreen(query: searchQueryFromUri(state.uri)),
+        ),
+      ],
+    ),
+    StatefulShellBranch(
+      routes: [
+        GoRoute(
+          path: planPath,
+          builder: (context, state) =>
+              TabPlaceholder(title: context.l10n.navPlanTitle),
+        ),
+      ],
+    ),
+    StatefulShellBranch(
+      routes: [
+        GoRoute(
+          path: shoppingPath,
+          builder: (context, state) =>
+              TabPlaceholder(title: context.l10n.navShoppingTitle),
+        ),
+      ],
+    ),
+  ],
+);
 
 /// The `?servings=` chosen on the recipe screen, `null` if missing or invalid.
 int? _servings(GoRouterState state) =>
