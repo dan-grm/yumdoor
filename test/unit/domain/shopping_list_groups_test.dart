@@ -205,10 +205,14 @@ void main() {
   });
 
   group('entries', () {
-    test('count once when an id comes twice, as its last occurrence', () {
+    test('count once when an id comes twice, as the newest copy', () {
       final old = entry(carrot, unit: gram, amount: 300);
       final updated = old.copyWith(amount: 400, updatedAt: time.add(_hour));
-      final checked = old.copyWith(checked: true, completedAt: time);
+      final checked = old.copyWith(
+        checked: true,
+        completedAt: time.add(_hour),
+        updatedAt: time.add(_hour),
+      );
       final groups = groupShoppingList([old, entry(feta), updated]);
       final carrots = groups.sections
           .singleWhere((section) => section.category == produce)
