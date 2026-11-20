@@ -504,20 +504,26 @@ class PlanDayPicker extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(child: PlanSectionLabel(l10n.planSheetDay)),
+            PlanSectionLabel(l10n.planSheetDay),
+            SizedBox(width: t.space3),
+            Expanded(
+              child: Semantics(
+                liveRegion: true,
+                child: Text(
+                  weekRangeLabel(context, start, today),
+                  textAlign: TextAlign.end,
+                  style: t.caption.copyWith(color: t.inkMuted),
+                ),
+              ),
+            ),
+            SizedBox(width: t.space2),
             RoundIconButton(
               icon: Icons.chevron_left_rounded,
               label: l10n.planWeekPrevious,
               outlined: true,
               onPressed: () => onChanged(day.addDays(-daysInWeek)),
             ),
-            Semantics(
-              liveRegion: true,
-              child: Text(
-                weekRangeLabel(context, start, today),
-                style: t.caption.copyWith(color: t.inkMuted),
-              ),
-            ),
+            SizedBox(width: t.space1),
             RoundIconButton(
               icon: Icons.chevron_right_rounded,
               label: l10n.planWeekNext,
@@ -581,9 +587,11 @@ class _DayButton extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          child: SizedBox(
-            height: t.sizeTouch + t.space4,
+          child: ConstrainedBox(
+            // Taller with large text.
+            constraints: BoxConstraints(minHeight: t.sizeTouch + t.space4),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
@@ -707,6 +715,7 @@ class _NewMealTypeState extends ConsumerState<_NewMealType> {
       if (!mounted) return;
       widget.onCreated(type);
       ref.invalidate(mealTypesProvider);
+      setState(() => _creating = false);
     } on Failure catch (failure) {
       if (!mounted) return;
       setState(() {

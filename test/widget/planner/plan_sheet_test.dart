@@ -78,7 +78,7 @@ void main() {
   setUpAll(loadBundledFonts);
 
   /// Wednesday; the week runs from Monday the 16th to Sunday the 22nd.
-  final now = DateTime(2026, 11, 18, 12);
+  late DateTime now;
 
   late FakeRecipeRepository recipes;
   late FakeMealPlanRepository plans;
@@ -88,6 +88,7 @@ void main() {
   late InMemoryLocalStore store;
 
   setUp(() {
+    now = DateTime(2026, 11, 18, 12);
     recipes = FakeRecipeRepository([_recipe, longNames]);
     plans = FakeMealPlanRepository([_plan(1, 16), _plan(2, 20)]);
     mealTypes = FakeMealTypeRepository([_breakfast, _lunch, _dinner, _snack]);
@@ -488,6 +489,16 @@ void main() {
       inSheet(find.text('Zweites Frühstück am Vormittag')),
       findsOneWidget,
     );
+  });
+
+  testWidgets('fits with large text and a week over New Year', (tester) async {
+    tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    now = DateTime(2026, 12, 30, 12);
+    await openSheet(tester);
+
+    expect(tester.takeException(), isNull);
+    expect(inSheet(find.text('28. Dez. – 3. Jan. 2027')), findsOneWidget);
   });
 
   group('goldens', skip: goldenSkip, () {
