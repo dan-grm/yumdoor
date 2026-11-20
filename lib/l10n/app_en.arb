@@ -329,5 +329,14 @@
   "navShopping": "Shopping",
   "navPlanTitle": "Meal plan",
   "navShoppingTitle": "Shopping list",
-  "navComingSoon": "This part is coming in one of the next versions."
+  "navComingSoon": "This part is coming in one of the next versions.",
+  "planWeekPrevious": "Previous week",
+  "planWeekNext": "Next week",
+  "planThisWeek": "This week",
+  "planBackToThisWeek": "Back to this week",
+  "planAddRecipe": "Plan a recipe",
+  "planEmptyWeek": "Nothing is planned for this week yet.",
+  "planRange": "{from} – {to}",
+  "planMealLine": "{meal} · {servings} serv.",
+  "planDayLabel": "{weekday}, {date}"
 }

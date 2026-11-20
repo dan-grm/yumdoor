@@ -1791,5 +1791,71 @@
   "navComingSoon": "Dieser Bereich kommt mit einer der nächsten Versionen.",
   "@navComingSoon": {
     "description": "Shown on a navigation tab whose screen isn't built yet."
+  },
+  "planWeekPrevious": "Vorherige Woche",
+  "@planWeekPrevious": {
+    "description": "Accessible label of the button that shows the week before."
+  },
+  "planWeekNext": "Nächste Woche",
+  "@planWeekNext": {
+    "description": "Accessible label of the button that shows the week after."
+  },
+  "planThisWeek": "Diese Woche",
+  "@planThisWeek": {
+    "description": "Under the date range of the planner while it shows the current week."
+  },
+  "planBackToThisWeek": "Zu dieser Woche",
+  "@planBackToThisWeek": {
+    "description": "Button under the date range that returns the planner to the current week."
+  },
+  "planAddRecipe": "Rezept planen",
+  "@planAddRecipe": {
+    "description": "Disabled placeholder on a day of the planner that has no meals yet."
+  },
+  "planEmptyWeek": "In dieser Woche ist noch nichts geplant.",
+  "@planEmptyWeek": {
+    "description": "Shown above the days of the planner when the week has no meals."
+  },
+  "planRange": "{from} – {to}",
+  "@planRange": {
+    "description": "Date range of the week shown in the planner, e.g. '19. Okt. – 25. Okt.'.",
+    "placeholders": {
+      "from": {
+        "type": "String",
+        "example": "19. Okt."
+      },
+      "to": {
+        "type": "String",
+        "example": "25. Okt."
+      }
+    }
+  },
+  "planMealLine": "{meal} · {servings} Port.",
+  "@planMealLine": {
+    "description": "Meal type and servings of a planned meal, e.g. 'Abendessen · 4 Port.'.",
+    "placeholders": {
+      "meal": {
+        "type": "String",
+        "example": "Abendessen"
+      },
+      "servings": {
+        "type": "String",
+        "example": "4"
+      }
+    }
+  },
+  "planDayLabel": "{weekday}, {date}",
+  "@planDayLabel": {
+    "description": "Accessible label of a day in the planner, e.g. 'Montag, 19. Okt.'.",
+    "placeholders": {
+      "weekday": {
+        "type": "String",
+        "example": "Montag"
+      },
+      "date": {
+        "type": "String",
+        "example": "19. Okt."
+      }
+    }
   }
 }

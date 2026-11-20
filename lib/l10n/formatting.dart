@@ -56,6 +56,20 @@ class LocaleFormat {
   /// A calendar date with abbreviated month (`20. Okt. 2026`, `Oct 20, 2026`).
   String date(DateTime value) => DateFormat.yMMMd(_locale).format(value);
 
+  /// A calendar date without the year (`19. Okt.`, `Oct 19`).
+  String dayMonth(DateTime value) => DateFormat.MMMd(_locale).format(value);
+
+  /// A calendar date with the year when it isn't [today]'s (`19. Okt.`,
+  /// `19. Okt. 2027`).
+  String dayMonthOrDate(DateTime value, DateTime today) =>
+      value.year == today.year ? dayMonth(value) : date(value);
+
+  /// The short name of a weekday (`Mo`, `Mon`).
+  String weekdayShort(DateTime value) => DateFormat.E(_locale).format(value);
+
+  /// The full name of a weekday (`Montag`, `Monday`).
+  String weekdayLong(DateTime value) => DateFormat.EEEE(_locale).format(value);
+
   /// A time of day in the locale's usual clock (`18:30`, `6:30 PM`).
   String time(DateTime value) => DateFormat.jm(_locale).format(value);
 }
