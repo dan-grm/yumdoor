@@ -4,6 +4,7 @@ import '../../domain/models/calendar_day.dart';
 import '../../domain/services/week_plan.dart';
 import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
+import '../shell/app_shell.dart';
 
 /// The first day of the week in the locale, 1 (Monday) to 7 (Sunday), like
 /// [CalendarDay.weekday].
@@ -11,6 +12,20 @@ int firstWeekdayOf(BuildContext context) {
   // 0 is Sunday, 1 Monday.
   final index = MaterialLocalizations.of(context).firstDayOfWeekIndex;
   return index == 0 ? DateTime.sunday : index;
+}
+
+/// The planner at the week of [day]: [planPath] for the week of [today], so
+/// the tab keeps following the current week, else [planLocation].
+String plannerLocation(
+  BuildContext context,
+  CalendarDay day,
+  CalendarDay today,
+) {
+  final firstWeekday = firstWeekdayOf(context);
+  final week = startOfWeek(day, firstWeekday);
+  return week == startOfWeek(today, firstWeekday)
+      ? planPath
+      : planLocation(week);
 }
 
 /// The week from [start] as a range, "16. Nov. – 22. Nov.", with the year

@@ -39,7 +39,7 @@ class PlannerScreen extends ConsumerWidget {
     final start = startOfWeek(day ?? today, firstWeekday);
 
     void show(CalendarDay week) =>
-        context.go(week == thisWeek ? planPath : planLocation(week));
+        context.go(plannerLocation(context, week, today));
 
     /// Loads the week again, for pull to refresh.
     Future<void> refresh() async {

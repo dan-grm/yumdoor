@@ -23,7 +23,6 @@ import '../common/offline_disabled.dart';
 import '../editor/editor_field.dart';
 import '../recipe/ingredient_lines.dart';
 import '../recipe/recipe_providers.dart';
-import '../shell/app_shell.dart';
 import 'planner_providers.dart';
 import 'week_labels.dart';
 
@@ -50,6 +49,10 @@ Future<void> showPlanSheet(
   final t = context.tokens;
   final messenger = ScaffoldMessenger.of(context);
   final router = GoRouter.of(context);
+  final clock = ProviderScope.containerOf(
+    context,
+    listen: false,
+  ).read(clockProvider);
 
   // Confirms through the messenger, which outlives the sheet and the screen
   // that opened it: a sheet that is dragged away while saving still reports
@@ -78,8 +81,23 @@ Future<void> showPlanSheet(
             : _failureSnackBarDuration,
         action: SnackBarAction(
           label: l10n.planSavedOpen,
-          onPressed: () => router.go(planLocation(plan.fromDay)),
+          onPressed: () => router.go(
+            plannerLocation(context, plan.fromDay, CalendarDay.of(clock())),
+          ),
         ),
+      ),
+    );
+  }
+
+  void reportFailure(Failure failure) {
+    if (!messenger.mounted) return;
+    final context = messenger.context;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          context.l10n.planSheetSaveFailed(failureMessage(context, failure)),
+        ),
+        duration: _failureSnackBarDuration,
       ),
     );
   }
@@ -100,6 +118,7 @@ Future<void> showPlanSheet(
       servingsText: servingsText,
       day: day,
       onSaved: confirm,
+      onFailedAfterClose: reportFailure,
     ),
   );
 }
@@ -138,6 +157,7 @@ class PlanSheet extends ConsumerStatefulWidget {
     this.servingsText = '',
     this.day,
     required this.onSaved,
+    this.onFailedAfterClose,
   });
 
   final int recipeId;
@@ -154,6 +174,10 @@ class PlanSheet extends ConsumerStatefulWidget {
 
   /// Called once the plan is saved, also if the sheet was closed meanwhile.
   final ValueChanged<PlanSheetResult> onSaved;
+
+  /// Called if saving fails after the sheet was closed, so the failure can
+  /// still be reported; while it is open, the sheet shows it.
+  final ValueChanged<Failure>? onFailedAfterClose;
 
   @override
   ConsumerState<PlanSheet> createState() => _PlanSheetState();
@@ -199,10 +223,13 @@ class _PlanSheetState extends ConsumerState<PlanSheet> {
     final recipes = ref.read(recipeRepositoryProvider);
     final shoppingList = ref.read(shoppingRepositoryProvider);
     final onSaved = widget.onSaved;
+    final onFailedAfterClose = widget.onFailedAfterClose;
+    final day = _day;
     final recipeId = widget.recipeId;
     final servings = _servings.toDouble();
+    final shoppingChoice = _addToShopping;
     final addToShopping =
-        _addToShopping && shopping != null && !shopping.isEmpty;
+        shoppingChoice && shopping != null && !shopping.isEmpty;
     setState(() {
       _saving = true;
       _error = null;
@@ -214,12 +241,15 @@ class _PlanSheetState extends ConsumerState<PlanSheet> {
         NewMealPlan(
           recipeId: recipeId,
           servings: servings,
-          day: _day,
+          day: day,
           mealType: mealType,
         ),
       );
     } on Failure catch (failure) {
-      if (!mounted) return;
+      if (!mounted) {
+        onFailedAfterClose?.call(failure);
+        return;
+      }
       setState(() {
         _saving = false;
         _error = context.l10n.planSheetSaveFailed(
@@ -229,9 +259,8 @@ class _PlanSheetState extends ConsumerState<PlanSheet> {
       return;
     }
     container
-      ..invalidate(weekPlansProvider)
-      ..read(planSheetChoicesProvider.notifier)
-          .remember(mealTypeName: mealType.name, addToShopping: _addToShopping);
+        .read(planSheetChoicesProvider.notifier)
+        .remember(mealTypeName: mealType.name, addToShopping: shoppingChoice);
 
     var added = false;
     Failure? shoppingFailure;
@@ -249,6 +278,8 @@ class _PlanSheetState extends ConsumerState<PlanSheet> {
         shoppingFailure = failure;
       }
     }
+    // After the shopping list, so the plans reload as on it.
+    container.invalidate(weekPlansProvider);
     onSaved(
       PlanSheetResult(
         plan: plan,
@@ -288,114 +319,119 @@ class _PlanSheetState extends ConsumerState<PlanSheet> {
         ),
         child: SafeArea(
           top: false,
-          child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(t.space5, 0, t.space5, t.space4),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Semantics(
-                  header: true,
-                  child: Text(
-                    l10n.planSheetTitle,
-                    style: t.titleM.copyWith(color: t.ink),
-                  ),
-                ),
-                Text(
-                  widget.recipeName,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: t.body.copyWith(color: t.inkMuted),
-                ),
-                SizedBox(height: t.space4),
-                PlanDayPicker(
-                  day: _day,
-                  today: today,
-                  plans: plans ?? const [],
-                  onChanged: (day) => setState(() => _day = day),
-                ),
-                SizedBox(height: t.space4),
-                PlanSectionLabel(l10n.planSheetMealType),
-                SizedBox(height: t.space1),
-                MealTypePicker(
-                  mealTypes: mealTypes,
-                  selected: mealType,
-                  onSelected: (type) => setState(() => _mealTypeId = type.id),
-                ),
-                SizedBox(height: t.space3),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.planSheetServings,
-                        style: t.label.copyWith(color: t.ink),
-                      ),
-                    ),
-                    ServingsPicker(
-                      servings: _servings,
-                      max: _maxServings,
-                      label: widget.servingsText.trim().isEmpty
-                          ? format.integer(_servings)
-                          : servingsLabel(
-                              context,
-                              _servings,
-                              widget.servingsText,
-                            ),
-                      onChanged: (value) => setState(() => _servings = value),
-                    ),
-                  ],
-                ),
-                SizedBox(height: t.space3),
-                Divider(height: 1, thickness: 1, color: t.line),
-                _ShoppingSwitch(
-                  recipe: recipe,
-                  shopping: shopping,
-                  value: _addToShopping,
-                  onChanged: (value) => setState(() => _addToShopping = value),
-                ),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.people_outline_rounded,
-                      size: t.label.fontSize! + t.space1,
-                      color: t.inkMuted,
-                    ),
-                    SizedBox(width: t.space2),
-                    Expanded(
-                      child: Text(
-                        l10n.planSharedWithHousehold,
-                        style: t.caption.copyWith(color: t.inkMuted),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: t.space4),
-                if (_error case final error?) ...[
+          // Nothing changes while saving: the plan is saved as it was.
+          child: IgnorePointer(
+            ignoring: _saving,
+            child: SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(t.space5, 0, t.space5, t.space4),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                   Semantics(
-                    liveRegion: true,
+                    header: true,
                     child: Text(
-                      error,
-                      style: t.caption.copyWith(color: t.danger),
+                      l10n.planSheetTitle,
+                      style: t.titleM.copyWith(color: t.ink),
                     ),
                   ),
-                  SizedBox(height: t.space2),
-                ],
-                OfflineDisabled(
-                  builder: (context, enabled) => PillButton(
-                    label: _submitLabel(context, today),
-                    onPressed: enabled && !_saving && mealType != null
-                        ? () => _save(mealType, shopping)
-                        : null,
-                  ),
-                ),
-                if (ref.watch(isOfflineProvider)) ...[
-                  SizedBox(height: t.space2),
                   Text(
-                    l10n.offlineWriteDisabled,
-                    style: t.caption.copyWith(color: t.inkMuted),
+                    widget.recipeName,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: t.body.copyWith(color: t.inkMuted),
                   ),
+                  SizedBox(height: t.space4),
+                  PlanDayPicker(
+                    day: _day,
+                    today: today,
+                    plans: plans ?? const [],
+                    onChanged: (day) => setState(() => _day = day),
+                  ),
+                  SizedBox(height: t.space4),
+                  PlanSectionLabel(l10n.planSheetMealType),
+                  SizedBox(height: t.space1),
+                  MealTypePicker(
+                    mealTypes: mealTypes,
+                    selected: mealType,
+                    onSelected: (type) => setState(() => _mealTypeId = type.id),
+                  ),
+                  SizedBox(height: t.space3),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.planSheetServings,
+                          style: t.label.copyWith(color: t.ink),
+                        ),
+                      ),
+                      ServingsPicker(
+                        servings: _servings,
+                        max: _maxServings,
+                        label: widget.servingsText.trim().isEmpty
+                            ? format.integer(_servings)
+                            : servingsLabel(
+                                context,
+                                _servings,
+                                widget.servingsText,
+                              ),
+                        onChanged: (value) => setState(() => _servings = value),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: t.space3),
+                  Divider(height: 1, thickness: 1, color: t.line),
+                  _ShoppingSwitch(
+                    recipe: recipe,
+                    shopping: shopping,
+                    value: _addToShopping,
+                    onChanged: (value) =>
+                        setState(() => _addToShopping = value),
+                  ),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.people_outline_rounded,
+                        size: t.label.fontSize! + t.space1,
+                        color: t.inkMuted,
+                      ),
+                      SizedBox(width: t.space2),
+                      Expanded(
+                        child: Text(
+                          l10n.planSharedWithHousehold,
+                          style: t.caption.copyWith(color: t.inkMuted),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: t.space4),
+                  if (_error case final error?) ...[
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        error,
+                        style: t.caption.copyWith(color: t.danger),
+                      ),
+                    ),
+                    SizedBox(height: t.space2),
+                  ],
+                  OfflineDisabled(
+                    builder: (context, enabled) => PillButton(
+                      label: _submitLabel(context, today),
+                      onPressed: enabled && !_saving && mealType != null
+                          ? () => _save(mealType, shopping)
+                          : null,
+                    ),
+                  ),
+                  if (ref.watch(isOfflineProvider)) ...[
+                    SizedBox(height: t.space2),
+                    Text(
+                      l10n.offlineWriteDisabled,
+                      style: t.caption.copyWith(color: t.inkMuted),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -534,6 +570,7 @@ class _DayButton extends StatelessWidget {
       checked: selected,
       inMutuallyExclusiveGroup: true,
       label: hasPlans ? context.l10n.planSheetDayHasPlans(label) : label,
+      onTap: onTap,
       excludeSemantics: true,
       child: Material(
         color: selected ? t.sage : t.bg,

@@ -206,6 +206,8 @@ class _ChipTapArea extends StatelessWidget {
       checked: exclusive ? (selected ?? false) : null,
       inMutuallyExclusiveGroup: exclusive ? true : null,
       label: label,
+      // The InkWell's own tap action is excluded with its semantics.
+      onTap: onTap,
       excludeSemantics: true,
       child: tooltip
           ? Tooltip(message: label, excludeFromSemantics: true, child: tappable)

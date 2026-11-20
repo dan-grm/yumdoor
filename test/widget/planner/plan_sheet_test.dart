@@ -184,9 +184,8 @@ void main() {
       'Freitag, 20. Nov., schon etwas geplant',
     );
     expect(
-      tester.getSemantics(inSheet(find.text('19'))).label,
-      'Donnerstag, '
-      '19. Nov.',
+      tester.getSemantics(inSheet(find.text('19'))),
+      isSemantics(label: 'Donnerstag, 19. Nov.', hasTapAction: true),
     );
     expectSelected(tester, inSheet(find.text('Frühstück')));
     expect(inSheet(find.text('2')), findsOneWidget);
@@ -233,7 +232,8 @@ void main() {
     );
 
     await tap(tester, find.text('Zum Plan'));
-    expect(router.state.uri.toString(), '/plan?day=2026-11-20');
+    // The current week: the tab keeps following today.
+    expect(router.state.uri.toString(), '/plan');
     expect(find.byType(PlannerScreen), findsOneWidget);
     expect(find.text('16. Nov. – 22. Nov.'), findsOneWidget);
     expect(find.text('Rezept 7'), findsOneWidget);
@@ -321,6 +321,27 @@ void main() {
     );
   });
 
+  testWidgets('a save failing after the sheet was dragged away says so', (
+    tester,
+  ) async {
+    final gate = plans.gate = Completer<void>();
+    plans.createFailure = const ServerFailure();
+    await openSheet(tester);
+    await tester.tap(inSheet(find.text('Für heute einplanen')));
+    await tester.pump();
+    await tester.fling(
+      inSheet(find.text('Einplanen')),
+      const Offset(0, 600),
+      2000,
+    );
+    await tester.pumpAndSettle();
+
+    gate.complete();
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Nicht eingeplant.'), findsOneWidget);
+    expect(find.byType(RecipeScreen), findsOneWidget);
+  });
+
   testWidgets('remembers the meal type by name', (tester) async {
     store.write('planner.meal-type', 'abendessen');
     await openSheet(tester);
@@ -336,7 +357,8 @@ void main() {
   });
 
   testWidgets('browses the weeks, keeping the weekday', (tester) async {
-    await openSheet(tester);
+    final router = await pumpRecipe(tester);
+    await tap(tester, find.text('Planen'));
 
     await tap(tester, inSheet(find.byTooltip('Nächste Woche')));
     expect(inSheet(find.text('23. Nov. – 29. Nov.')), findsOneWidget);
@@ -344,6 +366,9 @@ void main() {
     await tap(tester, inSheet(find.text('Für Mi, 25. Nov. einplanen')));
 
     expect(plans.created.single.day, CalendarDay(2026, 11, 25));
+    await tap(tester, find.text('Zum Plan'));
+    expect(router.state.uri.toString(), '/plan?day=2026-11-23');
+    expect(find.text('23. Nov. – 29. Nov.'), findsOneWidget);
   });
 
   testWidgets('a preset day is chosen', (tester) async {
