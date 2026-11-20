@@ -1767,5 +1767,29 @@
   "editorDeleteInUse": "Nicht gelöscht: Vielleicht wird das Rezept in einem anderen Rezept als Schritt verwendet. Dann lässt Tandoor das Löschen nicht zu.",
   "@editorDeleteInUse": {
     "description": "Snackbar when the server errors on deleting; the usual cause is a recipe used as a step of another one."
+  },
+  "navSearch": "Suchen",
+  "@navSearch": {
+    "description": "Main navigation tab for recipe search (bottom bar or side rail)."
+  },
+  "navPlan": "Planer",
+  "@navPlan": {
+    "description": "Main navigation tab for the week planner."
+  },
+  "navShopping": "Einkauf",
+  "@navShopping": {
+    "description": "Main navigation tab for the shopping list."
+  },
+  "navPlanTitle": "Wochenplan",
+  "@navPlanTitle": {
+    "description": "Heading of the week planner tab."
+  },
+  "navShoppingTitle": "Einkaufsliste",
+  "@navShoppingTitle": {
+    "description": "Heading of the shopping list tab."
+  },
+  "navComingSoon": "Dieser Bereich kommt mit einer der nächsten Versionen.",
+  "@navComingSoon": {
+    "description": "Shown on a navigation tab whose screen isn't built yet."
   }
 }

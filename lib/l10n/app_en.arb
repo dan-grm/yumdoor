@@ -323,5 +323,11 @@
   "editorDeleted": "Recipe deleted",
   "editorDeleteFailed": "Not deleted. {reason}",
   "editorDeleteForbidden": "Not deleted: you may not delete this recipe.",
-  "editorDeleteInUse": "Not deleted: the recipe may be used as a step in another recipe. Tandoor does not allow deleting it then."
+  "editorDeleteInUse": "Not deleted: the recipe may be used as a step in another recipe. Tandoor does not allow deleting it then.",
+  "navSearch": "Search",
+  "navPlan": "Planner",
+  "navShopping": "Shopping",
+  "navPlanTitle": "Meal plan",
+  "navShoppingTitle": "Shopping list",
+  "navComingSoon": "This part is coming in one of the next versions."
 }

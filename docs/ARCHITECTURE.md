@@ -88,7 +88,7 @@ web/                        index.html, manifest.json, icons, service worker, dr
 |---|---|---|
 | Framework | Flutter stable | Web first. Build with `--no-web-resources-cdn` so CanvasKit is served from our origin, not Google's CDN. |
 | State | Riverpod 3 with `riverpod_generator` | Repositories are exposed as providers, so tests override them with fakes. |
-| Navigation | go_router | Deep links (`/recipe/42`, `/recipe/42/cook`) work in the PWA. |
+| Navigation | go_router | Deep links (`/recipe/42`, `/recipe/42/cook`, `/plan`) work in the PWA. The tabs (`/search`, `/plan`, `/shopping`) are a `StatefulShellRoute` in `AppShell` (bottom bar, rail on wide layouts), one navigator each; recipe, cooking mode, cook log and editor are routes above it and cover the whole screen. Sheets opened from a tab use the root navigator so they cover the bar. |
 | HTTP | Dio | Used by the generated client; one interceptor adds the token, another maps errors. |
 | API client | openapi-generator `dart-dio` with built_value (pinned Docker image), output in `packages/tandoor_api` | Tandoor's own frontend uses openapi-generator on the same schema. Output is committed; CI regenerates and fails on a diff. See [API client](#api-client). |
 | Domain models | `freezed` | Immutable, value equality, `copyWith`. |
