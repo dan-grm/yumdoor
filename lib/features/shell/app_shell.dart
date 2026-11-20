@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../design/design.dart';
+import '../../domain/models/calendar_day.dart';
 import '../../l10n/l10n.dart';
 import '../common/layout.dart';
 
 /// The path of the week planner tab.
 const planPath = '/plan';
+
+/// The week planner at the week of [day].
+String planLocation(CalendarDay day) =>
+    Uri(path: planPath, queryParameters: {'day': '$day'}).toString();
 
 /// The path of the shopping list tab.
 const shoppingPath = '/shopping';

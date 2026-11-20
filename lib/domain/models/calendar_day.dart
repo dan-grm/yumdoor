@@ -17,6 +17,18 @@ class CalendarDay implements Comparable<CalendarDay> {
   /// Today on this device.
   factory CalendarDay.today() => CalendarDay.of(DateTime.now());
 
+  /// The day written as in [toString] (`2026-11-20`), or `null` if [text] is
+  /// not such a day, as for `2026-02-30`.
+  static CalendarDay? tryParse(String text) {
+    final match = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(text);
+    if (match == null) return null;
+    final [year, month, day] = [
+      for (var i = 1; i <= 3; i++) int.parse(match.group(i)!),
+    ];
+    final parsed = CalendarDay(year, month, day);
+    return parsed.month == month && parsed.day == day ? parsed : null;
+  }
+
   const CalendarDay._(this.year, this.month, this.day);
 
   final int year;

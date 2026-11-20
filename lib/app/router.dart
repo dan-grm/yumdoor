@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../design/token_gallery.dart';
+import '../domain/models/calendar_day.dart';
 import '../domain/models/session.dart';
 import '../features/auth/login_screen.dart';
 import '../features/cook_log/cook_log_screen.dart';
@@ -109,7 +110,9 @@ StatefulShellRoute tabsRoute() => StatefulShellRoute(
       routes: [
         GoRoute(
           path: planPath,
-          builder: (context, state) => const PlannerScreen(),
+          builder: (context, state) => PlannerScreen(
+            day: CalendarDay.tryParse(state.uri.queryParameters['day'] ?? ''),
+          ),
         ),
       ],
     ),

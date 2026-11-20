@@ -14,11 +14,17 @@ import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import '../common/recipe_image.dart';
 import 'planner_providers.dart';
+import 'week_labels.dart';
 
 /// The week planner (mockup 10-wochenplan): the days of one week with their
 /// planned meals, and buttons to browse the weeks.
+///
+/// It opens on the current week, or on the week of [day] if given.
 class PlannerScreen extends ConsumerStatefulWidget {
-  const PlannerScreen({super.key});
+  const PlannerScreen({super.key, this.day});
+
+  /// A day whose week to show, such as a day just planned.
+  final CalendarDay? day;
 
   @override
   ConsumerState<PlannerScreen> createState() => _PlannerScreenState();
@@ -27,6 +33,16 @@ class PlannerScreen extends ConsumerStatefulWidget {
 class _PlannerScreenState extends ConsumerState<PlannerScreen> {
   /// How many weeks the shown week is after the current one.
   int _offset = 0;
+
+  /// The day whose week to show at the next build, when [PlannerScreen.day]
+  /// is new.
+  late CalendarDay? _showDay = widget.day;
+
+  @override
+  void didUpdateWidget(PlannerScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.day != oldWidget.day) _showDay = widget.day;
+  }
 
   /// Loads the week at [start] again, for pull to refresh.
   Future<void> _refresh(CalendarDay start) async {
@@ -45,12 +61,20 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
     final t = context.tokens;
     final l10n = context.l10n;
     final today = CalendarDay.of(ref.watch(clockProvider)());
-    final firstWeekday = _firstWeekday(context);
+    final firstWeekday = firstWeekdayOf(context);
+    if (_showDay case final day?) {
+      _showDay = null;
+      _offset =
+          startOfWeek(
+            day,
+            firstWeekday,
+          ).differenceInDays(startOfWeek(today, firstWeekday)) ~/
+          daysInWeek;
+    }
     final start = startOfWeek(
       today,
       firstWeekday,
     ).addDays(_offset * daysInWeek);
-    final end = start.addDays(daysInWeek - 1);
     final plans = ref.watch(weekPlansProvider(start));
     final onlyMine = ref.watch(plannerOnlyMineProvider);
     final people = ref.watch(plannerPeopleProvider).value;
@@ -77,7 +101,6 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
               padding: EdgeInsets.fromLTRB(t.space5, t.space3, t.space5, 0),
               child: _WeekBar(
                 start: start,
-                end: end,
                 today: today,
                 isCurrent: _offset == 0,
                 onPrevious: () => _browse(-1),
@@ -156,18 +179,10 @@ class _HouseholdBar extends StatelessWidget {
   }
 }
 
-/// The first day of the week in the locale, 1 (Monday) to 7 (Sunday).
-int _firstWeekday(BuildContext context) {
-  // 0 is Sunday, 1 Monday.
-  final index = MaterialLocalizations.of(context).firstDayOfWeekIndex;
-  return index == 0 ? DateTime.sunday : index;
-}
-
 /// The date range with the buttons for the weeks before and after.
 class _WeekBar extends StatelessWidget {
   const _WeekBar({
     required this.start,
-    required this.end,
     required this.today,
     required this.isCurrent,
     required this.onPrevious,
@@ -176,7 +191,6 @@ class _WeekBar extends StatelessWidget {
   });
 
   final CalendarDay start;
-  final CalendarDay end;
   final CalendarDay today;
   final bool isCurrent;
   final VoidCallback onPrevious;
@@ -187,12 +201,7 @@ class _WeekBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
-    final format = LocaleFormat.of(context);
-    final now = today.atLocalTime();
-    final range = l10n.planRange(
-      format.dayMonthOrDate(start.atLocalTime(), now),
-      format.dayMonthOrDate(end.atLocalTime(), now),
-    );
+    final range = weekRangeLabel(context, start, today);
     return Row(
       children: [
         RoundIconButton(
@@ -319,10 +328,7 @@ class _DayRow extends StatelessWidget {
     final l10n = context.l10n;
     final format = LocaleFormat.of(context);
     final date = day.atLocalTime();
-    final name = l10n.planDayLabel(
-      format.weekdayLong(date),
-      format.dayMonth(date),
-    );
+    final name = dayLabel(context, day);
     final label = isToday ? l10n.planToday(name) : name;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

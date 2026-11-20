@@ -67,12 +67,13 @@ void main() {
 
   Future<GoRouter> pumpPlanner(
     WidgetTester tester, {
+    String location = '/plan',
     ThemeData? theme,
     FakeUserRepository? users,
     InMemoryLocalStore? store,
   }) => pumpRoutes(
     tester,
-    location: '/plan',
+    location: location,
     theme: theme,
     overrides: [
       ...appOverrides(
@@ -193,6 +194,27 @@ void main() {
     expect(find.text('16. Nov. – 22. Nov.'), findsOneWidget);
     expect(find.text('Diese Woche'), findsOneWidget);
     expect(find.text('Linsen-Bolognese'), findsOneWidget);
+  });
+
+  testWidgets('opens at the week of the day in the location', (tester) async {
+    final router = await pumpPlanner(tester, location: '/plan?day=2026-11-26');
+
+    expect(find.text('23. Nov. – 29. Nov.'), findsOneWidget);
+    expect(find.text('Porridge'), findsOneWidget);
+
+    // Browsing still works, and going to another day jumps to its week.
+    await tester.tap(find.byTooltip('Nächste Woche'));
+    await tester.pumpAndSettle();
+    expect(find.text('30. Nov. – 6. Dez.'), findsOneWidget);
+    router.go('/plan?day=2026-11-17');
+    await tester.pumpAndSettle();
+    expect(find.text('16. Nov. – 22. Nov.'), findsOneWidget);
+  });
+
+  testWidgets('an invalid day in the location shows this week', (tester) async {
+    await pumpPlanner(tester, location: '/plan?day=morgen');
+
+    expect(find.text('16. Nov. – 22. Nov.'), findsOneWidget);
   });
 
   testWidgets('shows the failure and retries', (tester) async {
