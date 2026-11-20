@@ -16,8 +16,8 @@ every section and update this file in the same PR.
   `lib/data/` turn that into non-null ids on domain models.
 - **Read-only fields are declared required and non-null, but often aren't.** drf-spectacular marks every read-only
   field required. Against the seeded 2.6.15, Tandoor sends `null` for `Food.parent` and `Keyword.parent` (root
-  nodes), `MealPlan.recipe_name` (plan without a recipe) and `User.display_name`, and leaves out
-  `RecipeOverview.recent` unless `num_recent` is set (it is a queryset annotation, `cookbook/helper/recipe_search.py`;
+  nodes) and `User.display_name`, and leaves out `MealPlan.recipe_name` for a plan without a recipe (its source is
+  `recipe.name`) and `RecipeOverview.recent` unless `num_recent` is set (it is a queryset annotation, `cookbook/helper/recipe_search.py`;
   DRF skips a read-only field whose attribute is missing). 138 read-only fields are affected, so
   `tool/generate_api.dart` makes **every read-only field optional and nullable** before generating. The committed
   schema stays as fetched.
@@ -367,11 +367,58 @@ steps and ingredients) plus `internal: true`.
   returns only the caller's own row for non-admins (that row does include their `household`). `/api/user/` lists all
   users in the space without household information. "What my household cooked" can only be approximated
   (see `docs/ARCHITECTURE.md`, Recommendations).
-- `GET /api/meal-plan/?from_date=&to_date=&meal_type=` (paginated: `{count, results}`). Defaults: today − 90 days to
-  today + 360 days.
-  Fields: `recipe`, `title`, `servings` (decimal), `note`, `from_date`, `to_date` (datetimes), `meal_type`,
-  `shopping` (read-only: is it on the shopping list), `addshopping` (write-only).
-- `GET /api/meal-type/` returns the space's meal types (name, order, color, time).
+
+## Meal plans
+
+Checked on 2.6.15 (`MealPlanViewSet` in `cookbook/views/api.py`, `MealPlanSerializer` in `cookbook/serializer.py`).
+Yumdoor's side is `lib/data/repositories/tandoor_meal_plan_repository.dart` and `lib/data/mappers/meal_plan_mapper.dart`.
+
+- `GET /api/meal-plan/?from_date=&to_date=&meal_type=` (paginated: `{count, results}`, `page_size` up to 200).
+  Ordered by id, so paging is stable.
+  Fields: `recipe` (a `RecipeOverview` or `null`), `title` (`""` if not set, at most 64 characters), `servings`
+  (decimal: at most 4 decimal places and 8 digits, more gets 400),
+  `note`, `from_date`, `to_date` (datetimes), `meal_type` (nested), `created_by` (a user **id**, not an object),
+  `shopping` (read-only: it has a `ShoppingListRecipe`), `addshopping` (write-only). `recipe_name` is left out
+  entirely for a plan without a recipe.
+- **The date filter only looks at `to_date`**, as the server's calendar day (`to_date__date__gte=from_date` and
+  `to_date__date__lte=to_date`). Defaults without the parameters: today − 90 days to today + 360 days. A plan over
+  several days is therefore returned only by a query whose range contains its **last** day: a plan from Saturday
+  to Sunday is missing from a query for Saturday alone. Yumdoor asks for two more days before the range (time zones can
+  differ by up to 26 hours) and 33 more after it, then keeps the plans that overlap the range on the device's calendar.
+- **Time zones:** datetimes are stored with a time zone and returned in the server's `TIME_ZONE`
+  (default `Europe/Berlin`, `TZ`/`TIMEZONE` env), e.g. `2026-11-16T18:30:00+01:00`. A datetime without an offset is
+  read as server time. On **create** only, a datetime that is exactly midnight in server time gets the meal type's
+  `time` (noon without one): `from_date: "2026-11-23T00:00:00"` (what the seed sends) becomes 12:30 for a
+  "Mittagessen" at 12:30. Midnight UTC is 01:00 in Berlin, so it is kept as 01:00. Update never applies a time.
+  Tandoor's own frontend works in the browser's time zone: it puts the meal type's time on the chosen day locally
+  and sends UTC. Yumdoor does the same, and a plan is on the day its datetime falls on in the device's time zone.
+  If that local time happens to be midnight on the server, the create moves it to another day; Yumdoor then PATCHes
+  the dates it sent.
+  The generated client parses datetimes to UTC and can only send UTC, so the server's offset is not kept.
+- `to_date` is optional on create (defaults to `from_date`), `meal_type` is required (400 without it). Recipe and
+  meal type may be sent as plain ids (`"recipe": 12, "meal_type": 3`) on create and update; a nested recipe needs
+  `name` but is not changed by it.
+- **Gotcha: a nested `meal_type` renames the meal type.** `{"meal_type": {"id": 3, "name": "x"}}` in a meal plan
+  PATCH saves "x" as that meal type's name for the whole space (writable nested serializer). Yumdoor sends the id
+  only, through Dio, because the generated `MealPlan` can't leave out `name`.
+- **Gotcha: PATCH without `servings` fails with 500** for a plan on the shopping list
+  (`MealPlanSerializer.update` reads `validated_data['servings']` to rescale its entries). Always send `servings`.
+- Permissions: the creator and their household can read, change and delete a plan (`CustomIsOwner |
+  CustomIsHousehold`). A user without a household, like the seed's `admin`, sees only their own.
+- **Deleting a plan deletes its shopping list recipe and that recipe's entries** (`ShoppingListRecipe.mealplan` and
+  `ShoppingListEntry.list_recipe` are `on_delete=CASCADE`; checked: after the DELETE both are gone, loose entries
+  stay).
+
+### Meal types
+
+- `GET /api/meal-type/` (paginated) returns **every meal type of the space**, whoever created it, ordered by
+  `time`, then id; Yumdoor sorts by `order`, then name. Fields: `name`, `order` (int, default 0), `color`
+  (`#rrggbb` or `null`), `time` (`HH:MM:SS` or `null`), `created_by` (id). `name` has at most 128 characters. Any
+  member can use any type.
+- `POST /api/meal-type/ {name}` trims the name and returns an existing type only if **the same user** created one
+  with that name (case-insensitive). Names are unique per space, but case-sensitively: Ben creating "abendessen"
+  next to Anna's "Abendessen" gets a second type, and creating "Abendessen" fails with 500 (unique constraint).
+  Yumdoor checks the list first and returns the existing one.
 
 ## On-hand foods
 

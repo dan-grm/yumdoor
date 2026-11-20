@@ -1080,8 +1080,8 @@ const seedComments = <String?>[
 ];
 
 /// Meal plans for the current week: weekday (1 = Monday), meal type, recipe or
-/// title, servings, creator. `shopping` marks plans whose ingredients go on
-/// the shopping list.
+/// title, servings, creator, and how many days it spans. `shopping` marks
+/// plans whose ingredients go on the shopping list.
 class SeedMealPlan {
   const SeedMealPlan(
     this.weekday,
@@ -1092,6 +1092,7 @@ class SeedMealPlan {
     this.title = '',
     this.note = '',
     this.shopping = false,
+    this.days = 1,
   });
 
   final int weekday;
@@ -1102,6 +1103,7 @@ class SeedMealPlan {
   final String title;
   final String note;
   final bool shopping;
+  final int days;
 }
 
 const seedMealPlans = <SeedMealPlan>[
@@ -1158,7 +1160,8 @@ const seedMealPlans = <SeedMealPlan>[
     by: 'anna',
     servings: 6,
     recipe: 'Rindergulasch',
-    note: 'Besuch von Freunden',
+    note: 'Besuch von Freunden, Reste am Sonntag',
+    days: 2,
   ),
   SeedMealPlan(7, 'Frühstück', by: 'anna', servings: 2, recipe: 'Shakshuka'),
 ];

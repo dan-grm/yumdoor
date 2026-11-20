@@ -6,6 +6,8 @@ import '../../domain/repositories/cook_log_repository.dart';
 import '../../domain/repositories/food_repository.dart';
 import '../../domain/repositories/ingredient_parser.dart';
 import '../../domain/repositories/keyword_repository.dart';
+import '../../domain/repositories/meal_plan_repository.dart';
+import '../../domain/repositories/meal_type_repository.dart';
 import '../../domain/repositories/recipe_repository.dart';
 import '../../domain/repositories/saved_filter_repository.dart';
 import '../../domain/repositories/unit_repository.dart';
@@ -21,6 +23,8 @@ import 'tandoor_cook_log_repository.dart';
 import 'tandoor_food_repository.dart';
 import 'tandoor_ingredient_parser.dart';
 import 'tandoor_keyword_repository.dart';
+import 'tandoor_meal_plan_repository.dart';
+import 'tandoor_meal_type_repository.dart';
 import 'current_user.dart';
 import 'tandoor_recipe_repository.dart';
 import 'tandoor_saved_filter_repository.dart';
@@ -89,6 +93,8 @@ class TandoorRepositories {
         final cache? => CachingSavedFilterRepository(savedFilters, cache),
         null => savedFilters,
       },
+      mealPlans: TandoorMealPlanRepository(apiClient, dio),
+      mealTypes: TandoorMealTypeRepository(apiClient),
     );
   }
 
@@ -104,6 +110,8 @@ class TandoorRepositories {
     required this.books,
     required this.users,
     required this.savedFilters,
+    required this.mealPlans,
+    required this.mealTypes,
   });
 
   final Dio _dio;
@@ -117,6 +125,8 @@ class TandoorRepositories {
   final BookRepository books;
   final UserRepository users;
   final SavedFilterRepository savedFilters;
+  final MealPlanRepository mealPlans;
+  final MealTypeRepository mealTypes;
 
   /// Cancels open requests and frees the connection pool.
   void close() {

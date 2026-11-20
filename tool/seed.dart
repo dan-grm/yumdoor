@@ -176,6 +176,9 @@ List<String> seedDataProblems() {
         'meal plan: unknown recipe ${plan.recipe}',
       if (!mealTypes.contains(plan.mealType))
         'meal plan: unknown meal type ${plan.mealType}',
+      if (plan.days < 1 || plan.weekday + plan.days - 1 > DateTime.sunday)
+        'meal plan: ${plan.days} days from weekday ${plan.weekday} '
+            'leave the week',
     ],
     for (final (food, _, _, _) in seedLooseShopping)
       if (!foods.contains(food)) 'shopping: unknown food $food',
@@ -576,6 +579,8 @@ class Seeder {
         'note': plan.note,
         // Midnight without offset: Tandoor applies the meal type's time.
         'from_date': '${_date(day)}T00:00:00',
+        'to_date':
+            '${_date(DateTime(day.year, day.month, day.day + plan.days - 1))}T00:00:00',
         'meal_type': {'id': mealType['id'], 'name': mealType['name']},
       }) as Map;
       if (plan.shopping && recipe != null) {
