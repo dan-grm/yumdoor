@@ -23,6 +23,7 @@ import '../domain/repositories/offline_cache.dart';
 import '../domain/repositories/recipe_repository.dart';
 import '../domain/repositories/saved_filter_repository.dart';
 import '../domain/repositories/server_repository.dart';
+import '../domain/repositories/shopping_repository.dart';
 import '../domain/repositories/unit_repository.dart';
 import '../domain/repositories/user_repository.dart';
 import 'offline.dart';
@@ -118,6 +119,10 @@ MealPlanRepository mealPlanRepository(Ref ref) =>
 @Riverpod(keepAlive: true)
 MealTypeRepository mealTypeRepository(Ref ref) =>
     ref.watch(_tandoorRepositoriesProvider).mealTypes;
+
+@Riverpod(keepAlive: true)
+ShoppingRepository shoppingRepository(Ref ref) =>
+    ref.watch(_tandoorRepositoriesProvider).shopping;
 
 @Riverpod(keepAlive: true)
 CacheDatabase _cacheDatabase(Ref ref) {

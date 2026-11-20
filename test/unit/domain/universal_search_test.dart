@@ -684,6 +684,10 @@ class _AllFoods implements FoodRepository {
 
   @override
   Future<Food> create(String name) => throw UnimplementedError();
+
+  @override
+  Future<Food> setOnHand(int foodId, {required bool onHand}) =>
+      throw UnimplementedError();
 }
 
 /// Answers text searches with every recipe, with their foods, like the

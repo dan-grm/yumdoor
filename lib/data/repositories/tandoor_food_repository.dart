@@ -44,4 +44,16 @@ class TandoorFoodRepository implements FoodRepository {
       return requireBody(response.data).toDomain();
     });
   }
+
+  /// Sends only `food_onhand`; Tandoor adds or removes every household
+  /// member (docs/TANDOOR_API.md#on-hand-foods).
+  @override
+  Future<Food> setOnHand(int foodId, {required bool onHand}) =>
+      guardRequest(() async {
+        final response = await _api.apiFoodPartialUpdate(
+          id: foodId,
+          patchedFood: api.PatchedFood((b) => b..foodOnhand = onHand),
+        );
+        return requireBody(response.data).toDomain();
+      });
 }

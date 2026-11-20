@@ -10,6 +10,7 @@ import '../../domain/repositories/meal_plan_repository.dart';
 import '../../domain/repositories/meal_type_repository.dart';
 import '../../domain/repositories/recipe_repository.dart';
 import '../../domain/repositories/saved_filter_repository.dart';
+import '../../domain/repositories/shopping_repository.dart';
 import '../../domain/repositories/unit_repository.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../api/image_downloader.dart';
@@ -28,6 +29,7 @@ import 'tandoor_meal_type_repository.dart';
 import 'current_user.dart';
 import 'tandoor_recipe_repository.dart';
 import 'tandoor_saved_filter_repository.dart';
+import 'tandoor_shopping_repository.dart';
 import 'tandoor_unit_repository.dart';
 import 'tandoor_user_repository.dart';
 
@@ -95,6 +97,7 @@ class TandoorRepositories {
       },
       mealPlans: TandoorMealPlanRepository(apiClient, dio),
       mealTypes: TandoorMealTypeRepository(apiClient),
+      shopping: TandoorShoppingRepository(apiClient, dio),
     );
   }
 
@@ -112,6 +115,7 @@ class TandoorRepositories {
     required this.savedFilters,
     required this.mealPlans,
     required this.mealTypes,
+    required this.shopping,
   });
 
   final Dio _dio;
@@ -127,6 +131,7 @@ class TandoorRepositories {
   final SavedFilterRepository savedFilters;
   final MealPlanRepository mealPlans;
   final MealTypeRepository mealTypes;
+  final ShoppingRepository shopping;
 
   /// Cancels open requests and frees the connection pool.
   void close() {

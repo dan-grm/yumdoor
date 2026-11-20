@@ -19,4 +19,9 @@ abstract interface class FoodRepository {
   /// plural name already exists (ignoring case), returns it unchanged instead.
   /// Fails with an [ArgumentError] if [name] is blank.
   Future<Food> create(String name);
+
+  /// Marks the food with [foodId] as on hand ([onHand] `true`) or not, for
+  /// the whole household, and returns it. Throws [NotFoundFailure] if the
+  /// food doesn't exist.
+  Future<Food> setOnHand(int foodId, {required bool onHand});
 }
