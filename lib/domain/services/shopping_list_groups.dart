@@ -12,26 +12,44 @@ import 'text_match.dart';
 /// name, uncategorized last. Rows in a section go by food name, then unit
 /// name, without a unit first.
 ///
-/// Entries of the same food and unit merge into one row, open and checked
-/// ones separately; the same food in different units stays separate rows.
-/// Checked rows are in [ShoppingListGroups.done], most recently completed
-/// first.
+/// Open entries of the same food and unit merge into one row; the same food
+/// in different units stays separate rows. Checked entries are in
+/// [ShoppingListGroups.done], most recently completed first, merged only
+/// when they were checked off together (same completion time), so undoing
+/// a check-off doesn't bring back what was bought days earlier.
+///
+/// An entry id that comes more than once (an incremental read appended to a
+/// full one) counts once, as its last occurrence. A row takes its food, and a
+/// section its category, from the most recently updated entry.
 ShoppingListGroups groupShoppingList(
   List<ShoppingEntry> entries, {
   Supermarket? store,
 }) {
+  final byId = <int, ShoppingEntry>{
+    for (final entry in entries) entry.id: entry,
+  };
   final open = <_RowKey, List<ShoppingEntry>>{};
   final done = <_RowKey, List<ShoppingEntry>>{};
-  for (final entry in entries) {
-    final key = (food: entry.food.id, unit: entry.unit?.id);
+  for (final entry in byId.values) {
+    final key = (
+      food: entry.food.id,
+      unit: entry.unit?.id,
+      completedAt: entry.checked ? _completedAt(entry) : null,
+    );
     (entry.checked ? done : open).putIfAbsent(key, () => []).add(entry);
   }
 
   final byCategory = <int?, List<ShoppingListRow>>{};
-  final categories = <int, SupermarketCategory>{};
+  final categories = <int, (SupermarketCategory, DateTime)>{};
   for (final group in open.values) {
-    final category = group.first.food.category;
-    if (category != null) categories.putIfAbsent(category.id, () => category);
+    final latest = _latest(group);
+    final category = latest.food.category;
+    if (category != null) {
+      final known = categories[category.id];
+      if (known == null || latest.updatedAt.isAfter(known.$2)) {
+        categories[category.id] = (category, latest.updatedAt);
+      }
+    }
     byCategory.putIfAbsent(category?.id, () => []).add(_row(group));
   }
 
@@ -39,16 +57,16 @@ ShoppingListGroups groupShoppingList(
   for (final id in store?.categoryIds ?? const <int>[]) {
     storeOrder.putIfAbsent(id, () => storeOrder.length);
   }
-  final sortedCategories = categories.values.toList()
-    ..sort((a, b) {
-      final ia = storeOrder[a.id];
-      final ib = storeOrder[b.id];
-      if (ia != null && ib != null) return ia.compareTo(ib);
-      if (ia != null) return -1;
-      if (ib != null) return 1;
-      final byName = foldText(a.name).compareTo(foldText(b.name));
-      return byName != 0 ? byName : a.id.compareTo(b.id);
-    });
+  final sortedCategories =
+      [for (final (category, _) in categories.values) category]..sort((a, b) {
+        final ia = storeOrder[a.id];
+        final ib = storeOrder[b.id];
+        if (ia != null && ib != null) return ia.compareTo(ib);
+        if (ia != null) return -1;
+        if (ib != null) return 1;
+        final byName = foldText(a.name).compareTo(foldText(b.name));
+        return byName != 0 ? byName : a.id.compareTo(b.id);
+      });
 
   final sections = [
     for (final category in sortedCategories)
@@ -72,15 +90,29 @@ ShoppingListGroups groupShoppingList(
   );
 }
 
-typedef _RowKey = ({int food, int? unit});
+typedef _RowKey = ({int food, int? unit, DateTime? completedAt});
+
+/// Tandoor sets `completed_at` on check-off; `updated_at` stands in if a
+/// checked entry has none.
+DateTime _completedAt(ShoppingEntry entry) =>
+    entry.completedAt ?? entry.updatedAt;
+
+ShoppingEntry _latest(List<ShoppingEntry> entries) => entries.reduce(
+  (latest, entry) => entry.updatedAt.isAfter(latest.updatedAt) ? entry : latest,
+);
 
 ShoppingListRow _row(List<ShoppingEntry> entries) {
   var amount = 0.0;
+  var someWithoutAmount = false;
   final recipeNames = <String>{};
   final addedBy = <int, UserRef>{};
   DateTime? completedAt;
   for (final entry in entries) {
-    if (entry.amount > 0) amount += entry.amount;
+    if (entry.amount > 0) {
+      amount += entry.amount;
+    } else {
+      someWithoutAmount = true;
+    }
     final source = entry.source;
     if (source == null) {
       addedBy.putIfAbsent(entry.createdBy.id, () => entry.createdBy);
@@ -88,17 +120,16 @@ ShoppingListRow _row(List<ShoppingEntry> entries) {
       recipeNames.add(source.recipeName);
     }
     if (entry.checked) {
-      // Tandoor sets `completed_at` on check-off; `updated_at` stands in if a
-      // checked entry has none.
-      final time = entry.completedAt ?? entry.updatedAt;
+      final time = _completedAt(entry);
       if (completedAt == null || time.isAfter(completedAt)) completedAt = time;
     }
   }
-  final first = entries.first;
+  final latest = _latest(entries);
   return ShoppingListRow(
-    food: first.food,
-    unit: first.unit,
+    food: latest.food,
+    unit: latest.unit,
     amount: amount,
+    someWithoutAmount: amount > 0 && someWithoutAmount,
     entryIds: List.unmodifiable([for (final e in entries) e.id]),
     recipeNames: List.unmodifiable(recipeNames),
     addedBy: List.unmodifiable(addedBy.values),
@@ -162,6 +193,7 @@ class ShoppingListRow {
     required this.food,
     required this.unit,
     required this.amount,
+    this.someWithoutAmount = false,
     required this.entryIds,
     required this.recipeNames,
     required this.addedBy,
@@ -177,17 +209,22 @@ class ShoppingListRow {
   /// amount add nothing.
   final double amount;
 
+  /// Whether, besides [amount], some merged entries have no amount, such as
+  /// "1 Bund" for one recipe plus "Petersilie" for another. `false` when
+  /// none has one.
+  final bool someWithoutAmount;
+
   /// The merged entries, to check them off or delete them together.
   final List<int> entryIds;
 
-  /// The recipes the entries were added for, each once, in list order.
+  /// The names of the recipes the entries were added for, each once, in list
+  /// order; a recipe planned twice is named once.
   final List<String> recipeNames;
 
   /// Who added the entries that were added by hand, each once, in list order.
   final List<UserRef> addedBy;
 
-  /// For a checked row, when its last entry was checked off; `null` while
-  /// open.
+  /// For a checked row, when it was checked off; `null` while open.
   final DateTime? completedAt;
 
   bool get hasAmount => amount > 0;

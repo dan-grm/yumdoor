@@ -142,6 +142,7 @@ void main() {
       expect(row.unit, gram);
       expect(row.amount, 1100);
       expect(row.hasAmount, isTrue);
+      expect(row.someWithoutAmount, isFalse);
       expect(row.entryIds, [a.id, b.id, c.id]);
       expect(row.recipeNames, ['Ofenkarotten', 'Bolognese']);
       expect(row.addedBy, isEmpty);
@@ -196,8 +197,46 @@ void main() {
       expect(rows[0].amount, 0);
       expect(rows[0].hasAmount, isFalse);
       expect(rows[0].entryIds, hasLength(2));
+      expect(rows[0].someWithoutAmount, isFalse);
       expect(rows[1].amount, 0.5);
+      expect(rows[1].someWithoutAmount, isTrue);
       expect(rows[1].entryIds, hasLength(2));
+    });
+  });
+
+  group('entries', () {
+    test('count once when an id comes twice, as its last occurrence', () {
+      final old = entry(carrot, unit: gram, amount: 300);
+      final updated = old.copyWith(amount: 400, updatedAt: time.add(_hour));
+      final checked = old.copyWith(checked: true, completedAt: time);
+      final groups = groupShoppingList([old, entry(feta), updated]);
+      final carrots = groups.sections
+          .singleWhere((section) => section.category == produce)
+          .rows
+          .single;
+      expect(carrots.amount, 400);
+      expect(carrots.entryIds, [old.id]);
+      expect(groupShoppingList([old, checked]).sections, isEmpty);
+    });
+
+    test('take food and category from the most recently updated entry', () {
+      const renamed = ShoppingFood(
+        id: 3,
+        name: 'Schafskäse',
+        category: SupermarketCategory(id: 2, name: 'Kühlung'),
+      );
+      final newer = ShoppingEntry(
+        id: 1,
+        food: renamed,
+        amount: 1,
+        updatedAt: time.add(_hour),
+        createdBy: anna,
+      );
+      final groups = groupShoppingList([entry(feta), newer, entry(feta)]);
+      final section = groups.sections.single;
+      expect(section.category?.name, 'Kühlung');
+      expect(section.rows.single.food.name, 'Schafskäse');
+      expect(section.rows.single.entryIds, hasLength(3));
     });
   });
 
@@ -218,7 +257,7 @@ void main() {
       expect(groups.done.first.completedAt, time.add(_hour));
     });
 
-    test('merges checked entries, completed when the last one was', () {
+    test('merges entries checked off together, not those checked apart', () {
       final a = entry(
         feta,
         unit: gram,
@@ -231,12 +270,20 @@ void main() {
         unit: gram,
         amount: 100,
         checked: true,
-        completedAt: time.add(_hour),
+        completedAt: time,
       );
-      final done = groupShoppingList([a, b]).done;
-      expect(done.single.amount, 300);
-      expect(done.single.entryIds, [a.id, b.id]);
-      expect(done.single.completedAt, time.add(_hour));
+      final c = entry(
+        feta,
+        unit: gram,
+        amount: 100,
+        checked: true,
+        completedAt: time.subtract(const Duration(days: 6)),
+      );
+      final done = groupShoppingList([a, c, b]).done;
+      expect([for (final row in done) row.amount], [300, 100]);
+      expect(done[0].entryIds, [a.id, b.id]);
+      expect(done[1].entryIds, [c.id]);
+      expect(done.first.completedAt, time);
     });
 
     test('falls back to the update time without a completion time', () {
