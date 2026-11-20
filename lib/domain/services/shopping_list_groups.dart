@@ -19,38 +19,52 @@ import 'text_match.dart';
 /// a check-off doesn't bring back what was bought days earlier.
 ///
 /// An entry id that comes more than once (an incremental read appended to a
-/// full one) counts once, as its last occurrence. A row takes its food, and a
-/// section its category, from the most recently updated entry.
+/// full one) counts once, as its most recently updated copy, at the place it
+/// first came. A food's name and category come from its most recently
+/// updated entry, so all rows of a food share one section.
 ShoppingListGroups groupShoppingList(
   List<ShoppingEntry> entries, {
   Supermarket? store,
 }) {
-  final byId = <int, ShoppingEntry>{
-    for (final entry in entries) entry.id: entry,
-  };
+  final byId = <int, ShoppingEntry>{};
+  final foods = <int, ShoppingEntry>{};
+  for (final entry in entries) {
+    final known = byId[entry.id];
+    if (known == null || !known.updatedAt.isAfter(entry.updatedAt)) {
+      byId[entry.id] = entry;
+    }
+  }
   final open = <_RowKey, List<ShoppingEntry>>{};
   final done = <_RowKey, List<ShoppingEntry>>{};
   for (final entry in byId.values) {
+    final known = foods[entry.food.id];
+    if (known == null || !known.updatedAt.isAfter(entry.updatedAt)) {
+      foods[entry.food.id] = entry;
+    }
     final key = (
       food: entry.food.id,
       unit: entry.unit?.id,
-      completedAt: entry.checked ? _completedAt(entry) : null,
+      completedAt: entry.checked
+          ? _completedAt(entry).microsecondsSinceEpoch
+          : null,
     );
     (entry.checked ? done : open).putIfAbsent(key, () => []).add(entry);
   }
+  ShoppingListRow row(List<ShoppingEntry> group) =>
+      _row(group, foods[group.first.food.id]!.food);
 
   final byCategory = <int?, List<ShoppingListRow>>{};
-  final categories = <int, (SupermarketCategory, DateTime)>{};
+  final categories = <int, ShoppingEntry>{};
   for (final group in open.values) {
-    final latest = _latest(group);
+    final latest = foods[group.first.food.id]!;
     final category = latest.food.category;
     if (category != null) {
       final known = categories[category.id];
-      if (known == null || latest.updatedAt.isAfter(known.$2)) {
-        categories[category.id] = (category, latest.updatedAt);
+      if (known == null || !known.updatedAt.isAfter(latest.updatedAt)) {
+        categories[category.id] = latest;
       }
     }
-    byCategory.putIfAbsent(category?.id, () => []).add(_row(group));
+    byCategory.putIfAbsent(category?.id, () => []).add(row(group));
   }
 
   final storeOrder = <int, int>{};
@@ -58,15 +72,16 @@ ShoppingListGroups groupShoppingList(
     storeOrder.putIfAbsent(id, () => storeOrder.length);
   }
   final sortedCategories =
-      [for (final (category, _) in categories.values) category]..sort((a, b) {
-        final ia = storeOrder[a.id];
-        final ib = storeOrder[b.id];
-        if (ia != null && ib != null) return ia.compareTo(ib);
-        if (ia != null) return -1;
-        if (ib != null) return 1;
-        final byName = foldText(a.name).compareTo(foldText(b.name));
-        return byName != 0 ? byName : a.id.compareTo(b.id);
-      });
+      [for (final entry in categories.values) entry.food.category!]
+        ..sort((a, b) {
+          final ia = storeOrder[a.id];
+          final ib = storeOrder[b.id];
+          if (ia != null && ib != null) return ia.compareTo(ib);
+          if (ia != null) return -1;
+          if (ib != null) return 1;
+          final byName = foldText(a.name).compareTo(foldText(b.name));
+          return byName != 0 ? byName : a.id.compareTo(b.id);
+        });
 
   final sections = [
     for (final category in sortedCategories)
@@ -78,7 +93,7 @@ ShoppingListGroups groupShoppingList(
       ShoppingListSection(category: null, rows: _sorted(rows)),
   ];
 
-  final doneRows = [for (final group in done.values) _row(group)]
+  final doneRows = [for (final group in done.values) row(group)]
     ..sort((a, b) {
       final byTime = b.completedAt!.compareTo(a.completedAt!);
       return byTime != 0 ? byTime : _byFoodAndUnit(a, b);
@@ -90,7 +105,9 @@ ShoppingListGroups groupShoppingList(
   );
 }
 
-typedef _RowKey = ({int food, int? unit, DateTime? completedAt});
+/// Checked entries also by completion time, in microseconds so UTC and local
+/// times of the same moment match.
+typedef _RowKey = ({int food, int? unit, int? completedAt});
 
 /// Tandoor sets `completed_at` on check-off; `updated_at` stands in if a
 /// checked entry has none.
@@ -101,7 +118,7 @@ ShoppingEntry _latest(List<ShoppingEntry> entries) => entries.reduce(
   (latest, entry) => entry.updatedAt.isAfter(latest.updatedAt) ? entry : latest,
 );
 
-ShoppingListRow _row(List<ShoppingEntry> entries) {
+ShoppingListRow _row(List<ShoppingEntry> entries, ShoppingFood food) {
   var amount = 0.0;
   var someWithoutAmount = false;
   final recipeNames = <String>{};
@@ -124,10 +141,9 @@ ShoppingListRow _row(List<ShoppingEntry> entries) {
       if (completedAt == null || time.isAfter(completedAt)) completedAt = time;
     }
   }
-  final latest = _latest(entries);
   return ShoppingListRow(
-    food: latest.food,
-    unit: latest.unit,
+    food: food,
+    unit: _latest(entries).unit,
     amount: amount,
     someWithoutAmount: amount > 0 && someWithoutAmount,
     entryIds: List.unmodifiable([for (final e in entries) e.id]),

@@ -219,6 +219,28 @@ void main() {
       expect(groupShoppingList([old, checked]).sections, isEmpty);
     });
 
+    test('keep the most recently updated copy of an id', () {
+      final old = entry(carrot, unit: gram, amount: 300);
+      final updated = old.copyWith(amount: 400, updatedAt: time.add(_hour));
+      final row = groupShoppingList([updated, old]).sections.single.rows.single;
+      expect(row.amount, 400);
+    });
+
+    test('put all rows of a food in the section of its newest entry', () {
+      const moved = ShoppingFood(id: 1, name: 'Karotte', category: pantry);
+      final newer = ShoppingEntry(
+        id: 1,
+        food: moved,
+        unit: kilo,
+        amount: 1,
+        updatedAt: time.add(_hour),
+        createdBy: anna,
+      );
+      final groups = groupShoppingList([entry(carrot, unit: gram), newer]);
+      expect(sectionNames(groups), ['Vorrat']);
+      expect(groups.sections.single.rows, hasLength(2));
+    });
+
     test('take food and category from the most recently updated entry', () {
       const renamed = ShoppingFood(
         id: 3,
@@ -284,6 +306,14 @@ void main() {
       expect(done[0].entryIds, [a.id, b.id]);
       expect(done[1].entryIds, [c.id]);
       expect(done.first.completedAt, time);
+    });
+
+    test('merges a check-off whose times differ only in time zone', () {
+      final done = groupShoppingList([
+        entry(feta, checked: true, completedAt: time),
+        entry(feta, checked: true, completedAt: time.toLocal()),
+      ]).done;
+      expect(done.single.entryIds, hasLength(2));
     });
 
     test('falls back to the update time without a completion time', () {
