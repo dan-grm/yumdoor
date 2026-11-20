@@ -69,4 +69,20 @@ void main() {
   test('prints as an ISO 8601 date', () {
     expect(CalendarDay(2026, 3, 7).toString(), '2026-03-07');
   });
+
+  test('parses what it prints and nothing else', () {
+    expect(CalendarDay.tryParse('2026-03-07'), CalendarDay(2026, 3, 7));
+    final day = CalendarDay(2026, 12, 31);
+    expect(CalendarDay.tryParse(day.toString()), day);
+    for (final text in [
+      '',
+      '2026-3-7',
+      '2026-02-30',
+      '2026-13-01',
+      '2026-11-20T00:00',
+      'heute',
+    ]) {
+      expect(CalendarDay.tryParse(text), isNull, reason: text);
+    }
+  });
 }

@@ -13,44 +13,44 @@ import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import '../common/recipe_image.dart';
+import '../shell/app_shell.dart';
 import 'planner_providers.dart';
+import 'week_labels.dart';
 
 /// The week planner (mockup 10-wochenplan): the days of one week with their
 /// planned meals, and buttons to browse the weeks.
-class PlannerScreen extends ConsumerStatefulWidget {
-  const PlannerScreen({super.key});
+///
+/// It shows the week of [day], the current week if `null`. Browsing changes
+/// the location ([planLocation]), so going to a day always shows its week,
+/// even one shown before.
+class PlannerScreen extends ConsumerWidget {
+  const PlannerScreen({super.key, this.day});
+
+  /// A day whose week to show.
+  final CalendarDay? day;
 
   @override
-  ConsumerState<PlannerScreen> createState() => _PlannerScreenState();
-}
-
-class _PlannerScreenState extends ConsumerState<PlannerScreen> {
-  /// How many weeks the shown week is after the current one.
-  int _offset = 0;
-
-  /// Loads the week at [start] again, for pull to refresh.
-  Future<void> _refresh(CalendarDay start) async {
-    ref.invalidate(weekPlansProvider(start));
-    try {
-      await ref.read(weekPlansProvider(start).future);
-    } on Object {
-      // The screen shows the failure.
-    }
-  }
-
-  void _browse(int weeks) => setState(() => _offset += weeks);
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = context.tokens;
     final l10n = context.l10n;
     final today = CalendarDay.of(ref.watch(clockProvider)());
-    final firstWeekday = _firstWeekday(context);
-    final start = startOfWeek(
-      today,
-      firstWeekday,
-    ).addDays(_offset * daysInWeek);
-    final end = start.addDays(daysInWeek - 1);
+    final firstWeekday = firstWeekdayOf(context);
+    final thisWeek = startOfWeek(today, firstWeekday);
+    final start = startOfWeek(day ?? today, firstWeekday);
+
+    void show(CalendarDay week) =>
+        context.go(plannerLocation(context, week, today));
+
+    /// Loads the week again, for pull to refresh.
+    Future<void> refresh() async {
+      ref.invalidate(weekPlansProvider(start));
+      try {
+        await ref.read(weekPlansProvider(start).future);
+      } on Object {
+        // The screen shows the failure.
+      }
+    }
+
     final plans = ref.watch(weekPlansProvider(start));
     final onlyMine = ref.watch(plannerOnlyMineProvider);
     final people = ref.watch(plannerPeopleProvider).value;
@@ -77,12 +77,11 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
               padding: EdgeInsets.fromLTRB(t.space5, t.space3, t.space5, 0),
               child: _WeekBar(
                 start: start,
-                end: end,
                 today: today,
-                isCurrent: _offset == 0,
-                onPrevious: () => _browse(-1),
-                onNext: () => _browse(1),
-                onCurrent: () => setState(() => _offset = 0),
+                isCurrent: start == thisWeek,
+                onPrevious: () => show(start.addDays(-daysInWeek)),
+                onNext: () => show(start.addDays(daysInWeek)),
+                onCurrent: () => show(thisWeek),
               ),
             ),
             _HouseholdBar(
@@ -101,7 +100,7 @@ class _PlannerScreenState extends ConsumerState<PlannerScreen> {
                   ],
                   me: me,
                   names: names,
-                  onRefresh: () => _refresh(start),
+                  onRefresh: refresh,
                 ),
                 AsyncError(:final error) => FailureView(
                   error: error,
@@ -156,18 +155,10 @@ class _HouseholdBar extends StatelessWidget {
   }
 }
 
-/// The first day of the week in the locale, 1 (Monday) to 7 (Sunday).
-int _firstWeekday(BuildContext context) {
-  // 0 is Sunday, 1 Monday.
-  final index = MaterialLocalizations.of(context).firstDayOfWeekIndex;
-  return index == 0 ? DateTime.sunday : index;
-}
-
 /// The date range with the buttons for the weeks before and after.
 class _WeekBar extends StatelessWidget {
   const _WeekBar({
     required this.start,
-    required this.end,
     required this.today,
     required this.isCurrent,
     required this.onPrevious,
@@ -176,7 +167,6 @@ class _WeekBar extends StatelessWidget {
   });
 
   final CalendarDay start;
-  final CalendarDay end;
   final CalendarDay today;
   final bool isCurrent;
   final VoidCallback onPrevious;
@@ -187,12 +177,7 @@ class _WeekBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
-    final format = LocaleFormat.of(context);
-    final now = today.atLocalTime();
-    final range = l10n.planRange(
-      format.dayMonthOrDate(start.atLocalTime(), now),
-      format.dayMonthOrDate(end.atLocalTime(), now),
-    );
+    final range = weekRangeLabel(context, start, today);
     return Row(
       children: [
         RoundIconButton(
@@ -319,10 +304,7 @@ class _DayRow extends StatelessWidget {
     final l10n = context.l10n;
     final format = LocaleFormat.of(context);
     final date = day.atLocalTime();
-    final name = l10n.planDayLabel(
-      format.weekdayLong(date),
-      format.dayMonth(date),
-    );
+    final name = dayLabel(context, day);
     final label = isToday ? l10n.planToday(name) : name;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -14,10 +14,12 @@ import 'fake_food_keyword_repositories.dart';
 import 'fake_ingredient_parser.dart';
 import 'fake_link_opener.dart';
 import 'fake_meal_plan_repository.dart';
+import 'fake_meal_type_repository.dart';
 import 'fake_offline_cache.dart';
 import 'fake_recipe_repository.dart';
 import 'fake_saved_filter_repository.dart';
 import 'fake_server_repository.dart';
+import 'fake_shopping_repository.dart';
 import 'fake_unload_guard.dart';
 import 'in_memory_local_store.dart';
 import 'in_memory_token_store.dart';
@@ -49,6 +51,8 @@ List<Override> appOverrides({
   FakeUserRepository? users,
   FakeSavedFilterRepository? savedFilters,
   FakeMealPlanRepository? mealPlans,
+  FakeMealTypeRepository? mealTypes,
+  FakeShoppingRepository? shopping,
   FakeOfflineCache? offlineCache,
   FakeDraftStore? drafts,
   FakeUnloadGuard? unloadGuard,
@@ -81,6 +85,12 @@ List<Override> appOverrides({
   ),
   mealPlanRepositoryProvider.overrideWithValue(
     mealPlans ?? FakeMealPlanRepository([]),
+  ),
+  mealTypeRepositoryProvider.overrideWithValue(
+    mealTypes ?? FakeMealTypeRepository(),
+  ),
+  shoppingRepositoryProvider.overrideWithValue(
+    shopping ?? FakeShoppingRepository(),
   ),
   offlineCacheProvider.overrideWithValue(offlineCache ?? FakeOfflineCache()),
   draftStoreProvider.overrideWithValue(drafts ?? FakeDraftStore()),
