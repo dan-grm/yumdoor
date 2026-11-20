@@ -475,8 +475,10 @@ amounts across recipes; merging per food and unit for display is our job. "Add t
     default); a date alone works as midnight there. Send UTC with `Z`.
   - **An unparsable value is ignored silently** (the exception is caught and printed) and the full list comes back.
     That includes an unencoded `+` in the offset, which arrives as a space. URL-encode the value.
-  - Yumdoor passes the first page's `timestamp` minus one second as the next `updated_after`, so a change between
-    the query and the timestamp isn't missed. An entry may come twice.
+  - Yumdoor passes the first page's `timestamp` minus a minute as the next `updated_after`, so a change between
+    the query and the timestamp (serializing a page can take a while) isn't missed. An entry may come twice.
+- Pages are offsets into the list ordered by id: an entry deleted between two page requests shifts the later pages
+  and one entry is skipped. Yumdoor starts the read over when `count` changes between pages.
 - Check off: `POST /api/shopping-list-entry/bulk/ {ids, checked}`. It sets `checked`, `updated_at` and
   `completed_at` (cleared on uncheck) for the ids the household has; unknown ids, and an empty list, are ignored
   with 200. The response echoes the request with a `timestamp`. Any household member can check off anyone's entries.

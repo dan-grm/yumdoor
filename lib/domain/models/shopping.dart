@@ -98,12 +98,13 @@ abstract class ShoppingListSnapshot with _$ShoppingListSnapshot {
     required List<ShoppingEntry> entries,
 
     /// Pass this as `updatedAfter` to the next read to get only what changed
-    /// since this one. Slightly before the read, so nothing is missed;
+    /// since this one. A minute before the read, so nothing is missed;
     /// entries may come again.
     required DateTime syncedAt,
 
-    /// Whether the server cut the list off at [maxShoppingEntries]. It keeps
-    /// the oldest entries, so the newest are missing.
+    /// Whether the list reached [maxShoppingEntries], where the server cuts
+    /// it off. It keeps the oldest entries, so the newest may be missing; a
+    /// list of exactly that many entries looks the same.
     @Default(false) bool truncated,
   }) = _ShoppingListSnapshot;
 }

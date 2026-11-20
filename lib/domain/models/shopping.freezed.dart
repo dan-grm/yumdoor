@@ -1561,10 +1561,11 @@ mixin _$ShoppingListSnapshot {
 /// setting, oldest first. After an incremental read, only the entries
 /// changed since then.
  List<ShoppingEntry> get entries;/// Pass this as `updatedAfter` to the next read to get only what changed
-/// since this one. Slightly before the read, so nothing is missed;
+/// since this one. A minute before the read, so nothing is missed;
 /// entries may come again.
- DateTime get syncedAt;/// Whether the server cut the list off at [maxShoppingEntries]. It keeps
-/// the oldest entries, so the newest are missing.
+ DateTime get syncedAt;/// Whether the list reached [maxShoppingEntries], where the server cuts
+/// it off. It keeps the oldest entries, so the newest may be missing; a
+/// list of exactly that many entries looks the same.
  bool get truncated;
 /// Create a copy of ShoppingListSnapshot
 /// with the given fields replaced by the non-null parameter values.
@@ -1781,11 +1782,12 @@ class _ShoppingListSnapshot implements ShoppingListSnapshot {
 }
 
 /// Pass this as `updatedAfter` to the next read to get only what changed
-/// since this one. Slightly before the read, so nothing is missed;
+/// since this one. A minute before the read, so nothing is missed;
 /// entries may come again.
 @override final  DateTime syncedAt;
-/// Whether the server cut the list off at [maxShoppingEntries]. It keeps
-/// the oldest entries, so the newest are missing.
+/// Whether the list reached [maxShoppingEntries], where the server cuts
+/// it off. It keeps the oldest entries, so the newest may be missing; a
+/// list of exactly that many entries looks the same.
 @override@JsonKey() final  bool truncated;
 
 /// Create a copy of ShoppingListSnapshot

@@ -67,10 +67,13 @@ void main() {
     expect(source.servings, 4);
     expect(source.mealPlan?.label, 'Linsen-Dal mit Karotten');
     expect(source.mealPlan?.onShoppingList, isTrue);
-    // Ben sees the same list.
+    // Ben sees the same items.
     expect(
-      {for (final e in (await ben.shopping.fetch()).entries) e.id},
-      {for (final e in list.entries) e.id},
+      {
+        for (final e in (await ben.shopping.fetch()).entries)
+          if (e.source == null) e.id,
+      },
+      {for (final e in loose) e.id},
     );
   });
 
@@ -111,7 +114,7 @@ void main() {
       // Without syncedAt's margin: the server's time of the first read, so
       // the changes of the tests before are older.
       final changes = await anna.shopping.fetch(
-        updatedAfter: before.syncedAt.add(const Duration(seconds: 1)),
+        updatedAfter: before.syncedAt.add(const Duration(minutes: 1)),
       );
 
       expect(changes.entries.length, lessThan(before.entries.length));

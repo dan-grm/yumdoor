@@ -84,8 +84,8 @@ void main() {
       expect([for (final e in list.entries) e.id], [1, 2, 3]);
       expect(list.entries.last.checked, isTrue);
       expect(list.truncated, isFalse);
-      // The first page's time, a second earlier.
-      expect(list.syncedAt, DateTime.utc(2026, 11, 20, 9, 29, 59, 250));
+      // The first page's time, a minute earlier.
+      expect(list.syncedAt, DateTime.utc(2026, 11, 20, 9, 29, 0, 250));
       expect(list.syncedAt.isUtc, isTrue);
       expect(adapter.requests, hasLength(2));
       final query = adapter.requests.first.uri.queryParameters;
@@ -104,6 +104,41 @@ void main() {
       // A raw `+` would be read as a space, and Tandoor then ignores the
       // filter.
       expect(uri.query, isNot(contains('+')));
+    });
+
+    test('starts over when the list changes between pages', () async {
+      var reads = 0;
+      final adapter = FakeHttpAdapter((request) {
+        if (request.uri.queryParameters['page'] == '1') {
+          reads++;
+          return jsonResponse(page([entry(1), entry(2)], more: true, count: 3));
+        }
+        // Entry 2 was deleted before the second read's page 2.
+        return jsonResponse(
+          reads == 1 ? page([entry(4)], count: 2) : page([entry(3)], count: 3),
+        );
+      });
+
+      final list = await shopping(adapter).fetch();
+
+      expect([for (final e in list.entries) e.id], [1, 2, 3]);
+      expect(adapter.requests, hasLength(4));
+    });
+
+    test('keeps the last read of a list that keeps changing', () async {
+      var reads = 0;
+      final adapter = FakeHttpAdapter((request) {
+        if (request.uri.queryParameters['page'] == '1') {
+          reads++;
+          return jsonResponse(page([entry(reads)], more: true, count: 9));
+        }
+        return jsonResponse(page([entry(10 + reads)], count: 8));
+      });
+
+      final list = await shopping(adapter).fetch();
+
+      expect([for (final e in list.entries) e.id], [3, 13]);
+      expect(adapter.requests, hasLength(6));
     });
 
     test('reports a list cut off at the server limit', () async {
