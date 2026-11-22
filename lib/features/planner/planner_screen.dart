@@ -94,6 +94,7 @@ class PlannerScreen extends ConsumerWidget {
             failureMessage(context, failure),
           ),
         },
+        failed: failure != null,
       );
     }
 
@@ -355,9 +356,9 @@ class _DaysState extends State<_Days> {
           // Follows the finger from here, not from the dragged card: the
           // list disposes rows that scroll far enough away, that one too.
           child: Listener(
-            onPointerMove: (event) => _autoScroll.update(event.position),
-            onPointerUp: (_) => _autoScroll.stop(),
-            onPointerCancel: (_) => _autoScroll.stop(),
+            onPointerMove: _autoScroll.update,
+            onPointerUp: _autoScroll.lifted,
+            onPointerCancel: _autoScroll.lifted,
             child: ListView(
               key: _listKey,
               controller: _controller,
@@ -399,7 +400,9 @@ class _DaysState extends State<_Days> {
 /// edge, so that every day can be reached: a drag can't scroll by itself.
 ///
 /// [start] it when a drag starts; the list's pointer events then [update] it
-/// until the pointer is lifted ([stop]).
+/// until the dragging pointer is [lifted]. After each scroll, the drag is
+/// told the pointer moved (by nothing), so that the day under it, not the
+/// one under it before scrolling, takes the plan.
 class _AutoScroll {
   _AutoScroll(this._controller, this._listKey);
 
@@ -414,12 +417,18 @@ class _AutoScroll {
   double _speed = 0;
   bool _dragging = false;
 
+  /// The pointer that drags, once it moved, and where it was last.
+  PointerMoveEvent? _last;
+
   /// A plan is being dragged.
   void start() => _dragging = true;
 
-  /// The pointer is at [position] (global).
-  void update(Offset position) {
+  /// A pointer moved.
+  void update(PointerMoveEvent event) {
     if (!_dragging) return;
+    if (_last case final last? when last.pointer != event.pointer) return;
+    _last = event;
+    final position = event.position;
     final box = _listKey.currentContext?.findRenderObject();
     if (box is! RenderBox || !box.hasSize) return;
     final y = box.globalToLocal(position).dy;
@@ -440,13 +449,26 @@ class _AutoScroll {
         scroll.minScrollExtent,
         scroll.maxScrollExtent,
       );
-      if (to != scroll.pixels) _controller.jumpTo(to);
+      if (to == scroll.pixels) return;
+      _controller.jumpTo(to);
+      if (_last case final last?) {
+        GestureBinding.instance.handlePointerEvent(
+          last.copyWith(delta: Offset.zero),
+        );
+      }
     });
+  }
+
+  /// A pointer was lifted or cancelled; if it drags, the drag ends.
+  void lifted(PointerEvent event) {
+    if (_last case final last? when last.pointer != event.pointer) return;
+    stop();
   }
 
   /// The drag ended.
   void stop() {
     _dragging = false;
+    _last = null;
     _timer?.cancel();
     _timer = null;
   }

@@ -109,7 +109,9 @@ class PendingPlans extends _$PendingPlans {
   /// Shows [plan] as [pending] while [save] runs. Once saved, the weeks
   /// reload, and the plan is shown as loaded when the week from [shown] (the
   /// one on screen) is back, so it doesn't jump back meanwhile. If saving
-  /// fails, the plan is shown as it was and the failure is returned.
+  /// fails, the plan is shown as it was, the weeks reload all the same (the
+  /// plan may have changed elsewhere) and the failure is returned. A plan to
+  /// delete that is gone already counts as deleted.
   ///
   /// Callers check [isPending] first: while a change of [plan] is pending,
   /// this throws a [StateError].
@@ -130,15 +132,23 @@ class PendingPlans extends _$PendingPlans {
       if (ref.mounted) state = {...state}..remove(plan.id);
     }
 
+    Failure? failure;
     try {
       await save();
+    } on NotFoundFailure catch (notFound) {
+      // Deleted elsewhere meanwhile.
+      if (pending != null) failure = notFound;
+    } on Failure catch (error) {
+      failure = error;
     } on Object catch (error) {
-      settle();
-      if (error is Failure) return error;
-      rethrow;
+      failure = ServerFailure(cause: error);
     }
-    if (!ref.mounted) return null;
+    if (!ref.mounted) return failure;
     ref.invalidate(weekPlansProvider);
+    if (failure != null) {
+      settle();
+      return failure;
+    }
     try {
       await ref.read(weekPlansProvider(shown).future);
     } on Object {

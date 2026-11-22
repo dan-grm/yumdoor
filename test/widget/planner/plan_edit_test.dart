@@ -90,6 +90,8 @@ void main() {
     final y = tester.getCenter(finder.first).dy;
     var day = _weekdays.first;
     for (final weekday in _weekdays) {
+      // Rows scrolled far away aren't built.
+      if (find.text(weekday).evaluate().isEmpty) continue;
       // The labels sit at the top of their rows.
       if (tester.getTopLeft(find.text(weekday)).dy <= y) day = weekday;
     }
@@ -241,8 +243,12 @@ void main() {
       }
 
       expect(position().pixels, greaterThan(0));
+      // The day under the still pointer now, not the one before scrolling.
+      final under = dayOf(tester, find.text('Hier ablegen'));
+      expect(under, isIn(['Sa', 'So']));
       await gesture.up();
       await tester.pumpAndSettle();
+      expect(dayOf(tester, find.text('Linsen-Bolognese')), under);
       // It stopped with the drag.
       final stopped = position().pixels;
       await tester.pump(const Duration(milliseconds: 200));
@@ -552,6 +558,28 @@ void main() {
 
       expect(find.textContaining('Nicht gelöscht.'), findsOneWidget);
       expect(find.text('Linsen-Bolognese'), findsOneWidget);
+    });
+
+    testWidgets('a meal deleted elsewhere meanwhile counts as deleted', (
+      tester,
+    ) async {
+      await pumpPlanner(tester);
+      // Someone else in the household deleted it.
+      repository.plans.removeWhere((plan) => plan.id == 1);
+      repository.deleteFailure = const NotFoundFailure();
+
+      await openMenu(tester, 'Linsen-Bolognese');
+      await tap(tester, find.text('Löschen'));
+      await tap(
+        tester,
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('Löschen'),
+        ),
+      );
+
+      expect(find.text('Linsen-Bolognese'), findsNothing);
+      expect(find.text('Aus dem Plan gelöscht.'), findsOneWidget);
     });
 
     testWidgets('hides the meal at once, back if deleting fails', (

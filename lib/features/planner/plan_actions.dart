@@ -23,13 +23,25 @@ import 'week_labels.dart';
 /// Shows the [message] built in the context of [messenger], unless it is
 /// gone. The messenger outlives the sheets and screens that report through
 /// it.
+///
+/// A [failed] message stays twice as long as usual, to read why.
 void showPlannerMessage(
   ScaffoldMessengerState messenger,
-  String Function(BuildContext context) message,
-) {
+  String Function(BuildContext context) message, {
+  bool failed = false,
+}) {
   if (!messenger.mounted) return;
-  messenger.showSnackBar(SnackBar(content: Text(message(messenger.context))));
+  messenger.showSnackBar(
+    SnackBar(
+      content: Text(message(messenger.context)),
+      duration: failed ? _failureDuration : _duration,
+    ),
+  );
 }
+
+/// Flutter's default for snackbars, and twice that for failures.
+const _duration = Duration(seconds: 4);
+const _failureDuration = Duration(seconds: 8);
 
 /// Opens the [EditPlanSheet] for [plan], from the planner showing the week
 /// from [shown]. Once the changes are saved, a snackbar says so and the
@@ -41,8 +53,10 @@ Future<void> showEditPlanSheet(
 }) {
   final messenger = ScaffoldMessenger.of(context);
 
-  void report(String Function(BuildContext context) message) =>
-      showPlannerMessage(messenger, message);
+  void report(
+    String Function(BuildContext context) message, {
+    bool failed = false,
+  }) => showPlannerMessage(messenger, message, failed: failed);
 
   return showPlannerSheet<void>(
     context,
@@ -53,6 +67,7 @@ Future<void> showEditPlanSheet(
       onFailedAfterClose: (failure) => report(
         (context) =>
             context.l10n.planEditFailed(failureMessage(context, failure)),
+        failed: true,
       ),
     ),
   );
@@ -339,6 +354,7 @@ Future<void> confirmAndDeletePlan(
         failureMessage(context, failure),
       ),
     },
+    failed: failure != null,
   );
 }
 
