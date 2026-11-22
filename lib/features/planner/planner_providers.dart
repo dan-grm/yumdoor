@@ -52,47 +52,63 @@ Future<PlannerPeople> plannerPeople(Ref ref) async {
   );
 }
 
-/// Meals being moved to another day, by id, as they will be once saved. The
-/// planner shows them there right away (see [PlanMoves.move]).
-@Riverpod(keepAlive: true)
-class PlanMoves extends _$PlanMoves {
+/// Meals being moved or deleted, by id: as they will be once saved, `null`
+/// for one being deleted. The planner shows the change right away and offers
+/// nothing more for these meals until it is settled, so changes of one meal
+/// never overlap.
+@riverpod
+class PendingPlans extends _$PendingPlans {
   @override
-  Map<int, MealPlan> build() => const {};
+  Map<int, MealPlan?> build() => const {};
 
-  /// Moves [plan] so that it starts on [day], keeping its length, and shows
-  /// it there while it is saved. Once saved, the weeks reload, and the plan
-  /// is shown as loaded when the week from [shown] (the one on screen) is
-  /// back. If saving fails, it goes back to where it was and the failure is
-  /// returned.
+  /// Moves [plan] so that it starts on [day], keeping its length. See
+  /// [_apply].
   Future<Failure?> move(
     MealPlan plan,
     CalendarDay day, {
     required CalendarDay shown,
-  }) async {
-    if (day == plan.fromDay) return null;
-    final moved = plan.copyWith(
-      fromDay: day,
-      toDay: day.addDays(plan.days - 1),
+  }) {
+    if (day == plan.fromDay) return Future.value();
+    final repository = ref.read(mealPlanRepositoryProvider);
+    return _apply(
+      plan,
+      plan.copyWith(fromDay: day, toDay: day.addDays(plan.days - 1)),
+      () => repository.update(plan.id, MealPlanChanges(day: day)),
+      shown: shown,
     );
-    state = {...state, plan.id: moved};
+  }
+
+  /// Deletes [plan]. See [_apply].
+  Future<Failure?> delete(MealPlan plan, {required CalendarDay shown}) {
+    final repository = ref.read(mealPlanRepositoryProvider);
+    return _apply(plan, null, () => repository.delete(plan.id), shown: shown);
+  }
+
+  /// Shows [plan] as [pending] while [save] runs. Once saved, the weeks
+  /// reload, and the plan is shown as loaded when the week from [shown] (the
+  /// one on screen) is back, so it doesn't jump back meanwhile. If saving
+  /// fails, the plan is shown as it was and the failure is returned. Does
+  /// nothing while a change of [plan] is pending.
+  Future<Failure?> _apply(
+    MealPlan plan,
+    MealPlan? pending,
+    Future<void> Function() save, {
+    required CalendarDay shown,
+  }) async {
+    if (state.containsKey(plan.id)) return null;
+    state = {...state, plan.id: pending};
     void settle() {
-      // A later move of the same plan has its own say.
-      if (!ref.mounted || !identical(state[plan.id], moved)) return;
-      state = {...state}..remove(plan.id);
+      if (ref.mounted) state = {...state}..remove(plan.id);
     }
 
     try {
-      await ref
-          .read(mealPlanRepositoryProvider)
-          .update(plan.id, MealPlanChanges(day: day));
+      await save();
     } on Failure catch (failure) {
       settle();
       return failure;
     }
     if (!ref.mounted) return null;
     ref.invalidate(weekPlansProvider);
-    // Keeps showing the move until the week it is in has loaded again, so
-    // the plan doesn't jump back meanwhile.
     try {
       await ref.read(weekPlansProvider(shown).future);
     } on Object {

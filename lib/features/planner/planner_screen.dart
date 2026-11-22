@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -59,13 +61,17 @@ class PlannerScreen extends ConsumerWidget {
     }
 
     final plans = ref.watch(weekPlansProvider(start));
-    final moves = ref.watch(planMovesProvider);
+    final pending = ref.watch(pendingPlansProvider);
     final offline = ref.watch(isOfflineProvider);
     final onlyMine = ref.watch(plannerOnlyMineProvider);
     final people = ref.watch(plannerPeopleProvider).value;
     final me = people?.me;
     final names = people?.names ?? const <int, String>{};
     final end = start.addDays(daysInWeek - 1);
+
+    // Kept for after awaits: the screen may be gone by then.
+    final container = ProviderScope.containerOf(context, listen: false);
+    final messenger = ScaffoldMessenger.of(context);
 
     /// Moves [plan] to start on [day], showing it there at once. A failure
     /// puts it back and says why; with [confirm], so does success.
@@ -74,9 +80,8 @@ class PlannerScreen extends ConsumerWidget {
       CalendarDay day, {
       bool confirm = false,
     }) async {
-      final messenger = ScaffoldMessenger.of(context);
-      final failure = await ref
-          .read(planMovesProvider.notifier)
+      final failure = await container
+          .read(pendingPlansProvider.notifier)
           .move(plan, day, shown: start);
       if (failure == null && !confirm) return;
       showPlannerMessage(
@@ -99,7 +104,7 @@ class PlannerScreen extends ConsumerWidget {
               final day = await showMovePlanSheet(context, plan);
               if (day != null) await move(plan, day, confirm: true);
             },
-            delete: (plan) => confirmAndDeletePlan(context, plan),
+            delete: (plan) => confirmAndDeletePlan(context, plan, shown: start),
           );
 
     return Scaffold(
@@ -141,7 +146,10 @@ class PlannerScreen extends ConsumerWidget {
                   today: today,
                   plans: [
                     for (final loaded in value)
-                      if (moves[loaded.id] ?? loaded case final plan
+                      if ((pending.containsKey(loaded.id)
+                              ? pending[loaded.id]
+                              : loaded)
+                          case final plan?
                           when (!onlyMine ||
                                   me == null ||
                                   plan.createdBy == me) &&
@@ -150,6 +158,7 @@ class PlannerScreen extends ConsumerWidget {
                         plan,
                   ],
                   actions: actions,
+                  pending: pending.keys.toSet(),
                   me: me,
                   names: names,
                   onRefresh: refresh,
@@ -283,6 +292,7 @@ class _Days extends StatelessWidget {
     required this.me,
     required this.names,
     required this.actions,
+    required this.pending,
     required this.onRefresh,
   });
 
@@ -292,6 +302,9 @@ class _Days extends StatelessWidget {
 
   /// What can be done with the plans, `null` while offline.
   final _PlanActions? actions;
+
+  /// The ids of plans with a change pending, which get no new ones.
+  final Set<int> pending;
 
   /// The current user's id and the users' names, to mark the meals of others.
   final int? me;
@@ -330,6 +343,7 @@ class _Days extends StatelessWidget {
                     me: me,
                     names: names,
                     actions: actions,
+                    pending: pending,
                   ),
                 ),
             ],
@@ -377,6 +391,7 @@ class _DayRow extends StatelessWidget {
     required this.me,
     required this.names,
     required this.actions,
+    required this.pending,
   });
 
   final CalendarDay day;
@@ -385,6 +400,7 @@ class _DayRow extends StatelessWidget {
   final int? me;
   final Map<int, String> names;
   final _PlanActions? actions;
+  final Set<int> pending;
 
   /// The first day of the dragged plan if dropped here.
   CalendarDay _newStart(_PlanDrag drag) =>
@@ -438,7 +454,7 @@ class _DayRow extends StatelessWidget {
                         plannedBy: me == null || plan.createdBy == me
                             ? null
                             : names[plan.createdBy] ?? '',
-                        actions: actions,
+                        actions: pending.contains(plan.id) ? null : actions,
                       ),
                     ],
                     if (hovered) ...[
@@ -551,17 +567,55 @@ class _DropHere extends StatelessWidget {
   }
 }
 
-/// Whether drags start with a long press, as on touch screens, so that
-/// swiping still scrolls; with a mouse they start right away.
-bool _dragAfterLongPress(BuildContext context) =>
-    switch (Theme.of(context).platform) {
-      TargetPlatform.android ||
-      TargetPlatform.iOS ||
-      TargetPlatform.fuchsia => true,
-      TargetPlatform.linux ||
-      TargetPlatform.macOS ||
-      TargetPlatform.windows => false,
-    };
+/// A [Draggable] for a mouse or trackpad: dragging starts right away.
+class _PointerDraggable<T extends Object> extends Draggable<T> {
+  const _PointerDraggable({
+    required super.child,
+    required super.feedback,
+    super.data,
+    super.childWhenDragging,
+  });
+
+  @override
+  MultiDragGestureRecognizer createRecognizer(
+    GestureMultiDragStartCallback onStart,
+  ) => ImmediateMultiDragGestureRecognizer(
+    supportedDevices: const {
+      PointerDeviceKind.mouse,
+      PointerDeviceKind.trackpad,
+    },
+  )..onStart = onStart;
+}
+
+/// A [Draggable] for fingers and pens: dragging starts after a long press,
+/// so that swiping still scrolls. By input device, not platform: a laptop
+/// can have a touch screen.
+class _TouchDraggable<T extends Object> extends LongPressDraggable<T> {
+  const _TouchDraggable({
+    required super.child,
+    required super.feedback,
+    super.data,
+    super.childWhenDragging,
+  });
+
+  @override
+  DelayedMultiDragGestureRecognizer createRecognizer(
+    GestureMultiDragStartCallback onStart,
+  ) =>
+      DelayedMultiDragGestureRecognizer(
+          supportedDevices: const {
+            PointerDeviceKind.touch,
+            PointerDeviceKind.stylus,
+            PointerDeviceKind.invertedStylus,
+            PointerDeviceKind.unknown,
+          },
+        )
+        ..onStart = (position) {
+          final drag = onStart(position);
+          if (drag != null) HapticFeedback.selectionClick();
+          return drag;
+        };
+}
 
 /// One planned meal on [day], with its menu. Opens its recipe if it has one.
 /// Unless [actions] is `null` (offline), it can be dragged to another day.
@@ -599,19 +653,17 @@ class _PlanCard extends StatelessWidget {
           ),
         );
         final placeholder = Opacity(opacity: 0.4, child: card);
-        return _dragAfterLongPress(context)
-            ? LongPressDraggable<_PlanDrag>(
-                data: data,
-                feedback: feedback,
-                childWhenDragging: placeholder,
-                child: card,
-              )
-            : Draggable<_PlanDrag>(
-                data: data,
-                feedback: feedback,
-                childWhenDragging: placeholder,
-                child: card,
-              );
+        return _TouchDraggable<_PlanDrag>(
+          data: data,
+          feedback: feedback,
+          childWhenDragging: placeholder,
+          child: _PointerDraggable<_PlanDrag>(
+            data: data,
+            feedback: feedback,
+            childWhenDragging: placeholder,
+            child: card,
+          ),
+        );
       },
     );
   }

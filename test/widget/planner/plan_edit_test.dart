@@ -203,10 +203,7 @@ void main() {
     });
 
     testWidgets('with a mouse, dragging starts right away', (tester) async {
-      await pumpPlanner(
-        tester,
-        theme: lightTheme.copyWith(platform: TargetPlatform.linux),
-      );
+      await pumpPlanner(tester);
 
       final gesture = await dragTo(
         tester,
@@ -218,6 +215,56 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(repository.updates.single.changes.day, CalendarDay(2026, 11, 17));
+    });
+
+    testWidgets('a finger swipe scrolls, also on a desktop platform', (
+      tester,
+    ) async {
+      // A laptop with a touch screen.
+      await pumpPlanner(
+        tester,
+        theme: lightTheme.copyWith(platform: TargetPlatform.windows),
+      );
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Linsen-Bolognese')),
+      );
+      await gesture.moveTo(tester.getCenter(find.text('Di')));
+      await tester.pump();
+      expect(find.text('Hier ablegen'), findsNothing);
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(repository.updates, isEmpty);
+    });
+
+    testWidgets('a meal being moved can\'t be changed again meanwhile', (
+      tester,
+    ) async {
+      final gate = repository.gate = Completer<void>();
+      await pumpPlanner(tester);
+
+      final gesture = await dragTo(tester, 'Linsen-Bolognese', 'Di');
+      await gesture.up();
+      await tester.pump();
+      await tester.pump();
+
+      final menu = tester.widget<PopupMenuButton<Object?>>(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is PopupMenuButton &&
+              widget.tooltip == 'Optionen für Linsen-Bolognese',
+        ),
+      );
+      expect(menu.enabled, isFalse);
+      final again = await dragTo(tester, 'Linsen-Bolognese', 'Mi');
+      expect(find.text('Hier ablegen'), findsNothing);
+      await again.up();
+
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(repository.updates, hasLength(1));
+      expect(dayOf(tester, find.text('Linsen-Bolognese')), 'Di');
     });
   });
 
@@ -319,6 +366,22 @@ void main() {
       );
     });
 
+    testWidgets('picked servings are saved even if they look the same', (
+      tester,
+    ) async {
+      repository.plans[0] = repository.plans[0].copyWith(servings: 2.5);
+      await pumpPlanner(tester);
+
+      await openMenu(tester, 'Linsen-Bolognese');
+      await tap(tester, find.text('Bearbeiten'));
+      // 2.5 shows as 3.
+      await tap(tester, find.byTooltip('Weniger Portionen'));
+      await tap(tester, find.byTooltip('Mehr Portionen'));
+      await tap(tester, find.text('Speichern'));
+
+      expect(repository.updates.single.changes, MealPlanChanges(servings: 3));
+    });
+
     testWidgets('a failed save keeps the sheet open', (tester) async {
       repository.updateFailure = const ServerFailure(statusCode: 500);
       await pumpPlanner(tester);
@@ -401,6 +464,31 @@ void main() {
 
       expect(find.textContaining('Nicht gelöscht.'), findsOneWidget);
       expect(find.text('Linsen-Bolognese'), findsOneWidget);
+    });
+
+    testWidgets('hides the meal at once, back if deleting fails', (
+      tester,
+    ) async {
+      final gate = repository.gate = Completer<void>();
+      repository.deleteFailure = const ServerFailure(statusCode: 500);
+      await pumpPlanner(tester);
+
+      await openMenu(tester, 'Linsen-Bolognese');
+      await tap(tester, find.text('Löschen'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('Löschen'),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+      expect(find.text('Linsen-Bolognese'), findsNothing);
+
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(find.text('Linsen-Bolognese'), findsOneWidget);
+      expect(find.textContaining('Nicht gelöscht.'), findsOneWidget);
     });
   });
 

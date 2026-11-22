@@ -83,13 +83,10 @@ class _EditPlanSheetState extends ConsumerState<EditPlanSheet> {
   late CalendarDay _day = widget.plan.fromDay;
   late MealType _mealType = widget.plan.mealType;
 
-  /// Tandoor's servings may have decimals; they stay as they are unless the
-  /// user changes them.
-  late final int _initialServings = widget.plan.servings.round().clamp(
-    1,
-    maxPlanServings,
-  );
-  late int _servings = _initialServings;
+  /// Tandoor's servings may have decimals; they are shown rounded and stay
+  /// as they are unless the user picks others.
+  late int _servings = widget.plan.servings.round().clamp(1, maxPlanServings);
+  bool _servingsPicked = false;
 
   bool _saving = false;
   String? _error;
@@ -99,9 +96,9 @@ class _EditPlanSheetState extends ConsumerState<EditPlanSheet> {
     final plan = widget.plan;
     final day = _day == plan.fromDay ? null : _day;
     final mealType = _mealType.id == plan.mealType.id ? null : _mealType;
-    final servings = _servings == _initialServings
-        ? null
-        : _servings.toDouble();
+    final servings = _servingsPicked && _servings != plan.servings
+        ? _servings.toDouble()
+        : null;
     if (day == null && mealType == null && servings == null) return null;
     return MealPlanChanges(day: day, mealType: mealType, servings: servings);
   }
@@ -185,7 +182,10 @@ class _EditPlanSheetState extends ConsumerState<EditPlanSheet> {
               label: servingsText.isEmpty
                   ? LocaleFormat.of(context).integer(_servings)
                   : servingsLabel(context, _servings, servingsText),
-              onChanged: (value) => setState(() => _servings = value),
+              onChanged: (value) => setState(() {
+                _servings = value;
+                _servingsPicked = true;
+              }),
             ),
           ],
         ),
@@ -254,8 +254,13 @@ class _MovePlanSheetState extends ConsumerState<MovePlanSheet> {
 
 /// Asks "Mahlzeit löschen?", saying that it goes for the whole household
 /// and, for a plan on the shopping list, that its ingredients go with it.
-/// Deletes it if the user agrees; a snackbar says how it went.
-Future<void> confirmAndDeletePlan(BuildContext context, MealPlan plan) async {
+/// Deletes it if the user agrees, hiding it at once ([PendingPlans]; [shown]
+/// is the week on screen); a snackbar says how it went.
+Future<void> confirmAndDeletePlan(
+  BuildContext context,
+  MealPlan plan, {
+  required CalendarDay shown,
+}) async {
   final l10n = context.l10n;
   final messenger = ScaffoldMessenger.of(context);
   final container = ProviderScope.containerOf(context, listen: false);
@@ -293,13 +298,9 @@ Future<void> confirmAndDeletePlan(BuildContext context, MealPlan plan) async {
     );
     return;
   }
-  Failure? failure;
-  try {
-    await container.read(mealPlanRepositoryProvider).delete(plan.id);
-  } on Failure catch (e) {
-    failure = e;
-  }
-  container.invalidate(weekPlansProvider);
+  final failure = await container
+      .read(pendingPlansProvider.notifier)
+      .delete(plan, shown: shown);
   showPlannerMessage(
     messenger,
     (context) => switch (failure) {

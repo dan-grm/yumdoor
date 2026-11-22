@@ -191,61 +191,69 @@ final class PlannerPeopleProvider
 
 String _$plannerPeopleHash() => r'a08951f3bf4d82aebc0c6a486ed7ca8e73307cf9';
 
-/// Meals being moved to another day, by id, as they will be once saved. The
-/// planner shows them there right away (see [PlanMoves.move]).
+/// Meals being moved or deleted, by id: as they will be once saved, `null`
+/// for one being deleted. The planner shows the change right away and offers
+/// nothing more for these meals until it is settled, so changes of one meal
+/// never overlap.
 
-@ProviderFor(PlanMoves)
-final planMovesProvider = PlanMovesProvider._();
+@ProviderFor(PendingPlans)
+final pendingPlansProvider = PendingPlansProvider._();
 
-/// Meals being moved to another day, by id, as they will be once saved. The
-/// planner shows them there right away (see [PlanMoves.move]).
-final class PlanMovesProvider
-    extends $NotifierProvider<PlanMoves, Map<int, MealPlan>> {
-  /// Meals being moved to another day, by id, as they will be once saved. The
-  /// planner shows them there right away (see [PlanMoves.move]).
-  PlanMovesProvider._()
+/// Meals being moved or deleted, by id: as they will be once saved, `null`
+/// for one being deleted. The planner shows the change right away and offers
+/// nothing more for these meals until it is settled, so changes of one meal
+/// never overlap.
+final class PendingPlansProvider
+    extends $NotifierProvider<PendingPlans, Map<int, MealPlan?>> {
+  /// Meals being moved or deleted, by id: as they will be once saved, `null`
+  /// for one being deleted. The planner shows the change right away and offers
+  /// nothing more for these meals until it is settled, so changes of one meal
+  /// never overlap.
+  PendingPlansProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'planMovesProvider',
-        isAutoDispose: false,
+        name: r'pendingPlansProvider',
+        isAutoDispose: true,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$planMovesHash();
+  String debugGetCreateSourceHash() => _$pendingPlansHash();
 
   @$internal
   @override
-  PlanMoves create() => PlanMoves();
+  PendingPlans create() => PendingPlans();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(Map<int, MealPlan> value) {
+  Override overrideWithValue(Map<int, MealPlan?> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<Map<int, MealPlan>>(value),
+      providerOverride: $SyncValueProvider<Map<int, MealPlan?>>(value),
     );
   }
 }
 
-String _$planMovesHash() => r'aae5af8013e97b83f6998086a42b02a9fb202821';
+String _$pendingPlansHash() => r'5e3861869634f7074dd1c2e4905113e264b0e28e';
 
-/// Meals being moved to another day, by id, as they will be once saved. The
-/// planner shows them there right away (see [PlanMoves.move]).
+/// Meals being moved or deleted, by id: as they will be once saved, `null`
+/// for one being deleted. The planner shows the change right away and offers
+/// nothing more for these meals until it is settled, so changes of one meal
+/// never overlap.
 
-abstract class _$PlanMoves extends $Notifier<Map<int, MealPlan>> {
-  Map<int, MealPlan> build();
+abstract class _$PendingPlans extends $Notifier<Map<int, MealPlan?>> {
+  Map<int, MealPlan?> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref as $Ref<Map<int, MealPlan>, Map<int, MealPlan>>;
+    final ref = this.ref as $Ref<Map<int, MealPlan?>, Map<int, MealPlan?>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<Map<int, MealPlan>, Map<int, MealPlan>>,
-              Map<int, MealPlan>,
+              AnyNotifier<Map<int, MealPlan?>, Map<int, MealPlan?>>,
+              Map<int, MealPlan?>,
               Object?,
               Object?
             >;
