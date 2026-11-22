@@ -352,35 +352,42 @@ class _DaysState extends State<_Days> {
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: t.sizeWide),
-          child: ListView(
-            key: _listKey,
-            controller: _controller,
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(t.space5, 0, t.space5, t.space5),
-            children: [
-              if (plans.isEmpty)
-                Padding(
-                  padding: EdgeInsets.only(bottom: t.space3),
-                  child: Text(
-                    l10n.planEmptyWeek,
-                    style: t.body.copyWith(color: t.inkMuted),
+          // Follows the finger from here, not from the dragged card: the
+          // list disposes rows that scroll far enough away, that one too.
+          child: Listener(
+            onPointerMove: (event) => _autoScroll.update(event.position),
+            onPointerUp: (_) => _autoScroll.stop(),
+            onPointerCancel: (_) => _autoScroll.stop(),
+            child: ListView(
+              key: _listKey,
+              controller: _controller,
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(t.space5, 0, t.space5, t.space5),
+              children: [
+                if (plans.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: t.space3),
+                    child: Text(
+                      l10n.planEmptyWeek,
+                      style: t.body.copyWith(color: t.inkMuted),
+                    ),
                   ),
-                ),
-              for (var i = 0; i < daysInWeek; i++)
-                Padding(
-                  padding: EdgeInsets.only(bottom: t.space2),
-                  child: _DayRow(
-                    day: start.addDays(i),
-                    isToday: start.addDays(i) == today,
-                    plans: plansOnDay(plans, start.addDays(i)),
-                    me: me,
-                    names: names,
-                    actions: actions,
-                    pending: pending,
-                    autoScroll: _autoScroll,
+                for (var i = 0; i < daysInWeek; i++)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: t.space2),
+                    child: _DayRow(
+                      day: start.addDays(i),
+                      isToday: start.addDays(i) == today,
+                      plans: plansOnDay(plans, start.addDays(i)),
+                      me: me,
+                      names: names,
+                      actions: actions,
+                      pending: pending,
+                      autoScroll: _autoScroll,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -390,6 +397,9 @@ class _DaysState extends State<_Days> {
 
 /// Scrolls the planner while a dragged plan is held near its top or bottom
 /// edge, so that every day can be reached: a drag can't scroll by itself.
+///
+/// [start] it when a drag starts; the list's pointer events then [update] it
+/// until the pointer is lifted ([stop]).
 class _AutoScroll {
   _AutoScroll(this._controller, this._listKey);
 
@@ -402,9 +412,14 @@ class _AutoScroll {
 
   Timer? _timer;
   double _speed = 0;
+  bool _dragging = false;
 
-  /// The dragged plan is at [position] (global).
+  /// A plan is being dragged.
+  void start() => _dragging = true;
+
+  /// The pointer is at [position] (global).
   void update(Offset position) {
+    if (!_dragging) return;
     final box = _listKey.currentContext?.findRenderObject();
     if (box is! RenderBox || !box.hasSize) return;
     final y = box.globalToLocal(position).dy;
@@ -413,7 +428,11 @@ class _AutoScroll {
         : y > box.size.height - edge
         ? step
         : 0;
-    if (_speed == 0) return stop();
+    if (_speed == 0) {
+      _timer?.cancel();
+      _timer = null;
+      return;
+    }
     _timer ??= Timer.periodic(const Duration(milliseconds: 16), (_) {
       if (!_controller.hasClients) return stop();
       final scroll = _controller.position;
@@ -427,6 +446,7 @@ class _AutoScroll {
 
   /// The drag ended.
   void stop() {
+    _dragging = false;
     _timer?.cancel();
     _timer = null;
   }
@@ -529,6 +549,7 @@ class _DayRow extends StatelessWidget {
                         for (final (i, plan) in plans.indexed) ...[
                           if (i > 0) SizedBox(height: t.space2),
                           _PlanCard(
+                            key: ValueKey(plan.id),
                             plan: plan,
                             day: day,
                             plannedBy: me == null || plan.createdBy == me
@@ -654,7 +675,7 @@ class _PointerDraggable<T extends Object> extends Draggable<T> {
     super.data,
     super.childWhenDragging,
     super.maxSimultaneousDrags,
-    super.onDragUpdate,
+    super.onDragStarted,
     super.onDragEnd,
   });
 
@@ -679,7 +700,7 @@ class _TouchDraggable<T extends Object> extends LongPressDraggable<T> {
     super.data,
     super.childWhenDragging,
     super.maxSimultaneousDrags,
-    super.onDragUpdate,
+    super.onDragStarted,
     super.onDragEnd,
   });
 
@@ -706,6 +727,7 @@ class _TouchDraggable<T extends Object> extends LongPressDraggable<T> {
 /// Unless [actions] is `null` (offline), it can be dragged to another day.
 class _PlanCard extends StatelessWidget {
   const _PlanCard({
+    super.key,
     required this.plan,
     required this.day,
     this.plannedBy,
@@ -747,15 +769,14 @@ class _PlanCard extends StatelessWidget {
           feedback: feedback,
           childWhenDragging: placeholder,
           maxSimultaneousDrags: drags,
-          onDragUpdate: (details) => autoScroll.update(details.globalPosition),
+          onDragStarted: autoScroll.start,
           onDragEnd: (_) => autoScroll.stop(),
           child: _PointerDraggable<_PlanDrag>(
             data: data,
             feedback: feedback,
             childWhenDragging: placeholder,
             maxSimultaneousDrags: drags,
-            onDragUpdate: (details) =>
-                autoScroll.update(details.globalPosition),
+            onDragStarted: autoScroll.start,
             onDragEnd: (_) => autoScroll.stop(),
             child: card,
           ),

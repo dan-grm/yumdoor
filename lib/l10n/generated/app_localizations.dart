@@ -2419,6 +2419,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Nicht gelöscht. {reason}'**
   String planDeleteFailed(String reason);
+
+  /// Servings with decimals in the recipe's own word for servings, e.g. '2,5 Stück'.
+  ///
+  /// In de, this message translates to:
+  /// **'{servings} {unit}'**
+  String planServingsCustom(String servings, String unit);
 }
 
 class _AppLocalizationsDelegate

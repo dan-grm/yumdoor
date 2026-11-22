@@ -437,6 +437,18 @@ void main() {
       expect(repository.updates.single.changes, MealPlanChanges(servings: 2));
     });
 
+    testWidgets('1,5 servings can go down to 1', (tester) async {
+      repository.plans[0] = repository.plans[0].copyWith(servings: 1.5);
+      await pumpPlanner(tester);
+
+      await openMenu(tester, 'Linsen-Bolognese');
+      await tap(tester, find.text('Bearbeiten'));
+      await tap(tester, find.byTooltip('Weniger Portionen'));
+      await tap(tester, find.text('Speichern'));
+
+      expect(repository.updates.single.changes, MealPlanChanges(servings: 1));
+    });
+
     testWidgets('servings with decimals stay unless changed', (tester) async {
       repository.plans[0] = repository.plans[0].copyWith(servings: 2.5);
       await pumpPlanner(tester);

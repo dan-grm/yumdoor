@@ -155,6 +155,14 @@ class _EditPlanSheetState extends ConsumerState<EditPlanSheet> {
     final mealTypes = ref.watch(mealTypesProvider);
     final servingsText = plan.recipe?.servingsText.trim() ?? '';
     final changes = _changes;
+    // Changed elsewhere meanwhile; the menu that opened the sheet is off.
+    final busy =
+        !_saving && ref.watch(pendingPlansProvider).containsKey(plan.id);
+    final pickerServings =
+        (_servings == _servings.roundToDouble()
+                ? _servings.round()
+                : _servings.ceil())
+            .clamp(1, maxPlanServings);
 
     return _SheetBody(
       saving: _saving,
@@ -162,7 +170,7 @@ class _EditPlanSheetState extends ConsumerState<EditPlanSheet> {
       subtitle: plan.label,
       error: _error,
       submitLabel: l10n.planEditSave,
-      onSubmit: changes == null ? null : () => _save(changes),
+      onSubmit: changes == null || busy ? null : () => _save(changes),
       children: [
         PlanDayPicker(
           day: _day,
@@ -188,17 +196,23 @@ class _EditPlanSheetState extends ConsumerState<EditPlanSheet> {
               ),
             ),
             ServingsPicker(
-              servings: _servings.floor().clamp(1, maxPlanServings),
+              servings: pickerServings,
               max: maxPlanServings,
               label: switch (_servings) {
                 final whole when whole == whole.roundToDouble() =>
                   servingsText.isEmpty
                       ? LocaleFormat.of(context).integer(whole.round())
                       : servingsLabel(context, whole.round(), servingsText),
-                final servings => LocaleFormat.of(context).amount(servings),
+                final servings when servingsText.isEmpty => LocaleFormat.of(
+                  context,
+                ).amount(servings),
+                final servings => l10n.planServingsCustom(
+                  LocaleFormat.of(context).amount(servings),
+                  servingsText,
+                ),
               },
               onChanged: (value) => setState(() {
-                final up = value > _servings.floor();
+                final up = value > pickerServings;
                 _servings = (up ? _servings.floor() + 1 : _servings.ceil() - 1)
                     .clamp(1, maxPlanServings)
                     .toDouble();

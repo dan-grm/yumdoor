@@ -122,6 +122,9 @@ class PendingPlans extends _$PendingPlans {
     if (isPending(plan.id)) {
       throw StateError('A change of meal plan ${plan.id} is pending.');
     }
+    // This build's ref: it is unmounted once a change of server or login
+    // starts over, and then nothing here may touch the new state.
+    final ref = this.ref;
     state = {...state, plan.id: pending};
     void settle() {
       if (ref.mounted) state = {...state}..remove(plan.id);
@@ -129,11 +132,11 @@ class PendingPlans extends _$PendingPlans {
 
     try {
       await save();
-    } on Failure catch (failure) {
+    } on Object catch (error) {
       settle();
-      return failure;
+      if (error is Failure) return error;
+      rethrow;
     }
-    // Not mounted only after a change of server or login.
     if (!ref.mounted) return null;
     ref.invalidate(weekPlansProvider);
     try {

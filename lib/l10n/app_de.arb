@@ -2163,5 +2163,19 @@
         "example": "Der Server hat einen Fehler gemeldet."
       }
     }
+  },
+  "planServingsCustom": "{servings} {unit}",
+  "@planServingsCustom": {
+    "description": "Servings with decimals in the recipe's own word for servings, e.g. '2,5 Stück'.",
+    "placeholders": {
+      "servings": {
+        "type": "String",
+        "example": "2,5"
+      },
+      "unit": {
+        "type": "String",
+        "example": "Stück"
+      }
+    }
   }
 }

@@ -1491,4 +1491,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String planDeleteFailed(String reason) {
     return 'Nicht gelöscht. $reason';
   }
+
+  @override
+  String planServingsCustom(String servings, String unit) {
+    return '$servings $unit';
+  }
 }

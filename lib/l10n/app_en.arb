@@ -386,5 +386,6 @@
   "planDeleteBodyShopping": "“{name}” is removed from the plan for everyone in the household, and its ingredients leave the shopping list.",
   "planDeleteKeep": "Keep",
   "planDeleted": "Removed from the plan.",
-  "planDeleteFailed": "Not deleted. {reason}"
+  "planDeleteFailed": "Not deleted. {reason}",
+  "planServingsCustom": "{servings} {unit}"
 }
