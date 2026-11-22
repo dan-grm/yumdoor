@@ -236,7 +236,7 @@ final class PendingPlansProvider
   }
 }
 
-String _$pendingPlansHash() => r'73fe9b406928f0250194e0a3c8d5d92fb119f525';
+String _$pendingPlansHash() => r'50d5bcd3846c4ae64485134146ff8b3a399b5369';
 
 /// Meals being changed, moved or deleted, by id: as they will be once saved,
 /// `null` for one being deleted. The planner shows the change right away and
