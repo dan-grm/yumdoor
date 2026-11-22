@@ -319,14 +319,16 @@ class _Days extends StatefulWidget {
 }
 
 class _DaysState extends State<_Days> {
-  final _controller = ScrollController();
+  /// Used if there is no [PrimaryScrollController], which the list
+  /// otherwise uses as before (tapping the status bar on iOS scrolls up).
+  final _ownController = ScrollController();
   final _listKey = GlobalKey();
-  late final _autoScroll = _AutoScroll(_controller, _listKey);
+  late final _autoScroll = _AutoScroll(_listKey);
 
   @override
   void dispose() {
     _autoScroll.stop();
-    _controller.dispose();
+    _ownController.dispose();
     super.dispose();
   }
 
@@ -344,7 +346,10 @@ class _DaysState extends State<_Days> {
       :pending,
       :onRefresh,
     ) = widget;
+    final controller =
+        PrimaryScrollController.maybeOf(context) ?? _ownController;
     _autoScroll
+      ..controller = controller
       ..edge = t.sizeTouch
       ..step = t.space2;
     return RefreshIndicator(
@@ -361,7 +366,7 @@ class _DaysState extends State<_Days> {
             onPointerCancel: _autoScroll.lifted,
             child: ListView(
               key: _listKey,
-              controller: _controller,
+              controller: controller,
               physics: const AlwaysScrollableScrollPhysics(),
               padding: EdgeInsets.fromLTRB(t.space5, 0, t.space5, t.space5),
               children: [
@@ -404,10 +409,12 @@ class _DaysState extends State<_Days> {
 /// told the pointer moved (by nothing), so that the day under it, not the
 /// one under it before scrolling, takes the plan.
 class _AutoScroll {
-  _AutoScroll(this._controller, this._listKey);
+  _AutoScroll(this._listKey);
 
-  final ScrollController _controller;
   final GlobalKey _listKey;
+
+  /// The list's.
+  ScrollController? controller;
 
   /// How close to an edge scrolling starts, and how far each frame goes.
   double edge = 0;
@@ -415,18 +422,22 @@ class _AutoScroll {
 
   Timer? _timer;
   double _speed = 0;
-  bool _dragging = false;
 
-  /// The pointer that drags, once it moved, and where it was last.
+  /// The pointer that drags, `null` while nothing is dragged.
+  int? _pointer;
+
+  /// Where [_pointer] last moved.
   PointerMoveEvent? _last;
 
-  /// A plan is being dragged.
-  void start() => _dragging = true;
+  /// A plan is being dragged by [pointer].
+  void start(int pointer) {
+    stop();
+    _pointer = pointer;
+  }
 
   /// A pointer moved.
   void update(PointerMoveEvent event) {
-    if (!_dragging) return;
-    if (_last case final last? when last.pointer != event.pointer) return;
+    if (event.pointer != _pointer || event.synthesized) return;
     _last = event;
     final position = event.position;
     final box = _listKey.currentContext?.findRenderObject();
@@ -443,17 +454,18 @@ class _AutoScroll {
       return;
     }
     _timer ??= Timer.periodic(const Duration(milliseconds: 16), (_) {
-      if (!_controller.hasClients) return stop();
-      final scroll = _controller.position;
+      final controller = this.controller;
+      if (controller == null || !controller.hasClients) return stop();
+      final scroll = controller.position;
       final to = (scroll.pixels + _speed).clamp(
         scroll.minScrollExtent,
         scroll.maxScrollExtent,
       );
       if (to == scroll.pixels) return;
-      _controller.jumpTo(to);
+      controller.jumpTo(to);
       if (_last case final last?) {
         GestureBinding.instance.handlePointerEvent(
-          last.copyWith(delta: Offset.zero),
+          last.copyWith(delta: Offset.zero, synthesized: true),
         );
       }
     });
@@ -461,13 +473,12 @@ class _AutoScroll {
 
   /// A pointer was lifted or cancelled; if it drags, the drag ends.
   void lifted(PointerEvent event) {
-    if (_last case final last? when last.pointer != event.pointer) return;
-    stop();
+    if (event.pointer == _pointer) stop();
   }
 
   /// The drag ended.
   void stop() {
-    _dragging = false;
+    _pointer = null;
     _last = null;
     _timer?.cancel();
     _timer = null;
@@ -689,27 +700,84 @@ class _DropHere extends StatelessWidget {
   }
 }
 
-/// A [Draggable] for a mouse or trackpad: dragging starts right away.
+/// Tells which pointer started a drag: [_PlanDraggable]'s recognizers call
+/// it with the pointer before the drag starts.
+typedef _DragPointerCallback = void Function(int pointer);
+
+/// Wraps [onStart] so that [onPointer] learns the pointer of a drag first.
+/// [pointers] maps where pointers went down to their ids; a drag starts at
+/// the position its pointer went down.
+GestureMultiDragStartCallback _reportingPointer(
+  GestureMultiDragStartCallback onStart,
+  Map<Offset, int> pointers,
+  _DragPointerCallback onPointer,
+) => (position) {
+  if (pointers.remove(position) case final pointer?) onPointer(pointer);
+  return onStart(position);
+};
+
+/// A [Draggable] for a mouse or trackpad: dragging starts once the pointer
+/// moved as far as a finger must, so that a click with a little wobble stays
+/// a click.
 class _PointerDraggable<T extends Object> extends Draggable<T> {
   const _PointerDraggable({
     required super.child,
     required super.feedback,
+    required this.onPointer,
     super.data,
     super.childWhenDragging,
     super.maxSimultaneousDrags,
-    super.onDragStarted,
     super.onDragEnd,
   });
+
+  final _DragPointerCallback onPointer;
 
   @override
   MultiDragGestureRecognizer createRecognizer(
     GestureMultiDragStartCallback onStart,
-  ) => ImmediateMultiDragGestureRecognizer(
-    supportedDevices: const {
-      PointerDeviceKind.mouse,
-      PointerDeviceKind.trackpad,
-    },
-  )..onStart = onStart;
+  ) {
+    final pointers = <Offset, int>{};
+    return _SlopDragRecognizer(pointers)
+      ..onStart = _reportingPointer(onStart, pointers, onPointer);
+  }
+}
+
+class _SlopDragRecognizer extends MultiDragGestureRecognizer {
+  _SlopDragRecognizer(this._pointers)
+    : super(
+        debugOwner: null,
+        supportedDevices: const {
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.trackpad,
+        },
+      );
+
+  final Map<Offset, int> _pointers;
+
+  @override
+  MultiDragPointerState createNewPointerState(PointerDownEvent event) {
+    _pointers[event.position] = event.pointer;
+    return _SlopPointerState(event.position, event.kind, gestureSettings);
+  }
+
+  @override
+  String get debugDescription => 'multidrag after touch slop';
+}
+
+class _SlopPointerState extends MultiDragPointerState {
+  _SlopPointerState(super.initialPosition, super.kind, super.gestureSettings);
+
+  @override
+  void checkForResolutionAfterMove() {
+    if (pendingDelta!.distance > kTouchSlop) {
+      resolve(GestureDisposition.accepted);
+    }
+  }
+
+  @override
+  void accepted(GestureMultiDragStartCallback starter) {
+    starter(initialPosition);
+  }
 }
 
 /// A [Draggable] for fingers and pens: dragging starts after a long press,
@@ -719,30 +787,51 @@ class _TouchDraggable<T extends Object> extends LongPressDraggable<T> {
   const _TouchDraggable({
     required super.child,
     required super.feedback,
+    required this.onPointer,
     super.data,
     super.childWhenDragging,
     super.maxSimultaneousDrags,
-    super.onDragStarted,
     super.onDragEnd,
   });
+
+  final _DragPointerCallback onPointer;
 
   @override
   DelayedMultiDragGestureRecognizer createRecognizer(
     GestureMultiDragStartCallback onStart,
-  ) =>
-      DelayedMultiDragGestureRecognizer(
-          supportedDevices: const {
-            PointerDeviceKind.touch,
-            PointerDeviceKind.stylus,
-            PointerDeviceKind.invertedStylus,
-            PointerDeviceKind.unknown,
-          },
-        )
-        ..onStart = (position) {
+  ) {
+    final pointers = <Offset, int>{};
+    return _ReportingDelayedRecognizer(pointers)
+      ..onStart = _reportingPointer(
+        (position) {
           final drag = onStart(position);
           if (drag != null) HapticFeedback.selectionClick();
           return drag;
-        };
+        },
+        pointers,
+        onPointer,
+      );
+  }
+}
+
+class _ReportingDelayedRecognizer extends DelayedMultiDragGestureRecognizer {
+  _ReportingDelayedRecognizer(this._pointers)
+    : super(
+        supportedDevices: const {
+          PointerDeviceKind.touch,
+          PointerDeviceKind.stylus,
+          PointerDeviceKind.invertedStylus,
+          PointerDeviceKind.unknown,
+        },
+      );
+
+  final Map<Offset, int> _pointers;
+
+  @override
+  MultiDragPointerState createNewPointerState(PointerDownEvent event) {
+    _pointers[event.position] = event.pointer;
+    return super.createNewPointerState(event);
+  }
 }
 
 /// One planned meal on [day], with its menu. Opens its recipe if it has one.
@@ -791,14 +880,14 @@ class _PlanCard extends StatelessWidget {
           feedback: feedback,
           childWhenDragging: placeholder,
           maxSimultaneousDrags: drags,
-          onDragStarted: autoScroll.start,
+          onPointer: autoScroll.start,
           onDragEnd: (_) => autoScroll.stop(),
           child: _PointerDraggable<_PlanDrag>(
             data: data,
             feedback: feedback,
             childWhenDragging: placeholder,
             maxSimultaneousDrags: drags,
-            onDragStarted: autoScroll.start,
+            onPointer: autoScroll.start,
             onDragEnd: (_) => autoScroll.stop(),
             child: card,
           ),

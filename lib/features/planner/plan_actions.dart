@@ -154,8 +154,12 @@ class _EditPlanSheetState extends ConsumerState<EditPlanSheet> {
       return;
     }
     onSaved();
-    if (mounted && (ModalRoute.of(context)?.isCurrent ?? false)) {
+    if (!mounted) return;
+    if (ModalRoute.of(context)?.isCurrent ?? false) {
       Navigator.of(context).pop();
+    } else {
+      // Something is on top; the sheet stays, usable again.
+      setState(() => _saving = false);
     }
   }
 

@@ -270,6 +270,24 @@ void main() {
       expect(repository.updates.single.changes.day, CalendarDay(2026, 11, 17));
     });
 
+    testWidgets('a mouse click that wobbles a little doesn\'t drag', (
+      tester,
+    ) async {
+      await pumpPlanner(tester);
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Linsen-Bolognese')),
+        kind: PointerDeviceKind.mouse,
+      );
+      await gesture.moveBy(const Offset(3, 2));
+      await tester.pump();
+      expect(find.text('Linsen-Bolognese'), findsOneWidget);
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      expect(repository.updates, isEmpty);
+    });
+
     testWidgets('a finger swipe scrolls, also on a desktop platform', (
       tester,
     ) async {
