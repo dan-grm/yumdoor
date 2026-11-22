@@ -34,14 +34,12 @@ void showPlannerMessage(
   messenger.showSnackBar(
     SnackBar(
       content: Text(message(messenger.context)),
-      duration: failed ? _failureDuration : _duration,
+      duration: failed
+          ? plannerFailureSnackBarDuration
+          : plannerSnackBarDuration,
     ),
   );
 }
-
-/// Flutter's default for snackbars, and twice that for failures.
-const _duration = Duration(seconds: 4);
-const _failureDuration = Duration(seconds: 8);
 
 /// Opens the [EditPlanSheet] for [plan], from the planner showing the week
 /// from [shown]. Once the changes are saved, a snackbar says so and the
@@ -155,11 +153,13 @@ class _EditPlanSheetState extends ConsumerState<EditPlanSheet> {
     }
     onSaved();
     if (!mounted) return;
-    if (ModalRoute.of(context)?.isCurrent ?? false) {
+    final route = ModalRoute.of(context);
+    if (route == null) return;
+    if (route.isCurrent) {
       Navigator.of(context).pop();
-    } else {
-      // Something is on top; the sheet stays, usable again.
-      setState(() => _saving = false);
+    } else if (route.isActive) {
+      // Something is on top of it; it goes all the same.
+      Navigator.of(context).removeRoute(route);
     }
   }
 

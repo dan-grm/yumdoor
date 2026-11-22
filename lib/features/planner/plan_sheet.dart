@@ -26,10 +26,10 @@ import '../recipe/recipe_providers.dart';
 import 'planner_providers.dart';
 import 'week_labels.dart';
 
-/// How long the confirmation stays: Flutter's default, and twice that when
-/// the shopping list couldn't be filled, to read why.
-const _snackBarDuration = Duration(seconds: 4);
-const _failureSnackBarDuration = Duration(seconds: 8);
+/// How long the planner's snackbars stay: Flutter's default, and twice that
+/// for failures, to read why.
+const plannerSnackBarDuration = Duration(seconds: 4);
+const plannerFailureSnackBarDuration = Duration(seconds: 8);
 
 /// Opens the [PlanSheet] for the recipe [recipeId] and, once a plan is
 /// saved, confirms it in a snackbar with a way to the planner. Completes
@@ -76,8 +76,8 @@ Future<void> showPlanSheet(
         // With an action, a snackbar would stay until it is closed.
         persist: false,
         duration: failure == null
-            ? _snackBarDuration
-            : _failureSnackBarDuration,
+            ? plannerSnackBarDuration
+            : plannerFailureSnackBarDuration,
         action: SnackBarAction(
           label: l10n.planSavedOpen,
           onPressed: () => router.go(
@@ -96,7 +96,7 @@ Future<void> showPlanSheet(
         content: Text(
           context.l10n.planSheetSaveFailed(failureMessage(context, failure)),
         ),
-        duration: _failureSnackBarDuration,
+        duration: plannerFailureSnackBarDuration,
       ),
     );
   }

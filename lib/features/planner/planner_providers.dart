@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../app/platform_providers.dart';
@@ -140,7 +141,11 @@ class PendingPlans extends _$PendingPlans {
       if (pending != null) failure = notFound;
     } on Failure catch (error) {
       failure = error;
-    } on Object catch (error) {
+    } on Object catch (error, stack) {
+      // A bug rather than the server; reported, and the plan goes back.
+      FlutterError.reportError(
+        FlutterErrorDetails(exception: error, stack: stack, library: 'planner'),
+      );
       failure = ServerFailure(cause: error);
     }
     if (!ref.mounted) return failure;

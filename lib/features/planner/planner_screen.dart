@@ -461,7 +461,12 @@ class _AutoScroll {
         scroll.minScrollExtent,
         scroll.maxScrollExtent,
       );
-      if (to == scroll.pixels) return;
+      if (to == scroll.pixels) {
+        // At the end; the next move starts it again.
+        _timer?.cancel();
+        _timer = null;
+        return;
+      }
       controller.jumpTo(to);
       if (_last case final last?) {
         GestureBinding.instance.handlePointerEvent(
@@ -590,6 +595,7 @@ class _DayRow extends StatelessWidget {
                                 : names[plan.createdBy] ?? '',
                             actions: pending.contains(plan.id) ? null : actions,
                             autoScroll: autoScroll,
+                            offline: actions == null,
                           ),
                         ],
                       ],
@@ -712,8 +718,10 @@ GestureMultiDragStartCallback _reportingPointer(
   Map<Offset, int> pointers,
   _DragPointerCallback onPointer,
 ) => (position) {
-  if (pointers.remove(position) case final pointer?) onPointer(pointer);
-  return onStart(position);
+  final pointer = pointers.remove(position);
+  final drag = onStart(position);
+  if (drag != null && pointer != null) onPointer(pointer);
+  return drag;
 };
 
 /// A [Draggable] for a mouse or trackpad: dragging starts once the pointer
@@ -756,6 +764,8 @@ class _SlopDragRecognizer extends MultiDragGestureRecognizer {
 
   @override
   MultiDragPointerState createNewPointerState(PointerDownEvent event) {
+    // Taps and swipes leave theirs behind; a drag starts from the latest.
+    if (_pointers.length > 8) _pointers.clear();
     _pointers[event.position] = event.pointer;
     return _SlopPointerState(event.position, event.kind, gestureSettings);
   }
@@ -829,13 +839,16 @@ class _ReportingDelayedRecognizer extends DelayedMultiDragGestureRecognizer {
 
   @override
   MultiDragPointerState createNewPointerState(PointerDownEvent event) {
+    // Taps and swipes leave theirs behind; a drag starts from the latest.
+    if (_pointers.length > 8) _pointers.clear();
     _pointers[event.position] = event.pointer;
     return super.createNewPointerState(event);
   }
 }
 
 /// One planned meal on [day], with its menu. Opens its recipe if it has one.
-/// Unless [actions] is `null` (offline), it can be dragged to another day.
+/// Unless [actions] is `null` (offline, or a change of it is pending), it can
+/// be dragged to another day.
 class _PlanCard extends StatelessWidget {
   const _PlanCard({
     super.key,
@@ -844,11 +857,15 @@ class _PlanCard extends StatelessWidget {
     this.plannedBy,
     required this.actions,
     required this.autoScroll,
+    required this.offline,
   });
 
   final MealPlan plan;
   final CalendarDay day;
   final _AutoScroll autoScroll;
+
+  /// Offline, a long press says why the plan can't be moved.
+  final bool offline;
 
   /// The name of the household member who planned it, empty if unknown;
   /// `null` for the current user's own plans.
@@ -857,7 +874,14 @@ class _PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final card = _PlanTile(plan: plan, plannedBy: plannedBy, actions: actions);
+    final card = GestureDetector(
+      onLongPress: offline
+          ? () => ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(context.l10n.offlineWriteDisabled)),
+            )
+          : null,
+      child: _PlanTile(plan: plan, plannedBy: plannedBy, actions: actions),
+    );
     // The same widgets with and without actions, so the card keeps its state
     // (and its image) when a change of it is pending.
     final drags = actions == null ? 0 : 1;

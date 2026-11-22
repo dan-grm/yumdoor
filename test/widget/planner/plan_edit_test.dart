@@ -655,6 +655,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(repository.updates, isEmpty);
       expect(dayOf(tester, find.text('Linsen-Bolognese')), 'Mo');
+      // The long press says why.
+      expect(
+        find.descendant(
+          of: find.byType(SnackBar),
+          matching: find.textContaining('Offline kannst du nichts ändern.'),
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('saving an edit is disabled with an explanation', (
