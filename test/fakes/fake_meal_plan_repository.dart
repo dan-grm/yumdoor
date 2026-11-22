@@ -10,19 +10,29 @@ import 'package:yumdoor/domain/repositories/meal_plan_repository.dart';
 typedef ListCall = ({CalendarDay from, CalendarDay to});
 
 /// [MealPlanRepository] for tests, answering [list] from [plans]. Set
-/// [failure] to make [list] throw it, [createFailure] for [create].
+/// [failure] to make [list] throw it, [createFailure] for [create],
+/// [updateFailure] for [update] and [deleteFailure] for [delete].
 class FakeMealPlanRepository implements MealPlanRepository {
   FakeMealPlanRepository(this.plans, {this.me = 1});
 
   final List<MealPlan> plans;
   Failure? failure;
   Failure? createFailure;
+  Failure? updateFailure;
+  Failure? deleteFailure;
 
   /// The user [create] saves plans for.
   final int me;
 
-  /// While set, [create] waits for it before answering.
+  /// While set, [create], [update] and [delete] wait for it before
+  /// answering.
   Completer<void>? gate;
+
+  /// The [update] calls received, by plan id.
+  final updates = <({int id, MealPlanChanges changes})>[];
+
+  /// The ids [delete] received.
+  final deleted = <int>[];
 
   /// The plans [create] received.
   final created = <NewMealPlan>[];
@@ -63,9 +73,30 @@ class FakeMealPlanRepository implements MealPlanRepository {
   }
 
   @override
-  Future<MealPlan> update(int id, MealPlanChanges changes) =>
-      throw UnimplementedError();
+  Future<MealPlan> update(int id, MealPlanChanges changes) async {
+    if (gate case final gate?) await gate.future;
+    if (updateFailure case final failure?) throw failure;
+    updates.add((id: id, changes: changes));
+    final index = plans.indexWhere((plan) => plan.id == id);
+    if (index < 0) throw const NotFoundFailure();
+    final plan = plans[index];
+    final from = changes.day ?? plan.fromDay;
+    final saved = plan.copyWith(
+      fromDay: from,
+      toDay: from.addDays(plan.days - 1),
+      mealType: changes.mealType ?? plan.mealType,
+      servings: changes.servings ?? plan.servings,
+      note: changes.note ?? plan.note,
+    );
+    plans[index] = saved;
+    return saved;
+  }
 
   @override
-  Future<void> delete(int id) => throw UnimplementedError();
+  Future<void> delete(int id) async {
+    if (gate case final gate?) await gate.future;
+    if (deleteFailure case final failure?) throw failure;
+    deleted.add(id);
+    plans.removeWhere((plan) => plan.id == id);
+  }
 }

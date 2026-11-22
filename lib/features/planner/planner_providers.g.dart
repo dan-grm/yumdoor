@@ -191,6 +191,68 @@ final class PlannerPeopleProvider
 
 String _$plannerPeopleHash() => r'a08951f3bf4d82aebc0c6a486ed7ca8e73307cf9';
 
+/// Meals being moved to another day, by id, as they will be once saved. The
+/// planner shows them there right away (see [PlanMoves.move]).
+
+@ProviderFor(PlanMoves)
+final planMovesProvider = PlanMovesProvider._();
+
+/// Meals being moved to another day, by id, as they will be once saved. The
+/// planner shows them there right away (see [PlanMoves.move]).
+final class PlanMovesProvider
+    extends $NotifierProvider<PlanMoves, Map<int, MealPlan>> {
+  /// Meals being moved to another day, by id, as they will be once saved. The
+  /// planner shows them there right away (see [PlanMoves.move]).
+  PlanMovesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'planMovesProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$planMovesHash();
+
+  @$internal
+  @override
+  PlanMoves create() => PlanMoves();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Map<int, MealPlan> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Map<int, MealPlan>>(value),
+    );
+  }
+}
+
+String _$planMovesHash() => r'aae5af8013e97b83f6998086a42b02a9fb202821';
+
+/// Meals being moved to another day, by id, as they will be once saved. The
+/// planner shows them there right away (see [PlanMoves.move]).
+
+abstract class _$PlanMoves extends $Notifier<Map<int, MealPlan>> {
+  Map<int, MealPlan> build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<Map<int, MealPlan>, Map<int, MealPlan>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<Map<int, MealPlan>, Map<int, MealPlan>>,
+              Map<int, MealPlan>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 /// Whether the planner shows only the meals the current user planned,
 /// remembered on this device.
 

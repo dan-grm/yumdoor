@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../app/platform_providers.dart';
 import '../../app/repository_providers.dart';
+import '../../core/failures.dart';
 import '../../domain/models/calendar_day.dart';
 import '../../domain/models/meal_plan.dart';
 import '../../domain/models/meal_type.dart';
@@ -49,6 +50,57 @@ Future<PlannerPeople> plannerPeople(Ref ref) async {
     me: await me,
     names: {for (final user in list ?? <UserRef>[]) user.id: user.name.trim()},
   );
+}
+
+/// Meals being moved to another day, by id, as they will be once saved. The
+/// planner shows them there right away (see [PlanMoves.move]).
+@Riverpod(keepAlive: true)
+class PlanMoves extends _$PlanMoves {
+  @override
+  Map<int, MealPlan> build() => const {};
+
+  /// Moves [plan] so that it starts on [day], keeping its length, and shows
+  /// it there while it is saved. Once saved, the weeks reload, and the plan
+  /// is shown as loaded when the week from [shown] (the one on screen) is
+  /// back. If saving fails, it goes back to where it was and the failure is
+  /// returned.
+  Future<Failure?> move(
+    MealPlan plan,
+    CalendarDay day, {
+    required CalendarDay shown,
+  }) async {
+    if (day == plan.fromDay) return null;
+    final moved = plan.copyWith(
+      fromDay: day,
+      toDay: day.addDays(plan.days - 1),
+    );
+    state = {...state, plan.id: moved};
+    void settle() {
+      // A later move of the same plan has its own say.
+      if (!ref.mounted || !identical(state[plan.id], moved)) return;
+      state = {...state}..remove(plan.id);
+    }
+
+    try {
+      await ref
+          .read(mealPlanRepositoryProvider)
+          .update(plan.id, MealPlanChanges(day: day));
+    } on Failure catch (failure) {
+      settle();
+      return failure;
+    }
+    if (!ref.mounted) return null;
+    ref.invalidate(weekPlansProvider);
+    // Keeps showing the move until the week it is in has loaded again, so
+    // the plan doesn't jump back meanwhile.
+    try {
+      await ref.read(weekPlansProvider(shown).future);
+    } on Object {
+      // The planner shows the failure.
+    }
+    settle();
+    return null;
+  }
 }
 
 const _onlyMineKey = 'planner.only-mine';

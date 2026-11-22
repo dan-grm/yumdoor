@@ -2035,5 +2035,133 @@
   "planSavedOpen": "Zum Plan",
   "@planSavedOpen": {
     "description": "Snackbar action after planning: opens the planner at that week."
+  },
+  "planMealMenu": "Optionen für {name}",
+  "@planMealMenu": {
+    "description": "Accessible label of the menu button on a planned meal.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Linsen-Bolognese"
+      }
+    }
+  },
+  "planEdit": "Bearbeiten",
+  "@planEdit": {
+    "description": "Menu item of a planned meal: opens the sheet to change its day, meal and servings."
+  },
+  "planMove": "Verschieben",
+  "@planMove": {
+    "description": "Menu item of a planned meal: picks another day for it (the keyboard alternative to dragging)."
+  },
+  "planDelete": "Löschen",
+  "@planDelete": {
+    "description": "Menu item of a planned meal, and the button that confirms deleting it."
+  },
+  "planDropHere": "Hier ablegen",
+  "@planDropHere": {
+    "description": "Shown on a day of the planner while a meal is dragged over it."
+  },
+  "planMoved": "Auf {day} verschoben.",
+  "@planMoved": {
+    "description": "Snackbar after a planned meal was moved to another day.",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Mittwoch, 25. Nov."
+      }
+    }
+  },
+  "planMoveFailed": "Nicht verschoben. {reason}",
+  "@planMoveFailed": {
+    "description": "Snackbar when moving a planned meal failed; the meal is back on its day.",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "Der Server hat einen Fehler gemeldet."
+      }
+    }
+  },
+  "planMoveTitle": "Mahlzeit verschieben",
+  "@planMoveTitle": {
+    "description": "Title of the sheet that moves a planned meal to another day."
+  },
+  "planMoveSubmit": "Auf {day} verschieben",
+  "@planMoveSubmit": {
+    "description": "Button in the move sheet.",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Mittwoch, 25. Nov."
+      }
+    }
+  },
+  "planEditTitle": "Mahlzeit bearbeiten",
+  "@planEditTitle": {
+    "description": "Title of the sheet that changes a planned meal."
+  },
+  "planEditSave": "Speichern",
+  "@planEditSave": {
+    "description": "Button that saves the changes to a planned meal."
+  },
+  "planEditShoppingNote": "Steht auf der Einkaufsliste. Änderst du die Portionen, passen sich die Mengen dort an.",
+  "@planEditShoppingNote": {
+    "description": "Note in the edit sheet for a planned meal whose ingredients are on the shopping list."
+  },
+  "planEditSaved": "Gespeichert.",
+  "@planEditSaved": {
+    "description": "Snackbar after changes to a planned meal were saved."
+  },
+  "planEditFailed": "Nicht gespeichert. {reason}",
+  "@planEditFailed": {
+    "description": "Error when saving the changes to a planned meal failed.",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "Der Server hat einen Fehler gemeldet."
+      }
+    }
+  },
+  "planDeleteTitle": "Mahlzeit löschen?",
+  "@planDeleteTitle": {
+    "description": "Title of the dialog that confirms deleting a planned meal."
+  },
+  "planDeleteBody": "„{name}“ wird für alle im Haushalt aus dem Plan gelöscht.",
+  "@planDeleteBody": {
+    "description": "Body of the dialog that confirms deleting a planned meal.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Linsen-Bolognese"
+      }
+    }
+  },
+  "planDeleteBodyShopping": "„{name}“ wird für alle im Haushalt aus dem Plan gelöscht, und seine Zutaten verschwinden von der Einkaufsliste.",
+  "@planDeleteBodyShopping": {
+    "description": "Body of the dialog that confirms deleting a planned meal whose ingredients are on the shopping list (Tandoor deletes them with it).",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Linsen-Bolognese"
+      }
+    }
+  },
+  "planDeleteKeep": "Behalten",
+  "@planDeleteKeep": {
+    "description": "Button that closes the delete dialog without deleting."
+  },
+  "planDeleted": "Aus dem Plan gelöscht.",
+  "@planDeleted": {
+    "description": "Snackbar after a planned meal was deleted."
+  },
+  "planDeleteFailed": "Nicht gelöscht. {reason}",
+  "@planDeleteFailed": {
+    "description": "Snackbar when deleting a planned meal failed.",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "Der Server hat einen Fehler gemeldet."
+      }
+    }
   }
 }

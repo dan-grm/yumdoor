@@ -1407,4 +1407,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get planSavedOpen => 'Open plan';
+
+  @override
+  String planMealMenu(String name) {
+    return 'Options for $name';
+  }
+
+  @override
+  String get planEdit => 'Edit';
+
+  @override
+  String get planMove => 'Move';
+
+  @override
+  String get planDelete => 'Delete';
+
+  @override
+  String get planDropHere => 'Drop here';
+
+  @override
+  String planMoved(String day) {
+    return 'Moved to $day.';
+  }
+
+  @override
+  String planMoveFailed(String reason) {
+    return 'Not moved. $reason';
+  }
+
+  @override
+  String get planMoveTitle => 'Move meal';
+
+  @override
+  String planMoveSubmit(String day) {
+    return 'Move to $day';
+  }
+
+  @override
+  String get planEditTitle => 'Edit meal';
+
+  @override
+  String get planEditSave => 'Save';
+
+  @override
+  String get planEditShoppingNote =>
+      'It\'s on the shopping list. If you change the servings, the amounts there change with them.';
+
+  @override
+  String get planEditSaved => 'Saved.';
+
+  @override
+  String planEditFailed(String reason) {
+    return 'Not saved. $reason';
+  }
+
+  @override
+  String get planDeleteTitle => 'Delete meal?';
+
+  @override
+  String planDeleteBody(String name) {
+    return '“$name” is removed from the plan for everyone in the household.';
+  }
+
+  @override
+  String planDeleteBodyShopping(String name) {
+    return '“$name” is removed from the plan for everyone in the household, and its ingredients leave the shopping list.';
+  }
+
+  @override
+  String get planDeleteKeep => 'Keep';
+
+  @override
+  String get planDeleted => 'Removed from the plan.';
+
+  @override
+  String planDeleteFailed(String reason) {
+    return 'Not deleted. $reason';
+  }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/offline.dart';
 import '../../app/platform_providers.dart';
 import '../../design/components/buttons.dart';
 import '../../design/components/filter_chips.dart';
@@ -12,13 +13,19 @@ import '../../domain/services/week_plan.dart';
 import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
+import '../common/offline_disabled.dart';
 import '../common/recipe_image.dart';
 import '../shell/app_shell.dart';
+import 'plan_actions.dart';
 import 'planner_providers.dart';
 import 'week_labels.dart';
 
 /// The week planner (mockup 10-wochenplan): the days of one week with their
 /// planned meals, and buttons to browse the weeks.
+///
+/// A meal can be dragged to another day (after a long press on touch
+/// screens), and its menu edits, moves or deletes it. Offline, all of that is
+/// disabled.
 ///
 /// It shows the week of [day], the current week if `null`. Browsing changes
 /// the location ([planLocation]), so going to a day always shows its week,
@@ -52,10 +59,48 @@ class PlannerScreen extends ConsumerWidget {
     }
 
     final plans = ref.watch(weekPlansProvider(start));
+    final moves = ref.watch(planMovesProvider);
+    final offline = ref.watch(isOfflineProvider);
     final onlyMine = ref.watch(plannerOnlyMineProvider);
     final people = ref.watch(plannerPeopleProvider).value;
     final me = people?.me;
     final names = people?.names ?? const <int, String>{};
+    final end = start.addDays(daysInWeek - 1);
+
+    /// Moves [plan] to start on [day], showing it there at once. A failure
+    /// puts it back and says why; with [confirm], so does success.
+    Future<void> move(
+      MealPlan plan,
+      CalendarDay day, {
+      bool confirm = false,
+    }) async {
+      final messenger = ScaffoldMessenger.of(context);
+      final failure = await ref
+          .read(planMovesProvider.notifier)
+          .move(plan, day, shown: start);
+      if (failure == null && !confirm) return;
+      showPlannerMessage(
+        messenger,
+        (context) => switch (failure) {
+          null => context.l10n.planMoved(dayLabel(context, day)),
+          final failure => context.l10n.planMoveFailed(
+            failureMessage(context, failure),
+          ),
+        },
+      );
+    }
+
+    final actions = offline
+        ? null
+        : _PlanActions(
+            move: move,
+            edit: (plan) => showEditPlanSheet(context, plan),
+            pickDay: (plan) async {
+              final day = await showMovePlanSheet(context, plan);
+              if (day != null) await move(plan, day, confirm: true);
+            },
+            delete: (plan) => confirmAndDeletePlan(context, plan),
+          );
 
     return Scaffold(
       body: SafeArea(
@@ -95,9 +140,16 @@ class PlannerScreen extends ConsumerWidget {
                   start: start,
                   today: today,
                   plans: [
-                    for (final plan in value)
-                      if (!onlyMine || me == null || plan.createdBy == me) plan,
+                    for (final loaded in value)
+                      if (moves[loaded.id] ?? loaded case final plan
+                          when (!onlyMine ||
+                                  me == null ||
+                                  plan.createdBy == me) &&
+                              !plan.toDay.isBefore(start) &&
+                              !plan.fromDay.isAfter(end))
+                        plan,
                   ],
+                  actions: actions,
                   me: me,
                   names: names,
                   onRefresh: refresh,
@@ -230,12 +282,16 @@ class _Days extends StatelessWidget {
     required this.plans,
     required this.me,
     required this.names,
+    required this.actions,
     required this.onRefresh,
   });
 
   final CalendarDay start;
   final CalendarDay today;
   final List<MealPlan> plans;
+
+  /// What can be done with the plans, `null` while offline.
+  final _PlanActions? actions;
 
   /// The current user's id and the users' names, to mark the meals of others.
   final int? me;
@@ -273,6 +329,7 @@ class _Days extends StatelessWidget {
                     plans: plansOnDay(plans, start.addDays(i)),
                     me: me,
                     names: names,
+                    actions: actions,
                   ),
                 ),
             ],
@@ -283,6 +340,35 @@ class _Days extends StatelessWidget {
   }
 }
 
+/// What the planner can do with a plan; see [PlannerScreen].
+class _PlanActions {
+  const _PlanActions({
+    required this.move,
+    required this.edit,
+    required this.pickDay,
+    required this.delete,
+  });
+
+  /// Moves the plan to start on the day.
+  final Future<void> Function(MealPlan plan, CalendarDay day) move;
+
+  /// Opens the edit sheet.
+  final void Function(MealPlan plan) edit;
+
+  /// Asks for another day and moves the plan there.
+  final void Function(MealPlan plan) pickDay;
+
+  /// Asks and deletes the plan.
+  final void Function(MealPlan plan) delete;
+}
+
+/// A plan being dragged, from the [day] it was picked up on: a plan of
+/// several days is on each of them.
+typedef _PlanDrag = ({MealPlan plan, CalendarDay day});
+
+/// One day of the planner. While a plan is dragged over it, it says "Hier
+/// ablegen" and takes the plan: the day it was picked up on moves here, and
+/// the rest of a plan of several days moves with it.
 class _DayRow extends StatelessWidget {
   const _DayRow({
     required this.day,
@@ -290,6 +376,7 @@ class _DayRow extends StatelessWidget {
     required this.plans,
     required this.me,
     required this.names,
+    required this.actions,
   });
 
   final CalendarDay day;
@@ -297,9 +384,27 @@ class _DayRow extends StatelessWidget {
   final List<MealPlan> plans;
   final int? me;
   final Map<int, String> names;
+  final _PlanActions? actions;
+
+  /// The first day of the dragged plan if dropped here.
+  CalendarDay _newStart(_PlanDrag drag) =>
+      drag.plan.fromDay.addDays(day.differenceInDays(drag.day));
 
   @override
   Widget build(BuildContext context) {
+    final actions = this.actions;
+    if (actions == null) return _build(context, hovered: false);
+    return DragTarget<_PlanDrag>(
+      onWillAcceptWithDetails: (details) =>
+          _newStart(details.data) != details.data.plan.fromDay,
+      onAcceptWithDetails: (details) =>
+          actions.move(details.data.plan, _newStart(details.data)),
+      builder: (context, candidates, rejected) =>
+          _build(context, hovered: candidates.isNotEmpty),
+    );
+  }
+
+  Widget _build(BuildContext context, {required bool hovered}) {
     final t = context.tokens;
     final l10n = context.l10n;
     final format = LocaleFormat.of(context);
@@ -321,7 +426,7 @@ class _DayRow extends StatelessWidget {
         ),
         SizedBox(width: t.space3),
         Expanded(
-          child: plans.isEmpty
+          child: plans.isEmpty && !hovered
               ? const _EmptyDay()
               : Column(
                   children: [
@@ -329,10 +434,16 @@ class _DayRow extends StatelessWidget {
                       if (i > 0) SizedBox(height: t.space2),
                       _PlanCard(
                         plan: plan,
+                        day: day,
                         plannedBy: me == null || plan.createdBy == me
                             ? null
                             : names[plan.createdBy] ?? '',
+                        actions: actions,
                       ),
+                    ],
+                    if (hovered) ...[
+                      if (plans.isNotEmpty) SizedBox(height: t.space2),
+                      const _DropHere(),
                     ],
                   ],
                 ),
@@ -417,15 +528,111 @@ class _EmptyDay extends StatelessWidget {
   }
 }
 
-/// One planned meal. Opens its recipe if it has one.
+/// Where a dragged plan lands: "Hier ablegen".
+class _DropHere extends StatelessWidget {
+  const _DropHere();
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Container(
+      constraints: BoxConstraints(minHeight: t.sizeTouch + t.space3),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: t.sageSoft,
+        borderRadius: BorderRadius.circular(t.radiusM),
+        border: Border.all(color: t.sage, width: t.space1 / 2),
+      ),
+      child: Text(
+        context.l10n.planDropHere,
+        style: t.label.copyWith(color: t.sage),
+      ),
+    );
+  }
+}
+
+/// Whether drags start with a long press, as on touch screens, so that
+/// swiping still scrolls; with a mouse they start right away.
+bool _dragAfterLongPress(BuildContext context) =>
+    switch (Theme.of(context).platform) {
+      TargetPlatform.android ||
+      TargetPlatform.iOS ||
+      TargetPlatform.fuchsia => true,
+      TargetPlatform.linux ||
+      TargetPlatform.macOS ||
+      TargetPlatform.windows => false,
+    };
+
+/// One planned meal on [day], with its menu. Opens its recipe if it has one.
+/// Unless [actions] is `null` (offline), it can be dragged to another day.
 class _PlanCard extends StatelessWidget {
-  const _PlanCard({required this.plan, this.plannedBy});
+  const _PlanCard({
+    required this.plan,
+    required this.day,
+    this.plannedBy,
+    required this.actions,
+  });
 
   final MealPlan plan;
+  final CalendarDay day;
 
   /// The name of the household member who planned it, empty if unknown;
   /// `null` for the current user's own plans.
   final String? plannedBy;
+  final _PlanActions? actions;
+
+  @override
+  Widget build(BuildContext context) {
+    final card = _PlanTile(plan: plan, plannedBy: plannedBy, actions: actions);
+    if (actions == null) return card;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final _PlanDrag data = (plan: plan, day: day);
+        // In the overlay, as wide as the card.
+        final feedback = SizedBox(
+          width: constraints.maxWidth,
+          child: _PlanTile(
+            plan: plan,
+            plannedBy: plannedBy,
+            actions: actions,
+            lifted: true,
+          ),
+        );
+        final placeholder = Opacity(opacity: 0.4, child: card);
+        return _dragAfterLongPress(context)
+            ? LongPressDraggable<_PlanDrag>(
+                data: data,
+                feedback: feedback,
+                childWhenDragging: placeholder,
+                child: card,
+              )
+            : Draggable<_PlanDrag>(
+                data: data,
+                feedback: feedback,
+                childWhenDragging: placeholder,
+                child: card,
+              );
+      },
+    );
+  }
+}
+
+/// What can be done with a plan, in its menu.
+enum _PlanAction { edit, move, delete }
+
+/// The look of a [_PlanCard]: [lifted] while it is dragged.
+class _PlanTile extends StatelessWidget {
+  const _PlanTile({
+    required this.plan,
+    required this.plannedBy,
+    required this.actions,
+    this.lifted = false,
+  });
+
+  final MealPlan plan;
+  final String? plannedBy;
+  final _PlanActions? actions;
+  final bool lifted;
 
   @override
   Widget build(BuildContext context) {
@@ -443,12 +650,16 @@ class _PlanCard extends StatelessWidget {
         color: t.sage,
       ),
     );
-    return Material(
+    final actions = this.actions;
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(t.radiusM),
+      side: lifted
+          ? BorderSide(color: t.sage, width: t.space1 / 2)
+          : BorderSide(color: t.line),
+    );
+    final material = Material(
       color: t.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(t.radiusM),
-        side: BorderSide(color: t.line),
-      ),
+      shape: shape,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: recipe == null
@@ -502,11 +713,46 @@ class _PlanCard extends StatelessWidget {
                     ],
                   ),
                 ),
+                OfflineDisabled(
+                  builder: (context, enabled) => PopupMenuButton<_PlanAction>(
+                    enabled: enabled && actions != null,
+                    tooltip: l10n.planMealMenu(plan.label),
+                    icon: const Icon(Icons.more_vert_rounded),
+                    iconColor: t.inkMuted,
+                    onSelected: (action) => switch (action) {
+                      _PlanAction.edit => actions?.edit(plan),
+                      _PlanAction.move => actions?.pickDay(plan),
+                      _PlanAction.delete => actions?.delete(plan),
+                    },
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: _PlanAction.edit,
+                        child: Text(l10n.planEdit),
+                      ),
+                      PopupMenuItem(
+                        value: _PlanAction.move,
+                        child: Text(l10n.planMove),
+                      ),
+                      PopupMenuItem(
+                        value: _PlanAction.delete,
+                        child: Text(
+                          l10n.planDelete,
+                          style: TextStyle(color: t.danger),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
         ),
       ),
+    );
+    if (!lifted) return material;
+    return DecoratedBox(
+      decoration: ShapeDecoration(shape: shape, shadows: t.shadowLift),
+      child: material,
     );
   }
 }

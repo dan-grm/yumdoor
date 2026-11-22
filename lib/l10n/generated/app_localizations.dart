@@ -2299,6 +2299,126 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Zum Plan'**
   String get planSavedOpen;
+
+  /// Accessible label of the menu button on a planned meal.
+  ///
+  /// In de, this message translates to:
+  /// **'Optionen für {name}'**
+  String planMealMenu(String name);
+
+  /// Menu item of a planned meal: opens the sheet to change its day, meal and servings.
+  ///
+  /// In de, this message translates to:
+  /// **'Bearbeiten'**
+  String get planEdit;
+
+  /// Menu item of a planned meal: picks another day for it (the keyboard alternative to dragging).
+  ///
+  /// In de, this message translates to:
+  /// **'Verschieben'**
+  String get planMove;
+
+  /// Menu item of a planned meal, and the button that confirms deleting it.
+  ///
+  /// In de, this message translates to:
+  /// **'Löschen'**
+  String get planDelete;
+
+  /// Shown on a day of the planner while a meal is dragged over it.
+  ///
+  /// In de, this message translates to:
+  /// **'Hier ablegen'**
+  String get planDropHere;
+
+  /// Snackbar after a planned meal was moved to another day.
+  ///
+  /// In de, this message translates to:
+  /// **'Auf {day} verschoben.'**
+  String planMoved(String day);
+
+  /// Snackbar when moving a planned meal failed; the meal is back on its day.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht verschoben. {reason}'**
+  String planMoveFailed(String reason);
+
+  /// Title of the sheet that moves a planned meal to another day.
+  ///
+  /// In de, this message translates to:
+  /// **'Mahlzeit verschieben'**
+  String get planMoveTitle;
+
+  /// Button in the move sheet.
+  ///
+  /// In de, this message translates to:
+  /// **'Auf {day} verschieben'**
+  String planMoveSubmit(String day);
+
+  /// Title of the sheet that changes a planned meal.
+  ///
+  /// In de, this message translates to:
+  /// **'Mahlzeit bearbeiten'**
+  String get planEditTitle;
+
+  /// Button that saves the changes to a planned meal.
+  ///
+  /// In de, this message translates to:
+  /// **'Speichern'**
+  String get planEditSave;
+
+  /// Note in the edit sheet for a planned meal whose ingredients are on the shopping list.
+  ///
+  /// In de, this message translates to:
+  /// **'Steht auf der Einkaufsliste. Änderst du die Portionen, passen sich die Mengen dort an.'**
+  String get planEditShoppingNote;
+
+  /// Snackbar after changes to a planned meal were saved.
+  ///
+  /// In de, this message translates to:
+  /// **'Gespeichert.'**
+  String get planEditSaved;
+
+  /// Error when saving the changes to a planned meal failed.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht gespeichert. {reason}'**
+  String planEditFailed(String reason);
+
+  /// Title of the dialog that confirms deleting a planned meal.
+  ///
+  /// In de, this message translates to:
+  /// **'Mahlzeit löschen?'**
+  String get planDeleteTitle;
+
+  /// Body of the dialog that confirms deleting a planned meal.
+  ///
+  /// In de, this message translates to:
+  /// **'„{name}“ wird für alle im Haushalt aus dem Plan gelöscht.'**
+  String planDeleteBody(String name);
+
+  /// Body of the dialog that confirms deleting a planned meal whose ingredients are on the shopping list (Tandoor deletes them with it).
+  ///
+  /// In de, this message translates to:
+  /// **'„{name}“ wird für alle im Haushalt aus dem Plan gelöscht, und seine Zutaten verschwinden von der Einkaufsliste.'**
+  String planDeleteBodyShopping(String name);
+
+  /// Button that closes the delete dialog without deleting.
+  ///
+  /// In de, this message translates to:
+  /// **'Behalten'**
+  String get planDeleteKeep;
+
+  /// Snackbar after a planned meal was deleted.
+  ///
+  /// In de, this message translates to:
+  /// **'Aus dem Plan gelöscht.'**
+  String get planDeleted;
+
+  /// Snackbar when deleting a planned meal failed.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht gelöscht. {reason}'**
+  String planDeleteFailed(String reason);
 }
 
 class _AppLocalizationsDelegate
