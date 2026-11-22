@@ -1414,4 +1414,86 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get planSavedOpen => 'Zum Plan';
+
+  @override
+  String planMealMenu(String name) {
+    return 'Optionen für $name';
+  }
+
+  @override
+  String get planEdit => 'Bearbeiten';
+
+  @override
+  String get planMove => 'Verschieben';
+
+  @override
+  String get planDelete => 'Löschen';
+
+  @override
+  String get planDropHere => 'Hier ablegen';
+
+  @override
+  String planMoved(String day) {
+    return 'Auf $day verschoben.';
+  }
+
+  @override
+  String planMoveFailed(String reason) {
+    return 'Nicht verschoben. $reason';
+  }
+
+  @override
+  String get planMoveTitle => 'Mahlzeit verschieben';
+
+  @override
+  String planMoveSubmit(String day) {
+    return 'Auf $day verschieben';
+  }
+
+  @override
+  String get planEditTitle => 'Mahlzeit bearbeiten';
+
+  @override
+  String get planEditSave => 'Speichern';
+
+  @override
+  String get planEditShoppingNote =>
+      'Steht auf der Einkaufsliste. Änderst du die Portionen, passen sich die Mengen dort an.';
+
+  @override
+  String get planEditSaved => 'Gespeichert.';
+
+  @override
+  String planEditFailed(String reason) {
+    return 'Nicht gespeichert. $reason';
+  }
+
+  @override
+  String get planDeleteTitle => 'Mahlzeit löschen?';
+
+  @override
+  String planDeleteBody(String name) {
+    return '„$name“ wird für alle im Haushalt aus dem Plan gelöscht.';
+  }
+
+  @override
+  String planDeleteBodyShopping(String name) {
+    return '„$name“ wird für alle im Haushalt aus dem Plan gelöscht, und seine Zutaten verschwinden von der Einkaufsliste.';
+  }
+
+  @override
+  String get planDeleteKeep => 'Behalten';
+
+  @override
+  String get planDeleted => 'Aus dem Plan gelöscht.';
+
+  @override
+  String planDeleteFailed(String reason) {
+    return 'Nicht gelöscht. $reason';
+  }
+
+  @override
+  String planServingsCustom(String servings, String unit) {
+    return '$servings $unit';
+  }
 }

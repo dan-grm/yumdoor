@@ -1,11 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../app/platform_providers.dart';
 import '../../app/repository_providers.dart';
+import '../../core/failures.dart';
 import '../../domain/models/calendar_day.dart';
 import '../../domain/models/meal_plan.dart';
 import '../../domain/models/meal_type.dart';
 import '../../domain/models/user_ref.dart';
+import '../../domain/repositories/meal_plan_repository.dart';
 import '../../domain/services/week_plan.dart';
 
 part 'planner_providers.g.dart';
@@ -49,6 +52,116 @@ Future<PlannerPeople> plannerPeople(Ref ref) async {
     me: await me,
     names: {for (final user in list ?? <UserRef>[]) user.id: user.name.trim()},
   );
+}
+
+/// Meals being changed, moved or deleted, by id: as they will be once saved,
+/// `null` for one being deleted. The planner shows the change right away and
+/// offers nothing more for these meals until it is settled, so changes of one
+/// meal never overlap. Starts over with another server or login.
+@Riverpod(keepAlive: true)
+class PendingPlans extends _$PendingPlans {
+  late MealPlanRepository _repository;
+
+  @override
+  Map<int, MealPlan?> build() {
+    _repository = ref.watch(mealPlanRepositoryProvider);
+    return const {};
+  }
+
+  /// Whether a change of the plan with [id] is being saved.
+  bool isPending(int id) => state.containsKey(id);
+
+  /// Moves [plan] so that it starts on [day], keeping its length. See
+  /// [_apply].
+  Future<Failure?> move(
+    MealPlan plan,
+    CalendarDay day, {
+    required CalendarDay shown,
+  }) => update(plan, MealPlanChanges(day: day), shown: shown);
+
+  /// Applies [changes] to [plan]. See [_apply].
+  Future<Failure?> update(
+    MealPlan plan,
+    MealPlanChanges changes, {
+    required CalendarDay shown,
+  }) {
+    final from = changes.day ?? plan.fromDay;
+    final repository = _repository;
+    return _apply(
+      plan,
+      plan.copyWith(
+        fromDay: from,
+        toDay: from.addDays(plan.days - 1),
+        mealType: changes.mealType ?? plan.mealType,
+        servings: changes.servings ?? plan.servings,
+        note: changes.note ?? plan.note,
+      ),
+      () => repository.update(plan.id, changes),
+      shown: shown,
+    );
+  }
+
+  /// Deletes [plan]. See [_apply].
+  Future<Failure?> delete(MealPlan plan, {required CalendarDay shown}) {
+    final repository = _repository;
+    return _apply(plan, null, () => repository.delete(plan.id), shown: shown);
+  }
+
+  /// Shows [plan] as [pending] while [save] runs. Once saved, the weeks
+  /// reload, and the plan is shown as loaded when the week from [shown] (the
+  /// one on screen) is back, so it doesn't jump back meanwhile. If saving
+  /// fails, the plan is shown as it was, the weeks reload all the same (the
+  /// plan may have changed elsewhere) and the failure is returned. A plan to
+  /// delete that is gone already counts as deleted.
+  ///
+  /// Callers check [isPending] first: while a change of [plan] is pending,
+  /// this throws a [StateError].
+  Future<Failure?> _apply(
+    MealPlan plan,
+    MealPlan? pending,
+    Future<void> Function() save, {
+    required CalendarDay shown,
+  }) async {
+    if (isPending(plan.id)) {
+      throw StateError('A change of meal plan ${plan.id} is pending.');
+    }
+    // This build's ref: it is unmounted once a change of server or login
+    // starts over, and then nothing here may touch the new state.
+    final ref = this.ref;
+    state = {...state, plan.id: pending};
+    void settle() {
+      if (ref.mounted) state = {...state}..remove(plan.id);
+    }
+
+    Failure? failure;
+    try {
+      await save();
+    } on NotFoundFailure catch (notFound) {
+      // Deleted elsewhere meanwhile.
+      if (pending != null) failure = notFound;
+    } on Failure catch (error) {
+      failure = error;
+    } on Object catch (error, stack) {
+      // A bug rather than the server; reported, and the plan goes back.
+      FlutterError.reportError(
+        FlutterErrorDetails(exception: error, stack: stack, library: 'planner'),
+      );
+      failure = ServerFailure(cause: error);
+    }
+    if (!ref.mounted) return failure;
+    ref.invalidate(weekPlansProvider);
+    if (failure != null) {
+      settle();
+      return failure;
+    }
+    try {
+      await ref.read(weekPlansProvider(shown).future);
+    } on Object {
+      // The planner shows the failure.
+    }
+    settle();
+    return null;
+  }
 }
 
 const _onlyMineKey = 'planner.only-mine';

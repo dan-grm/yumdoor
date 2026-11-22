@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/router.dart';
 import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
@@ -31,7 +32,11 @@ void main() {
     location: location,
     size: size,
     theme: theme,
-    overrides: appOverrides(recipes: FakeRecipeRepository(manyRecipes)),
+    overrides: [
+      ...appOverrides(recipes: FakeRecipeRepository(manyRecipes)),
+      // A fixed day, so the planner in the goldens doesn't change with it.
+      clockProvider.overrideWithValue(() => DateTime(2026, 11, 18, 12)),
+    ],
     routes: [
       tabsRoute(),
       GoRoute(

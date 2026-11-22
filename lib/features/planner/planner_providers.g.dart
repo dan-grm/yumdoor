@@ -191,6 +191,76 @@ final class PlannerPeopleProvider
 
 String _$plannerPeopleHash() => r'a08951f3bf4d82aebc0c6a486ed7ca8e73307cf9';
 
+/// Meals being changed, moved or deleted, by id: as they will be once saved,
+/// `null` for one being deleted. The planner shows the change right away and
+/// offers nothing more for these meals until it is settled, so changes of one
+/// meal never overlap. Starts over with another server or login.
+
+@ProviderFor(PendingPlans)
+final pendingPlansProvider = PendingPlansProvider._();
+
+/// Meals being changed, moved or deleted, by id: as they will be once saved,
+/// `null` for one being deleted. The planner shows the change right away and
+/// offers nothing more for these meals until it is settled, so changes of one
+/// meal never overlap. Starts over with another server or login.
+final class PendingPlansProvider
+    extends $NotifierProvider<PendingPlans, Map<int, MealPlan?>> {
+  /// Meals being changed, moved or deleted, by id: as they will be once saved,
+  /// `null` for one being deleted. The planner shows the change right away and
+  /// offers nothing more for these meals until it is settled, so changes of one
+  /// meal never overlap. Starts over with another server or login.
+  PendingPlansProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'pendingPlansProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$pendingPlansHash();
+
+  @$internal
+  @override
+  PendingPlans create() => PendingPlans();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Map<int, MealPlan?> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Map<int, MealPlan?>>(value),
+    );
+  }
+}
+
+String _$pendingPlansHash() => r'50d5bcd3846c4ae64485134146ff8b3a399b5369';
+
+/// Meals being changed, moved or deleted, by id: as they will be once saved,
+/// `null` for one being deleted. The planner shows the change right away and
+/// offers nothing more for these meals until it is settled, so changes of one
+/// meal never overlap. Starts over with another server or login.
+
+abstract class _$PendingPlans extends $Notifier<Map<int, MealPlan?>> {
+  Map<int, MealPlan?> build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<Map<int, MealPlan?>, Map<int, MealPlan?>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<Map<int, MealPlan?>, Map<int, MealPlan?>>,
+              Map<int, MealPlan?>,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 /// Whether the planner shows only the meals the current user planned,
 /// remembered on this device.
 

@@ -26,10 +26,10 @@ import '../recipe/recipe_providers.dart';
 import 'planner_providers.dart';
 import 'week_labels.dart';
 
-/// How long the confirmation stays: Flutter's default, and twice that when
-/// the shopping list couldn't be filled, to read why.
-const _snackBarDuration = Duration(seconds: 4);
-const _failureSnackBarDuration = Duration(seconds: 8);
+/// How long the planner's snackbars stay: Flutter's default, and twice that
+/// for failures, to read why.
+const plannerSnackBarDuration = Duration(seconds: 4);
+const plannerFailureSnackBarDuration = Duration(seconds: 8);
 
 /// Opens the [PlanSheet] for the recipe [recipeId] and, once a plan is
 /// saved, confirms it in a snackbar with a way to the planner. Completes
@@ -46,7 +46,6 @@ Future<void> showPlanSheet(
   String servingsText = '',
   CalendarDay? day,
 }) async {
-  final t = context.tokens;
   final messenger = ScaffoldMessenger.of(context);
   final router = GoRouter.of(context);
   final clock = ProviderScope.containerOf(
@@ -77,8 +76,8 @@ Future<void> showPlanSheet(
         // With an action, a snackbar would stay until it is closed.
         persist: false,
         duration: failure == null
-            ? _snackBarDuration
-            : _failureSnackBarDuration,
+            ? plannerSnackBarDuration
+            : plannerFailureSnackBarDuration,
         action: SnackBarAction(
           label: l10n.planSavedOpen,
           onPressed: () => router.go(
@@ -97,21 +96,14 @@ Future<void> showPlanSheet(
         content: Text(
           context.l10n.planSheetSaveFailed(failureMessage(context, failure)),
         ),
-        duration: _failureSnackBarDuration,
+        duration: plannerFailureSnackBarDuration,
       ),
     );
   }
 
-  await showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    useSafeArea: true,
-    backgroundColor: t.surface,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(t.radiusL)),
-    ),
-    builder: (context) => PlanSheet(
+  await showPlannerSheet<void>(
+    context,
+    (context) => PlanSheet(
       recipeId: recipeId,
       recipeName: recipeName,
       servings: servings,
@@ -120,6 +112,23 @@ Future<void> showPlanSheet(
       onSaved: confirm,
       onFailedAfterClose: reportFailure,
     ),
+  );
+}
+
+/// Shows a bottom sheet of the planner, built by [builder], styled like the
+/// [PlanSheet].
+Future<T?> showPlannerSheet<T>(BuildContext context, WidgetBuilder builder) {
+  final t = context.tokens;
+  return showModalBottomSheet<T>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    useSafeArea: true,
+    backgroundColor: t.surface,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(t.radiusL)),
+    ),
+    builder: builder,
   );
 }
 
@@ -184,12 +193,12 @@ class PlanSheet extends ConsumerStatefulWidget {
 }
 
 /// The most servings a plan can have; Tandoor stores less than 10000.
-const _maxServings = 9999;
+const maxPlanServings = 9999;
 
 class _PlanSheetState extends ConsumerState<PlanSheet> {
   late CalendarDay _day =
       widget.day ?? CalendarDay.of(ref.read(clockProvider)());
-  late int _servings = widget.servings.clamp(1, _maxServings);
+  late int _servings = widget.servings.clamp(1, maxPlanServings);
 
   /// The meal type the user chose here, `null` until they do.
   int? _mealTypeId;
@@ -367,7 +376,7 @@ class _PlanSheetState extends ConsumerState<PlanSheet> {
                       ),
                       ServingsPicker(
                         servings: _servings,
-                        max: _maxServings,
+                        max: maxPlanServings,
                         label: widget.servingsText.trim().isEmpty
                             ? format.integer(_servings)
                             : servingsLabel(
