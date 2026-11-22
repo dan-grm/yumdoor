@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -80,9 +82,9 @@ class PlannerScreen extends ConsumerWidget {
       CalendarDay day, {
       bool confirm = false,
     }) async {
-      final failure = await container
-          .read(pendingPlansProvider.notifier)
-          .move(plan, day, shown: start);
+      final pending = container.read(pendingPlansProvider.notifier);
+      if (pending.isPending(plan.id)) return;
+      final failure = await pending.move(plan, day, shown: start);
       if (failure == null && !confirm) return;
       showPlannerMessage(
         messenger,
@@ -99,7 +101,7 @@ class PlannerScreen extends ConsumerWidget {
         ? null
         : _PlanActions(
             move: move,
-            edit: (plan) => showEditPlanSheet(context, plan),
+            edit: (plan) => showEditPlanSheet(context, plan, shown: start),
             pickDay: (plan) async {
               final day = await showMovePlanSheet(context, plan);
               if (day != null) await move(plan, day, confirm: true);
@@ -284,7 +286,7 @@ class _WeekBar extends StatelessWidget {
 }
 
 /// The seven days from [start], with the [plans] on each.
-class _Days extends StatelessWidget {
+class _Days extends StatefulWidget {
   const _Days({
     required this.start,
     required this.today,
@@ -312,9 +314,38 @@ class _Days extends StatelessWidget {
   final Future<void> Function() onRefresh;
 
   @override
+  State<_Days> createState() => _DaysState();
+}
+
+class _DaysState extends State<_Days> {
+  final _controller = ScrollController();
+  final _listKey = GlobalKey();
+  late final _autoScroll = _AutoScroll(_controller, _listKey);
+
+  @override
+  void dispose() {
+    _autoScroll.stop();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
+    final _Days(
+      :start,
+      :today,
+      :plans,
+      :me,
+      :names,
+      :actions,
+      :pending,
+      :onRefresh,
+    ) = widget;
+    _autoScroll
+      ..edge = t.sizeTouch
+      ..step = t.space2;
     return RefreshIndicator(
       onRefresh: onRefresh,
       child: Align(
@@ -322,6 +353,8 @@ class _Days extends StatelessWidget {
         child: ConstrainedBox(
           constraints: BoxConstraints(maxWidth: t.sizeWide),
           child: ListView(
+            key: _listKey,
+            controller: _controller,
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.fromLTRB(t.space5, 0, t.space5, t.space5),
             children: [
@@ -344,6 +377,7 @@ class _Days extends StatelessWidget {
                     names: names,
                     actions: actions,
                     pending: pending,
+                    autoScroll: _autoScroll,
                   ),
                 ),
             ],
@@ -351,6 +385,50 @@ class _Days extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Scrolls the planner while a dragged plan is held near its top or bottom
+/// edge, so that every day can be reached: a drag can't scroll by itself.
+class _AutoScroll {
+  _AutoScroll(this._controller, this._listKey);
+
+  final ScrollController _controller;
+  final GlobalKey _listKey;
+
+  /// How close to an edge scrolling starts, and how far each frame goes.
+  double edge = 0;
+  double step = 0;
+
+  Timer? _timer;
+  double _speed = 0;
+
+  /// The dragged plan is at [position] (global).
+  void update(Offset position) {
+    final box = _listKey.currentContext?.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return;
+    final y = box.globalToLocal(position).dy;
+    _speed = y < edge
+        ? -step
+        : y > box.size.height - edge
+        ? step
+        : 0;
+    if (_speed == 0) return stop();
+    _timer ??= Timer.periodic(const Duration(milliseconds: 16), (_) {
+      if (!_controller.hasClients) return stop();
+      final scroll = _controller.position;
+      final to = (scroll.pixels + _speed).clamp(
+        scroll.minScrollExtent,
+        scroll.maxScrollExtent,
+      );
+      if (to != scroll.pixels) _controller.jumpTo(to);
+    });
+  }
+
+  /// The drag ended.
+  void stop() {
+    _timer?.cancel();
+    _timer = null;
   }
 }
 
@@ -392,6 +470,7 @@ class _DayRow extends StatelessWidget {
     required this.names,
     required this.actions,
     required this.pending,
+    required this.autoScroll,
   });
 
   final CalendarDay day;
@@ -401,24 +480,21 @@ class _DayRow extends StatelessWidget {
   final Map<int, String> names;
   final _PlanActions? actions;
   final Set<int> pending;
+  final _AutoScroll autoScroll;
 
   /// The first day of the dragged plan if dropped here.
   CalendarDay _newStart(_PlanDrag drag) =>
       drag.plan.fromDay.addDays(day.differenceInDays(drag.day));
 
   @override
-  Widget build(BuildContext context) {
-    final actions = this.actions;
-    if (actions == null) return _build(context, hovered: false);
-    return DragTarget<_PlanDrag>(
-      onWillAcceptWithDetails: (details) =>
-          _newStart(details.data) != details.data.plan.fromDay,
-      onAcceptWithDetails: (details) =>
-          actions.move(details.data.plan, _newStart(details.data)),
-      builder: (context, candidates, rejected) =>
-          _build(context, hovered: candidates.isNotEmpty),
-    );
-  }
+  Widget build(BuildContext context) => DragTarget<_PlanDrag>(
+    onWillAcceptWithDetails: (details) =>
+        actions != null && _newStart(details.data) != details.data.plan.fromDay,
+    onAcceptWithDetails: (details) =>
+        actions?.move(details.data.plan, _newStart(details.data)),
+    builder: (context, candidates, rejected) =>
+        _build(context, hovered: candidates.isNotEmpty),
+  );
 
   Widget _build(BuildContext context, {required bool hovered}) {
     final t = context.tokens;
@@ -442,27 +518,31 @@ class _DayRow extends StatelessWidget {
         ),
         SizedBox(width: t.space3),
         Expanded(
-          child: plans.isEmpty && !hovered
-              ? const _EmptyDay()
-              : Column(
-                  children: [
-                    for (final (i, plan) in plans.indexed) ...[
-                      if (i > 0) SizedBox(height: t.space2),
-                      _PlanCard(
-                        plan: plan,
-                        day: day,
-                        plannedBy: me == null || plan.createdBy == me
-                            ? null
-                            : names[plan.createdBy] ?? '',
-                        actions: pending.contains(plan.id) ? null : actions,
-                      ),
-                    ],
-                    if (hovered) ...[
-                      if (plans.isNotEmpty) SizedBox(height: t.space2),
-                      const _DropHere(),
-                    ],
-                  ],
-                ),
+          // "Hier ablegen" covers the day instead of adding to it: a day
+          // that changes its height would move the others under the finger.
+          child: Stack(
+            children: [
+              plans.isEmpty
+                  ? const _EmptyDay()
+                  : Column(
+                      children: [
+                        for (final (i, plan) in plans.indexed) ...[
+                          if (i > 0) SizedBox(height: t.space2),
+                          _PlanCard(
+                            plan: plan,
+                            day: day,
+                            plannedBy: me == null || plan.createdBy == me
+                                ? null
+                                : names[plan.createdBy] ?? '',
+                            actions: pending.contains(plan.id) ? null : actions,
+                            autoScroll: autoScroll,
+                          ),
+                        ],
+                      ],
+                    ),
+              if (hovered) const Positioned.fill(child: _DropHere()),
+            ],
+          ),
         ),
       ],
     );
@@ -552,7 +632,6 @@ class _DropHere extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = context.tokens;
     return Container(
-      constraints: BoxConstraints(minHeight: t.sizeTouch + t.space3),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: t.sageSoft,
@@ -574,6 +653,9 @@ class _PointerDraggable<T extends Object> extends Draggable<T> {
     required super.feedback,
     super.data,
     super.childWhenDragging,
+    super.maxSimultaneousDrags,
+    super.onDragUpdate,
+    super.onDragEnd,
   });
 
   @override
@@ -596,6 +678,9 @@ class _TouchDraggable<T extends Object> extends LongPressDraggable<T> {
     required super.feedback,
     super.data,
     super.childWhenDragging,
+    super.maxSimultaneousDrags,
+    super.onDragUpdate,
+    super.onDragEnd,
   });
 
   @override
@@ -625,10 +710,12 @@ class _PlanCard extends StatelessWidget {
     required this.day,
     this.plannedBy,
     required this.actions,
+    required this.autoScroll,
   });
 
   final MealPlan plan;
   final CalendarDay day;
+  final _AutoScroll autoScroll;
 
   /// The name of the household member who planned it, empty if unknown;
   /// `null` for the current user's own plans.
@@ -638,7 +725,9 @@ class _PlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final card = _PlanTile(plan: plan, plannedBy: plannedBy, actions: actions);
-    if (actions == null) return card;
+    // The same widgets with and without actions, so the card keeps its state
+    // (and its image) when a change of it is pending.
+    final drags = actions == null ? 0 : 1;
     return LayoutBuilder(
       builder: (context, constraints) {
         final _PlanDrag data = (plan: plan, day: day);
@@ -657,10 +746,17 @@ class _PlanCard extends StatelessWidget {
           data: data,
           feedback: feedback,
           childWhenDragging: placeholder,
+          maxSimultaneousDrags: drags,
+          onDragUpdate: (details) => autoScroll.update(details.globalPosition),
+          onDragEnd: (_) => autoScroll.stop(),
           child: _PointerDraggable<_PlanDrag>(
             data: data,
             feedback: feedback,
             childWhenDragging: placeholder,
+            maxSimultaneousDrags: drags,
+            onDragUpdate: (details) =>
+                autoScroll.update(details.globalPosition),
+            onDragEnd: (_) => autoScroll.stop(),
             child: card,
           ),
         );

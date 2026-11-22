@@ -7,6 +7,7 @@ import '../../domain/models/calendar_day.dart';
 import '../../domain/models/meal_plan.dart';
 import '../../domain/models/meal_type.dart';
 import '../../domain/models/user_ref.dart';
+import '../../domain/repositories/meal_plan_repository.dart';
 import '../../domain/services/week_plan.dart';
 
 part 'planner_providers.g.dart';
@@ -52,14 +53,22 @@ Future<PlannerPeople> plannerPeople(Ref ref) async {
   );
 }
 
-/// Meals being moved or deleted, by id: as they will be once saved, `null`
-/// for one being deleted. The planner shows the change right away and offers
-/// nothing more for these meals until it is settled, so changes of one meal
-/// never overlap.
-@riverpod
+/// Meals being changed, moved or deleted, by id: as they will be once saved,
+/// `null` for one being deleted. The planner shows the change right away and
+/// offers nothing more for these meals until it is settled, so changes of one
+/// meal never overlap. Starts over with another server or login.
+@Riverpod(keepAlive: true)
 class PendingPlans extends _$PendingPlans {
+  late MealPlanRepository _repository;
+
   @override
-  Map<int, MealPlan?> build() => const {};
+  Map<int, MealPlan?> build() {
+    _repository = ref.watch(mealPlanRepositoryProvider);
+    return const {};
+  }
+
+  /// Whether a change of the plan with [id] is being saved.
+  bool isPending(int id) => state.containsKey(id);
 
   /// Moves [plan] so that it starts on [day], keeping its length. See
   /// [_apply].
@@ -67,35 +76,52 @@ class PendingPlans extends _$PendingPlans {
     MealPlan plan,
     CalendarDay day, {
     required CalendarDay shown,
+  }) => update(plan, MealPlanChanges(day: day), shown: shown);
+
+  /// Applies [changes] to [plan]. See [_apply].
+  Future<Failure?> update(
+    MealPlan plan,
+    MealPlanChanges changes, {
+    required CalendarDay shown,
   }) {
-    if (day == plan.fromDay) return Future.value();
-    final repository = ref.read(mealPlanRepositoryProvider);
+    final from = changes.day ?? plan.fromDay;
+    final repository = _repository;
     return _apply(
       plan,
-      plan.copyWith(fromDay: day, toDay: day.addDays(plan.days - 1)),
-      () => repository.update(plan.id, MealPlanChanges(day: day)),
+      plan.copyWith(
+        fromDay: from,
+        toDay: from.addDays(plan.days - 1),
+        mealType: changes.mealType ?? plan.mealType,
+        servings: changes.servings ?? plan.servings,
+        note: changes.note ?? plan.note,
+      ),
+      () => repository.update(plan.id, changes),
       shown: shown,
     );
   }
 
   /// Deletes [plan]. See [_apply].
   Future<Failure?> delete(MealPlan plan, {required CalendarDay shown}) {
-    final repository = ref.read(mealPlanRepositoryProvider);
+    final repository = _repository;
     return _apply(plan, null, () => repository.delete(plan.id), shown: shown);
   }
 
   /// Shows [plan] as [pending] while [save] runs. Once saved, the weeks
   /// reload, and the plan is shown as loaded when the week from [shown] (the
   /// one on screen) is back, so it doesn't jump back meanwhile. If saving
-  /// fails, the plan is shown as it was and the failure is returned. Does
-  /// nothing while a change of [plan] is pending.
+  /// fails, the plan is shown as it was and the failure is returned.
+  ///
+  /// Callers check [isPending] first: while a change of [plan] is pending,
+  /// this throws a [StateError].
   Future<Failure?> _apply(
     MealPlan plan,
     MealPlan? pending,
     Future<void> Function() save, {
     required CalendarDay shown,
   }) async {
-    if (state.containsKey(plan.id)) return null;
+    if (isPending(plan.id)) {
+      throw StateError('A change of meal plan ${plan.id} is pending.');
+    }
     state = {...state, plan.id: pending};
     void settle() {
       if (ref.mounted) state = {...state}..remove(plan.id);
@@ -107,6 +133,7 @@ class PendingPlans extends _$PendingPlans {
       settle();
       return failure;
     }
+    // Not mounted only after a change of server or login.
     if (!ref.mounted) return null;
     ref.invalidate(weekPlansProvider);
     try {

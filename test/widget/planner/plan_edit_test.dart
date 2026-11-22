@@ -202,6 +202,53 @@ void main() {
       expect(repository.updates, isEmpty);
     });
 
+    testWidgets('the day under the meal keeps its height', (tester) async {
+      await pumpPlanner(tester);
+      final before = tester.getTopLeft(find.text('So')).dy;
+
+      // Wednesday has a meal; "Hier ablegen" covers it.
+      final gesture = await dragTo(tester, 'Linsen-Bolognese', 'Mi');
+      expect(find.text('Hier ablegen'), findsOneWidget);
+      expect(tester.getTopLeft(find.text('So')).dy, before);
+      await gesture.up();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('scrolls while the meal is held at the bottom edge', (
+      tester,
+    ) async {
+      for (var id = 20; id < 26; id++) {
+        repository.plans.add(_plan(id, 17, _dinner, title: 'Gericht $id'));
+      }
+      await pumpPlanner(tester);
+      final list = find.byWidgetPredicate(
+        (widget) =>
+            widget is Scrollable && widget.axisDirection == AxisDirection.down,
+      );
+      ScrollPosition position() =>
+          tester.state<ScrollableState>(list.first).position;
+      expect(position().pixels, 0);
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('Linsen-Bolognese')),
+      );
+      await tester.pump(kLongPressTimeout * 2);
+      final bottom = tester.getRect(list.first).bottomCenter;
+      await gesture.moveTo(bottom.translate(0, -30));
+      await gesture.moveTo(bottom.translate(0, -10));
+      for (var i = 0; i < 30; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+
+      expect(position().pixels, greaterThan(0));
+      await gesture.up();
+      await tester.pumpAndSettle();
+      // It stopped with the drag.
+      final stopped = position().pixels;
+      await tester.pump(const Duration(milliseconds: 200));
+      expect(position().pixels, stopped);
+    });
+
     testWidgets('with a mouse, dragging starts right away', (tester) async {
       await pumpPlanner(tester);
 
@@ -366,20 +413,49 @@ void main() {
       );
     });
 
-    testWidgets('picked servings are saved even if they look the same', (
-      tester,
-    ) async {
+    testWidgets('servings with decimals step to whole numbers', (tester) async {
       repository.plans[0] = repository.plans[0].copyWith(servings: 2.5);
       await pumpPlanner(tester);
 
       await openMenu(tester, 'Linsen-Bolognese');
       await tap(tester, find.text('Bearbeiten'));
-      // 2.5 shows as 3.
+      expect(
+        find.descendant(
+          of: find.byType(EditPlanSheet),
+          matching: find.text('2,5'),
+        ),
+        findsOneWidget,
+      );
+      await tap(tester, find.byTooltip('Mehr Portionen'));
+      expect(find.text('3'), findsOneWidget);
       await tap(tester, find.byTooltip('Weniger Portionen'));
+      await tap(tester, find.byTooltip('Weniger Portionen'));
+      expect(find.text('1'), findsOneWidget);
       await tap(tester, find.byTooltip('Mehr Portionen'));
       await tap(tester, find.text('Speichern'));
 
-      expect(repository.updates.single.changes, MealPlanChanges(servings: 3));
+      expect(repository.updates.single.changes, MealPlanChanges(servings: 2));
+    });
+
+    testWidgets('servings with decimals stay unless changed', (tester) async {
+      repository.plans[0] = repository.plans[0].copyWith(servings: 2.5);
+      await pumpPlanner(tester);
+
+      await openMenu(tester, 'Linsen-Bolognese');
+      await tap(tester, find.text('Bearbeiten'));
+      await tap(
+        tester,
+        find.descendant(
+          of: find.byType(EditPlanSheet),
+          matching: find.text('Mittagessen'),
+        ),
+      );
+      await tap(tester, find.text('Speichern'));
+
+      expect(
+        repository.updates.single.changes,
+        MealPlanChanges(mealType: _lunch),
+      );
     });
 
     testWidgets('a failed save keeps the sheet open', (tester) async {

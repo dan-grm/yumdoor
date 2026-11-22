@@ -191,31 +191,31 @@ final class PlannerPeopleProvider
 
 String _$plannerPeopleHash() => r'a08951f3bf4d82aebc0c6a486ed7ca8e73307cf9';
 
-/// Meals being moved or deleted, by id: as they will be once saved, `null`
-/// for one being deleted. The planner shows the change right away and offers
-/// nothing more for these meals until it is settled, so changes of one meal
-/// never overlap.
+/// Meals being changed, moved or deleted, by id: as they will be once saved,
+/// `null` for one being deleted. The planner shows the change right away and
+/// offers nothing more for these meals until it is settled, so changes of one
+/// meal never overlap. Starts over with another server or login.
 
 @ProviderFor(PendingPlans)
 final pendingPlansProvider = PendingPlansProvider._();
 
-/// Meals being moved or deleted, by id: as they will be once saved, `null`
-/// for one being deleted. The planner shows the change right away and offers
-/// nothing more for these meals until it is settled, so changes of one meal
-/// never overlap.
+/// Meals being changed, moved or deleted, by id: as they will be once saved,
+/// `null` for one being deleted. The planner shows the change right away and
+/// offers nothing more for these meals until it is settled, so changes of one
+/// meal never overlap. Starts over with another server or login.
 final class PendingPlansProvider
     extends $NotifierProvider<PendingPlans, Map<int, MealPlan?>> {
-  /// Meals being moved or deleted, by id: as they will be once saved, `null`
-  /// for one being deleted. The planner shows the change right away and offers
-  /// nothing more for these meals until it is settled, so changes of one meal
-  /// never overlap.
+  /// Meals being changed, moved or deleted, by id: as they will be once saved,
+  /// `null` for one being deleted. The planner shows the change right away and
+  /// offers nothing more for these meals until it is settled, so changes of one
+  /// meal never overlap. Starts over with another server or login.
   PendingPlansProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'pendingPlansProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -236,12 +236,12 @@ final class PendingPlansProvider
   }
 }
 
-String _$pendingPlansHash() => r'5e3861869634f7074dd1c2e4905113e264b0e28e';
+String _$pendingPlansHash() => r'73fe9b406928f0250194e0a3c8d5d92fb119f525';
 
-/// Meals being moved or deleted, by id: as they will be once saved, `null`
-/// for one being deleted. The planner shows the change right away and offers
-/// nothing more for these meals until it is settled, so changes of one meal
-/// never overlap.
+/// Meals being changed, moved or deleted, by id: as they will be once saved,
+/// `null` for one being deleted. The planner shows the change right away and
+/// offers nothing more for these meals until it is settled, so changes of one
+/// meal never overlap. Starts over with another server or login.
 
 abstract class _$PendingPlans extends $Notifier<Map<int, MealPlan?>> {
   Map<int, MealPlan?> build();

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/offline.dart';
 import '../../app/platform_providers.dart';
-import '../../app/repository_providers.dart';
 import '../../core/failures.dart';
 import '../../design/components/buttons.dart';
 import '../../design/components/servings_picker.dart';
@@ -32,9 +31,14 @@ void showPlannerMessage(
   messenger.showSnackBar(SnackBar(content: Text(message(messenger.context))));
 }
 
-/// Opens the [EditPlanSheet] for [plan]. Once the changes are saved, a
-/// snackbar says so and the planner's weeks reload.
-Future<void> showEditPlanSheet(BuildContext context, MealPlan plan) {
+/// Opens the [EditPlanSheet] for [plan], from the planner showing the week
+/// from [shown]. Once the changes are saved, a snackbar says so and the
+/// planner's weeks reload.
+Future<void> showEditPlanSheet(
+  BuildContext context,
+  MealPlan plan, {
+  required CalendarDay shown,
+}) {
   final messenger = ScaffoldMessenger.of(context);
 
   void report(String Function(BuildContext context) message) =>
@@ -44,6 +48,7 @@ Future<void> showEditPlanSheet(BuildContext context, MealPlan plan) {
     context,
     (context) => EditPlanSheet(
       plan: plan,
+      shown: shown,
       onSaved: () => report((context) => context.l10n.planEditSaved),
       onFailedAfterClose: (failure) => report(
         (context) =>
@@ -61,11 +66,15 @@ class EditPlanSheet extends ConsumerStatefulWidget {
   const EditPlanSheet({
     super.key,
     required this.plan,
+    required this.shown,
     required this.onSaved,
     this.onFailedAfterClose,
   });
 
   final MealPlan plan;
+
+  /// The first day of the week the planner shows.
+  final CalendarDay shown;
 
   /// Called once the changes are saved, also if the sheet was closed
   /// meanwhile.
@@ -83,10 +92,9 @@ class _EditPlanSheetState extends ConsumerState<EditPlanSheet> {
   late CalendarDay _day = widget.plan.fromDay;
   late MealType _mealType = widget.plan.mealType;
 
-  /// Tandoor's servings may have decimals; they are shown rounded and stay
-  /// as they are unless the user picks others.
-  late int _servings = widget.plan.servings.round().clamp(1, maxPlanServings);
-  bool _servingsPicked = false;
+  /// Tandoor's servings may have decimals ("2,5"); the buttons go to the
+  /// next whole number up or down.
+  late double _servings = widget.plan.servings;
 
   bool _saving = false;
   String? _error;
@@ -96,26 +104,30 @@ class _EditPlanSheetState extends ConsumerState<EditPlanSheet> {
     final plan = widget.plan;
     final day = _day == plan.fromDay ? null : _day;
     final mealType = _mealType.id == plan.mealType.id ? null : _mealType;
-    final servings = _servingsPicked && _servings != plan.servings
-        ? _servings.toDouble()
-        : null;
+    final servings = _servings == plan.servings ? null : _servings;
     if (day == null && mealType == null && servings == null) return null;
     return MealPlanChanges(day: day, mealType: mealType, servings: servings);
   }
 
   Future<void> _save(MealPlanChanges changes) async {
     // Read before the first await: the sheet may be dragged away meanwhile.
-    final container = ProviderScope.containerOf(context, listen: false);
-    final mealPlans = ref.read(mealPlanRepositoryProvider);
+    final pending = ref.read(pendingPlansProvider.notifier);
     final onSaved = widget.onSaved;
     final onFailedAfterClose = widget.onFailedAfterClose;
+    // The menu that opened the sheet is off while a change is pending.
+    if (pending.isPending(widget.plan.id)) return;
     setState(() {
       _saving = true;
       _error = null;
     });
-    try {
-      await mealPlans.update(widget.plan.id, changes);
-    } on Failure catch (failure) {
+    // The planner shows the change at once, also if the sheet is dragged
+    // away.
+    final failure = await pending.update(
+      widget.plan,
+      changes,
+      shown: widget.shown,
+    );
+    if (failure != null) {
       if (!mounted) {
         onFailedAfterClose?.call(failure);
         return;
@@ -126,7 +138,6 @@ class _EditPlanSheetState extends ConsumerState<EditPlanSheet> {
       });
       return;
     }
-    container.invalidate(weekPlansProvider);
     onSaved();
     if (mounted && (ModalRoute.of(context)?.isCurrent ?? false)) {
       Navigator.of(context).pop();
@@ -177,14 +188,20 @@ class _EditPlanSheetState extends ConsumerState<EditPlanSheet> {
               ),
             ),
             ServingsPicker(
-              servings: _servings,
+              servings: _servings.floor().clamp(1, maxPlanServings),
               max: maxPlanServings,
-              label: servingsText.isEmpty
-                  ? LocaleFormat.of(context).integer(_servings)
-                  : servingsLabel(context, _servings, servingsText),
+              label: switch (_servings) {
+                final whole when whole == whole.roundToDouble() =>
+                  servingsText.isEmpty
+                      ? LocaleFormat.of(context).integer(whole.round())
+                      : servingsLabel(context, whole.round(), servingsText),
+                final servings => LocaleFormat.of(context).amount(servings),
+              },
               onChanged: (value) => setState(() {
-                _servings = value;
-                _servingsPicked = true;
+                final up = value > _servings.floor();
+                _servings = (up ? _servings.floor() + 1 : _servings.ceil() - 1)
+                    .clamp(1, maxPlanServings)
+                    .toDouble();
               }),
             ),
           ],
@@ -289,7 +306,8 @@ Future<void> confirmAndDeletePlan(
       );
     },
   );
-  if (confirmed != true) return;
+  final pending = container.read(pendingPlansProvider.notifier);
+  if (confirmed != true || pending.isPending(plan.id)) return;
   // Offline came while the dialog was open: nothing is queued.
   if (container.read(isOfflineProvider)) {
     showPlannerMessage(
@@ -298,9 +316,7 @@ Future<void> confirmAndDeletePlan(
     );
     return;
   }
-  final failure = await container
-      .read(pendingPlansProvider.notifier)
-      .delete(plan, shown: shown);
+  final failure = await pending.delete(plan, shown: shown);
   showPlannerMessage(
     messenger,
     (context) => switch (failure) {
