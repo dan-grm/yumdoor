@@ -297,6 +297,58 @@ void main() {
       ]);
     });
 
+    test(
+      'a read that started before a deletion does not bring it back',
+      () async {
+        await repository.fetch();
+        final gate = Completer<void>();
+        remote.entries[1] = remote.entries[1].copyWith(
+          amount: 0.7,
+          updatedAt: DateTime.utc(2026, 11, 18, 11, 30),
+        );
+        remote.fetchGates.add(gate);
+        final poll = repository.fetch(
+          updatedAfter: DateTime.utc(2026, 11, 18, 11),
+        );
+        await repository.deleteEntries([remote.entries[1]]);
+        gate.complete();
+        await poll;
+        await pumpEventQueue();
+
+        final stored = (await offlineRead()).entries.map((e) => e.id);
+        expect(stored, isNot(contains(102)));
+      },
+    );
+
+    test('a read that started before a check-off keeps it', () async {
+      final gate = Completer<void>();
+      remote.fetchGates.add(gate);
+      final read = repository.fetch();
+      await repository.setChecked({101}, checked: true);
+      gate.complete();
+      await read;
+      await pumpEventQueue();
+
+      // The read had it unchecked; the cache was empty, so it stays out
+      // rather than showing an old state.
+      final stored = {for (final e in (await offlineRead()).entries) e.id: e};
+      expect(stored[101]?.checked ?? true, isTrue);
+    });
+
+    test('an older full read that answers last is dropped', () async {
+      final older = Completer<void>();
+      remote.fetchGates.add(older);
+      final first = repository.fetch();
+      final removed = remote.entries.removeAt(0);
+      await repository.fetch();
+      older.complete();
+      await first;
+      await pumpEventQueue();
+
+      final stored = (await offlineRead()).entries.map((e) => e.id);
+      expect(stored, isNot(contains(removed.id)));
+    });
+
     test('stores nothing once closed', () async {
       repository.close();
       await repository.fetch();

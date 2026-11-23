@@ -22,9 +22,15 @@ class RecipeCache implements OfflineCache {
   final int maxRecipes;
   final DateTime Function() _now;
 
+  /// The number to pass as `epoch` for a read that starts now: writes
+  /// with it do nothing once the cache was cleared ([clear]) since.
+  int get epoch => _db.clears;
+
   /// Stores [recipe] as just opened, replacing an older copy, and drops the
-  /// least recently opened recipes beyond [maxRecipes].
-  Future<void> put(Recipe recipe) => _db.transaction(() async {
+  /// least recently opened recipes beyond [maxRecipes]. With an [epoch],
+  /// only if the cache wasn't cleared since.
+  Future<void> put(Recipe recipe, {int? epoch}) => _db.transaction(() async {
+    if (epoch != null && _db.clears != epoch) return;
     await _db
         .into(_db.cachedRecipes)
         .insertOnConflictUpdate(
@@ -58,6 +64,17 @@ class RecipeCache implements OfflineCache {
     return recipe;
   }
 
+  /// Whether the recipe with [id] is stored, as last changed at
+  /// [updatedAt] if given. Doesn't count as opening it.
+  Future<bool> has(int id, {DateTime? updatedAt}) async {
+    final query = _db.select(_db.cachedRecipes)..where((r) => r.id.equals(id));
+    final row = await query.getSingleOrNull();
+    if (row == null) return false;
+    if (updatedAt == null) return true;
+    final stored = (await _decode(row))?.updatedAt;
+    return stored != null && stored.isAtSameMomentAs(updatedAt);
+  }
+
   /// Every stored recipe, the most recently opened first.
   Future<List<Recipe>> all() async {
     final query = _db.select(_db.cachedRecipes)
@@ -79,22 +96,25 @@ class RecipeCache implements OfflineCache {
     return await query.getSingleOrNull() != null;
   }
 
-  /// Stores the image at [url] if a stored recipe still uses it.
-  Future<void> putImage(Uri url, Uint8List bytes) => _db.transaction(() async {
-    final users = _db.selectOnly(_db.cachedRecipes)
-      ..addColumns([_db.cachedRecipes.id])
-      ..where(_db.cachedRecipes.imageUrl.equals(url.toString()))
-      ..limit(1);
-    if (await users.getSingleOrNull() == null) return;
-    await _db
-        .into(_db.cachedImages)
-        .insertOnConflictUpdate(
-          CachedImagesCompanion(
-            url: Value(url.toString()),
-            bytes: Value(bytes),
-          ),
-        );
-  });
+  /// Stores the image at [url] if a stored recipe still uses it. With an
+  /// [epoch], only if the cache wasn't cleared since.
+  Future<void> putImage(Uri url, Uint8List bytes, {int? epoch}) =>
+      _db.transaction(() async {
+        if (epoch != null && _db.clears != epoch) return;
+        final users = _db.selectOnly(_db.cachedRecipes)
+          ..addColumns([_db.cachedRecipes.id])
+          ..where(_db.cachedRecipes.imageUrl.equals(url.toString()))
+          ..limit(1);
+        if (await users.getSingleOrNull() == null) return;
+        await _db
+            .into(_db.cachedImages)
+            .insertOnConflictUpdate(
+              CachedImagesCompanion(
+                url: Value(url.toString()),
+                bytes: Value(bytes),
+              ),
+            );
+      });
 
   @override
   Future<Uint8List?> image(Uri url) async {

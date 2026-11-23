@@ -29,40 +29,49 @@ class ShoppingCache {
   /// The number to pass to the writes for a read that starts now.
   int get epoch => _db.clears;
 
-  /// Replaces the stored list with [snapshot], read just now.
-  Future<void> putList(ShoppingListSnapshot snapshot, {required int epoch}) =>
-      _db.transaction(() async {
-        if (_db.clears != epoch) return;
-        await _db.delete(_db.cachedShoppingEntries).go();
-        await _db.batch(
-          (batch) => batch.insertAll(_db.cachedShoppingEntries, [
-            for (final (position, entry) in snapshot.entries.indexed)
-              _row(entry, position),
-          ]),
-        );
-        await _putInfo(
-          syncedAt: snapshot.syncedAt,
-          truncated: snapshot.truncated,
-        );
-      });
+  /// Replaces the stored list with [snapshot], read just now. The entries
+  /// with ids in [keep] (changed here since the read started) stay as
+  /// stored, or missing.
+  Future<void> putList(
+    ShoppingListSnapshot snapshot, {
+    Set<int> keep = const {},
+    required int epoch,
+  }) => _db.transaction(() async {
+    if (_db.clears != epoch) return;
+    await (_db.delete(
+      _db.cachedShoppingEntries,
+    )..where((r) => r.id.isNotIn(keep))).go();
+    await _db.batch(
+      (batch) => batch.insertAll(_db.cachedShoppingEntries, [
+        for (final (position, entry) in snapshot.entries.indexed)
+          if (!keep.contains(entry.id)) _row(entry, position),
+      ]),
+    );
+    await _putInfo(syncedAt: snapshot.syncedAt, truncated: snapshot.truncated);
+  });
 
   /// Merges the entries an incremental read ([changes]) found changed into
   /// the stored list: changed entries are replaced, new ones added at the
-  /// end (unless the list was cut off, which leaves out the newest). Does
-  /// nothing if no list is stored.
-  Future<void> merge(ShoppingListSnapshot changes, {required int epoch}) =>
-      _db.transaction(() async {
-        if (_db.clears != epoch) return;
-        final info = await _info();
-        if (info == null) return;
-        var next = await _nextPosition();
-        for (final entry in changes.entries) {
-          final updated = await _replace(entry);
-          if (updated || info.truncated) continue;
-          await _db.into(_db.cachedShoppingEntries).insert(_row(entry, next++));
-        }
-        await _putInfo(syncedAt: changes.syncedAt, truncated: info.truncated);
-      });
+  /// end (unless the list was cut off, which leaves out the newest). Entries
+  /// with ids in [keep] (changed here since the read started) stay as
+  /// stored, or missing. Does nothing if no list is stored.
+  Future<void> merge(
+    ShoppingListSnapshot changes, {
+    Set<int> keep = const {},
+    required int epoch,
+  }) => _db.transaction(() async {
+    if (_db.clears != epoch) return;
+    final info = await _info();
+    if (info == null) return;
+    var next = await _nextPosition();
+    for (final entry in changes.entries) {
+      if (keep.contains(entry.id)) continue;
+      final updated = await _replace(entry);
+      if (updated || info.truncated) continue;
+      await _db.into(_db.cachedShoppingEntries).insert(_row(entry, next++));
+    }
+    await _putInfo(syncedAt: changes.syncedAt, truncated: info.truncated);
+  });
 
   /// Marks the stored entries with [ids] as checked off ([checked] `true`)
   /// or not, as the server just accepted.

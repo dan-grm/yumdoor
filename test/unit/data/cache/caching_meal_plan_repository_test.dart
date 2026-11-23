@@ -153,7 +153,11 @@ void main() {
       repository = CachingMealPlanRepository(
         remote,
         cache,
-        storeRecipe: (recipe) async => storedRecipes.add(recipe.id),
+        storeRecipe: (recipe, {required epoch}) async {
+          expect(epoch, cache.epoch);
+          storedRecipes.add(recipe.id);
+        },
+        clock: () => DateTime(2026, 11, 16, 20),
       );
     });
 
@@ -214,15 +218,51 @@ void main() {
       repository = CachingMealPlanRepository(
         remote,
         cache,
-        storeRecipe: (recipe) async {
+        storeRecipe: (recipe, {required epoch}) async {
           storedRecipes.add(recipe.id);
           if (recipe.id == 101) throw const ServerFailure();
         },
+        clock: () => DateTime(2026, 11, 16, 20),
       );
 
       await repository.list(_monday, _sunday);
       await pumpEventQueue();
       expect(storedRecipes, [101, 102]);
+    });
+
+    test('stores no recipes of plans that are over', () async {
+      repository = CachingMealPlanRepository(
+        remote,
+        cache,
+        storeRecipe: (recipe, {required epoch}) async =>
+            storedRecipes.add(recipe.id),
+        clock: () => DateTime(2026, 11, 17, 8),
+      );
+
+      await repository.list(_monday, _sunday);
+      await pumpEventQueue();
+      expect(storedRecipes, isEmpty);
+    });
+
+    test('stops storing recipes once the cache was cleared', () async {
+      final second = _bolognese.copyWith(
+        id: 3,
+        recipe: const RecipeSummary(id: 102, name: 'Flammkuchen'),
+      );
+      remote.plans.add(second);
+      repository = CachingMealPlanRepository(
+        remote,
+        cache,
+        storeRecipe: (recipe, {required epoch}) async {
+          storedRecipes.add(recipe.id);
+          await RecipeCache(db).clear();
+        },
+        clock: () => DateTime(2026, 11, 16, 20),
+      );
+
+      await repository.list(_monday, _sunday);
+      await pumpEventQueue();
+      expect(storedRecipes, [101]);
     });
 
     test('stores nothing once closed', () async {

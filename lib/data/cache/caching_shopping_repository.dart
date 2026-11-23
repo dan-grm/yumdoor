@@ -18,6 +18,9 @@ import 'shopping_cache.dart';
 /// is read-only).
 ///
 /// Cache writes run one after another, in the order the server answered.
+/// A read that answers late doesn't undo what is stored already: a full
+/// read older than the stored one is dropped, an incremental one too, and
+/// neither touches entries changed here after it started.
 class CachingShoppingRepository implements ShoppingRepository {
   CachingShoppingRepository(this._remote, this._cache);
 
@@ -26,6 +29,30 @@ class CachingShoppingRepository implements ShoppingRepository {
 
   var _closed = false;
   Future<void> _writes = Future.value();
+
+  /// Counts reads started and changes accepted, to order them.
+  var _clock = 0;
+
+  /// When each entry was last changed here (checked off, added, deleted),
+  /// as [_clock] then.
+  final _changedAt = <int, int>{};
+
+  /// When the full read the stored list comes from started.
+  var _storedFullRead = -1;
+
+  /// The ids of the entries changed here since [start].
+  Set<int> _changedSince(int start) => {
+    for (final MapEntry(key: id, value: at) in _changedAt.entries)
+      if (at > start) id,
+  };
+
+  /// Notes that the entries with [ids] were just changed here.
+  void _changed(Iterable<int> ids) {
+    final at = ++_clock;
+    for (final id in ids) {
+      _changedAt[id] = at;
+    }
+  }
 
   /// Stops storing: the session ended, and logout clears the cache.
   void close() => _closed = true;
@@ -46,6 +73,7 @@ class CachingShoppingRepository implements ShoppingRepository {
   @override
   Future<ShoppingListSnapshot> fetch({DateTime? updatedAfter}) async {
     final epoch = _cache.epoch;
+    final start = ++_clock;
     final ShoppingListSnapshot snapshot;
     try {
       snapshot = await _remote.fetch(updatedAfter: updatedAfter);
@@ -54,11 +82,17 @@ class CachingShoppingRepository implements ShoppingRepository {
       if (updatedAfter != null) rethrow;
       return await _read(_cache.list) ?? (throw const OfflineFailure());
     }
-    if (updatedAfter == null) {
-      _store(() => _cache.putList(snapshot, epoch: epoch));
-    } else {
-      _store(() => _cache.merge(snapshot, epoch: epoch));
-    }
+    _store(() async {
+      // A newer full read is stored already.
+      if (start < _storedFullRead) return;
+      final keep = _changedSince(start);
+      if (updatedAfter == null) {
+        _storedFullRead = start;
+        await _cache.putList(snapshot, keep: keep, epoch: epoch);
+      } else {
+        await _cache.merge(snapshot, keep: keep, epoch: epoch);
+      }
+    });
     return snapshot;
   }
 
@@ -66,6 +100,7 @@ class CachingShoppingRepository implements ShoppingRepository {
   Future<void> setChecked(Set<int> ids, {required bool checked}) async {
     final epoch = _cache.epoch;
     await _remote.setChecked(ids, checked: checked);
+    _changed(ids);
     _store(() => _cache.setChecked(ids, checked: checked, epoch: epoch));
   }
 
@@ -97,6 +132,7 @@ class CachingShoppingRepository implements ShoppingRepository {
   }) async {
     final epoch = _cache.epoch;
     final entry = await _remote.addItem(foodId, amount, unitId: unitId);
+    _changed([entry.id]);
     _store(() => _cache.add(entry, epoch: epoch));
     return entry;
   }
@@ -107,6 +143,7 @@ class CachingShoppingRepository implements ShoppingRepository {
     final list = entries.toList();
     await _remote.deleteEntries(list);
     final ids = {for (final entry in list) entry.id};
+    _changed(ids);
     _store(() => _cache.remove(ids, epoch: epoch));
   }
 

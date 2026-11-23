@@ -137,6 +137,8 @@ class ShoppingList extends _$ShoppingList {
   Future<void> poll() async {
     final server = _server;
     if (server == null || _fullReads > 0) return;
+    // The stored list may lack what changed since, deletions included.
+    if (server.cachedAt != null) return refresh();
     final ref = this.ref;
     final repository = _repository;
     final read = ++_reads;

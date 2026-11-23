@@ -14,16 +14,26 @@ import 'meal_plan_cache.dart';
 /// it anew.
 ///
 /// After each list from the server, [storeRecipe] is called in the
-/// background for the recipe of each plan, so the planned recipes open
-/// offline too.
+/// background for the recipe of each plan that isn't over yet, so the
+/// planned recipes open offline too. Past weeks store none: they would only
+/// push the recipes the user opened out of the cache.
 class CachingMealPlanRepository implements MealPlanRepository {
-  CachingMealPlanRepository(this._remote, this._cache, {this.storeRecipe});
+  CachingMealPlanRepository(
+    this._remote,
+    this._cache, {
+    this.storeRecipe,
+    DateTime Function()? clock,
+  }) : _now = clock ?? DateTime.now;
 
   final MealPlanRepository _remote;
   final MealPlanCache _cache;
+  final DateTime Function() _now;
 
-  /// Stores a planned recipe for offline use. May throw.
-  final Future<void> Function(RecipeSummary recipe)? storeRecipe;
+  /// Stores a planned recipe for offline use, unless the cache was cleared
+  /// since `epoch` ([MealPlanCache.epoch]); returns once it is stored. May
+  /// throw.
+  final Future<void> Function(RecipeSummary recipe, {required int epoch})?
+  storeRecipe;
 
   var _closed = false;
 
@@ -41,22 +51,24 @@ class CachingMealPlanRepository implements MealPlanRepository {
     }
     if (!_closed) {
       unawaited(_ignoreErrors(_cache.put(from, to, list.plans, epoch: epoch)));
-      unawaited(_ignoreErrors(_storeRecipes(list.plans)));
+      unawaited(_ignoreErrors(_storeRecipes(list.plans, epoch)));
     }
     return list;
   }
 
   /// One after another, so a week doesn't send a burst of requests.
-  Future<void> _storeRecipes(List<MealPlan> plans) async {
+  Future<void> _storeRecipes(List<MealPlan> plans, int epoch) async {
     final store = storeRecipe;
     if (store == null) return;
+    final today = CalendarDay.of(_now());
     final recipes = {
-      for (final recipe in [for (final plan in plans) ?plan.recipe])
-        recipe.id: recipe,
+      for (final plan in plans)
+        if (plan.recipe case final recipe? when !plan.toDay.isBefore(today))
+          recipe.id: recipe,
     };
     for (final recipe in recipes.values) {
-      if (_closed) return;
-      await _ignoreErrors(store(recipe));
+      if (_closed || _cache.epoch != epoch) return;
+      await _ignoreErrors(store(recipe, epoch: epoch));
     }
   }
 

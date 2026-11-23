@@ -270,6 +270,20 @@ void main() {
       expect(view.entries, hasLength(mockupShoppingList().length));
     });
 
+    test('a poll on the stored list reads it in full', () async {
+      repository.cachedAt = cachedAt;
+      container = await create();
+      await container.read(shoppingListProvider.future);
+
+      repository.cachedAt = null;
+      await list().poll();
+      expect(repository.fetchedAfter.last, isNull);
+      expect(
+        container.read(shoppingListProvider).requireValue.cachedAt,
+        isNull,
+      );
+    });
+
     test('the server list replaces the stored one', () async {
       repository.cachedAt = cachedAt;
       container = await create();
