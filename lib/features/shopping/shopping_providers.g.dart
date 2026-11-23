@@ -81,7 +81,7 @@ final class ShoppingListProvider
   ShoppingList create() => ShoppingList();
 }
 
-String _$shoppingListHash() => r'1ada5bfa113d88331533d99ca7a0ec928eabfd91';
+String _$shoppingListHash() => r'da0c5ecf09a6e3f59dd88805b420aa1d52a4382b';
 
 /// The entries of the household's shopping list, with the check states set
 /// on this device shown at once.

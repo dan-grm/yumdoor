@@ -1,7 +1,9 @@
 @Tags(['integration'])
 library;
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/data/api/tandoor_dio.dart';
 import 'package:yumdoor/data/repositories/tandoor_repositories.dart';
 import 'package:yumdoor/domain/models/calendar_day.dart';
@@ -9,6 +11,7 @@ import 'package:yumdoor/domain/models/meal_plan.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
 import 'package:yumdoor/domain/models/shopping.dart';
+import 'package:yumdoor/features/shopping/shopping_providers.dart';
 
 import '../../tool/seed/data.dart';
 import 'seeded_tandoor.dart';
@@ -377,6 +380,52 @@ void main() {
     );
     // Gone already: ignored.
     await anna.shopping.deleteEntries([item]);
+  });
+
+  // Here rather than in a file of its own: it adds items by hand, which the
+  // tests above count.
+  test("Anna's open list sees Ben's check-off and new item", () async {
+    final recipe = await salad();
+    final mozzarella = recipe.steps
+        .expand((s) => s.ingredients)
+        .singleWhere((i) => i.food?.name == 'Mozzarella');
+    final first = await ben.shopping.addItem(mozzarella.food!.id, 1);
+    final added = <ShoppingEntry>[first];
+    final annasPhone = ProviderContainer(
+      overrides: [shoppingRepositoryProvider.overrideWithValue(anna.shopping)],
+    );
+    try {
+      ShoppingEntry? shown(int id) {
+        for (final entry
+            in annasPhone.read(shoppingListProvider).requireValue.entries) {
+          if (entry.id == id) return entry;
+        }
+        return null;
+      }
+
+      annasPhone.listen(shoppingListProvider, (_, _) {});
+      await annasPhone.read(shoppingListProvider.future);
+      final list = annasPhone.read(shoppingListProvider.notifier);
+      expect(shown(first.id)!.checked, isFalse);
+
+      await ben.shopping.setChecked({first.id}, checked: true);
+      added.add(await ben.shopping.addItem(mozzarella.food!.id, 2));
+      await list.poll();
+
+      expect(shown(first.id)!.checked, isTrue);
+      expect(shown(first.id)!.completedAt, isNotNull);
+      expect(shown(added.last.id)!.amount, 2);
+
+      // Deleted: gone with the next full read, not with a poll.
+      await ben.shopping.deleteEntries([added.last]);
+      await list.poll();
+      expect(shown(added.last.id), isNotNull);
+      await list.refresh();
+      expect(shown(added.last.id), isNull);
+    } finally {
+      annasPhone.dispose();
+      await ben.shopping.deleteEntries(added);
+    }
   });
 }
 
