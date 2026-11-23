@@ -85,11 +85,21 @@ class FakeShoppingRepository implements ShoppingRepository {
     return buildRecipeShopping(recipe, servings: servings);
   }
 
+  /// The `updatedAfter` of each [fetch], in order; `null` for a full read.
+  final fetchedAfter = <DateTime?>[];
+
+  /// With `updatedAfter`, only the entries changed since then, as Tandoor
+  /// does. [now] is the `syncedAt` for the next read.
   @override
   Future<ShoppingListSnapshot> fetch({DateTime? updatedAfter}) async {
     fetchCalls++;
+    fetchedAfter.add(updatedAfter);
     if (fetchFailure case final failure?) throw failure;
-    final read = [...entries];
+    final read = [
+      for (final entry in entries)
+        if (updatedAfter == null || !entry.updatedAt.isBefore(updatedAfter))
+          entry,
+    ];
     if (fetchGates.isNotEmpty) await fetchGates.removeAt(0).future;
     return ShoppingListSnapshot(
       entries: read,

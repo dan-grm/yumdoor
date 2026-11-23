@@ -494,6 +494,9 @@ amounts across recipes; merging per food and unit for display is our job. "Add t
     That includes an unencoded `+` in the offset, which arrives as a space. URL-encode the value.
   - Yumdoor passes the first page's `timestamp` minus a minute as the next `updated_after`, so a change between
     the query and the timestamp (serializing a page can take a while) isn't missed. An entry may come twice.
+  - Tandoor has no push channel. While the shopping list is in view and online, Yumdoor polls with
+    `updated_after` every 5 s and reads the whole list every 3 minutes, on pull to refresh and when coming back to
+    it (tab, app or connection), to drop deleted entries (`lib/features/shopping/shopping_sync.dart`).
 - Pages are offsets into the list ordered by id: an entry deleted between two page requests shifts the later pages
   and one entry is skipped. Yumdoor starts the read over when `count` changes between pages. That misses a delete
   plus an add between two pages, and any delete in a list at the cap (`count` stays 1000).

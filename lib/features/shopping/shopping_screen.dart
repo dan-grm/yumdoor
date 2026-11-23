@@ -18,6 +18,7 @@ import '../common/failure_view.dart';
 import '../search/option_sheet.dart';
 import 'add_item_field.dart';
 import 'shopping_providers.dart';
+import 'shopping_sync.dart';
 
 /// How long the snackbar after a check-off offers to undo it.
 const shoppingSnackBarDuration = Duration(seconds: 4);
@@ -33,8 +34,10 @@ const shoppingFailureSnackBarDuration = Duration(seconds: 8);
 /// straight to Tandoor ([ShoppingList.setChecked]); a snackbar offers to
 /// undo it. Offline, a tap only explains that ticking needs a connection.
 ///
-/// The list is read again whenever the tab comes back into view, and on
-/// pull to refresh.
+/// While the list is in view and online, it stays in sync with the
+/// household's ([ShoppingSync]): what the others tick off or add shows up
+/// within seconds. Coming back to it (the tab, the app or the connection)
+/// reads it again at once, as does pull to refresh.
 class ShoppingScreen extends ConsumerStatefulWidget {
   const ShoppingScreen({super.key});
 
@@ -43,22 +46,78 @@ class ShoppingScreen extends ConsumerStatefulWidget {
 }
 
 class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
-  /// Whether the tab was in view at the last build; hidden tabs have their
-  /// tickers off ([TickerMode]).
-  bool? _visible;
+  late final ShoppingSync _sync = ShoppingSync(
+    poll: _poll,
+    reload: _refreshQuietly,
+  );
+  late final AppLifecycleListener _lifecycle;
+
+  /// Whether the tab is in view; hidden tabs have their tickers off
+  /// ([TickerMode]).
+  var _tabVisible = false;
+
+  /// Whether the app is in front (on the web: the browser tab is visible).
+  var _appVisible = true;
+
+  /// Whether the screen was set up, so the first start doesn't read the
+  /// list that is just being loaded again; later ones catch up.
+  var _started = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _appVisible = _isVisible(WidgetsBinding.instance.lifecycleState);
+    _lifecycle = AppLifecycleListener(
+      onStateChange: (state) {
+        _appVisible = _isVisible(state);
+        _updateSync();
+      },
+    );
+    // Offline, nothing to ask; back online, catch up.
+    ref.listenManual(isOfflineProvider, (_, _) => _updateSync());
+  }
+
+  /// Inactive still counts: the app is in view, only without focus (a
+  /// browser tab while another window has it, a system dialog).
+  static bool _isVisible(AppLifecycleState? state) => switch (state) {
+    null || AppLifecycleState.resumed || AppLifecycleState.inactive => true,
+    AppLifecycleState.hidden ||
+    AppLifecycleState.paused ||
+    AppLifecycleState.detached => false,
+  };
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final visible = TickerMode.valuesOf(context).enabled;
-    // Back into view: what the planner or the others added since shows up.
+    _tabVisible = TickerMode.valuesOf(context).enabled;
     // After this frame: providers can't change while widgets build.
-    if (_visible == false && visible) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) unawaited(_refreshQuietly());
-      });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _updateSync();
+    });
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    _sync.dispose();
+    super.dispose();
+  }
+
+  /// Keeps the list in sync while it is in view and online.
+  void _updateSync() {
+    final active = _tabVisible && _appVisible && !ref.read(isOfflineProvider);
+    final catchUp = _started;
+    _started = true;
+    if (active != _sync.active) _sync.setActive(active, catchUp: catchUp);
+  }
+
+  Future<void> _poll() async {
+    if (!ref.read(shoppingListProvider).hasValue) return;
+    try {
+      await ref.read(shoppingListProvider.notifier).poll();
+    } on Object {
+      // The next poll tries again; pull to refresh says why.
     }
-    _visible = visible;
   }
 
   Future<void> _refreshQuietly() async {
@@ -68,7 +127,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
       return;
     }
     try {
-      await ref.read(shoppingListProvider.notifier).refresh();
+      await ref.read(shoppingListProvider.notifier).catchUp();
     } on Object {
       // The list stays as it was; pull to refresh says why.
     }
@@ -91,6 +150,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
       ref.invalidate(shoppingMeProvider);
     }
     Object? failure;
+    _sync.didReload();
     try {
       await ref.read(shoppingListProvider.notifier).refresh();
     } on Failure catch (error) {

@@ -7,6 +7,7 @@ import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/domain/models/user_ref.dart';
 import 'package:yumdoor/features/shopping/shopping_screen.dart';
+import 'package:yumdoor/features/shopping/shopping_sync.dart';
 
 import '../../fakes/app_overrides.dart';
 import '../../fakes/fake_book_user_repositories.dart';
@@ -293,6 +294,55 @@ void main() {
 
     expect(repository.fetchCalls, 2);
     expect(find.text('Ingwer'), findsOneWidget);
+  });
+
+  testWidgets('stays in sync while in view, online and in front', (
+    tester,
+  ) async {
+    final connectivity = FakeConnectivityService();
+    await pumpList(tester, connectivity: connectivity);
+    expect(repository.fetchedAfter, [null]);
+
+    // Lena ticks Feta off on her phone.
+    repository.now = repository.now.add(const Duration(minutes: 1));
+    final feta = repository.entries.indexWhere((e) => e.id == 105);
+    repository.entries[feta] = repository.entries[feta].copyWith(
+      checked: true,
+      completedAt: repository.now,
+      updatedAt: repository.now,
+    );
+    await tester.pump(shoppingPollInterval);
+    await tester.pumpAndSettle();
+    expect(repository.fetchedAfter, hasLength(2));
+    expect(repository.fetchedAfter.last, isNotNull);
+    expect(find.text('Geteilt mit deinem Haushalt · 6 offen'), findsOneWidget);
+
+    // Offline: nothing to ask. Back online: read in full at once.
+    connectivity.isOnline = false;
+    await tester.pump(const Duration(seconds: 30));
+    expect(repository.fetchedAfter, hasLength(2));
+    connectivity.isOnline = true;
+    await tester.pump();
+    expect(repository.fetchedAfter, hasLength(3));
+    expect(repository.fetchedAfter.last, isNull);
+
+    // In the background (another browser tab): paused, caught up on return.
+    tester.binding
+      ..handleAppLifecycleStateChanged(AppLifecycleState.inactive)
+      ..handleAppLifecycleStateChanged(AppLifecycleState.hidden);
+    await tester.pump(const Duration(seconds: 30));
+    expect(repository.fetchedAfter, hasLength(3));
+    tester.binding
+      ..handleAppLifecycleStateChanged(AppLifecycleState.inactive)
+      ..handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(repository.fetchedAfter, hasLength(4));
+    expect(repository.fetchedAfter.last, isNull);
+
+    // Polling again.
+    await tester.pump(shoppingPollInterval);
+    expect(repository.fetchedAfter, hasLength(5));
+    expect(repository.fetchedAfter.last, isNotNull);
   });
 
   testWidgets('undo after going offline is disabled and says why', (

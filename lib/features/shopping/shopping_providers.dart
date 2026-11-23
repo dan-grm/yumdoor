@@ -73,9 +73,12 @@ class ShoppingList extends _$ShoppingList {
   /// How many reads have started.
   var _reads = 0;
 
-  /// The read [_server] comes from; an older one that ends later is
-  /// dropped.
+  /// The full read [_server] comes from; an older one that ends later is
+  /// dropped. An edit moves it on, too.
   var _shownRead = 0;
+
+  /// How many full reads are running.
+  var _fullReads = 0;
 
   @override
   Future<ShoppingListView> build() async {
@@ -83,7 +86,7 @@ class ShoppingList extends _$ShoppingList {
     _server = null;
     _changes.clear();
     final read = ++_reads;
-    final snapshot = await _repository.fetch();
+    final snapshot = await _fullRead(_repository);
     _apply(read, snapshot);
     return _view();
   }
@@ -95,10 +98,38 @@ class ShoppingList extends _$ShoppingList {
     final ref = this.ref;
     final repository = _repository;
     final read = ++_reads;
-    final snapshot = await repository.fetch();
+    final snapshot = await _fullRead(repository);
     if (!ref.mounted || !identical(repository, _repository)) return;
     _apply(read, snapshot);
     state = AsyncData(_view());
+  }
+
+  /// Sends what is waiting to be sent, then reads the list again
+  /// ([refresh]): for coming back to the list, or back online.
+  ///
+  /// The offline check-off queue (#116) hooks in here: once [_send] queues
+  /// check-offs while offline and chains sending them on [_writes] when the
+  /// connection is back, this read shows the list after they went through.
+  Future<void> catchUp() async {
+    await _writes;
+    await refresh();
+  }
+
+  /// Asks Tandoor what changed since the last read, by anyone in the
+  /// household, and merges it into the list. Deleted entries don't show up
+  /// this way; [refresh] now and then. Does nothing while the list is
+  /// loading or read in full, which brings the changes anyway. Throws the
+  /// [Failure] if the read fails; the list then stays as it was.
+  Future<void> poll() async {
+    final server = _server;
+    if (server == null || _fullReads > 0) return;
+    final ref = this.ref;
+    final repository = _repository;
+    final read = ++_reads;
+    final changes = await repository.fetch(updatedAfter: server.syncedAt);
+    if (!ref.mounted || !identical(repository, _repository)) return;
+    _merge(read, changes);
+    if (changes.entries.isNotEmpty) _publish();
   }
 
   /// Checks off ([checked] `true`) or unchecks the entries with [ids],
@@ -298,6 +329,50 @@ class ShoppingList extends _$ShoppingList {
     List<int> ids,
     bool checked,
   ) => repository.setChecked(ids.toSet(), checked: checked);
+
+  Future<ShoppingListSnapshot> _fullRead(ShoppingRepository repository) async {
+    _fullReads++;
+    try {
+      return await repository.fetch();
+    } finally {
+      _fullReads--;
+    }
+  }
+
+  /// Merges the entries an incremental read found changed into the list.
+  ///
+  /// A read that started before the list shown ([_shownRead]: a full read
+  /// or an edit) may bring back an entry deleted since, and older states:
+  /// it only updates entries still on the list, where it has a newer state.
+  void _merge(int read, ShoppingListSnapshot changes) {
+    final server = _server;
+    if (server == null) return;
+    final current = read >= _shownRead;
+    final changed = {for (final entry in changes.entries) entry.id: entry};
+    final entries = <ShoppingEntry>[];
+    for (final entry in server.entries) {
+      final update = changed.remove(entry.id);
+      if (update == null ||
+          (!current && !update.updatedAt.isAfter(entry.updatedAt))) {
+        entries.add(entry);
+      } else {
+        entries.add(update);
+      }
+    }
+    // New entries, by the others or by this device elsewhere.
+    if (current) entries.addAll(changed.values);
+    _server = server.copyWith(
+      entries: entries,
+      syncedAt: current ? changes.syncedAt : server.syncedAt,
+    );
+    // Check states this read shows as saved.
+    for (final entry in changes.entries) {
+      final change = _changes[entry.id];
+      if (change?.savedBeforeRead case final saved? when saved < read) {
+        _changes.remove(entry.id);
+      }
+    }
+  }
 
   void _apply(int read, ShoppingListSnapshot snapshot) {
     if (read < _shownRead) return;
