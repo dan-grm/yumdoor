@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
 import 'package:yumdoor/domain/models/shopping.dart';
+import 'package:yumdoor/domain/models/unit.dart';
+import 'package:yumdoor/domain/models/user_ref.dart';
 import 'package:yumdoor/domain/repositories/shopping_repository.dart';
 import 'package:yumdoor/domain/services/recipe_shopping.dart';
 
@@ -15,7 +17,7 @@ typedef SetCheckedCall = ({Set<int> ids, bool checked});
 /// [ShoppingRepository] for tests: a list of [entries] that [fetch] returns
 /// and [setChecked] changes, and [addRecipe] calls it records. Set
 /// [failure] to make [addRecipe] throw, [fetchFailure] or [checkFailure]
-/// for the others. [addItem] and [deleteEntries] aren't needed yet.
+/// for the others. [editFailure] fails [addItem] and [deleteEntries].
 class FakeShoppingRepository implements ShoppingRepository {
   FakeShoppingRepository({
     List<ShoppingEntry> entries = const [],
@@ -117,11 +119,48 @@ class FakeShoppingRepository implements ShoppingRepository {
   @override
   Future<List<Supermarket>> supermarkets() async => supermarketList;
 
-  @override
-  Future<ShoppingEntry> addItem(int foodId, double amount, {int? unitId}) =>
-      throw UnimplementedError();
+  /// The foods [addItem] knows by id; others come as `Food 7` (with their id).
+  final foods = <int, ShoppingFood>{};
+
+  /// The units [addItem] knows by id; unknown ones are left out.
+  final units = <int, Unit>{};
+
+  /// Set to make [addItem] or [deleteEntries] throw.
+  Failure? editFailure;
+
+  /// The [addItem] calls that succeeded.
+  final addedItems = <({int foodId, double amount, int? unitId})>[];
+
+  /// The ids passed to [deleteEntries] that succeeded, in order.
+  final deletedIds = <int>[];
+
+  var _nextId = 1000;
 
   @override
-  Future<void> deleteEntries(Iterable<ShoppingEntry> entries) =>
-      throw UnimplementedError();
+  Future<ShoppingEntry> addItem(
+    int foodId,
+    double amount, {
+    int? unitId,
+  }) async {
+    if (editFailure case final failure?) throw failure;
+    addedItems.add((foodId: foodId, amount: amount, unitId: unitId));
+    final entry = ShoppingEntry(
+      id: _nextId++,
+      food: foods[foodId] ?? ShoppingFood(id: foodId, name: 'Food $foodId'),
+      unit: units[unitId],
+      amount: amount,
+      updatedAt: now,
+      createdBy: const UserRef(id: 1, name: 'Anna'),
+    );
+    entries.add(entry);
+    return entry;
+  }
+
+  @override
+  Future<void> deleteEntries(Iterable<ShoppingEntry> toDelete) async {
+    if (editFailure case final failure?) throw failure;
+    final ids = {for (final e in toDelete) e.id};
+    deletedIds.addAll(ids);
+    entries.removeWhere((e) => ids.contains(e.id));
+  }
 }

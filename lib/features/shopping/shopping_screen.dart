@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/offline.dart';
+import '../../app/repository_providers.dart';
 import '../../core/failures.dart';
 import '../../design/components/buttons.dart';
 import '../../design/components/ingredient_row.dart';
@@ -15,6 +16,7 @@ import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import '../search/option_sheet.dart';
+import 'add_item_field.dart';
 import 'shopping_providers.dart';
 
 /// How long the snackbar after a check-off offers to undo it.
@@ -163,6 +165,145 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     await set(checked);
   }
 
+  /// Adds the typed [line] ("2 Zitronen"): Tandoor splits it into amount,
+  /// unit and food. Returns whether it is on the list now.
+  Future<bool> _addLine(String line) async {
+    final messenger = ScaffoldMessenger.of(context);
+    if (ref.read(isOfflineProvider)) {
+      _show(messenger, (context) => context.l10n.offlineWriteDisabled);
+      return false;
+    }
+    final parser = ref.read(ingredientParserProvider);
+    final list = ref.read(shoppingListProvider.notifier);
+    Failure? failure;
+    final foodId = await () async {
+      try {
+        final parsed = await parser.parse(line);
+        if (parsed.food?.id case final id?) {
+          failure = await list.addItem(
+            id,
+            parsed.amount,
+            unitId: parsed.unit?.id,
+          );
+          return id;
+        }
+      } on Failure catch (error) {
+        failure = error;
+      } on Object catch (error, stack) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stack,
+            library: 'shopping',
+          ),
+        );
+        failure = ServerFailure(cause: error);
+      }
+      return null;
+    }();
+    if (failure case final failure?) {
+      _show(
+        messenger,
+        (context) =>
+            context.l10n.shoppingAddFailed(failureMessage(context, failure)),
+        failed: true,
+      );
+      return false;
+    }
+    if (foodId == null) {
+      _show(
+        messenger,
+        (context) => context.l10n.shoppingAddUnparsed(line),
+        failed: true,
+      );
+      return false;
+    }
+    _show(messenger, (context) => context.l10n.shoppingAdded(line));
+    return true;
+  }
+
+  /// The actions of [row]: on hand, or delete.
+  Future<void> _more(ShoppingListRow row, String name) async {
+    final messenger = ScaffoldMessenger.of(context);
+    if (ref.read(isOfflineProvider)) {
+      _show(messenger, (context) => context.l10n.offlineWriteDisabled);
+      return;
+    }
+    final l10n = context.l10n;
+    final action = await showOptionSheet<_RowAction>(
+      context,
+      title: name,
+      hint: l10n.shoppingOnHandHint,
+      options: [
+        (l10n.shoppingOnHand, _RowAction.onHand),
+        (l10n.shoppingDelete, _RowAction.delete),
+      ],
+    );
+    if (action == null || !mounted) return;
+    // Gone offline while choosing.
+    if (ref.read(isOfflineProvider)) {
+      _show(messenger, (context) => context.l10n.offlineWriteDisabled);
+      return;
+    }
+    final list = ref.read(shoppingListProvider.notifier);
+    switch (action) {
+      case _RowAction.onHand:
+        final failure = await list.markOnHand(row.food.id, row.entryIds);
+        _show(
+          messenger,
+          (context) => failure == null
+              ? context.l10n.shoppingOnHandDone(name)
+              : context.l10n.shoppingOnHandFailed(
+                  name,
+                  failureMessage(context, failure),
+                ),
+          failed: failure != null,
+        );
+      case _RowAction.delete:
+        final entries = list.entriesOf(row.entryIds);
+        final failure = await list.delete(entries);
+        if (failure != null) {
+          _show(
+            messenger,
+            (context) => context.l10n.shoppingDeleteFailed(
+              name,
+              failureMessage(context, failure),
+            ),
+            failed: true,
+          );
+          return;
+        }
+        _show(
+          messenger,
+          (context) => context.l10n.shoppingDeleted(name),
+          undo: () => unawaited(_restore(messenger, entries, name)),
+        );
+    }
+  }
+
+  Future<void> _restore(
+    ScaffoldMessengerState messenger,
+    List<ShoppingEntry> entries,
+    String name,
+  ) async {
+    if (ref.read(isOfflineProvider)) {
+      _show(messenger, (context) => context.l10n.offlineWriteDisabled);
+      return;
+    }
+    final failure = await ref
+        .read(shoppingListProvider.notifier)
+        .restore(entries);
+    if (failure == null) return;
+    _show(
+      messenger,
+      (context) => context.l10n.shoppingRestoreFailed(
+        name,
+        failureMessage(context, failure),
+      ),
+      failed: true,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
@@ -208,6 +349,15 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
                           l10n.shoppingShared(groups.openCount),
                           style: t.label.copyWith(color: t.inkMuted),
                         ),
+                      SizedBox(height: t.space3),
+                      AddItemField(
+                        onAdd: _addLine,
+                        enabled: !ref.watch(isOfflineProvider),
+                        onDisabledTap: () => _show(
+                          ScaffoldMessenger.of(context),
+                          (context) => context.l10n.offlineWriteDisabled,
+                        ),
+                      ),
                       if (supermarkets.isNotEmpty) ...[
                         SizedBox(height: t.space2),
                         Align(
@@ -243,6 +393,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
                   me: me,
                   onRefresh: _refresh,
                   onToggle: _toggle,
+                  onMore: _more,
                 ),
                 _ => const Center(child: CircularProgressIndicator()),
               },
@@ -277,6 +428,8 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
   }
 }
 
+enum _RowAction { onHand, delete }
+
 /// Shows the [message] built in the context of [messenger] in place of any
 /// snackbar shown before, so quick ticks don't queue up. With [undo], it
 /// offers to take the change back.
@@ -305,6 +458,8 @@ void _show(
     );
 }
 
+typedef _More = void Function(ShoppingListRow row, String name);
+
 typedef _Toggle = Future<void> Function(
   ShoppingListRow row,
   String name, {
@@ -320,6 +475,7 @@ class _ListBody extends StatefulWidget {
     required this.me,
     required this.onRefresh,
     required this.onToggle,
+    required this.onMore,
   });
 
   final ShoppingListGroups groups;
@@ -329,6 +485,7 @@ class _ListBody extends StatefulWidget {
   final int? me;
   final Future<void> Function() onRefresh;
   final _Toggle onToggle;
+  final _More onMore;
 
   @override
   State<_ListBody> createState() => _ListBodyState();
@@ -341,7 +498,7 @@ class _ListBodyState extends State<_ListBody> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
-    final _ListBody(:groups, :me, :onToggle) = widget;
+    final _ListBody(:groups, :me, :onToggle, :onMore) = widget;
     final done = groups.done;
 
     return RefreshIndicator(
@@ -389,7 +546,12 @@ class _ListBodyState extends State<_ListBody> {
                     ),
                   ),
                 ),
-                _RowCard(rows: section.rows, me: me, onToggle: onToggle),
+                _RowCard(
+                  rows: section.rows,
+                  me: me,
+                  onToggle: onToggle,
+                  onMore: onMore,
+                ),
               ],
               if (done.isNotEmpty) ...[
                 SizedBox(height: t.space4),
@@ -424,7 +586,12 @@ class _ListBodyState extends State<_ListBody> {
                 ),
                 if (_showDone) ...[
                   SizedBox(height: t.space2),
-                  _RowCard(rows: done, me: me, onToggle: onToggle),
+                  _RowCard(
+                    rows: done,
+                    me: me,
+                    onToggle: onToggle,
+                    onMore: onMore,
+                  ),
                 ],
               ],
             ],
@@ -441,11 +608,13 @@ class _RowCard extends StatelessWidget {
     required this.rows,
     required this.me,
     required this.onToggle,
+    required this.onMore,
   });
 
   final List<ShoppingListRow> rows;
   final int? me;
   final _Toggle onToggle;
+  final _More onMore;
 
   @override
   Widget build(BuildContext context) {
@@ -468,6 +637,7 @@ class _RowCard extends StatelessWidget {
                 row: row,
                 me: me,
                 onToggle: onToggle,
+                onMore: onMore,
               ),
             ],
           ],
@@ -484,11 +654,13 @@ class _Row extends StatelessWidget {
     required this.row,
     required this.me,
     required this.onToggle,
+    required this.onMore,
   });
 
   final ShoppingListRow row;
   final int? me;
   final _Toggle onToggle;
+  final _More onMore;
 
   @override
   Widget build(BuildContext context) {
@@ -514,15 +686,32 @@ class _Row extends StatelessWidget {
       unit,
     ].where((part) => part.isNotEmpty).join(' ');
     final checked = row.completedAt != null;
-    return IngredientRow(
-      name: name,
-      note: _source(context),
-      amount: row.someWithoutAmount && amount.isNotEmpty
-          ? l10n.shoppingAmountMore(amount)
-          : amount,
-      done: checked,
-      toggleLabel: l10n.ingredientTickOff(name),
-      onToggle: () => unawaited(onToggle(row, name, checked: !checked)),
+    final t = context.tokens;
+    return Row(
+      children: [
+        Expanded(
+          child: IngredientRow(
+            name: name,
+            note: _source(context),
+            amount: row.someWithoutAmount && amount.isNotEmpty
+                ? l10n.shoppingAmountMore(amount)
+                : amount,
+            done: checked,
+            toggleLabel: l10n.ingredientTickOff(name),
+            onToggle: () => unawaited(onToggle(row, name, checked: !checked)),
+          ),
+        ),
+        IconButton(
+          tooltip: l10n.shoppingActions(name),
+          icon: const Icon(Icons.more_vert_rounded),
+          color: t.inkMuted,
+          constraints: BoxConstraints(
+            minWidth: t.sizeTouch,
+            minHeight: t.sizeTouch,
+          ),
+          onPressed: () => onMore(row, name),
+        ),
+      ],
     );
   }
 

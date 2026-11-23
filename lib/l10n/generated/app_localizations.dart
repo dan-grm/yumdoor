@@ -2611,6 +2611,90 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Tandoor schickt höchstens {count} Einträge. Die neuesten fehlen hier vielleicht.'**
   String shoppingTruncated(int count);
+
+  /// Accessible name of the field that adds a shopping item by hand.
+  ///
+  /// In de, this message translates to:
+  /// **'Artikel hinzufügen'**
+  String get shoppingAddLabel;
+
+  /// Hint of the field that adds a shopping item by hand.
+  ///
+  /// In de, this message translates to:
+  /// **'Artikel hinzufügen'**
+  String get shoppingAddHint;
+
+  /// Snackbar after adding an item by hand.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} auf die Liste gesetzt'**
+  String shoppingAdded(String name);
+
+  /// Snackbar when adding an item by hand failed.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht hinzugefügt. {reason}'**
+  String shoppingAddFailed(String reason);
+
+  /// Snackbar when Tandoor found no food in the typed line.
+  ///
+  /// In de, this message translates to:
+  /// **'„{text}“ habe ich nicht verstanden. Versuch es mit Menge und Artikel, etwa „2 Zitronen“.'**
+  String shoppingAddUnparsed(String text);
+
+  /// Accessible name of the button that opens the actions of a shopping row.
+  ///
+  /// In de, this message translates to:
+  /// **'Mehr zu {name}'**
+  String shoppingActions(String name);
+
+  /// Shopping row action: marks the food as on hand and checks the row off.
+  ///
+  /// In de, this message translates to:
+  /// **'Habe ich da'**
+  String get shoppingOnHand;
+
+  /// Explains the on-hand action of a shopping row.
+  ///
+  /// In de, this message translates to:
+  /// **'Gilt für den ganzen Haushalt und hakt den Eintrag ab.'**
+  String get shoppingOnHandHint;
+
+  /// Shopping row action: removes the row's entries.
+  ///
+  /// In de, this message translates to:
+  /// **'Löschen'**
+  String get shoppingDelete;
+
+  /// Snackbar after marking a food on hand.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} ist als vorrätig markiert'**
+  String shoppingOnHandDone(String name);
+
+  /// Snackbar when marking a food on hand failed.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} nicht als vorrätig markiert. {reason}'**
+  String shoppingOnHandFailed(String name, String reason);
+
+  /// Snackbar after deleting a shopping row, with an undo action.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} gelöscht'**
+  String shoppingDeleted(String name);
+
+  /// Snackbar when deleting a shopping row failed.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} nicht gelöscht. {reason}'**
+  String shoppingDeleteFailed(String name, String reason);
+
+  /// Snackbar when undoing a delete failed.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} nicht zurückgeholt. {reason}'**
+  String shoppingRestoreFailed(String name, String reason);
 }
 
 class _AppLocalizationsDelegate
