@@ -278,14 +278,20 @@ class ShoppingList extends _$ShoppingList {
         // Still loading: what that read shows may predate this edit.
         unawaited(_resync());
       } else {
-        // A poll may have brought an added entry already.
-        final added = {for (final e in add) e.id};
+        // A poll may have brought an added entry already, maybe in a newer
+        // state (checked off by someone else): that one stays.
+        final added = {for (final e in add) e.id: e};
         _server = server.copyWith(
           entries: [
             for (final entry in server.entries)
-              if (!remove.contains(entry.id) && !added.contains(entry.id))
-                entry,
-            ...add,
+              if (!remove.contains(entry.id))
+                switch (added.remove(entry.id)) {
+                  null => entry,
+                  final mine when !mine.updatedAt.isBefore(entry.updatedAt) =>
+                    mine,
+                  _ => entry,
+                },
+            ...added.values,
           ],
         );
         for (final id in remove) {

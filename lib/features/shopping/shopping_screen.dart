@@ -146,7 +146,9 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
   /// button would; the regular full reads leave the failure on screen.
   Future<void> _refreshQuietly({bool catchingUp = true}) async {
     if (!ref.read(shoppingListProvider).hasValue) {
-      if (catchingUp && ref.read(shoppingListProvider).hasError) _reload();
+      final list = ref.read(shoppingListProvider);
+      // Not while it loads again (the retry button), or it starts over.
+      if (catchingUp && list.hasError && !list.isLoading) _reload();
       return;
     }
     try {
