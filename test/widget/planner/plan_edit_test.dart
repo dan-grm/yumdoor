@@ -72,6 +72,8 @@ void main() {
       pumpRoutes(
         tester,
         location: '/plan',
+        // Tall enough for the week and the shopping card under it.
+        size: const Size(390, 1000),
         theme: theme,
         overrides: [
           ...appOverrides(

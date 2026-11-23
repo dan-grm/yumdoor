@@ -25,6 +25,7 @@ import '../shell/app_shell.dart';
 import 'plan_actions.dart';
 import 'planner_providers.dart';
 import 'week_labels.dart';
+import 'week_shopping.dart';
 
 /// The week planner (mockup 10-wochenplan): the days of one week with their
 /// planned meals, and buttons to browse the weeks.
@@ -177,6 +178,8 @@ class PlannerScreen extends ConsumerWidget {
                 _ => const Center(child: CircularProgressIndicator()),
               },
             ),
+            if (plans.hasValue)
+              WeekShoppingCard(key: ValueKey(start), start: start),
           ],
         ),
       ),

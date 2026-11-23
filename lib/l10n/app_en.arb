@@ -388,5 +388,14 @@
   "planDeleteKeep": "Keep",
   "planDeleted": "Removed from the plan.",
   "planDeleteFailed": "Not deleted. {reason}",
-  "planServingsCustom": "{servings} {unit}"
+  "planServingsCustom": "{servings} {unit}",
+  "planWeekShoppingTitle": "Shopping for the week",
+  "planWeekShoppingCount": "{needed, plural, =1{1 ingredient} other{{needed} ingredients}} · {onHand} already at home",
+  "planWeekShoppingCounting": "Counting ingredients …",
+  "planWeekShoppingCountFailed": "The ingredients could not be counted.",
+  "planWeekShoppingDone": "Everything for this week is already on the list.",
+  "planWeekShoppingAdd": "Add all to the list",
+  "planWeekShoppingOpen": "Go to the list",
+  "planWeekShoppingProgress": "Meal {done} of {total} …",
+  "planWeekShoppingFailed": "Not added to the list: {meals}. The others are on it."
 }

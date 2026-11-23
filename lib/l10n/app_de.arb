@@ -2187,5 +2187,65 @@
         "example": "Stück"
       }
     }
+  },
+  "planWeekShoppingTitle": "Einkauf für die Woche",
+  "@planWeekShoppingTitle": {
+    "description": "Title of the card under the week planner that puts the week's meals on the shopping list."
+  },
+  "planWeekShoppingCount": "{needed, plural, =1{1 Zutat} other{{needed} Zutaten}} · {onHand} hast du schon",
+  "@planWeekShoppingCount": {
+    "description": "Counts on the week shopping card: ingredients still to put on the list, and ingredients at home.",
+    "placeholders": {
+      "needed": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "onHand": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "planWeekShoppingCounting": "Zutaten werden gezählt …",
+  "@planWeekShoppingCounting": {
+    "description": "Week shopping card while the ingredients are counted."
+  },
+  "planWeekShoppingCountFailed": "Die Zutaten konnten nicht gezählt werden.",
+  "@planWeekShoppingCountFailed": {
+    "description": "Week shopping card when loading the recipes failed."
+  },
+  "planWeekShoppingDone": "Alles für diese Woche steht schon auf der Liste.",
+  "@planWeekShoppingDone": {
+    "description": "Week shopping card when every planned meal of the week is on the shopping list."
+  },
+  "planWeekShoppingAdd": "Alles auf die Liste",
+  "@planWeekShoppingAdd": {
+    "description": "Button of the week shopping card that puts the week's ingredients on the shopping list."
+  },
+  "planWeekShoppingOpen": "Zur Liste",
+  "@planWeekShoppingOpen": {
+    "description": "Button of the week shopping card that opens the shopping list."
+  },
+  "planWeekShoppingProgress": "Mahlzeit {done} von {total} …",
+  "@planWeekShoppingProgress": {
+    "description": "Progress while the week's meals are put on the shopping list.",
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "planWeekShoppingFailed": "Nicht auf die Liste gekommen: {meals}. Die anderen stehen drauf.",
+  "@planWeekShoppingFailed": {
+    "description": "Week shopping card after some meals could not be added; the rest was added.",
+    "placeholders": {
+      "meals": {
+        "type": "String",
+        "example": "Flammkuchen, Linsen-Bolognese"
+      }
+    }
   }
 }

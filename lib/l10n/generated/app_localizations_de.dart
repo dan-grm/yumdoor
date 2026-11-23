@@ -1501,4 +1501,52 @@ class AppLocalizationsDe extends AppLocalizations {
   String planServingsCustom(String servings, String unit) {
     return '$servings $unit';
   }
+
+  @override
+  String get planWeekShoppingTitle => 'Einkauf für die Woche';
+
+  @override
+  String planWeekShoppingCount(int needed, int onHand) {
+    final intl.NumberFormat neededNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String neededString = neededNumberFormat.format(needed);
+    final intl.NumberFormat onHandNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String onHandString = onHandNumberFormat.format(onHand);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      needed,
+      locale: localeName,
+      other: '$neededString Zutaten',
+      one: '1 Zutat',
+    );
+    return '$_temp0 · $onHandString hast du schon';
+  }
+
+  @override
+  String get planWeekShoppingCounting => 'Zutaten werden gezählt …';
+
+  @override
+  String get planWeekShoppingCountFailed =>
+      'Die Zutaten konnten nicht gezählt werden.';
+
+  @override
+  String get planWeekShoppingDone =>
+      'Alles für diese Woche steht schon auf der Liste.';
+
+  @override
+  String get planWeekShoppingAdd => 'Alles auf die Liste';
+
+  @override
+  String get planWeekShoppingOpen => 'Zur Liste';
+
+  @override
+  String planWeekShoppingProgress(int done, int total) {
+    return 'Mahlzeit $done von $total …';
+  }
+
+  @override
+  String planWeekShoppingFailed(String meals) {
+    return 'Nicht auf die Liste gekommen: $meals. Die anderen stehen drauf.';
+  }
 }

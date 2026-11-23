@@ -16,6 +16,8 @@ import '../../fakes/app_overrides.dart';
 import '../../fakes/fake_book_user_repositories.dart';
 import '../../fakes/in_memory_local_store.dart';
 import '../../fakes/fake_meal_plan_repository.dart';
+import '../../fakes/fake_recipe_repository.dart';
+import '../../fixtures/recipes.dart';
 import '../fonts.dart';
 import '../golden.dart';
 import '../harness.dart';
@@ -81,6 +83,10 @@ void main() {
     overrides: [
       ...appOverrides(
         mealPlans: repository,
+        recipes: FakeRecipeRepository([
+          for (final id in [101, 102, 103, 104, 107])
+            ofenkarotten.copyWith(id: id),
+        ]),
         users:
             users ??
             FakeUserRepository(const [

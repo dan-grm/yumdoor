@@ -2431,6 +2431,60 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{servings} {unit}'**
   String planServingsCustom(String servings, String unit);
+
+  /// Title of the card under the week planner that puts the week's meals on the shopping list.
+  ///
+  /// In de, this message translates to:
+  /// **'Einkauf für die Woche'**
+  String get planWeekShoppingTitle;
+
+  /// Counts on the week shopping card: ingredients still to put on the list, and ingredients at home.
+  ///
+  /// In de, this message translates to:
+  /// **'{needed, plural, =1{1 Zutat} other{{needed} Zutaten}} · {onHand} hast du schon'**
+  String planWeekShoppingCount(int needed, int onHand);
+
+  /// Week shopping card while the ingredients are counted.
+  ///
+  /// In de, this message translates to:
+  /// **'Zutaten werden gezählt …'**
+  String get planWeekShoppingCounting;
+
+  /// Week shopping card when loading the recipes failed.
+  ///
+  /// In de, this message translates to:
+  /// **'Die Zutaten konnten nicht gezählt werden.'**
+  String get planWeekShoppingCountFailed;
+
+  /// Week shopping card when every planned meal of the week is on the shopping list.
+  ///
+  /// In de, this message translates to:
+  /// **'Alles für diese Woche steht schon auf der Liste.'**
+  String get planWeekShoppingDone;
+
+  /// Button of the week shopping card that puts the week's ingredients on the shopping list.
+  ///
+  /// In de, this message translates to:
+  /// **'Alles auf die Liste'**
+  String get planWeekShoppingAdd;
+
+  /// Button of the week shopping card that opens the shopping list.
+  ///
+  /// In de, this message translates to:
+  /// **'Zur Liste'**
+  String get planWeekShoppingOpen;
+
+  /// Progress while the week's meals are put on the shopping list.
+  ///
+  /// In de, this message translates to:
+  /// **'Mahlzeit {done} von {total} …'**
+  String planWeekShoppingProgress(int done, int total);
+
+  /// Week shopping card after some meals could not be added; the rest was added.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht auf die Liste gekommen: {meals}. Die anderen stehen drauf.'**
+  String planWeekShoppingFailed(String meals);
 }
 
 class _AppLocalizationsDelegate
