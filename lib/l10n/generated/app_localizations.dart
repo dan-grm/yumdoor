@@ -2605,6 +2605,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Nicht aktualisiert. {reason}'**
   String shoppingRefreshFailed(String reason);
+
+  /// Note on a shopping list that Tandoor cut off at its maximum, keeping the oldest entries.
+  ///
+  /// In de, this message translates to:
+  /// **'Tandoor schickt höchstens {count} Einträge. Die neuesten fehlen hier vielleicht.'**
+  String shoppingTruncated(int count);
 }
 
 class _AppLocalizationsDelegate

@@ -24,6 +24,9 @@ void main() {
   late FakeShoppingRepository repository;
   late InMemoryLocalStore store;
 
+  /// What remembers Markt am Eck on the test server.
+  final storedChoice = '${marketAmEck.id} $testServerUrl';
+
   setUp(() {
     repository = FakeShoppingRepository(
       entries: mockupShoppingList(),
@@ -47,6 +50,7 @@ void main() {
         shopping: repository,
         localStore: store,
         connectivity: connectivity,
+        tokenStore: loggedInTokenStore(),
         users: FakeUserRepository(const [anna, lena], anna.id),
       ),
       clockProvider.overrideWithValue(() => DateTime(2026, 11, 18, 12)),
@@ -76,7 +80,7 @@ void main() {
   testWidgets('shows merged rows by category in the chosen store order', (
     tester,
   ) async {
-    store.write('shopping.supermarket', '${marketAmEck.id}');
+    store.write('shopping.supermarket', storedChoice);
     await pumpList(tester, size: const Size(390, 1400));
 
     expect(find.text('Einkaufsliste'), findsOneWidget);
@@ -191,7 +195,7 @@ void main() {
     await tester.tap(find.text('Markt am Eck'));
     await tester.pumpAndSettle();
 
-    expect(store.values['shopping.supermarket'], '7');
+    expect(store.values['shopping.supermarket'], storedChoice);
     expect(find.text('Supermarkt: Markt am Eck'), findsOneWidget);
     expect(sections(tester), ['OBST UND GEMÜSE', 'KÜHLREGAL', 'VORRAT']);
 
@@ -227,6 +231,19 @@ void main() {
 
     expect(find.text('Alles erledigt.'), findsOneWidget);
     expect(find.text('Erledigt · 3'), findsOneWidget);
+  });
+
+  testWidgets('says when Tandoor cut the list off', (tester) async {
+    repository.truncated = true;
+    await pumpList(tester);
+
+    expect(
+      find.text(
+        'Tandoor schickt höchstens 1.000 Einträge. '
+        'Die neuesten fehlen hier vielleicht.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('a failed read offers to try again', (tester) async {
@@ -317,7 +334,7 @@ void main() {
   group('goldens', skip: goldenSkip, () {
     for (final (name, theme) in [('light', lightTheme), ('dark', darkTheme)]) {
       testWidgets('mockup 12 in $name', tags: goldenTags, (tester) async {
-        store.write('shopping.supermarket', '${marketAmEck.id}');
+        store.write('shopping.supermarket', storedChoice);
         await pumpList(tester, theme: theme);
 
         await expectLater(

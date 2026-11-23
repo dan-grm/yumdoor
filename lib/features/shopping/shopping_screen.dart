@@ -62,10 +62,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
   Future<void> _refreshQuietly() async {
     if (!ref.read(shoppingListProvider).hasValue) {
       // Failed before: try again, as the retry button would.
-      if (ref.read(shoppingListProvider).hasError) {
-        ref.invalidate(shoppingListProvider);
-        ref.invalidate(shoppingSupermarketsProvider);
-      }
+      if (ref.read(shoppingListProvider).hasError) _reload();
       return;
     }
     try {
@@ -76,30 +73,45 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
   }
 
   /// For pull to refresh: a failure keeps the list and says why.
+  /// Loads what the list shows anew, after a failure.
+  void _reload() {
+    ref
+      ..invalidate(shoppingListProvider)
+      ..invalidate(shoppingSupermarketsProvider)
+      ..invalidate(shoppingMeProvider);
+  }
+
+  /// For pull to refresh: a failure keeps the list and says why.
   Future<void> _refresh() async {
     final messenger = ScaffoldMessenger.of(context);
-    if (!ref.read(shoppingListProvider).hasValue) {
-      ref.invalidate(shoppingListProvider);
-      ref.invalidate(shoppingSupermarketsProvider);
-      try {
-        await ref.read(shoppingListProvider.future);
-      } on Object {
-        // The screen shows the failure.
-      }
-      return;
-    }
     ref.invalidate(shoppingSupermarketsProvider);
+    // Unknown after a failure: worth asking again.
+    if (ref.read(shoppingMeProvider).value == null) {
+      ref.invalidate(shoppingMeProvider);
+    }
+    Object? failure;
     try {
       await ref.read(shoppingListProvider.notifier).refresh();
-    } on Failure catch (failure) {
-      _show(
-        messenger,
-        (context) => context.l10n.shoppingRefreshFailed(
-          failureMessage(context, failure),
+    } on Failure catch (error) {
+      failure = error;
+    } on Object catch (error, stack) {
+      // A bug rather than the server; reported, and said like a server error.
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'shopping',
         ),
-        failed: true,
       );
+      failure = error;
     }
+    if (failure == null) return;
+    _show(
+      messenger,
+      (context) =>
+          context.l10n.shoppingRefreshFailed(failureMessage(context, failure!)),
+      failed: true,
+    );
   }
 
   /// Checks [row] off ([checked]) or back on, with a snackbar to undo it.
@@ -156,7 +168,11 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
-    final groups = ref.watch(shoppingGroupsProvider);
+    final list = ref.watch(shoppingListProvider);
+    // Loading for another login: the previous one's list is not this one's.
+    final groups = list.isReloading
+        ? const AsyncLoading<ShoppingListGroups>()
+        : ref.watch(shoppingGroupsProvider);
     final supermarkets =
         ref.watch(shoppingSupermarketsProvider).value ?? const <Supermarket>[];
     final supermarket = ref.watch(shoppingSupermarketProvider);
@@ -213,18 +229,16 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
             SizedBox(height: t.space2),
             Expanded(
               child: switch (groups) {
+                AsyncValue(:final error?) => FailureView(
+                  error: error,
+                  onRetry: _reload,
+                ),
                 AsyncValue(value: final groups?) => _ListBody(
                   groups: groups,
+                  truncated: list.value?.truncated ?? false,
                   me: me,
                   onRefresh: _refresh,
                   onToggle: _toggle,
-                ),
-                AsyncValue(:final error?) => FailureView(
-                  error: error,
-                  onRetry: () {
-                    ref.invalidate(shoppingListProvider);
-                    ref.invalidate(shoppingSupermarketsProvider);
-                  },
                 ),
                 _ => const Center(child: CircularProgressIndicator()),
               },
@@ -298,12 +312,16 @@ typedef _Toggle = Future<void> Function(
 class _ListBody extends StatefulWidget {
   const _ListBody({
     required this.groups,
+    required this.truncated,
     required this.me,
     required this.onRefresh,
     required this.onToggle,
   });
 
   final ShoppingListGroups groups;
+
+  /// Whether Tandoor cut the list off, so the newest items may be missing.
+  final bool truncated;
   final int? me;
   final Future<void> Function() onRefresh;
   final _Toggle onToggle;
@@ -332,6 +350,14 @@ class _ListBodyState extends State<_ListBody> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.fromLTRB(t.space5, 0, t.space5, t.space5),
             children: [
+              if (widget.truncated)
+                Padding(
+                  padding: EdgeInsets.only(top: t.space2),
+                  child: Text(
+                    l10n.shoppingTruncated(maxShoppingEntries),
+                    style: t.caption.copyWith(color: t.inkMuted),
+                  ),
+                ),
               if (groups.isEmpty) ...[
                 SizedBox(height: t.space4),
                 Text(l10n.shoppingEmpty, style: t.bodyL.copyWith(color: t.ink)),

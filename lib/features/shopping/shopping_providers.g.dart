@@ -22,7 +22,8 @@ part of 'shopping_providers.dart';
 /// bring back the old state.
 ///
 /// Sending goes through [_send], the one place a queue for offline
-/// check-offs can take over later.
+/// check-offs (#116) can take over later. Until then, the screen doesn't
+/// offer ticking offline.
 
 @ProviderFor(ShoppingList)
 final shoppingListProvider = ShoppingListProvider._();
@@ -41,9 +42,10 @@ final shoppingListProvider = ShoppingListProvider._();
 /// bring back the old state.
 ///
 /// Sending goes through [_send], the one place a queue for offline
-/// check-offs can take over later.
+/// check-offs (#116) can take over later. Until then, the screen doesn't
+/// offer ticking offline.
 final class ShoppingListProvider
-    extends $AsyncNotifierProvider<ShoppingList, List<ShoppingEntry>> {
+    extends $AsyncNotifierProvider<ShoppingList, ShoppingListView> {
   /// The entries of the household's shopping list, with the check states set
   /// on this device shown at once.
   ///
@@ -58,12 +60,13 @@ final class ShoppingListProvider
   /// bring back the old state.
   ///
   /// Sending goes through [_send], the one place a queue for offline
-  /// check-offs can take over later.
+  /// check-offs (#116) can take over later. Until then, the screen doesn't
+  /// offer ticking offline.
   ShoppingListProvider._()
     : super(
         from: null,
         argument: null,
-        retry: null,
+        retry: _noRetry,
         name: r'shoppingListProvider',
         isAutoDispose: false,
         dependencies: null,
@@ -78,7 +81,7 @@ final class ShoppingListProvider
   ShoppingList create() => ShoppingList();
 }
 
-String _$shoppingListHash() => r'c840142dcb6b358031c133d5e5e8b4a042706176';
+String _$shoppingListHash() => r'd54b8912433cc51b4e99e70658127bc786d3018c';
 
 /// The entries of the household's shopping list, with the check states set
 /// on this device shown at once.
@@ -94,20 +97,21 @@ String _$shoppingListHash() => r'c840142dcb6b358031c133d5e5e8b4a042706176';
 /// bring back the old state.
 ///
 /// Sending goes through [_send], the one place a queue for offline
-/// check-offs can take over later.
+/// check-offs (#116) can take over later. Until then, the screen doesn't
+/// offer ticking offline.
 
-abstract class _$ShoppingList extends $AsyncNotifier<List<ShoppingEntry>> {
-  FutureOr<List<ShoppingEntry>> build();
+abstract class _$ShoppingList extends $AsyncNotifier<ShoppingListView> {
+  FutureOr<ShoppingListView> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
     final ref =
-        this.ref as $Ref<AsyncValue<List<ShoppingEntry>>, List<ShoppingEntry>>;
+        this.ref as $Ref<AsyncValue<ShoppingListView>, ShoppingListView>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AsyncValue<List<ShoppingEntry>>, List<ShoppingEntry>>,
-              AsyncValue<List<ShoppingEntry>>,
+              AnyNotifier<AsyncValue<ShoppingListView>, ShoppingListView>,
+              AsyncValue<ShoppingListView>,
               Object?,
               Object?
             >;
@@ -207,17 +211,20 @@ final class ShoppingMeProvider
 String _$shoppingMeHash() => r'7e8bc0a005103fbbd1658a8cce6c7c3ab67341cf';
 
 /// The id of the supermarket whose order the list follows, remembered on
-/// this device; `null` for none (categories by name).
+/// this device for the server it was chosen on (as `<id> <server>`: ids of
+/// another server mean other stores); `null` for none (categories by name).
 
 @ProviderFor(ShoppingSupermarketChoice)
 final shoppingSupermarketChoiceProvider = ShoppingSupermarketChoiceProvider._();
 
 /// The id of the supermarket whose order the list follows, remembered on
-/// this device; `null` for none (categories by name).
+/// this device for the server it was chosen on (as `<id> <server>`: ids of
+/// another server mean other stores); `null` for none (categories by name).
 final class ShoppingSupermarketChoiceProvider
     extends $NotifierProvider<ShoppingSupermarketChoice, int?> {
   /// The id of the supermarket whose order the list follows, remembered on
-  /// this device; `null` for none (categories by name).
+  /// this device for the server it was chosen on (as `<id> <server>`: ids of
+  /// another server mean other stores); `null` for none (categories by name).
   ShoppingSupermarketChoiceProvider._()
     : super(
         from: null,
@@ -246,10 +253,11 @@ final class ShoppingSupermarketChoiceProvider
 }
 
 String _$shoppingSupermarketChoiceHash() =>
-    r'd5826b79b4c8ae37372a98067c0bd583252ea9f6';
+    r'9af731f6a239533398c047fcebf0acfab939ceaa';
 
 /// The id of the supermarket whose order the list follows, remembered on
-/// this device; `null` for none (categories by name).
+/// this device for the server it was chosen on (as `<id> <server>`: ids of
+/// another server mean other stores); `null` for none (categories by name).
 
 abstract class _$ShoppingSupermarketChoice extends $Notifier<int?> {
   int? build();
@@ -317,11 +325,15 @@ String _$shoppingSupermarketHash() =>
     r'e6e19707bc99c65075e11f41c9dab449ab1e20b7';
 
 /// The list arranged for the chosen supermarket ([groupShoppingList]).
+/// With a supermarket chosen, it waits for the supermarkets, so the sections
+/// don't change order once they arrive; if they fail, by name.
 
 @ProviderFor(shoppingGroups)
 final shoppingGroupsProvider = ShoppingGroupsProvider._();
 
 /// The list arranged for the chosen supermarket ([groupShoppingList]).
+/// With a supermarket chosen, it waits for the supermarkets, so the sections
+/// don't change order once they arrive; if they fail, by name.
 
 final class ShoppingGroupsProvider
     extends
@@ -332,6 +344,8 @@ final class ShoppingGroupsProvider
         >
     with $Provider<AsyncValue<ShoppingListGroups>> {
   /// The list arranged for the chosen supermarket ([groupShoppingList]).
+  /// With a supermarket chosen, it waits for the supermarkets, so the sections
+  /// don't change order once they arrive; if they fail, by name.
   ShoppingGroupsProvider._()
     : super(
         from: null,
@@ -368,4 +382,4 @@ final class ShoppingGroupsProvider
   }
 }
 
-String _$shoppingGroupsHash() => r'd8d620053f650ee441c8d13a16268646b73a41ca';
+String _$shoppingGroupsHash() => r'1f05c1c6bc8d773d283a74b2ba17461887ab3003';

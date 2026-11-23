@@ -200,8 +200,8 @@ shows the origin and explains the constraint.
 - Shopping list check-offs (`ShoppingList` in `lib/features/shopping/shopping_providers.dart`) are optimistic: the
   check state set on the device is shown over the list read from the server and sent to Tandoor at once (not after
   the undo snackbar), one request after another so an undo can't overtake its check-off. It stays on top until a
-  read that started after it was saved; a failure takes it back. Offline, ticking is disabled like
-  every other write; sending goes through one method so that #116 (offline check-offs, a decided rule change) can
+  read that started after it was saved; a failure takes it back. Offline, a tap only explains that
+  ticking needs a connection, as in the planner; sending goes through one method so that #116 (offline check-offs, a decided rule change) can
   put a queue there.
 - The recipe editor keeps unsaved changes as drafts in the same database (`editor_draft`, `DraftStore`): one per
   recipe and one for a new recipe, the `RecipeDraft` as JSON plus a chosen photo's bytes, written a second after the

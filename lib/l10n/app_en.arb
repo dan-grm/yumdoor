@@ -417,5 +417,6 @@
   "shoppingUndo": "Undo",
   "shoppingCheckFailed": "{name} not checked off. {reason}",
   "shoppingUncheckFailed": "{name} not put back on the list. {reason}",
-  "shoppingRefreshFailed": "Not updated. {reason}"
+  "shoppingRefreshFailed": "Not updated. {reason}",
+  "shoppingTruncated": "Tandoor sends at most {count} entries. The newest may be missing here."
 }

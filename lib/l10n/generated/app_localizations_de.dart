@@ -1640,4 +1640,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String shoppingRefreshFailed(String reason) {
     return 'Nicht aktualisiert. $reason';
   }
+
+  @override
+  String shoppingTruncated(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Tandoor schickt höchstens $countString Einträge. Die neuesten fehlen hier vielleicht.';
+  }
 }

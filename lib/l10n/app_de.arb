@@ -2405,5 +2405,15 @@
         "example": "Der Server ist gerade nicht erreichbar."
       }
     }
+  },
+  "shoppingTruncated": "Tandoor schickt höchstens {count} Einträge. Die neuesten fehlen hier vielleicht.",
+  "@shoppingTruncated": {
+    "description": "Note on a shopping list that Tandoor cut off at its maximum, keeping the oldest entries.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
   }
 }

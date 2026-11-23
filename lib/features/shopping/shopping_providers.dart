@@ -5,12 +5,25 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../app/platform_providers.dart';
 import '../../app/repository_providers.dart';
+import '../../app/session.dart';
 import '../../core/failures.dart';
 import '../../domain/models/shopping.dart';
 import '../../domain/repositories/shopping_repository.dart';
 import '../../domain/services/shopping_list_groups.dart';
 
 part 'shopping_providers.g.dart';
+
+/// The shopping list as shown: the entries with the check states set on
+/// this device.
+class ShoppingListView {
+  const ShoppingListView({required this.entries, this.truncated = false});
+
+  final List<ShoppingEntry> entries;
+
+  /// Whether Tandoor cut the list off ([ShoppingListSnapshot.truncated]), so
+  /// the newest entries may be missing.
+  final bool truncated;
+}
 
 /// A check state set on this device and shown over the list as read from
 /// the server, until a read that started after it was saved shows it.
@@ -47,8 +60,8 @@ class _CheckChange {
 class ShoppingList extends _$ShoppingList {
   late ShoppingRepository _repository;
 
-  /// The entries as last read from the server.
-  List<ShoppingEntry> _server = const [];
+  /// The list as last read from the server.
+  ShoppingListSnapshot? _server;
 
   /// Check states set here, by entry id.
   final _changes = <int, _CheckChange>{};
@@ -65,9 +78,9 @@ class ShoppingList extends _$ShoppingList {
   var _shownRead = 0;
 
   @override
-  Future<List<ShoppingEntry>> build() async {
+  Future<ShoppingListView> build() async {
     _repository = ref.watch(shoppingRepositoryProvider);
-    _server = const [];
+    _server = null;
     _changes.clear();
     final read = ++_reads;
     final snapshot = await _repository.fetch();
@@ -152,28 +165,32 @@ class ShoppingList extends _$ShoppingList {
   void _apply(int read, ShoppingListSnapshot snapshot) {
     if (read < _shownRead) return;
     _shownRead = read;
-    _server = snapshot.entries;
+    _server = snapshot;
     _changes.removeWhere(
       (_, change) =>
           change.savedBeforeRead != null && change.savedBeforeRead! < read,
     );
   }
 
+  /// Shows the changes, unless the list is loading anew (another login).
   void _publish() {
-    if (state.hasValue) state = AsyncData(_view());
+    if (state is AsyncData) state = AsyncData(_view());
   }
 
-  List<ShoppingEntry> _view() => List.unmodifiable([
-    for (final entry in _server)
-      switch (_changes[entry.id]) {
-        null => entry,
-        final change => entry.copyWith(
-          checked: change.checked,
-          completedAt: change.checked ? change.at : null,
-          updatedAt: change.at,
-        ),
-      },
-  ]);
+  ShoppingListView _view() => ShoppingListView(
+    truncated: _server?.truncated ?? false,
+    entries: List.unmodifiable([
+      for (final entry in _server?.entries ?? const <ShoppingEntry>[])
+        switch (_changes[entry.id]) {
+          null => entry,
+          final change => entry.copyWith(
+            checked: change.checked,
+            completedAt: change.checked ? change.at : null,
+            updatedAt: change.at,
+          ),
+        },
+    ]),
+  );
 }
 
 Duration? _noRetry(int retryCount, Object error) => null;
@@ -198,12 +215,23 @@ Future<int?> shoppingMe(Ref ref) async {
 const _supermarketKey = 'shopping.supermarket';
 
 /// The id of the supermarket whose order the list follows, remembered on
-/// this device; `null` for none (categories by name).
+/// this device for the server it was chosen on (as `<id> <server>`: ids of
+/// another server mean other stores); `null` for none (categories by name).
 @Riverpod(keepAlive: true)
 class ShoppingSupermarketChoice extends _$ShoppingSupermarketChoice {
   @override
-  int? build() =>
-      int.tryParse(ref.watch(localStoreProvider).read(_supermarketKey) ?? '');
+  int? build() {
+    final server = _server();
+    final stored = ref.watch(localStoreProvider).read(_supermarketKey) ?? '';
+    return switch (stored.split(' ')) {
+      [final id, final storedServer] when storedServer == server =>
+        int.tryParse(id),
+      _ => null,
+    };
+  }
+
+  String _server() =>
+      '${ref.watch(sessionControllerProvider).value?.serverUrl ?? ''}';
 
   void set(int? id) {
     state = id;
@@ -211,7 +239,7 @@ class ShoppingSupermarketChoice extends _$ShoppingSupermarketChoice {
     if (id == null) {
       store.delete(_supermarketKey);
     } else {
-      store.write(_supermarketKey, '$id');
+      store.write(_supermarketKey, '$id ${_server()}');
     }
   }
 }
@@ -229,10 +257,17 @@ Supermarket? shoppingSupermarket(Ref ref) {
 }
 
 /// The list arranged for the chosen supermarket ([groupShoppingList]).
+/// With a supermarket chosen, it waits for the supermarkets, so the sections
+/// don't change order once they arrive; if they fail, by name.
 @riverpod
 AsyncValue<ShoppingListGroups> shoppingGroups(Ref ref) {
+  final list = ref.watch(shoppingListProvider);
+  final supermarkets = ref.watch(shoppingSupermarketsProvider);
+  if (ref.watch(shoppingSupermarketChoiceProvider) != null &&
+      !supermarkets.hasValue &&
+      !supermarkets.hasError) {
+    return const AsyncLoading();
+  }
   final store = ref.watch(shoppingSupermarketProvider);
-  return ref
-      .watch(shoppingListProvider)
-      .whenData((entries) => groupShoppingList(entries, store: store));
+  return list.whenData((view) => groupShoppingList(view.entries, store: store));
 }

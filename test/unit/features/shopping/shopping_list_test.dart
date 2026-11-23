@@ -4,10 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/repository_providers.dart';
+import 'package:yumdoor/app/session.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/domain/models/shopping.dart';
 import 'package:yumdoor/features/shopping/shopping_providers.dart';
 
+import '../../../fakes/app_overrides.dart';
 import '../../../fakes/fake_shopping_repository.dart';
 import '../../../fakes/in_memory_local_store.dart';
 import '../../../fixtures/shopping.dart';
@@ -18,9 +20,13 @@ void main() {
   late ProviderContainer container;
   final now = DateTime.utc(2026, 11, 18, 15);
 
-  ProviderContainer create() {
+  /// What remembers Markt am Eck on the test server.
+  final storedChoice = '${marketAmEck.id} $testServerUrl';
+
+  Future<ProviderContainer> create() async {
     final container = ProviderContainer(
       overrides: [
+        tokenStoreProvider.overrideWithValue(loggedInTokenStore()),
         shoppingRepositoryProvider.overrideWithValue(repository),
         localStoreProvider.overrideWithValue(store),
         clockProvider.overrideWithValue(() => now),
@@ -28,16 +34,17 @@ void main() {
     );
     addTearDown(container.dispose);
     container.listen(shoppingListProvider, (_, _) {});
+    await container.read(sessionControllerProvider.future);
     return container;
   }
 
-  setUp(() {
+  setUp(() async {
     repository = FakeShoppingRepository(
       entries: mockupShoppingList(),
       supermarketList: const [marketAmEck, bioladen],
     );
     store = InMemoryLocalStore();
-    container = create();
+    container = await create();
   });
 
   ShoppingList list() => container.read(shoppingListProvider.notifier);
@@ -45,6 +52,7 @@ void main() {
   ShoppingEntry entry(int id) => container
       .read(shoppingListProvider)
       .requireValue
+      .entries
       .firstWhere((entry) => entry.id == id);
 
   test('shows a check-off at once and sends it right away', () async {
@@ -169,13 +177,20 @@ void main() {
 
       await list().refresh();
       expect(
-        container.read(shoppingListProvider).requireValue.map((e) => e.id),
+        container
+            .read(shoppingListProvider)
+            .requireValue
+            .entries
+            .map((e) => e.id),
         isNot(contains(108)),
       );
 
       repository.fetchFailure = const OfflineFailure();
       await expectLater(list().refresh(), throwsA(isA<OfflineFailure>()));
-      expect(container.read(shoppingListProvider).requireValue, hasLength(10));
+      expect(
+        container.read(shoppingListProvider).requireValue.entries,
+        hasLength(10),
+      );
     },
   );
 
@@ -195,10 +210,10 @@ void main() {
 
     container.read(shoppingSupermarketChoiceProvider.notifier).set(7);
     expect(sections(), ['Obst und Gemüse', 'Kühlregal', 'Vorrat']);
-    expect(store.values['shopping.supermarket'], '7');
+    expect(store.values['shopping.supermarket'], storedChoice);
 
     // Another start of the app.
-    container = create();
+    container = await create();
     await container.read(shoppingListProvider.future);
     await container.read(shoppingSupermarketsProvider.future);
     container.listen(shoppingGroupsProvider, (_, _) {});
@@ -209,8 +224,30 @@ void main() {
     expect(store.values, isNot(contains('shopping.supermarket')));
   });
 
+  test('ignores a supermarket remembered for another server', () async {
+    store.write(
+      'shopping.supermarket',
+      '${marketAmEck.id} https://other.example',
+    );
+    await container.read(shoppingSupermarketsProvider.future);
+
+    expect(container.read(shoppingSupermarketChoiceProvider), isNull);
+    expect(container.read(shoppingSupermarketProvider), isNull);
+  });
+
+  test('reports a truncated list', () async {
+    expect(
+      (await container.read(shoppingListProvider.future)).truncated,
+      isFalse,
+    );
+
+    repository.truncated = true;
+    await list().refresh();
+    expect(container.read(shoppingListProvider).requireValue.truncated, isTrue);
+  });
+
   test('ignores a remembered supermarket the space no longer has', () async {
-    store.write('shopping.supermarket', '99');
+    store.write('shopping.supermarket', '99 $testServerUrl');
     await container.read(shoppingSupermarketsProvider.future);
 
     expect(container.read(shoppingSupermarketProvider), isNull);

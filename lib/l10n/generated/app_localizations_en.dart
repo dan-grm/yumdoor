@@ -1633,4 +1633,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String shoppingRefreshFailed(String reason) {
     return 'Not updated. $reason';
   }
+
+  @override
+  String shoppingTruncated(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Tandoor sends at most $countString entries. The newest may be missing here.';
+  }
 }

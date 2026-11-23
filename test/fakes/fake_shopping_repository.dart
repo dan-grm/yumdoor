@@ -31,6 +31,9 @@ class FakeShoppingRepository implements ShoppingRepository {
   List<Supermarket> supermarketList;
 
   Failure? fetchFailure;
+
+  /// Whether [fetch] reports the list as cut off at the server's maximum.
+  bool truncated = false;
   Failure? checkFailure;
 
   /// Whether [checkFailure] fails only the next [setChecked].
@@ -86,7 +89,11 @@ class FakeShoppingRepository implements ShoppingRepository {
     if (fetchFailure case final failure?) throw failure;
     final read = [...entries];
     if (fetchGates.isNotEmpty) await fetchGates.removeAt(0).future;
-    return ShoppingListSnapshot(entries: read, syncedAt: now);
+    return ShoppingListSnapshot(
+      entries: read,
+      syncedAt: now,
+      truncated: truncated,
+    );
   }
 
   @override
