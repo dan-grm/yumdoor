@@ -240,6 +240,75 @@ void main() {
     }
   });
 
+  test(
+    'adding a week twice, skipping plans on the list, adds nothing twice',
+    () async {
+      final recipe = await salad();
+      final lunch = (await anna.mealTypes.list()).firstWhere(
+        (t) => t.name == 'Mittagessen',
+      );
+      // A week of its own, far from the seeded one.
+      final first = CalendarDay.today().addDays(300);
+      final last = first.addDays(6);
+      final created = <MealPlan>[];
+      for (final offset in [0, 2, 4]) {
+        created.add(
+          await anna.mealPlans.create(
+            NewMealPlan(
+              recipeId: recipe.id,
+              servings: 2,
+              day: first.addDays(offset),
+              mealType: lunch,
+            ),
+          ),
+        );
+      }
+      final ids = {for (final plan in created) plan.id};
+      List<ShoppingEntry> ours(ShoppingListSnapshot list) => [
+        for (final e in list.entries)
+          if (ids.contains(e.source?.mealPlan?.id)) e,
+      ];
+
+      /// What the planner's "Einkauf für die Woche" does.
+      Future<int> addWeek() async {
+        var added = 0;
+        for (final plan in await anna.mealPlans.list(first, last)) {
+          if (plan.recipe == null || plan.onShoppingList) continue;
+          final fresh = await anna.recipes.fetchRecipe(
+            plan.recipe!.id,
+            allowCached: false,
+          );
+          await anna.shopping.addRecipe(
+            fresh,
+            plan.servings,
+            mealPlanId: plan.id,
+          );
+          added++;
+        }
+        return added;
+      }
+
+      try {
+        expect(await addWeek(), 3);
+        final once = ours(await anna.shopping.fetch());
+        expect(once, hasLength(3 * 3));
+        for (final plan in await anna.mealPlans.list(first, last)) {
+          expect(plan.onShoppingList, isTrue);
+        }
+
+        expect(await addWeek(), 0);
+        expect(ours(await anna.shopping.fetch()).map((e) => e.id).toSet(), {
+          for (final e in once) e.id,
+        });
+      } finally {
+        await anna.shopping.deleteEntries(ours(await anna.shopping.fetch()));
+        for (final plan in created) {
+          await anna.mealPlans.delete(plan.id);
+        }
+      }
+    },
+  );
+
   test('adds a recipe without a meal plan', () async {
     final recipe = await salad();
     // Entries of the salad without a plan come from this test only; other

@@ -12,6 +12,14 @@ typedef AddRecipeCall = ({int recipeId, double servings, int? mealPlanId});
 class FakeShoppingRepository implements ShoppingRepository {
   Failure? failure;
 
+  /// Meal plan ids whose [addRecipe] throws [mealPlanFailure].
+  final failMealPlanIds = <int>{};
+  Failure mealPlanFailure = const ServerFailure();
+
+  /// Called with the meal plan id of each [addRecipe] that succeeded, to let
+  /// a test mark the plan as on the list.
+  void Function(int mealPlanId)? onPlanAdded;
+
   /// The [addRecipe] calls that succeeded.
   final added = <AddRecipeCall>[];
 
@@ -22,11 +30,13 @@ class FakeShoppingRepository implements ShoppingRepository {
     int? mealPlanId,
   }) async {
     if (failure case final failure?) throw failure;
+    if (failMealPlanIds.contains(mealPlanId)) throw mealPlanFailure;
     added.add((
       recipeId: recipe.id,
       servings: servings,
       mealPlanId: mealPlanId,
     ));
+    if (mealPlanId != null) onPlanAdded?.call(mealPlanId);
     return buildRecipeShopping(recipe, servings: servings);
   }
 
