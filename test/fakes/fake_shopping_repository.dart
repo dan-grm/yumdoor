@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
 import 'package:yumdoor/domain/models/shopping.dart';
@@ -7,10 +9,51 @@ import 'package:yumdoor/domain/services/recipe_shopping.dart';
 /// A [ShoppingRepository.addRecipe] call, as the fake received it.
 typedef AddRecipeCall = ({int recipeId, double servings, int? mealPlanId});
 
-/// [ShoppingRepository] for tests that records [addRecipe] calls. Set
-/// [failure] to make it throw. The other methods aren't needed yet.
+/// A [ShoppingRepository.setChecked] call, as the fake received it.
+typedef SetCheckedCall = ({Set<int> ids, bool checked});
+
+/// [ShoppingRepository] for tests: a list of [entries] that [fetch] returns
+/// and [setChecked] changes, and [addRecipe] calls it records. Set
+/// [failure] to make [addRecipe] throw, [fetchFailure] or [checkFailure]
+/// for the others. [addItem] and [deleteEntries] aren't needed yet.
 class FakeShoppingRepository implements ShoppingRepository {
+  FakeShoppingRepository({
+    List<ShoppingEntry> entries = const [],
+    this.supermarketList = const [],
+  }) : entries = [...entries];
+
   Failure? failure;
+
+  /// The household's list, as the server has it.
+  final List<ShoppingEntry> entries;
+
+  /// What [supermarkets] returns.
+  List<Supermarket> supermarketList;
+
+  Failure? fetchFailure;
+
+  /// Whether [fetch] reports the list as cut off at the server's maximum.
+  bool truncated = false;
+  Failure? checkFailure;
+
+  /// Whether [checkFailure] fails only the next [setChecked].
+  bool checkFailsOnce = false;
+
+  /// How many times [fetch] was called.
+  var fetchCalls = 0;
+
+  /// The [setChecked] calls, in order, including failed ones.
+  final checkCalls = <SetCheckedCall>[];
+
+  /// Each [fetch] reads the list, then waits for the first of these, if
+  /// any, before it answers.
+  final fetchGates = <Completer<void>>[];
+
+  /// While set, [setChecked] waits for it before it answers.
+  Completer<void>? checkGate;
+
+  /// The time [setChecked] stamps entries with.
+  DateTime now = DateTime.utc(2026, 11, 18, 12);
 
   /// Meal plan ids whose [addRecipe] throws [mealPlanFailure].
   final failMealPlanIds = <int>{};
@@ -41,15 +84,38 @@ class FakeShoppingRepository implements ShoppingRepository {
   }
 
   @override
-  Future<ShoppingListSnapshot> fetch({DateTime? updatedAfter}) =>
-      throw UnimplementedError();
+  Future<ShoppingListSnapshot> fetch({DateTime? updatedAfter}) async {
+    fetchCalls++;
+    if (fetchFailure case final failure?) throw failure;
+    final read = [...entries];
+    if (fetchGates.isNotEmpty) await fetchGates.removeAt(0).future;
+    return ShoppingListSnapshot(
+      entries: read,
+      syncedAt: now,
+      truncated: truncated,
+    );
+  }
 
   @override
-  Future<void> setChecked(Set<int> ids, {required bool checked}) =>
-      throw UnimplementedError();
+  Future<void> setChecked(Set<int> ids, {required bool checked}) async {
+    checkCalls.add((ids: ids, checked: checked));
+    if (checkGate case final gate?) await gate.future;
+    if (checkFailure case final failure?) {
+      if (checkFailsOnce) checkFailure = null;
+      throw failure;
+    }
+    for (final (index, entry) in entries.indexed) {
+      if (!ids.contains(entry.id)) continue;
+      entries[index] = entry.copyWith(
+        checked: checked,
+        completedAt: checked ? now : null,
+        updatedAt: now,
+      );
+    }
+  }
 
   @override
-  Future<List<Supermarket>> supermarkets() => throw UnimplementedError();
+  Future<List<Supermarket>> supermarkets() async => supermarketList;
 
   @override
   Future<ShoppingEntry> addItem(int foodId, double amount, {int? unitId}) =>

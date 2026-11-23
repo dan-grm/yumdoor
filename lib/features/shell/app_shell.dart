@@ -159,38 +159,3 @@ class TabStack extends StatelessWidget {
     ],
   );
 }
-
-/// Stands in for a tab whose screen isn't built yet: its [title] and a line
-/// saying it is coming.
-class TabPlaceholder extends StatelessWidget {
-  const TabPlaceholder({super.key, required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = context.tokens;
-    return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: EdgeInsets.fromLTRB(t.space5, t.space3, t.space5, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Semantics(
-                header: true,
-                child: Text(title, style: t.titleL.copyWith(color: t.ink)),
-              ),
-              SizedBox(height: t.space4),
-              Text(
-                context.l10n.navComingSoon,
-                style: t.body.copyWith(color: t.inkMuted),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

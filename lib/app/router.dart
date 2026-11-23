@@ -15,7 +15,7 @@ import '../features/recipe/recipe_screen.dart';
 import '../features/search/search_location.dart';
 import '../features/search/search_screen.dart';
 import '../features/shell/app_shell.dart';
-import '../l10n/l10n.dart';
+import '../features/shopping/shopping_screen.dart';
 import 'session.dart';
 
 part 'router.g.dart';
@@ -131,8 +131,7 @@ StatefulShellRoute tabsRoute() => StatefulShellRoute(
       routes: [
         GoRoute(
           path: shoppingPath,
-          builder: (context, state) =>
-              TabPlaceholder(title: context.l10n.navShoppingTitle),
+          builder: (context, state) => const ShoppingScreen(),
         ),
       ],
     ),

@@ -1271,10 +1271,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get navShoppingTitle => 'Einkaufsliste';
 
   @override
-  String get navComingSoon =>
-      'Dieser Bereich kommt mit einer der nächsten Versionen.';
-
-  @override
   String get planWeekPrevious => 'Vorherige Woche';
 
   @override
@@ -1548,5 +1544,109 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String planWeekShoppingFailed(String meals) {
     return 'Nicht auf die Liste gekommen: $meals. Die anderen stehen drauf.';
+  }
+
+  @override
+  String shoppingShared(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Geteilt mit deinem Haushalt · $countString offen';
+  }
+
+  @override
+  String shoppingSupermarket(String name) {
+    return 'Supermarkt: $name';
+  }
+
+  @override
+  String get shoppingSupermarketNone => 'Supermarkt wählen';
+
+  @override
+  String get shoppingSupermarketTitle => 'Supermarkt';
+
+  @override
+  String get shoppingSupermarketHint =>
+      'Die Abteilungen kommen in der Reihenfolge dieses Ladens. Gilt nur auf diesem Gerät.';
+
+  @override
+  String get shoppingSupermarketByName => 'Keiner (Abteilungen nach Name)';
+
+  @override
+  String get shoppingUncategorized => 'Sonstiges';
+
+  @override
+  String shoppingAddedBy(String names) {
+    return 'von $names hinzugefügt';
+  }
+
+  @override
+  String get shoppingAddedByMe => 'dir';
+
+  @override
+  String shoppingNamesAnd(String first, String last) {
+    return '$first und $last';
+  }
+
+  @override
+  String shoppingAmountMore(String amount) {
+    return '$amount +';
+  }
+
+  @override
+  String shoppingDone(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Erledigt · $countString';
+  }
+
+  @override
+  String get shoppingEmpty => 'Die Einkaufsliste ist leer.';
+
+  @override
+  String get shoppingEmptyHint =>
+      'Zutaten kommen vom Rezept oder aus dem Wochenplan auf die Liste.';
+
+  @override
+  String get shoppingAllDone => 'Alles erledigt.';
+
+  @override
+  String shoppingChecked(String name) {
+    return '$name abgehakt';
+  }
+
+  @override
+  String shoppingUnchecked(String name) {
+    return '$name wieder auf der Liste';
+  }
+
+  @override
+  String get shoppingUndo => 'Rückgängig';
+
+  @override
+  String shoppingCheckFailed(String name, String reason) {
+    return '$name nicht abgehakt. $reason';
+  }
+
+  @override
+  String shoppingUncheckFailed(String name, String reason) {
+    return '$name nicht wieder auf die Liste gesetzt. $reason';
+  }
+
+  @override
+  String shoppingRefreshFailed(String reason) {
+    return 'Nicht aktualisiert. $reason';
+  }
+
+  @override
+  String shoppingTruncated(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Tandoor schickt höchstens $countString Einträge. Die neuesten fehlen hier vielleicht.';
   }
 }
