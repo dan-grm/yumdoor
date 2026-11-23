@@ -210,7 +210,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recipeEdit => 'Edit';
 
   @override
-  String get recipeShopComingSoon => 'Shopping is coming soon.';
+  String recipeShopAdded(int needed) {
+    final intl.NumberFormat neededNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String neededString = neededNumberFormat.format(needed);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      needed,
+      locale: localeName,
+      other: '$neededString ingredients',
+      one: '1 ingredient',
+    );
+    return '$_temp0 on the list';
+  }
+
+  @override
+  String recipeShopAddedOnHand(int needed, int onHand) {
+    final intl.NumberFormat neededNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String neededString = neededNumberFormat.format(needed);
+    final intl.NumberFormat onHandNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String onHandString = onHandNumberFormat.format(onHand);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      needed,
+      locale: localeName,
+      other: '$neededString ingredients',
+      one: '1 ingredient',
+    );
+    return '$_temp0 on the list · $onHandString already at home';
+  }
+
+  @override
+  String get recipeShopNothing =>
+      'You have everything already, so nothing goes on the list.';
+
+  @override
+  String get recipeShopNoIngredients =>
+      'This recipe has no ingredients for the shopping list.';
+
+  @override
+  String get recipeShopOpen => 'Go to the list';
+
+  @override
+  String recipeShopFailed(String reason) {
+    return 'Couldn\'t be added to the list. $reason';
+  }
 
   @override
   String get recipeIngredients => 'Ingredients';
