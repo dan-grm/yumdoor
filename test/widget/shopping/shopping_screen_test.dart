@@ -350,7 +350,8 @@ void main() {
   testWidgets('keeps asking an unreachable server and catches up after', (
     tester,
   ) async {
-    await pumpList(tester);
+    final connectivity = FakeConnectivityService();
+    await pumpList(tester, connectivity: connectivity);
     final offline = ProviderScope.containerOf(
       tester.element(find.byType(ShoppingScreen)),
     ).read(isOfflineProvider.notifier);
@@ -363,6 +364,16 @@ void main() {
     offline.reportServerReachable(true);
     await tester.pump();
     expect(repository.fetchedAfter, hasLength(3));
+    expect(repository.fetchedAfter.last, isNull);
+
+    // Unreachable, then the device's network goes, too: paused.
+    offline.reportServerReachable(false);
+    connectivity.isOnline = false;
+    await tester.pump(const Duration(seconds: 30));
+    expect(repository.fetchedAfter, hasLength(3));
+    connectivity.isOnline = true;
+    await tester.pump();
+    expect(repository.fetchedAfter, hasLength(4));
     expect(repository.fetchedAfter.last, isNull);
   });
 

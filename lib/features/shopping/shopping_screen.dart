@@ -52,6 +52,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     reload: _refreshQuietly,
   );
   late final AppLifecycleListener _lifecycle;
+  late final StreamSubscription<bool> _network;
 
   /// Whether the tab is in view; hidden tabs have their tickers off
   /// ([TickerMode]).
@@ -82,6 +83,13 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
         _sync.catchUp();
       }
     });
+    // The device's network alone can change while the server is already
+    // unreachable; isOffline stays the same then. Subscribed after
+    // isOffline, which hears of a change first.
+    _network = ref
+        .read(connectivityServiceProvider)
+        .onlineChanges
+        .listen((_) => _updateSync());
   }
 
   /// Inactive still counts: the app is in view, only without focus (a
@@ -106,6 +114,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
   @override
   void dispose() {
     _lifecycle.dispose();
+    unawaited(_network.cancel());
     _sync.dispose();
     super.dispose();
   }
@@ -141,14 +150,20 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     }
   }
 
-  /// Reads the list again, keeping it on failure. When [catchingUp] (back
-  /// to the list), a list that failed to load is tried again, as the retry
-  /// button would; the regular full reads leave the failure on screen.
+  /// Reads the list again, keeping it on failure.
+  ///
+  /// A list that failed to load is tried again, as the retry button would,
+  /// when [catchingUp] (back to the list) or while the server can't be
+  /// reached (nothing else asks it); otherwise the failure stays on screen.
   Future<void> _refreshQuietly({bool catchingUp = true}) async {
-    if (!ref.read(shoppingListProvider).hasValue) {
-      final list = ref.read(shoppingListProvider);
+    final list = ref.read(shoppingListProvider);
+    if (!list.hasValue) {
       // Not while it loads again (the retry button), or it starts over.
-      if (catchingUp && list.hasError && !list.isLoading) _reload();
+      if (list.hasError &&
+          !list.isLoading &&
+          (catchingUp || ref.read(isOfflineProvider))) {
+        _reload();
+      }
       return;
     }
     try {
@@ -175,9 +190,9 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
       ref.invalidate(shoppingMeProvider);
     }
     Object? failure;
-    _sync.didReload();
     try {
       await ref.read(shoppingListProvider.notifier).refresh();
+      _sync.didReload();
     } on Failure catch (error) {
       failure = error;
     } on Object catch (error, stack) {
