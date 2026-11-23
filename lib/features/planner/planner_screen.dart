@@ -13,12 +13,14 @@ import '../../design/components/filter_chips.dart';
 import '../../design/design.dart';
 import '../../domain/models/calendar_day.dart';
 import '../../domain/models/meal_plan.dart';
+import '../../domain/models/recipe_query.dart';
 import '../../domain/services/week_plan.dart';
 import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import '../common/offline_disabled.dart';
 import '../common/recipe_image.dart';
+import '../search/search_location.dart';
 import '../shell/app_shell.dart';
 import 'plan_actions.dart';
 import 'planner_providers.dart';
@@ -108,6 +110,8 @@ class PlannerScreen extends ConsumerWidget {
               if (day != null) await move(plan, day, confirm: true);
             },
             delete: (plan) => confirmAndDeletePlan(context, plan, shown: start),
+            add: (day) =>
+                context.push(pickRecipeLocation(const RecipeQuery(), day)),
           );
 
     return Scaffold(
@@ -497,7 +501,11 @@ class _PlanActions {
     required this.edit,
     required this.pickDay,
     required this.delete,
+    required this.add,
   });
+
+  /// Opens the search to pick a recipe for the day.
+  final void Function(CalendarDay day) add;
 
   /// Moves the plan to start on the day.
   final Future<void> Function(MealPlan plan, CalendarDay day) move;
@@ -561,18 +569,31 @@ class _DayRow extends StatelessWidget {
     final date = day.atLocalTime();
     final name = dayLabel(context, day);
     final label = isToday ? l10n.planToday(name) : name;
+    final add = actions == null ? null : () => actions!.add(day);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Semantics(
-          label: label,
-          excludeSemantics: true,
-          container: true,
-          child: _DayLabel(
-            weekday: format.weekdayShort(date),
-            number: format.integer(day.day),
-            isToday: isToday,
-          ),
+        Column(
+          children: [
+            Semantics(
+              label: label,
+              excludeSemantics: true,
+              container: true,
+              child: _DayLabel(
+                weekday: format.weekdayShort(date),
+                number: format.integer(day.day),
+                isToday: isToday,
+              ),
+            ),
+            // Days without meals have the placeholder instead. Under the
+            // date, where the cards leave room.
+            if (plans.isNotEmpty && add != null)
+              RoundIconButton(
+                icon: Icons.add_rounded,
+                label: l10n.planAddRecipe,
+                onPressed: add,
+              ),
+          ],
         ),
         SizedBox(width: t.space3),
         Expanded(
@@ -581,7 +602,7 @@ class _DayRow extends StatelessWidget {
           child: Stack(
             children: [
               plans.isEmpty
-                  ? const _EmptyDay()
+                  ? _EmptyDay(onAdd: add)
                   : Column(
                       children: [
                         for (final (i, plan) in plans.indexed) ...[
@@ -655,29 +676,36 @@ class _DayLabel extends StatelessWidget {
   }
 }
 
-/// A day without meals: a placeholder for planning one, disabled until
-/// planning exists.
+/// A day without meals: a button that opens the search to pick a recipe for
+/// it, disabled while offline.
 class _EmptyDay extends StatelessWidget {
-  const _EmptyDay();
+  const _EmptyDay({required this.onAdd});
+
+  final VoidCallback? onAdd;
 
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
+    final label = context.l10n.planAddRecipe;
     return Semantics(
       button: true,
-      enabled: false,
-      label: context.l10n.planAddRecipe,
+      enabled: onAdd != null,
+      label: label,
       excludeSemantics: true,
-      child: Container(
-        height: t.sizeTouch,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(t.radiusM),
-          border: Border.all(color: t.line),
-        ),
-        child: Text(
-          context.l10n.planAddRecipe,
-          style: t.label.copyWith(color: t.inkMuted),
+      child: InkWell(
+        onTap: onAdd,
+        borderRadius: BorderRadius.circular(t.radiusM),
+        child: Container(
+          height: t.sizeTouch,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(t.radiusM),
+            border: Border.all(color: t.line),
+          ),
+          child: Text(
+            label,
+            style: t.label.copyWith(color: onAdd == null ? t.inkMuted : t.ink),
+          ),
         ),
       ),
     );

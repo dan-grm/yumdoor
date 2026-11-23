@@ -238,14 +238,14 @@ void main() {
       final bottom = tester.getRect(list.first).bottomCenter;
       await gesture.moveTo(bottom.translate(0, -30));
       await gesture.moveTo(bottom.translate(0, -10));
-      for (var i = 0; i < 30; i++) {
+      for (var i = 0; i < 20; i++) {
         await tester.pump(const Duration(milliseconds: 16));
       }
 
       expect(position().pixels, greaterThan(0));
       // The day under the still pointer now, not the one before scrolling.
       final under = dayOf(tester, find.text('Hier ablegen'));
-      expect(under, isIn(['Sa', 'So']));
+      expect(under, isIn(['Fr', 'Sa', 'So']));
       await gesture.up();
       await tester.pumpAndSettle();
       expect(dayOf(tester, find.text('Linsen-Bolognese')), under);

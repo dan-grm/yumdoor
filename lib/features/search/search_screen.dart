@@ -10,6 +10,7 @@ import '../../design/components/filter_chips.dart';
 import '../../design/components/recipe_card.dart';
 import '../../design/components/search_field.dart';
 import '../../design/design.dart';
+import '../../domain/models/calendar_day.dart';
 import '../../domain/models/food.dart';
 import '../../domain/models/recipe_match.dart';
 import '../../domain/models/recipe_query.dart';
@@ -19,6 +20,9 @@ import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import '../common/offline_disabled.dart';
 import '../editor/editor_screen.dart';
+import '../planner/plan_sheet.dart';
+import '../planner/week_labels.dart';
+import '../shell/app_shell.dart';
 import '../recipe/recipe_meta.dart';
 import 'filter_picker_sheet.dart';
 import 'history_filters.dart';
@@ -33,9 +37,13 @@ import 'space_filters.dart';
 /// The location is the source of truth: [query] comes from the URL, and every
 /// change goes back into it, so a search survives reload and can be shared.
 class SearchScreen extends ConsumerStatefulWidget {
-  const SearchScreen({super.key, required this.query});
+  const SearchScreen({super.key, required this.query, this.pickDay});
 
   final RecipeQuery query;
+
+  /// Set in picker mode: tapping a result opens the plan sheet for this day
+  /// instead of the recipe, and the screen has a way back to the planner.
+  final CalendarDay? pickDay;
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
@@ -101,11 +109,20 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     // not pull them back. While a screen above is still moving (a back
     // swipe), try again later; once hidden, didChangeDependencies cancels
     // the wait and searches on return.
-    if (GoRouter.of(context).state.uri.path != searchPath) {
+    final path = widget.pickDay == null ? searchPath : pickRecipePath;
+    if (GoRouter.of(context).state.uri.path != path) {
       if (_inFront) _debounce = Timer(searchDebounce, () => _show(query));
       return;
     }
-    final location = searchLocation(query.copyWith(text: _text.text.trim()));
+    final location = searchLocation(
+      query.copyWith(text: _text.text.trim()),
+      pickDay: widget.pickDay,
+    );
+    if (widget.pickDay != null) {
+      // Replaces the picker, keeping the planner below it.
+      context.replace(location);
+      return;
+    }
     Router.neglect(context, () => context.go(location));
   }
 
@@ -152,37 +169,60 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Semantics(
-                          header: true,
-                          child: Text(
-                            l10n.searchTitle,
-                            style: t.titleL.copyWith(color: t.ink),
+                  if (widget.pickDay case final day?)
+                    Row(
+                      children: [
+                        RoundIconButton(
+                          icon: Icons.chevron_left_rounded,
+                          label: l10n.back,
+                          onPressed: () => context.canPop()
+                              ? context.pop()
+                              : context.go(planPath),
+                        ),
+                        SizedBox(width: t.space3),
+                        Expanded(
+                          child: Semantics(
+                            header: true,
+                            child: Text(
+                              l10n.searchPickTitle(dayLabel(context, day)),
+                              style: t.titleL.copyWith(color: t.ink),
+                            ),
                           ),
                         ),
-                      ),
-                      OfflineDisabled(
-                        builder: (context, enabled) => RoundIconButton(
-                          icon: Icons.add_rounded,
-                          label: l10n.searchNewRecipe,
-                          onPressed: enabled
-                              ? () => context.push(newRecipeLocation)
-                              : null,
+                      ],
+                    )
+                  else
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Semantics(
+                            header: true,
+                            child: Text(
+                              l10n.searchTitle,
+                              style: t.titleL.copyWith(color: t.ink),
+                            ),
+                          ),
                         ),
-                      ),
-                      SizedBox(width: t.space2),
-                      // Moves to the settings screen once it exists.
-                      RoundIconButton(
-                        icon: Icons.logout_rounded,
-                        label: l10n.logout,
-                        onPressed: () => ref
-                            .read(sessionControllerProvider.notifier)
-                            .logout(),
-                      ),
-                    ],
-                  ),
+                        OfflineDisabled(
+                          builder: (context, enabled) => RoundIconButton(
+                            icon: Icons.add_rounded,
+                            label: l10n.searchNewRecipe,
+                            onPressed: enabled
+                                ? () => context.push(newRecipeLocation)
+                                : null,
+                          ),
+                        ),
+                        SizedBox(width: t.space2),
+                        // Moves to the settings screen once it exists.
+                        RoundIconButton(
+                          icon: Icons.logout_rounded,
+                          label: l10n.logout,
+                          onPressed: () => ref
+                              .read(sessionControllerProvider.notifier)
+                              .logout(),
+                        ),
+                      ],
+                    ),
                   SizedBox(height: t.space3),
                   SearchField(
                     controller: _text,
@@ -240,7 +280,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               current: () => query.copyWith(text: _text.text.trim()),
             ),
             Expanded(
-              child: _Results(query: query, onChange: _show),
+              child: _Results(
+                query: query,
+                onChange: _show,
+                pickDay: widget.pickDay,
+              ),
             ),
           ],
         ),
@@ -349,9 +393,14 @@ class _KeywordChip extends ConsumerWidget {
 }
 
 class _Results extends ConsumerWidget {
-  const _Results({required this.query, required this.onChange});
+  const _Results({
+    required this.query,
+    required this.onChange,
+    required this.pickDay,
+  });
 
   final RecipeQuery query;
+  final CalendarDay? pickDay;
   final void Function(RecipeQuery query) onChange;
 
   @override
@@ -368,6 +417,7 @@ class _Results extends ConsumerWidget {
         results: value,
         onLoadMore: () => ref.read(provider.notifier).loadMore(),
         onChange: onChange,
+        pickDay: pickDay,
       ),
       AsyncError(:final error) => FailureView(
         error: error,
@@ -384,8 +434,10 @@ class _ResultList extends ConsumerWidget {
     required this.results,
     required this.onLoadMore,
     required this.onChange,
+    required this.pickDay,
   });
 
+  final CalendarDay? pickDay;
   final RecipeQuery query;
   final RecipeResults results;
   final VoidCallback onLoadMore;
@@ -482,7 +534,24 @@ class _ResultList extends ConsumerWidget {
               lastCooked: recipe.lastCooked,
             ),
             match: _matchLabel(l10n, match, foods),
-            onTap: () => context.push('/recipe/${recipe.id}'),
+            onTap: switch (pickDay) {
+              final day? =>
+                () =>
+                    showPlanSheet(
+                      context,
+                      recipeId: recipe.id,
+                      recipeName: recipe.name,
+                      servings: recipe.servings,
+                      servingsText: recipe.servingsText,
+                      day: day,
+                    ).then((saved) {
+                      // Planned: on to the planner, where the meal now is.
+                      if (saved && context.mounted && context.canPop()) {
+                        context.pop();
+                      }
+                    }),
+              null => () => context.push('/recipe/${recipe.id}'),
+            },
           ),
         );
       },

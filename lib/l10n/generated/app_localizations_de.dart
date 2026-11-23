@@ -800,6 +800,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Nicht gespeichert. In Tandoor gibt es den Namen vielleicht schon – versuch einen anderen.';
 
   @override
+  String searchPickTitle(String day) {
+    return 'Rezept für $day';
+  }
+
+  @override
   String get searchNewRecipe => 'Neues Rezept';
 
   @override

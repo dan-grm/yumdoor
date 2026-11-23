@@ -1107,6 +1107,16 @@
   "@searchSavedNameConflict": {
     "description": "Message when Tandoor refused a saved search's name, most likely because a saved search in the space (perhaps one the user can't see) has it."
   },
+  "searchPickTitle": "Rezept für {day}",
+  "@searchPickTitle": {
+    "description": "Heading of the search when it picks a recipe for a day of the planner.",
+    "placeholders": {
+      "day": {
+        "type": "String",
+        "example": "Mittwoch, 25. Nov."
+      }
+    }
+  },
   "searchNewRecipe": "Neues Rezept",
   "@searchNewRecipe": {
     "description": "Button on the search screen that opens the editor for a new recipe."
@@ -1810,7 +1820,7 @@
   },
   "planAddRecipe": "Rezept planen",
   "@planAddRecipe": {
-    "description": "Disabled placeholder on a day of the planner that has no meals yet."
+    "description": "Button on a day of the planner that has no meals yet, and the label of the add button on days that have; opens the search to pick a recipe for that day."
   },
   "planEmptyWeek": "In dieser Woche ist noch nichts geplant.",
   "@planEmptyWeek": {

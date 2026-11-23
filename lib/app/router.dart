@@ -36,6 +36,17 @@ GoRouter router(Ref ref) {
       // The start screen (M2) will live here; until then search is home.
       GoRoute(path: '/', redirect: (context, state) => searchPath),
       tabsRoute(),
+      // The search in picker mode, to choose a recipe for a day of the
+      // planner. Before '/recipe/:id' is no matter; the paths differ.
+      GoRoute(
+        path: pickRecipePath,
+        redirect: (context, state) =>
+            pickDayFromUri(state.uri) == null ? planPath : null,
+        builder: (context, state) => SearchScreen(
+          query: searchQueryFromUri(state.uri),
+          pickDay: pickDayFromUri(state.uri),
+        ),
+      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: loadingPath, builder: (context, state) => const Scaffold()),
       // Before '/recipe/:id', which would take "new" for an id.

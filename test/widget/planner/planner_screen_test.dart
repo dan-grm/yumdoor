@@ -73,6 +73,9 @@ void main() {
     InMemoryLocalStore? store,
   }) => pumpRoutes(
     tester,
+    // Tall enough for the whole week, whose days are taller with the add
+    // buttons.
+    size: const Size(390, 1200),
     location: location,
     theme: theme,
     overrides: [
@@ -128,14 +131,12 @@ void main() {
     );
   });
 
-  testWidgets('empty days offer a disabled placeholder', (tester) async {
+  testWidgets('empty days offer to plan a recipe', (tester) async {
     await pumpPlanner(tester);
 
     // Tuesday and Sunday have no meals.
+    // Opening the picker is covered by plan_from_day_test.
     expect(find.text('Rezept planen'), findsNWidgets(2));
-    await tester.tap(find.text('Rezept planen').first);
-    await tester.pumpAndSettle();
-    expect(find.byType(PlannerScreen), findsOneWidget);
   });
 
   testWidgets('a plan without a recipe shows its title and is not tappable', (

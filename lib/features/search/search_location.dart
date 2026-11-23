@@ -1,3 +1,4 @@
+import '../../domain/models/calendar_day.dart';
 import '../../domain/models/recipe_query.dart';
 import '../../domain/models/recipe_sort.dart';
 
@@ -22,6 +23,7 @@ const _book = 'book';
 const _createdBy = 'created_by';
 const _sort = 'sort';
 const _savedFilter = 'saved';
+const _pickDay = 'day';
 
 /// The value of the sort parameter for [sort].
 String _sortName(RecipeSort sort) => switch (sort) {
@@ -38,8 +40,22 @@ String _sortName(RecipeSort sort) => switch (sort) {
 /// and 1.
 const _maxMissingLimit = 1;
 
-/// The location of the search screen showing [query].
-String searchLocation(RecipeQuery query) {
+/// The path of the search screen in picker mode, opened from the planner to
+/// choose a recipe for a day (`?day=2026-11-25`, besides the search
+/// parameters). It covers the whole screen, like the recipe.
+const pickRecipePath = '/plan/pick';
+
+/// The location of the picker showing [query], planning for [day].
+String pickRecipeLocation(RecipeQuery query, CalendarDay day) =>
+    searchLocation(query, pickDay: day);
+
+/// The day the picker at [uri] plans for, `null` if it is missing or invalid.
+CalendarDay? pickDayFromUri(Uri uri) =>
+    CalendarDay.tryParse(uri.queryParameters[_pickDay] ?? '');
+
+/// The location of the search screen showing [query]; the picker for
+/// [pickDay] if given.
+String searchLocation(RecipeQuery query, {CalendarDay? pickDay}) {
   final text = query.text.trim();
   final params = <String, List<String>>{
     if (text.isNotEmpty) _text: [text],
@@ -61,9 +77,10 @@ String searchLocation(RecipeQuery query) {
     if (query.createdBy case final user?) _createdBy: ['$user'],
     if (query.sort case final sort?) _sort: [_sortName(sort)],
     if (query.savedFilter case final filter?) _savedFilter: ['$filter'],
+    if (pickDay != null) _pickDay: ['$pickDay'],
   };
   return Uri(
-    path: searchPath,
+    path: pickDay == null ? searchPath : pickRecipePath,
     queryParameters: params.isEmpty ? null : params,
   ).toString();
 }

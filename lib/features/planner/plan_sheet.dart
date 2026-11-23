@@ -33,12 +33,13 @@ const plannerFailureSnackBarDuration = Duration(seconds: 8);
 
 /// Opens the [PlanSheet] for the recipe [recipeId] and, once a plan is
 /// saved, confirms it in a snackbar with a way to the planner. Completes
-/// when the sheet is closed; the planner's weeks reload on their own.
+/// when the sheet is closed, with whether a plan was saved; the planner's
+/// weeks reload on their own.
 ///
 /// [servings] is where the servings start, usually what the recipe screen
 /// shows, counted in [servingsText] ("Stück") if the recipe has one; [day]
 /// presets the day (today if `null`).
-Future<void> showPlanSheet(
+Future<bool> showPlanSheet(
   BuildContext context, {
   required int recipeId,
   required String recipeName,
@@ -56,7 +57,9 @@ Future<void> showPlanSheet(
   // Confirms through the messenger, which outlives the sheet and the screen
   // that opened it: a sheet that is dragged away while saving still reports
   // how it went.
+  var saved = false;
   void confirm(PlanSheetResult result) {
+    saved = true;
     if (!messenger.mounted) return;
     final context = messenger.context;
     final l10n = context.l10n;
@@ -113,6 +116,7 @@ Future<void> showPlanSheet(
       onFailedAfterClose: reportFailure,
     ),
   );
+  return saved;
 }
 
 /// Shows a bottom sheet of the planner, built by [builder], styled like the
