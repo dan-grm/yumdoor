@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yumdoor/app/platform_providers.dart';
+import 'package:yumdoor/app/offline.dart';
 import 'package:yumdoor/app/router.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/design/design.dart';
@@ -343,6 +345,25 @@ void main() {
     await tester.pump(shoppingPollInterval);
     expect(repository.fetchedAfter, hasLength(5));
     expect(repository.fetchedAfter.last, isNotNull);
+  });
+
+  testWidgets('keeps asking an unreachable server and catches up after', (
+    tester,
+  ) async {
+    await pumpList(tester);
+    final offline = ProviderScope.containerOf(
+      tester.element(find.byType(ShoppingScreen)),
+    ).read(isOfflineProvider.notifier);
+
+    offline.reportServerReachable(false);
+    await tester.pump(shoppingPollInterval);
+    expect(repository.fetchedAfter, hasLength(2));
+    expect(repository.fetchedAfter.last, isNotNull);
+
+    offline.reportServerReachable(true);
+    await tester.pump();
+    expect(repository.fetchedAfter, hasLength(3));
+    expect(repository.fetchedAfter.last, isNull);
   });
 
   testWidgets('undo after going offline is disabled and says why', (

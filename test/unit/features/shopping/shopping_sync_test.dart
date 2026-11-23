@@ -30,8 +30,8 @@ void main() {
           calls.add('poll');
           await gate?.future;
         },
-        reload: () async {
-          calls.add('reload');
+        reload: ({required catchingUp}) async {
+          calls.add(catchingUp ? 'catch up' : 'reload');
           await gate?.future;
         },
         reloadInterval: const Duration(seconds: 20),
@@ -82,9 +82,27 @@ void main() {
 
         sync.setActive(true);
         async.flushMicrotasks();
-        expect(calls, ['poll', 'reload']);
+        expect(calls, ['poll', 'catch up']);
         async.elapse(_poll);
-        expect(calls, ['poll', 'reload', 'poll']);
+        expect(calls, ['poll', 'catch up', 'poll']);
+      });
+    });
+
+    test('catches up on request, then polls from there', () {
+      fakeAsync((async) {
+        sync.catchUp();
+        async.flushMicrotasks();
+        expect(calls, isEmpty, reason: 'not active');
+
+        sync.setActive(true, catchUp: false);
+        async.elapse(const Duration(seconds: 3));
+        sync.catchUp();
+        async.flushMicrotasks();
+        expect(calls, ['catch up']);
+        async.elapse(const Duration(seconds: 4));
+        expect(calls, ['catch up']);
+        async.elapse(const Duration(seconds: 1));
+        expect(calls, ['catch up', 'poll']);
       });
     });
 
@@ -129,7 +147,7 @@ void main() {
 
         slow.complete();
         async.flushMicrotasks();
-        expect(calls, ['poll', 'reload']);
+        expect(calls, ['poll', 'catch up']);
       });
     });
 
@@ -141,7 +159,7 @@ void main() {
             calls.add('poll');
             if (failing) throw StateError('server');
           },
-          reload: () async => calls.add('reload'),
+          reload: ({required catchingUp}) async => calls.add('reload'),
         );
         failingSync.setActive(true, catchUp: false);
         async.elapse(_poll);
@@ -196,7 +214,7 @@ void main() {
       expect(container.read(shoppingListProvider).hasValue, isTrue);
       sync = ShoppingSync(
         poll: () => list().poll(),
-        reload: () => list().catchUp(),
+        reload: ({required catchingUp}) => list().catchUp(),
         reloadInterval: const Duration(seconds: 30),
       )..setActive(true, catchUp: false);
     }
@@ -290,6 +308,50 @@ void main() {
         slow.complete();
         async.flushMicrotasks();
         expect(entry(108), isNull);
+        stop();
+      });
+    });
+
+    test('an added entry a poll brought already shows once', () {
+      fakeAsync((async) {
+        start(async);
+        final deleted = list().entriesOf([109]);
+        unawaited(list().delete(deleted));
+        async.flushMicrotasks();
+        repository.checkGate = Completer();
+        // Restoring the checked oil: added, then checked off, which hangs.
+        unawaited(list().restore(deleted));
+        async.flushMicrotasks();
+
+        async.elapse(_poll);
+        repository.checkGate!.complete();
+        async.flushMicrotasks();
+        final oil = [
+          for (final e
+              in container.read(shoppingListProvider).requireValue.entries)
+            if (e.food.id == deleted.single.food.id) e,
+        ];
+        expect(oil, hasLength(1));
+        expect(oil.single.checked, isTrue);
+        stop();
+      });
+    });
+
+    test('a list at the cap gets no new entries from a poll', () {
+      fakeAsync((async) {
+        start(async);
+        repository.truncated = true;
+        unawaited(list().refresh());
+        async.flushMicrotasks();
+        repository.now = repository.now.add(const Duration(minutes: 1));
+        repository.entries.add(
+          repository.entries.first.copyWith(id: 120, updatedAt: repository.now),
+        );
+        othersCheck(105, repository.now);
+
+        async.elapse(_poll);
+        expect(entry(120), isNull);
+        expect(entry(105)!.checked, isTrue);
         stop();
       });
     });

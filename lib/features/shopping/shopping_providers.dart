@@ -128,8 +128,7 @@ class ShoppingList extends _$ShoppingList {
     final read = ++_reads;
     final changes = await repository.fetch(updatedAfter: server.syncedAt);
     if (!ref.mounted || !identical(repository, _repository)) return;
-    _merge(read, changes);
-    if (changes.entries.isNotEmpty) _publish();
+    if (_merge(read, changes)) _publish();
   }
 
   /// Checks off ([checked] `true`) or unchecks the entries with [ids],
@@ -232,9 +231,8 @@ class ShoppingList extends _$ShoppingList {
           // Back where it was: checked off.
           await repository.setChecked({created.id}, checked: true);
           final at = ref.read(clockProvider)();
-          added.add(
-            created.copyWith(checked: true, completedAt: at, updatedAt: at),
-          );
+          // Keeps the server's updatedAt, so a poll can tell newer states.
+          added.add(created.copyWith(checked: true, completedAt: at));
         }
         return (add: added, remove: const <int>{});
       });
@@ -280,10 +278,13 @@ class ShoppingList extends _$ShoppingList {
         // Still loading: what that read shows may predate this edit.
         unawaited(_resync());
       } else {
+        // A poll may have brought an added entry already.
+        final added = {for (final e in add) e.id};
         _server = server.copyWith(
           entries: [
             for (final entry in server.entries)
-              if (!remove.contains(entry.id)) entry,
+              if (!remove.contains(entry.id) && !added.contains(entry.id))
+                entry,
             ...add,
           ],
         );
@@ -344,23 +345,33 @@ class ShoppingList extends _$ShoppingList {
   /// A read that started before the list shown ([_shownRead]: a full read
   /// or an edit) may bring back an entry deleted since, and older states:
   /// it only updates entries still on the list, where it has a newer state.
-  void _merge(int read, ShoppingListSnapshot changes) {
+  ///
+  /// Returns whether the list as shown may have changed.
+  bool _merge(int read, ShoppingListSnapshot changes) {
     final server = _server;
-    if (server == null) return;
+    if (server == null) return false;
     final current = read >= _shownRead;
     final changed = {for (final entry in changes.entries) entry.id: entry};
+    var differs = false;
     final entries = <ShoppingEntry>[];
     for (final entry in server.entries) {
       final update = changed.remove(entry.id);
       if (update == null ||
+          update == entry ||
           (!current && !update.updatedAt.isAfter(entry.updatedAt))) {
         entries.add(entry);
       } else {
         entries.add(update);
+        differs = true;
       }
     }
-    // New entries, by the others or by this device elsewhere.
-    if (current) entries.addAll(changed.values);
+    // New entries, by the others or by this device elsewhere. A list cut
+    // off at the cap leaves out the newest; a full read would drop them
+    // again.
+    if (current && !server.truncated && changed.isNotEmpty) {
+      entries.addAll(changed.values);
+      differs = true;
+    }
     _server = server.copyWith(
       entries: entries,
       syncedAt: current ? changes.syncedAt : server.syncedAt,
@@ -370,8 +381,10 @@ class ShoppingList extends _$ShoppingList {
       final change = _changes[entry.id];
       if (change?.savedBeforeRead case final saved? when saved < read) {
         _changes.remove(entry.id);
+        differs = true;
       }
     }
+    return differs;
   }
 
   void _apply(int read, ShoppingListSnapshot snapshot) {

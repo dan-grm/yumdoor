@@ -17,7 +17,8 @@ const shoppingReloadInterval = Duration(minutes: 3);
 /// [pollInterval] and, every [reloadInterval] instead, [reload] (a full
 /// read). Each read starts [pollInterval] after the previous one ended, so
 /// reads never overlap. Becoming active again (back on screen, the app in
-/// front again, back online) catches up at once with [reload].
+/// front again, back online) catches up at once with [reload], with
+/// `catchingUp` set; so does [catchUp].
 ///
 /// Failures of [poll] and [reload] are theirs to handle; one that throws
 /// anyway doesn't stop the sync.
@@ -30,7 +31,7 @@ class ShoppingSync {
   }) : assert(pollInterval > Duration.zero, 'pollInterval must be positive');
 
   final Future<void> Function() poll;
-  final Future<void> Function() reload;
+  final Future<void> Function({required bool catchingUp}) reload;
   final Duration pollInterval;
   final Duration reloadInterval;
 
@@ -66,11 +67,21 @@ class ShoppingSync {
     _timer = null;
     if (!active) return;
     if (catchUp) {
-      unawaited(_run(full: true));
+      unawaited(_run(full: true, catchingUp: true));
     } else {
       _polls = 0;
       _schedule();
     }
+  }
+
+  /// Catches up with a full read now, if [active] (the server answers
+  /// again, say).
+  void catchUp() {
+    if (!_active) return;
+    _generation++;
+    _timer?.cancel();
+    _timer = null;
+    unawaited(_run(full: true, catchingUp: true));
   }
 
   /// The list was just read in full elsewhere (pull to refresh): the next
@@ -93,7 +104,7 @@ class ShoppingSync {
     });
   }
 
-  Future<void> _run({required bool full}) async {
+  Future<void> _run({required bool full, bool catchingUp = false}) async {
     final generation = _generation;
     if (_running) {
       // A read from before a pause is still running; this one takes over
@@ -105,7 +116,7 @@ class ShoppingSync {
     try {
       if (full) {
         _polls = 0;
-        await reload();
+        await reload(catchingUp: catchingUp);
       } else {
         _polls++;
         await poll();

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/offline.dart';
+import '../../app/platform_providers.dart';
 import '../../app/repository_providers.dart';
 import '../../core/failures.dart';
 import '../../design/components/buttons.dart';
@@ -73,8 +74,14 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
         _updateSync();
       },
     );
-    // Offline, nothing to ask; back online, catch up.
-    ref.listenManual(isOfflineProvider, (_, _) => _updateSync());
+    ref.listenManual(isOfflineProvider, (wasOffline, offline) {
+      final wasActive = _sync.active;
+      _updateSync();
+      // The server answers again after it couldn't be reached: catch up.
+      if (wasOffline == true && !offline && wasActive && _sync.active) {
+        _sync.catchUp();
+      }
+    });
   }
 
   /// Inactive still counts: the app is in view, only without focus (a
@@ -103,9 +110,15 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     super.dispose();
   }
 
-  /// Keeps the list in sync while it is in view and online.
+  /// Keeps the list in sync while it is in view and the device online.
+  ///
+  /// Only the device's network pauses it: when merely the server can't be
+  /// reached, the polls are what notices it answering again.
   void _updateSync() {
-    final active = _tabVisible && _appVisible && !ref.read(isOfflineProvider);
+    final active =
+        _tabVisible &&
+        _appVisible &&
+        ref.read(connectivityServiceProvider).isOnline;
     final catchUp = _started;
     _started = true;
     if (active != _sync.active) _sync.setActive(active, catchUp: catchUp);
@@ -115,15 +128,25 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     if (!ref.read(shoppingListProvider).hasValue) return;
     try {
       await ref.read(shoppingListProvider.notifier).poll();
-    } on Object {
+    } on Failure {
       // The next poll tries again; pull to refresh says why.
+    } on Object catch (error, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'shopping',
+        ),
+      );
     }
   }
 
-  Future<void> _refreshQuietly() async {
+  /// Reads the list again, keeping it on failure. When [catchingUp] (back
+  /// to the list), a list that failed to load is tried again, as the retry
+  /// button would; the regular full reads leave the failure on screen.
+  Future<void> _refreshQuietly({bool catchingUp = true}) async {
     if (!ref.read(shoppingListProvider).hasValue) {
-      // Failed before: try again, as the retry button would.
-      if (ref.read(shoppingListProvider).hasError) _reload();
+      if (catchingUp && ref.read(shoppingListProvider).hasError) _reload();
       return;
     }
     try {
