@@ -3,11 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/core/failures.dart';
+import 'package:yumdoor/domain/models/recipe.dart';
+import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/design/components/timer_chip.dart';
 import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/features/recipe/recipe_screen.dart';
 
+import '../../fakes/fake_connectivity_service.dart';
 import '../../fakes/fake_recipe_repository.dart';
+import '../../fakes/fake_shopping_repository.dart';
 import '../../fixtures/recipes.dart';
 import '../fonts.dart';
 import '../golden.dart';
@@ -15,10 +19,16 @@ import '../harness.dart';
 
 void main() {
   late FakeRecipeRepository repository;
+  late FakeShoppingRepository shopping;
+  late FakeConnectivityService connectivity;
 
   setUpAll(loadBundledFonts);
 
-  setUp(() => repository = FakeRecipeRepository([ofenkarotten, longNames]));
+  setUp(() {
+    repository = FakeRecipeRepository([ofenkarotten, longNames]);
+    shopping = FakeShoppingRepository();
+    connectivity = FakeConnectivityService();
+  });
 
   Future<GoRouter> pumpRecipe(
     WidgetTester tester,
@@ -30,12 +40,20 @@ void main() {
     location: '/recipe/$id',
     theme: theme,
     size: size,
-    overrides: [recipeRepositoryProvider.overrideWithValue(repository)],
+    overrides: [
+      recipeRepositoryProvider.overrideWithValue(repository),
+      shoppingRepositoryProvider.overrideWithValue(shopping),
+      connectivityServiceProvider.overrideWithValue(connectivity),
+    ],
     routes: [
       GoRoute(
         path: '/recipe/:id',
         builder: (context, state) =>
             RecipeScreen(recipeId: int.parse(state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/shopping',
+        builder: (context, state) => const Text('shopping list'),
       ),
       GoRoute(
         path: '/recipe/:id/cook',
@@ -148,15 +166,125 @@ void main() {
     expect(find.text('cooked /recipe/7/cooked?servings=3'), findsOneWidget);
   });
 
-  testWidgets('shop is visible but disabled, plan is enabled', (tester) async {
-    await pumpRecipe(tester, ofenkarotten.id);
+  /// Ofenkarotten with every food in [onHand] on hand ('Salz' is never
+  /// bought).
+  Recipe withOnHand(Set<String> onHand) => ofenkarotten.copyWith(
+    steps: [
+      for (final step in ofenkarotten.steps)
+        step.copyWith(
+          ingredients: [
+            for (final ingredient in step.ingredients)
+              ingredient.copyWith(
+                food: ingredient.food?.copyWith(
+                  onHand: onHand.contains(ingredient.food?.name),
+                ),
+              ),
+          ],
+        ),
+    ],
+  );
 
-    TextButton button(String label) => tester.widget<TextButton>(
-      find.ancestor(of: find.text(label), matching: find.byType(TextButton)),
+  Future<void> tapShop(WidgetTester tester) async {
+    await tester.tap(find.text('Einkaufen'));
+    await tester.pumpAndSettle();
+  }
+
+  group('"Einkaufen"', () {
+    testWidgets('puts the ingredients for the chosen servings on the list', (
+      tester,
+    ) async {
+      repository = FakeRecipeRepository([
+        withOnHand({'Olivenöl', 'Kreuzkümmel, gemahlen'}),
+      ]);
+      await pumpRecipe(tester, ofenkarotten.id);
+      expect(find.text('Einkaufen kommt bald.'), findsNothing);
+
+      await tapTooltip(tester, 'Mehr Portionen');
+      await tapTooltip(tester, 'Mehr Portionen');
+      await tapShop(tester);
+
+      expect(shopping.added, [(recipeId: 7, servings: 4.0, mealPlanId: null)]);
+      expect(
+        find.text('4 Zutaten auf der Liste · 2 hast du schon'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('"Zur Liste" opens the shopping list', (tester) async {
+      await pumpRecipe(tester, ofenkarotten.id);
+
+      await tapShop(tester);
+      await tester.tap(find.text('Zur Liste'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('shopping list'), findsOneWidget);
+    });
+
+    testWidgets(
+      'leaves out the count of ingredients at home if there are none',
+      (tester) async {
+        await pumpRecipe(tester, ofenkarotten.id);
+
+        await tapShop(tester);
+
+        expect(find.text('6 Zutaten auf der Liste'), findsOneWidget);
+      },
     );
-    expect(button('Einkaufen').onPressed, isNull);
-    expect(button('Planen').onPressed, isNotNull);
-    expect(find.text('Einkaufen kommt bald.'), findsOneWidget);
+
+    testWidgets('says so when everything is on hand', (tester) async {
+      repository = FakeRecipeRepository([
+        withOnHand({
+          'Karotte',
+          'Olivenöl',
+          'Kreuzkümmel, gemahlen',
+          'Salz',
+          'Feta',
+          'Petersilie',
+        }),
+      ]);
+      await pumpRecipe(tester, ofenkarotten.id);
+
+      await tapShop(tester);
+
+      expect(
+        find.text('Alles hast du schon, es kommt nichts auf die Liste.'),
+        findsOneWidget,
+      );
+      expect(find.text('Zur Liste'), findsNothing);
+    });
+
+    testWidgets('explains a failure', (tester) async {
+      shopping.failure = const ServerFailure();
+      await pumpRecipe(tester, ofenkarotten.id);
+
+      await tapShop(tester);
+
+      expect(shopping.added, isEmpty);
+      expect(
+        find.textContaining('Nicht auf die Liste gekommen.'),
+        findsOneWidget,
+      );
+      expect(find.text('Zur Liste'), findsNothing);
+      // Can be tried again.
+      shopping.failure = null;
+      await tapShop(tester);
+      expect(shopping.added, hasLength(1));
+    });
+
+    testWidgets('is disabled offline, like planning', (tester) async {
+      connectivity.isOnline = false;
+      await pumpRecipe(tester, ofenkarotten.id);
+
+      TextButton button(String label) => tester.widget<TextButton>(
+        find.ancestor(of: find.text(label), matching: find.byType(TextButton)),
+      );
+      expect(button('Einkaufen').onPressed, isNull);
+      expect(button('Planen').onPressed, isNull);
+      expect(
+        find.textContaining('Offline kannst du nichts ändern.'),
+        findsOneWidget,
+      );
+    });
   });
 
   testWidgets('"Bearbeiten" opens the editor', (tester) async {

@@ -404,11 +404,41 @@ abstract class AppLocalizations {
   /// **'Bearbeiten'**
   String get recipeEdit;
 
-  /// Explains why the shop button on the recipe screen is disabled.
+  /// Snackbar after the recipe's ingredients were put on the shopping list; none of them was on hand.
   ///
   /// In de, this message translates to:
-  /// **'Einkaufen kommt bald.'**
-  String get recipeShopComingSoon;
+  /// **'{needed, plural, =1{1 Zutat} other{{needed} Zutaten}} auf der Liste'**
+  String recipeShopAdded(int needed);
+
+  /// Snackbar after the recipe's ingredients were put on the shopping list; some were left out because they are at home.
+  ///
+  /// In de, this message translates to:
+  /// **'{needed, plural, =1{1 Zutat} other{{needed} Zutaten}} auf der Liste · {onHand} hast du schon'**
+  String recipeShopAddedOnHand(int needed, int onHand);
+
+  /// Snackbar when every ingredient of the recipe is on hand, so nothing was added to the shopping list.
+  ///
+  /// In de, this message translates to:
+  /// **'Alles hast du schon, es kommt nichts auf die Liste.'**
+  String get recipeShopNothing;
+
+  /// Snackbar when the recipe has no ingredients to put on the shopping list.
+  ///
+  /// In de, this message translates to:
+  /// **'Das Rezept hat keine Zutaten für die Einkaufsliste.'**
+  String get recipeShopNoIngredients;
+
+  /// Action of the snackbar after shopping from the recipe: open the shopping list.
+  ///
+  /// In de, this message translates to:
+  /// **'Zur Liste'**
+  String get recipeShopOpen;
+
+  /// Snackbar when putting the recipe on the shopping list failed.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht auf die Liste gekommen. {reason}'**
+  String recipeShopFailed(String reason);
 
   /// Heading of the ingredient list.
   ///

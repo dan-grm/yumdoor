@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/offline.dart';
+import '../../app/repository_providers.dart';
+import '../../core/failures.dart';
 import '../../design/components/buttons.dart';
 import '../../design/components/servings_picker.dart';
 import '../../design/design.dart';
@@ -22,12 +24,17 @@ import '../common/step_text.dart';
 import '../cook_log/cook_log_screen.dart';
 import '../editor/editor_screen.dart';
 import '../planner/plan_sheet.dart';
+import '../shell/app_shell.dart';
 import 'ingredient_lines.dart';
 import 'recipe_meta.dart';
 import 'recipe_providers.dart';
 
 /// Height of the image above the title (mockup 04-rezept).
 const _imageHeight = 200.0;
+
+/// How long the shopping snackbar stays, and how long an error does.
+const _snackBarDuration = Duration(seconds: 4);
+const _failureDuration = Duration(seconds: 8);
 
 /// A recipe with the servings picker and its scaled ingredients
 /// (mockup `04-rezept`). "Kochen starten" opens cooking mode with the chosen
@@ -63,17 +70,104 @@ class RecipeScreen extends ConsumerWidget {
   }
 }
 
-class _RecipeView extends StatefulWidget {
+class _RecipeView extends ConsumerStatefulWidget {
   const _RecipeView({required this.recipe});
 
   final Recipe recipe;
 
   @override
-  State<_RecipeView> createState() => _RecipeViewState();
+  ConsumerState<_RecipeView> createState() => _RecipeViewState();
 }
 
-class _RecipeViewState extends State<_RecipeView> {
+class _RecipeViewState extends ConsumerState<_RecipeView> {
   late int _servings = math.max(widget.recipe.servings, 1);
+
+  /// Whether the ingredients are being put on the shopping list.
+  var _shopping = false;
+
+  /// Puts the ingredients for the chosen servings on the shopping list, and
+  /// says how it went in a snackbar that outlives this screen.
+  Future<void> _shop() async {
+    if (_shopping) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.of(context);
+    final recipes = ref.read(recipeRepositoryProvider);
+    final shoppingList = ref.read(shoppingRepositoryProvider);
+    final recipeId = widget.recipe.id;
+    final servings = _servings;
+    setState(() => _shopping = true);
+
+    Failure? failure;
+    var added = false;
+    var hasIngredients = true;
+    var needed = 0;
+    var onHand = 0;
+    try {
+      // Freshly read: what is on hand may have changed since it was opened.
+      final recipe = await recipes.fetchRecipe(recipeId);
+      final result = await shoppingList.addRecipe(recipe, servings.toDouble());
+      needed = result.neededCount;
+      onHand = result.onHandCount;
+      added = !result.isEmpty;
+      hasIngredients = needed + onHand > 0;
+    } on Failure catch (error) {
+      failure = error;
+    }
+    if (mounted) setState(() => _shopping = false);
+    _report(
+      messenger,
+      router,
+      failure: failure,
+      added: added,
+      hasIngredients: hasIngredients,
+      needed: needed,
+      onHand: onHand,
+    );
+  }
+
+  /// Says how adding to the shopping list went. Through the messenger, which
+  /// outlives this screen.
+  static void _report(
+    ScaffoldMessengerState messenger,
+    GoRouter router, {
+    required Failure? failure,
+    required bool added,
+    required bool hasIngredients,
+    required int needed,
+    required int onHand,
+  }) {
+    if (!messenger.mounted) return;
+    final messengerContext = messenger.context;
+    final l10n = messengerContext.l10n;
+    final message = switch (failure) {
+      final failure? => l10n.recipeShopFailed(
+        failureMessage(messengerContext, failure),
+      ),
+      null when added && onHand > 0 => l10n.recipeShopAddedOnHand(
+        needed,
+        onHand,
+      ),
+      null when added => l10n.recipeShopAdded(needed),
+      null when hasIngredients => l10n.recipeShopNothing,
+      null => l10n.recipeShopNoIngredients,
+    };
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          // With an action, a snackbar would stay until it is closed.
+          persist: false,
+          duration: failure == null ? _snackBarDuration : _failureDuration,
+          action: added
+              ? SnackBarAction(
+                  label: l10n.recipeShopOpen,
+                  onPressed: () => router.go(shoppingPath),
+                )
+              : null,
+        ),
+      );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +220,7 @@ class _RecipeViewState extends State<_RecipeView> {
                                 servings: _servings,
                                 servingsText: recipe.servingsText,
                               ),
+                              onShop: _shopping ? null : _shop,
                               onEdit: () =>
                                   context.push(editLocation(recipe.id)),
                             ),
@@ -353,12 +448,13 @@ class _TitleBlock extends StatelessWidget {
   }
 }
 
-/// "Als gekocht eintragen", then plan, shop and edit. Shop is visible but
-/// disabled until it is built. All of them are disabled while offline.
+/// "Als gekocht eintragen", then plan, shop and edit. All of them are
+/// disabled while offline.
 class _WriteActions extends ConsumerWidget {
   const _WriteActions({
     required this.onCooked,
     required this.onPlan,
+    required this.onShop,
     required this.onEdit,
   });
 
@@ -368,6 +464,9 @@ class _WriteActions extends ConsumerWidget {
   /// Opens the plan sheet for the chosen servings.
   final VoidCallback onPlan;
 
+  /// Puts the ingredients on the shopping list; `null` while that is going on.
+  final VoidCallback? onShop;
+
   /// Opens the editor.
   final VoidCallback onEdit;
 
@@ -376,10 +475,9 @@ class _WriteActions extends ConsumerWidget {
     final t = context.tokens;
     final l10n = context.l10n;
     final offline = ref.watch(isOfflineProvider);
-    // Shop isn't built yet, so it is disabled online too.
     final actions = [
       (Icons.calendar_today_outlined, l10n.recipePlan, onPlan),
-      (Icons.shopping_cart_outlined, l10n.recipeShop, null),
+      (Icons.shopping_cart_outlined, l10n.recipeShop, onShop),
       (Icons.edit_outlined, l10n.recipeEdit, onEdit),
     ];
 
@@ -415,11 +513,13 @@ class _WriteActions extends ConsumerWidget {
             ],
           ],
         ),
-        SizedBox(height: t.space2),
-        Text(
-          offline ? l10n.offlineWriteDisabled : l10n.recipeShopComingSoon,
-          style: t.caption.copyWith(color: t.inkMuted),
-        ),
+        if (offline) ...[
+          SizedBox(height: t.space2),
+          Text(
+            l10n.offlineWriteDisabled,
+            style: t.caption.copyWith(color: t.inkMuted),
+          ),
+        ],
       ],
     );
   }

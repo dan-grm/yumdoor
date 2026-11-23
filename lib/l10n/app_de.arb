@@ -256,9 +256,51 @@
   "@recipeEdit": {
     "description": "Button on the recipe screen: edit the recipe."
   },
-  "recipeShopComingSoon": "Einkaufen kommt bald.",
-  "@recipeShopComingSoon": {
-    "description": "Explains why the shop button on the recipe screen is disabled."
+  "recipeShopAdded": "{needed, plural, =1{1 Zutat} other{{needed} Zutaten}} auf der Liste",
+  "@recipeShopAdded": {
+    "description": "Snackbar after the recipe's ingredients were put on the shopping list; none of them was on hand.",
+    "placeholders": {
+      "needed": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "recipeShopAddedOnHand": "{needed, plural, =1{1 Zutat} other{{needed} Zutaten}} auf der Liste · {onHand} hast du schon",
+  "@recipeShopAddedOnHand": {
+    "description": "Snackbar after the recipe's ingredients were put on the shopping list; some were left out because they are at home.",
+    "placeholders": {
+      "needed": {
+        "type": "int",
+        "format": "decimalPattern"
+      },
+      "onHand": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "recipeShopNothing": "Alles hast du schon, es kommt nichts auf die Liste.",
+  "@recipeShopNothing": {
+    "description": "Snackbar when every ingredient of the recipe is on hand, so nothing was added to the shopping list."
+  },
+  "recipeShopNoIngredients": "Das Rezept hat keine Zutaten für die Einkaufsliste.",
+  "@recipeShopNoIngredients": {
+    "description": "Snackbar when the recipe has no ingredients to put on the shopping list."
+  },
+  "recipeShopOpen": "Zur Liste",
+  "@recipeShopOpen": {
+    "description": "Action of the snackbar after shopping from the recipe: open the shopping list."
+  },
+  "recipeShopFailed": "Nicht auf die Liste gekommen. {reason}",
+  "@recipeShopFailed": {
+    "description": "Snackbar when putting the recipe on the shopping list failed.",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "Der Server hat einen Fehler gemeldet."
+      }
+    }
   },
   "recipeIngredients": "Zutaten",
   "@recipeIngredients": {

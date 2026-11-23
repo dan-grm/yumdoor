@@ -97,7 +97,7 @@ void main() {
 
       expect(find.text(_banner), findsNothing);
       expect(find.byTooltip(_writeDisabled), findsNothing);
-      expect(find.text('Einkaufen kommt bald.'), findsOneWidget);
+      expect(find.text(_writeDisabled), findsNothing);
     });
 
     testWidgets('shows the image from the offline cache', (tester) async {
