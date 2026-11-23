@@ -41,8 +41,9 @@ class _CheckChange {
 /// bring back the old state.
 ///
 /// Sending goes through [_send], the one place a queue for offline
-/// check-offs can take over later.
-@Riverpod(keepAlive: true)
+/// check-offs (#116) can take over later. Until then, the screen doesn't
+/// offer ticking offline.
+@Riverpod(keepAlive: true, retry: _noRetry)
 class ShoppingList extends _$ShoppingList {
   late ShoppingRepository _repository;
 
@@ -52,18 +53,22 @@ class ShoppingList extends _$ShoppingList {
   /// Check states set here, by entry id.
   final _changes = <int, _CheckChange>{};
 
-  /// The changes being sent, in order.
+  /// The changes being sent, in order. Kept when the list starts over, so
+  /// a change still can't overtake an earlier one.
   Future<void> _writes = Future.value();
 
   /// How many reads have started.
   var _reads = 0;
+
+  /// The read [_server] comes from; an older one that ends later is
+  /// dropped.
+  var _shownRead = 0;
 
   @override
   Future<List<ShoppingEntry>> build() async {
     _repository = ref.watch(shoppingRepositoryProvider);
     _server = const [];
     _changes.clear();
-    _writes = Future.value();
     final read = ++_reads;
     final snapshot = await _repository.fetch();
     _apply(read, snapshot);
@@ -94,6 +99,8 @@ class ShoppingList extends _$ShoppingList {
       checked: checked,
       at: ref.read(clockProvider)(),
     );
+    // What each entry showed before, to go back to if this fails.
+    final previous = {for (final id in ids) id: _changes[id]};
     for (final id in ids) {
       _changes[id] = change;
     }
@@ -121,8 +128,15 @@ class ShoppingList extends _$ShoppingList {
     if (failure == null) {
       change.savedBeforeRead = _reads;
     } else {
-      // Only where no later change took over.
-      _changes.removeWhere((_, value) => identical(value, change));
+      // Back to what was shown before, where no later change took over.
+      for (final MapEntry(key: id, value: before) in previous.entries) {
+        if (!identical(_changes[id], change)) continue;
+        if (before == null) {
+          _changes.remove(id);
+        } else {
+          _changes[id] = before;
+        }
+      }
       _publish();
     }
     return failure;
@@ -136,6 +150,8 @@ class ShoppingList extends _$ShoppingList {
   ) => repository.setChecked(ids.toSet(), checked: checked);
 
   void _apply(int read, ShoppingListSnapshot snapshot) {
+    if (read < _shownRead) return;
+    _shownRead = read;
     _server = snapshot.entries;
     _changes.removeWhere(
       (_, change) =>

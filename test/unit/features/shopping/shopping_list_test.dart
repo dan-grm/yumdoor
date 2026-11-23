@@ -133,6 +133,34 @@ void main() {
     expect(entry(105).completedAt, repository.now);
   });
 
+  test('a failed undo shows the saved check-off again', () async {
+    await container.read(shoppingListProvider.future);
+    expect(await list().setChecked([103], checked: true), isNull);
+
+    repository.checkFailure = const OfflineFailure();
+    final failure = await list().setChecked([103], checked: false);
+
+    expect(failure, isA<OfflineFailure>());
+    expect(entry(103).checked, isTrue);
+  });
+
+  test('an older read that ends last does not replace a newer one', () async {
+    await container.read(shoppingListProvider.future);
+    final slow = Completer<void>();
+    repository.fetchGates.add(slow);
+    final older = list().refresh();
+    await pumpEventQueue();
+    // Someone checks off Feta between the two reads.
+    await repository.setChecked({105}, checked: true);
+
+    await list().refresh();
+    expect(entry(105).checked, isTrue);
+
+    slow.complete();
+    await older;
+    expect(entry(105).checked, isTrue);
+  });
+
   test(
     'refresh shows what others changed and keeps the list on failure',
     () async {

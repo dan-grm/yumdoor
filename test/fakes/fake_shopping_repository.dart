@@ -42,6 +42,10 @@ class FakeShoppingRepository implements ShoppingRepository {
   /// The [setChecked] calls, in order, including failed ones.
   final checkCalls = <SetCheckedCall>[];
 
+  /// Each [fetch] reads the list, then waits for the first of these, if
+  /// any, before it answers.
+  final fetchGates = <Completer<void>>[];
+
   /// While set, [setChecked] waits for it before it answers.
   Completer<void>? checkGate;
 
@@ -80,7 +84,9 @@ class FakeShoppingRepository implements ShoppingRepository {
   Future<ShoppingListSnapshot> fetch({DateTime? updatedAfter}) async {
     fetchCalls++;
     if (fetchFailure case final failure?) throw failure;
-    return ShoppingListSnapshot(entries: [...entries], syncedAt: now);
+    final read = [...entries];
+    if (fetchGates.isNotEmpty) await fetchGates.removeAt(0).future;
+    return ShoppingListSnapshot(entries: read, syncedAt: now);
   }
 
   @override

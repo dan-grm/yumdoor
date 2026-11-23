@@ -278,6 +278,42 @@ void main() {
     expect(find.text('Ingwer'), findsOneWidget);
   });
 
+  testWidgets('undo after going offline is disabled and says why', (
+    tester,
+  ) async {
+    final connectivity = FakeConnectivityService();
+    await pumpList(tester, connectivity: connectivity);
+
+    await tester.tap(find.text('Feta'));
+    await tester.pumpAndSettle();
+    connectivity.isOnline = false;
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Rückgängig'));
+    await tester.pumpAndSettle();
+
+    expect(repository.checkCalls, hasLength(1));
+    expect(
+      find.textContaining('Offline kannst du nichts ändern'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('a failed read is tried again when the tab comes back', (
+    tester,
+  ) async {
+    repository.fetchFailure = const OfflineFailure();
+    final router = await pumpList(tester);
+    expect(find.text('Nochmal versuchen'), findsOneWidget);
+
+    repository.fetchFailure = null;
+    router.go('/plan');
+    await tester.pumpAndSettle();
+    router.go('/shopping');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Karotten'), findsOneWidget);
+  });
+
   group('goldens', skip: goldenSkip, () {
     for (final (name, theme) in [('light', lightTheme), ('dark', darkTheme)]) {
       testWidgets('mockup 12 in $name', tags: goldenTags, (tester) async {

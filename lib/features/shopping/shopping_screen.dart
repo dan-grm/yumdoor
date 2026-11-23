@@ -50,12 +50,24 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     super.didChangeDependencies();
     final visible = TickerMode.valuesOf(context).enabled;
     // Back into view: what the planner or the others added since shows up.
-    if (_visible == false && visible) unawaited(_refreshQuietly());
+    // After this frame: providers can't change while widgets build.
+    if (_visible == false && visible) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) unawaited(_refreshQuietly());
+      });
+    }
     _visible = visible;
   }
 
   Future<void> _refreshQuietly() async {
-    if (!ref.read(shoppingListProvider).hasValue) return;
+    if (!ref.read(shoppingListProvider).hasValue) {
+      // Failed before: try again, as the retry button would.
+      if (ref.read(shoppingListProvider).hasError) {
+        ref.invalidate(shoppingListProvider);
+        ref.invalidate(shoppingSupermarketsProvider);
+      }
+      return;
+    }
     try {
       await ref.read(shoppingListProvider.notifier).refresh();
     } on Object {
@@ -110,7 +122,14 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
           (context) => checked
               ? context.l10n.shoppingChecked(name)
               : context.l10n.shoppingUnchecked(name),
-          undo: () => unawaited(set(!checked, undoable: false)),
+          undo: () {
+            // Gone offline meanwhile: undoing is a write like any other.
+            if (ref.read(isOfflineProvider)) {
+              _show(messenger, (context) => context.l10n.offlineWriteDisabled);
+              return;
+            }
+            unawaited(set(!checked, undoable: false));
+          },
         );
       }
       final failure = await list.setChecked(row.entryIds, checked: checked);
