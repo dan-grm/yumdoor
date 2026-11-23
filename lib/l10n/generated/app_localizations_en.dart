@@ -1264,10 +1264,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navShoppingTitle => 'Shopping list';
 
   @override
-  String get navComingSoon =>
-      'This part is coming in one of the next versions.';
-
-  @override
   String get planWeekPrevious => 'Previous week';
 
   @override
@@ -1541,5 +1537,100 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String planWeekShoppingFailed(String meals) {
     return 'Not added to the list: $meals. The others are on it.';
+  }
+
+  @override
+  String shoppingShared(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Shared with your household · $countString to buy';
+  }
+
+  @override
+  String shoppingSupermarket(String name) {
+    return 'Supermarket: $name';
+  }
+
+  @override
+  String get shoppingSupermarketNone => 'Choose supermarket';
+
+  @override
+  String get shoppingSupermarketTitle => 'Supermarket';
+
+  @override
+  String get shoppingSupermarketHint =>
+      'The sections come in this store\'s order. Only on this device.';
+
+  @override
+  String get shoppingSupermarketByName => 'None (sections by name)';
+
+  @override
+  String get shoppingUncategorized => 'Other';
+
+  @override
+  String shoppingAddedBy(String names) {
+    return 'added by $names';
+  }
+
+  @override
+  String get shoppingAddedByMe => 'you';
+
+  @override
+  String shoppingNamesAnd(String first, String last) {
+    return '$first and $last';
+  }
+
+  @override
+  String shoppingAmountMore(String amount) {
+    return '$amount +';
+  }
+
+  @override
+  String shoppingDone(int count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    return 'Done · $countString';
+  }
+
+  @override
+  String get shoppingEmpty => 'The shopping list is empty.';
+
+  @override
+  String get shoppingEmptyHint =>
+      'Ingredients get on the list from a recipe or the week planner.';
+
+  @override
+  String get shoppingAllDone => 'All done.';
+
+  @override
+  String shoppingChecked(String name) {
+    return '$name checked off';
+  }
+
+  @override
+  String shoppingUnchecked(String name) {
+    return '$name back on the list';
+  }
+
+  @override
+  String get shoppingUndo => 'Undo';
+
+  @override
+  String shoppingCheckFailed(String name, String reason) {
+    return '$name not checked off. $reason';
+  }
+
+  @override
+  String shoppingUncheckFailed(String name, String reason) {
+    return '$name not put back on the list. $reason';
+  }
+
+  @override
+  String shoppingRefreshFailed(String reason) {
+    return 'Not updated. $reason';
   }
 }

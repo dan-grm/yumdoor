@@ -2078,12 +2078,6 @@ abstract class AppLocalizations {
   /// **'Einkaufsliste'**
   String get navShoppingTitle;
 
-  /// Shown on a navigation tab whose screen isn't built yet.
-  ///
-  /// In de, this message translates to:
-  /// **'Dieser Bereich kommt mit einer der nächsten Versionen.'**
-  String get navComingSoon;
-
   /// Accessible label of the button that shows the week before.
   ///
   /// In de, this message translates to:
@@ -2485,6 +2479,132 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Nicht auf die Liste gekommen: {meals}. Die anderen stehen drauf.'**
   String planWeekShoppingFailed(String meals);
+
+  /// Under the shopping list heading: the list is the household's, and how many rows are still open.
+  ///
+  /// In de, this message translates to:
+  /// **'Geteilt mit deinem Haushalt · {count} offen'**
+  String shoppingShared(int count);
+
+  /// Button on the shopping list that opens the supermarket picker, with the chosen one.
+  ///
+  /// In de, this message translates to:
+  /// **'Supermarkt: {name}'**
+  String shoppingSupermarket(String name);
+
+  /// Button on the shopping list that opens the supermarket picker while none is chosen.
+  ///
+  /// In de, this message translates to:
+  /// **'Supermarkt wählen'**
+  String get shoppingSupermarketNone;
+
+  /// Title of the supermarket picker sheet.
+  ///
+  /// In de, this message translates to:
+  /// **'Supermarkt'**
+  String get shoppingSupermarketTitle;
+
+  /// Explains the supermarket picker.
+  ///
+  /// In de, this message translates to:
+  /// **'Die Abteilungen kommen in der Reihenfolge dieses Ladens. Gilt nur auf diesem Gerät.'**
+  String get shoppingSupermarketHint;
+
+  /// Option of the supermarket picker that sorts the sections by name.
+  ///
+  /// In de, this message translates to:
+  /// **'Keiner (Abteilungen nach Name)'**
+  String get shoppingSupermarketByName;
+
+  /// Shopping list section of foods without a supermarket category.
+  ///
+  /// In de, this message translates to:
+  /// **'Sonstiges'**
+  String get shoppingUncategorized;
+
+  /// Under a shopping list item someone put on the list by hand.
+  ///
+  /// In de, this message translates to:
+  /// **'von {names} hinzugefügt'**
+  String shoppingAddedBy(String names);
+
+  /// The current user in shoppingAddedBy ("von dir hinzugefügt").
+  ///
+  /// In de, this message translates to:
+  /// **'dir'**
+  String get shoppingAddedByMe;
+
+  /// Joins the last two names of a list of people.
+  ///
+  /// In de, this message translates to:
+  /// **'{first} und {last}'**
+  String shoppingNamesAnd(String first, String last);
+
+  /// Amount of a merged shopping item where some entries have no amount.
+  ///
+  /// In de, this message translates to:
+  /// **'{amount} +'**
+  String shoppingAmountMore(String amount);
+
+  /// Header of the collapsible section of checked-off shopping items.
+  ///
+  /// In de, this message translates to:
+  /// **'Erledigt · {count}'**
+  String shoppingDone(int count);
+
+  /// Shopping list without any items.
+  ///
+  /// In de, this message translates to:
+  /// **'Die Einkaufsliste ist leer.'**
+  String get shoppingEmpty;
+
+  /// Under shoppingEmpty: where items come from.
+  ///
+  /// In de, this message translates to:
+  /// **'Zutaten kommen vom Rezept oder aus dem Wochenplan auf die Liste.'**
+  String get shoppingEmptyHint;
+
+  /// Shopping list whose items are all checked off.
+  ///
+  /// In de, this message translates to:
+  /// **'Alles erledigt.'**
+  String get shoppingAllDone;
+
+  /// Snackbar after checking off a shopping item, with an undo action.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} abgehakt'**
+  String shoppingChecked(String name);
+
+  /// Snackbar after unchecking a shopping item, with an undo action.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} wieder auf der Liste'**
+  String shoppingUnchecked(String name);
+
+  /// Snackbar action that takes back a check-off.
+  ///
+  /// In de, this message translates to:
+  /// **'Rückgängig'**
+  String get shoppingUndo;
+
+  /// Snackbar when checking off failed; the item is back on the list.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} nicht abgehakt. {reason}'**
+  String shoppingCheckFailed(String name, String reason);
+
+  /// Snackbar when unchecking failed; the item stays done.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} nicht wieder auf die Liste gesetzt. {reason}'**
+  String shoppingUncheckFailed(String name, String reason);
+
+  /// Snackbar when pulling to refresh the shopping list failed.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht aktualisiert. {reason}'**
+  String shoppingRefreshFailed(String reason);
 }
 
 class _AppLocalizationsDelegate

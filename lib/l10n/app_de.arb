@@ -1798,10 +1798,6 @@
   "@navShoppingTitle": {
     "description": "Heading of the shopping list tab."
   },
-  "navComingSoon": "Dieser Bereich kommt mit einer der nächsten Versionen.",
-  "@navComingSoon": {
-    "description": "Shown on a navigation tab whose screen isn't built yet."
-  },
   "planWeekPrevious": "Vorherige Woche",
   "@planWeekPrevious": {
     "description": "Accessible label of the button that shows the week before."
@@ -2245,6 +2241,168 @@
       "meals": {
         "type": "String",
         "example": "Flammkuchen, Linsen-Bolognese"
+      }
+    }
+  },
+  "shoppingShared": "Geteilt mit deinem Haushalt · {count} offen",
+  "@shoppingShared": {
+    "description": "Under the shopping list heading: the list is the household's, and how many rows are still open.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "shoppingSupermarket": "Supermarkt: {name}",
+  "@shoppingSupermarket": {
+    "description": "Button on the shopping list that opens the supermarket picker, with the chosen one.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "REWE"
+      }
+    }
+  },
+  "shoppingSupermarketNone": "Supermarkt wählen",
+  "@shoppingSupermarketNone": {
+    "description": "Button on the shopping list that opens the supermarket picker while none is chosen."
+  },
+  "shoppingSupermarketTitle": "Supermarkt",
+  "@shoppingSupermarketTitle": {
+    "description": "Title of the supermarket picker sheet."
+  },
+  "shoppingSupermarketHint": "Die Abteilungen kommen in der Reihenfolge dieses Ladens. Gilt nur auf diesem Gerät.",
+  "@shoppingSupermarketHint": {
+    "description": "Explains the supermarket picker."
+  },
+  "shoppingSupermarketByName": "Keiner (Abteilungen nach Name)",
+  "@shoppingSupermarketByName": {
+    "description": "Option of the supermarket picker that sorts the sections by name."
+  },
+  "shoppingUncategorized": "Sonstiges",
+  "@shoppingUncategorized": {
+    "description": "Shopping list section of foods without a supermarket category."
+  },
+  "shoppingAddedBy": "von {names} hinzugefügt",
+  "@shoppingAddedBy": {
+    "description": "Under a shopping list item someone put on the list by hand.",
+    "placeholders": {
+      "names": {
+        "type": "String",
+        "example": "Lena"
+      }
+    }
+  },
+  "shoppingAddedByMe": "dir",
+  "@shoppingAddedByMe": {
+    "description": "The current user in shoppingAddedBy (\"von dir hinzugefügt\")."
+  },
+  "shoppingNamesAnd": "{first} und {last}",
+  "@shoppingNamesAnd": {
+    "description": "Joins the last two names of a list of people.",
+    "placeholders": {
+      "first": {
+        "type": "String",
+        "example": "Lena"
+      },
+      "last": {
+        "type": "String",
+        "example": "dir"
+      }
+    }
+  },
+  "shoppingAmountMore": "{amount} +",
+  "@shoppingAmountMore": {
+    "description": "Amount of a merged shopping item where some entries have no amount.",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "example": "1 Bund"
+      }
+    }
+  },
+  "shoppingDone": "Erledigt · {count}",
+  "@shoppingDone": {
+    "description": "Header of the collapsible section of checked-off shopping items.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "shoppingEmpty": "Die Einkaufsliste ist leer.",
+  "@shoppingEmpty": {
+    "description": "Shopping list without any items."
+  },
+  "shoppingEmptyHint": "Zutaten kommen vom Rezept oder aus dem Wochenplan auf die Liste.",
+  "@shoppingEmptyHint": {
+    "description": "Under shoppingEmpty: where items come from."
+  },
+  "shoppingAllDone": "Alles erledigt.",
+  "@shoppingAllDone": {
+    "description": "Shopping list whose items are all checked off."
+  },
+  "shoppingChecked": "{name} abgehakt",
+  "@shoppingChecked": {
+    "description": "Snackbar after checking off a shopping item, with an undo action.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      }
+    }
+  },
+  "shoppingUnchecked": "{name} wieder auf der Liste",
+  "@shoppingUnchecked": {
+    "description": "Snackbar after unchecking a shopping item, with an undo action.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      }
+    }
+  },
+  "shoppingUndo": "Rückgängig",
+  "@shoppingUndo": {
+    "description": "Snackbar action that takes back a check-off."
+  },
+  "shoppingCheckFailed": "{name} nicht abgehakt. {reason}",
+  "@shoppingCheckFailed": {
+    "description": "Snackbar when checking off failed; the item is back on the list.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      },
+      "reason": {
+        "type": "String",
+        "example": "Der Server ist gerade nicht erreichbar."
+      }
+    }
+  },
+  "shoppingUncheckFailed": "{name} nicht wieder auf die Liste gesetzt. {reason}",
+  "@shoppingUncheckFailed": {
+    "description": "Snackbar when unchecking failed; the item stays done.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      },
+      "reason": {
+        "type": "String",
+        "example": "Der Server ist gerade nicht erreichbar."
+      }
+    }
+  },
+  "shoppingRefreshFailed": "Nicht aktualisiert. {reason}",
+  "@shoppingRefreshFailed": {
+    "description": "Snackbar when pulling to refresh the shopping list failed.",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "Der Server ist gerade nicht erreichbar."
       }
     }
   }
