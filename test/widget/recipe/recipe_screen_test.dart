@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
-import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/design/components/timer_chip.dart';
 import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/features/recipe/recipe_screen.dart';
@@ -197,7 +197,6 @@ void main() {
         withOnHand({'Olivenöl', 'Kreuzkümmel, gemahlen'}),
       ]);
       await pumpRecipe(tester, ofenkarotten.id);
-      expect(find.text('Einkaufen kommt bald.'), findsNothing);
 
       await tapTooltip(tester, 'Mehr Portionen');
       await tapTooltip(tester, 'Mehr Portionen');

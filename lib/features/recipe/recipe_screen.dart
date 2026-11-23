@@ -112,6 +112,16 @@ class _RecipeViewState extends ConsumerState<_RecipeView> {
       hasIngredients = needed + onHand > 0;
     } on Failure catch (error) {
       failure = error;
+    } on Object catch (error, stack) {
+      // A bug rather than the server; reported, and said like a server error.
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'shopping',
+        ),
+      );
+      failure = ServerFailure(cause: error);
     }
     if (mounted) setState(() => _shopping = false);
     _report(
