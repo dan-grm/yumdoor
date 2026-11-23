@@ -1280,6 +1280,12 @@ abstract class AppLocalizations {
   /// **'Nicht gespeichert. In Tandoor gibt es den Namen vielleicht schon – versuch einen anderen.'**
   String get searchSavedNameConflict;
 
+  /// Heading of the search when it picks a recipe for a day of the planner.
+  ///
+  /// In de, this message translates to:
+  /// **'Rezept für {day}'**
+  String searchPickTitle(String day);
+
   /// Button on the search screen that opens the editor for a new recipe.
   ///
   /// In de, this message translates to:
@@ -2102,7 +2108,7 @@ abstract class AppLocalizations {
   /// **'Zu dieser Woche'**
   String get planBackToThisWeek;
 
-  /// Disabled placeholder on a day of the planner that has no meals yet.
+  /// Button on a day of the planner that has no meals yet, and the label of the add button on days that have; opens the search to pick a recipe for that day.
   ///
   /// In de, this message translates to:
   /// **'Rezept planen'**

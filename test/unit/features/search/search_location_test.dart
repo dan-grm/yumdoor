@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yumdoor/domain/models/calendar_day.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
 import 'package:yumdoor/domain/models/recipe_sort.dart';
 import 'package:yumdoor/features/search/search_location.dart';
@@ -135,5 +136,16 @@ void main() {
 
   test('ignores unknown parameters', () {
     expect(parse('/search?view=grid&q=Brot'), const RecipeQuery(text: 'Brot'));
+  });
+
+  test('the picker location carries the day and the query', () {
+    final day = CalendarDay(2026, 11, 25);
+    final location = pickRecipeLocation(const RecipeQuery(text: 'Brot'), day);
+    expect(location, '/plan/pick?q=Brot&day=2026-11-25');
+    final uri = Uri.parse(location);
+    expect(pickDayFromUri(uri), day);
+    expect(searchQueryFromUri(uri), const RecipeQuery(text: 'Brot'));
+    expect(pickDayFromUri(Uri.parse('/plan/pick?day=gestern')), isNull);
+    expect(pickDayFromUri(Uri.parse('/plan/pick')), isNull);
   });
 }

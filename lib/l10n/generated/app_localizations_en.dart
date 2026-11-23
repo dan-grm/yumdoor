@@ -793,6 +793,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Not saved. The name may already exist in Tandoor – try another one.';
 
   @override
+  String searchPickTitle(String day) {
+    return 'Recipe for $day';
+  }
+
+  @override
   String get searchNewRecipe => 'New recipe';
 
   @override
