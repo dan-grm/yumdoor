@@ -29,7 +29,7 @@ const shoppingFailureSnackBarDuration = Duration(seconds: 8);
 ///
 /// A tap checks a row off (or, under "Erledigt", back on), at once and
 /// straight to Tandoor ([ShoppingList.setChecked]); a snackbar offers to
-/// undo it. Offline, ticking is disabled and says why.
+/// undo it. Offline, a tap only explains that ticking needs a connection.
 ///
 /// The list is read again whenever the tab comes back into view, and on
 /// pull to refresh.
@@ -72,7 +72,6 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     }
   }
 
-  /// For pull to refresh: a failure keeps the list and says why.
   /// Loads what the list shows anew, after a failure.
   void _reload() {
     ref
@@ -173,10 +172,15 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     final groups = list.isReloading
         ? const AsyncLoading<ShoppingListGroups>()
         : ref.watch(shoppingGroupsProvider);
-    final supermarkets =
-        ref.watch(shoppingSupermarketsProvider).value ?? const <Supermarket>[];
+    // While reloading for another login, the previous one's are not this
+    // one's.
+    final supermarketsValue = ref.watch(shoppingSupermarketsProvider);
+    final supermarkets = supermarketsValue.isReloading
+        ? const <Supermarket>[]
+        : supermarketsValue.value ?? const <Supermarket>[];
     final supermarket = ref.watch(shoppingSupermarketProvider);
-    final me = ref.watch(shoppingMeProvider).value;
+    final meValue = ref.watch(shoppingMeProvider);
+    final me = meValue.isReloading ? null : meValue.value;
 
     return Scaffold(
       body: SafeArea(

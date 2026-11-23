@@ -22,8 +22,8 @@ part of 'shopping_providers.dart';
 /// bring back the old state.
 ///
 /// Sending goes through [_send], the one place a queue for offline
-/// check-offs (#116) can take over later. Until then, the screen doesn't
-/// offer ticking offline.
+/// check-offs (#116) can take over later. Until then, a tap offline only
+/// explains that ticking needs a connection.
 
 @ProviderFor(ShoppingList)
 final shoppingListProvider = ShoppingListProvider._();
@@ -42,8 +42,8 @@ final shoppingListProvider = ShoppingListProvider._();
 /// bring back the old state.
 ///
 /// Sending goes through [_send], the one place a queue for offline
-/// check-offs (#116) can take over later. Until then, the screen doesn't
-/// offer ticking offline.
+/// check-offs (#116) can take over later. Until then, a tap offline only
+/// explains that ticking needs a connection.
 final class ShoppingListProvider
     extends $AsyncNotifierProvider<ShoppingList, ShoppingListView> {
   /// The entries of the household's shopping list, with the check states set
@@ -60,8 +60,8 @@ final class ShoppingListProvider
   /// bring back the old state.
   ///
   /// Sending goes through [_send], the one place a queue for offline
-  /// check-offs (#116) can take over later. Until then, the screen doesn't
-  /// offer ticking offline.
+  /// check-offs (#116) can take over later. Until then, a tap offline only
+  /// explains that ticking needs a connection.
   ShoppingListProvider._()
     : super(
         from: null,
@@ -97,8 +97,8 @@ String _$shoppingListHash() => r'd54b8912433cc51b4e99e70658127bc786d3018c';
 /// bring back the old state.
 ///
 /// Sending goes through [_send], the one place a queue for offline
-/// check-offs (#116) can take over later. Until then, the screen doesn't
-/// offer ticking offline.
+/// check-offs (#116) can take over later. Until then, a tap offline only
+/// explains that ticking needs a connection.
 
 abstract class _$ShoppingList extends $AsyncNotifier<ShoppingListView> {
   FutureOr<ShoppingListView> build();
@@ -253,7 +253,7 @@ final class ShoppingSupermarketChoiceProvider
 }
 
 String _$shoppingSupermarketChoiceHash() =>
-    r'9af731f6a239533398c047fcebf0acfab939ceaa';
+    r'9d3f2e2a7a73c771e1d7eb6abe39cd98a241dc34';
 
 /// The id of the supermarket whose order the list follows, remembered on
 /// this device for the server it was chosen on (as `<id> <server>`: ids of
@@ -382,4 +382,4 @@ final class ShoppingGroupsProvider
   }
 }
 
-String _$shoppingGroupsHash() => r'1f05c1c6bc8d773d283a74b2ba17461887ab3003';
+String _$shoppingGroupsHash() => r'f638af1b9a3892a495451d55f572e57e3774d0cf';

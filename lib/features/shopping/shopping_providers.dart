@@ -54,8 +54,8 @@ class _CheckChange {
 /// bring back the old state.
 ///
 /// Sending goes through [_send], the one place a queue for offline
-/// check-offs (#116) can take over later. Until then, the screen doesn't
-/// offer ticking offline.
+/// check-offs (#116) can take over later. Until then, a tap offline only
+/// explains that ticking needs a connection.
 @Riverpod(keepAlive: true, retry: _noRetry)
 class ShoppingList extends _$ShoppingList {
   late ShoppingRepository _repository;
@@ -221,7 +221,8 @@ const _supermarketKey = 'shopping.supermarket';
 class ShoppingSupermarketChoice extends _$ShoppingSupermarketChoice {
   @override
   int? build() {
-    final server = _server();
+    final server =
+        '${ref.watch(sessionControllerProvider).value?.serverUrl ?? ''}';
     final stored = ref.watch(localStoreProvider).read(_supermarketKey) ?? '';
     return switch (stored.split(' ')) {
       [final id, final storedServer] when storedServer == server =>
@@ -230,16 +231,14 @@ class ShoppingSupermarketChoice extends _$ShoppingSupermarketChoice {
     };
   }
 
-  String _server() =>
-      '${ref.watch(sessionControllerProvider).value?.serverUrl ?? ''}';
-
   void set(int? id) {
     state = id;
     final store = ref.read(localStoreProvider);
     if (id == null) {
       store.delete(_supermarketKey);
     } else {
-      store.write(_supermarketKey, '$id ${_server()}');
+      final server = ref.read(sessionControllerProvider).value?.serverUrl;
+      store.write(_supermarketKey, '$id ${server ?? ''}');
     }
   }
 }
@@ -262,6 +261,9 @@ Supermarket? shoppingSupermarket(Ref ref) {
 @riverpod
 AsyncValue<ShoppingListGroups> shoppingGroups(Ref ref) {
   final list = ref.watch(shoppingListProvider);
+  if (list.hasError) {
+    return AsyncError(list.error!, list.stackTrace ?? StackTrace.empty);
+  }
   final supermarkets = ref.watch(shoppingSupermarketsProvider);
   if (ref.watch(shoppingSupermarketChoiceProvider) != null &&
       !supermarkets.hasValue &&
