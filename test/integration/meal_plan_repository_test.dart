@@ -31,10 +31,10 @@ void main() {
     );
     try {
       final today = CalendarDay.today();
-      final plans = await repositories.mealPlans.list(
+      final plans = (await repositories.mealPlans.list(
         today.addDays(-366),
         today.addDays(7),
-      );
+      )).plans;
       final goulash = plans.lastWhere((p) => p.label == 'Rindergulasch');
       monday = goulash.fromDay.addDays(1 - goulash.fromDay.weekday);
       sunday = monday.addDays(6);
@@ -97,7 +97,7 @@ void main() {
   });
 
   test("lists this week's plans of the household", () async {
-    final plans = await anna.mealPlans.list(monday, sunday);
+    final plans = (await anna.mealPlans.list(monday, sunday)).plans;
 
     expect(
       [for (final plan in plans) (plan.fromDay.weekday, plan.label)],
@@ -128,18 +128,18 @@ void main() {
     final goulash = (await anna.mealPlans.list(
       monday,
       sunday,
-    )).singleWhere((p) => p.label == 'Rindergulasch');
+    )).plans.singleWhere((p) => p.label == 'Rindergulasch');
 
     for (final day in [goulash.fromDay, goulash.toDay]) {
       expect(
-        (await anna.mealPlans.list(day, day)).map((p) => p.id),
+        (await anna.mealPlans.list(day, day)).plans.map((p) => p.id),
         contains(goulash.id),
         reason: '$day',
       );
     }
     final dayBefore = goulash.fromDay.addDays(-1);
     expect(
-      (await anna.mealPlans.list(dayBefore, dayBefore)).map((p) => p.id),
+      (await anna.mealPlans.list(dayBefore, dayBefore)).plans.map((p) => p.id),
       isNot(contains(goulash.id)),
     );
   });
@@ -173,7 +173,7 @@ void main() {
     expect(plan.onShoppingList, isFalse);
     // Ben shares Anna's household.
     expect(
-      (await ben.mealPlans.list(day, day)).map((p) => p.id),
+      (await ben.mealPlans.list(day, day)).plans.map((p) => p.id),
       contains(plan.id),
     );
 
@@ -184,7 +184,10 @@ void main() {
     expect(moved.fromDay, day.addDays(1));
     expect(moved.toDay, day.addDays(1));
     expect(moved.mealType, dinner);
-    expect((await anna.mealPlans.list(day, day)).map((p) => p.id), isEmpty);
+    expect(
+      (await anna.mealPlans.list(day, day)).plans.map((p) => p.id),
+      isEmpty,
+    );
 
     final rescaled = await anna.mealPlans.update(
       plan.id,
@@ -196,7 +199,7 @@ void main() {
 
     await anna.mealPlans.delete(plan.id);
     expect(
-      (await anna.mealPlans.list(day, day.addDays(1))).map((p) => p.id),
+      (await anna.mealPlans.list(day, day.addDays(1))).plans.map((p) => p.id),
       isNot(contains(plan.id)),
     );
     await expectLater(
@@ -210,7 +213,7 @@ void main() {
     final plan = (await anna.mealPlans.list(
       monday,
       sunday,
-    )).firstWhere((p) => p.onShoppingList);
+    )).plans.firstWhere((p) => p.onShoppingList);
 
     try {
       final changed = await anna.mealPlans.update(
@@ -233,7 +236,7 @@ void main() {
     );
     addTearDown(admin.close);
 
-    expect(await admin.mealPlans.list(monday, sunday), isEmpty);
+    expect((await admin.mealPlans.list(monday, sunday)).plans, isEmpty);
     // Meal types belong to the whole space.
     expect(await admin.mealTypes.list(), hasLength(seedMealTypes.length));
   });

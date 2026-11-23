@@ -49,6 +49,31 @@ class CachingRecipeRepository implements RecipeRepository {
     return recipe;
   }
 
+  /// The recipes [keepOffline] is fetching.
+  final _keeping = <int>{};
+
+  /// Stores the recipe [summary] stands for, with its image, unless the
+  /// stored copy is as new as [RecipeSummary.updatedAt]; for recipes the
+  /// user is likely to open, such as the planned ones. Either way it counts
+  /// as just opened, so it stays stored. Throws a [Failure] if it can't be
+  /// fetched.
+  Future<void> keepOffline(RecipeSummary summary) async {
+    final id = summary.id;
+    if (!_keeping.add(id)) return;
+    try {
+      final stored = await _cache.get(id);
+      final updatedAt = summary.updatedAt;
+      if (stored != null &&
+          updatedAt != null &&
+          (stored.updatedAt?.isAtSameMomentAs(updatedAt) ?? false)) {
+        return;
+      }
+      await fetchRecipe(id, allowCached: false);
+    } finally {
+      _keeping.remove(id);
+    }
+  }
+
   @override
   Future<ResultPage<RecipeSummary>> search(
     RecipeQuery query, {

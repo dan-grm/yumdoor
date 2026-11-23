@@ -5,6 +5,7 @@ import 'meal_type.dart';
 import 'recipe_summary.dart';
 
 part 'meal_plan.freezed.dart';
+part 'meal_plan.g.dart';
 
 /// A planned meal: a recipe or just a title, for one or more days. Everyone
 /// in the creator's household sees and can change it.
@@ -24,10 +25,10 @@ abstract class MealPlan with _$MealPlan {
     @Default('') String note,
 
     /// The first day, on this device's calendar.
-    required CalendarDay fromDay,
+    @CalendarDayConverter() required CalendarDay fromDay,
 
     /// The last day, the same as [fromDay] for a plan of one day.
-    required CalendarDay toDay,
+    @CalendarDayConverter() required CalendarDay toDay,
     required MealType mealType,
 
     /// Whether its ingredients are on the shopping list.
@@ -38,6 +39,11 @@ abstract class MealPlan with _$MealPlan {
   }) = _MealPlan;
 
   const MealPlan._();
+
+  /// For storing in the offline cache. The format follows the fields, so a
+  /// change to this model or the ones it contains needs a new cache version.
+  factory MealPlan.fromJson(Map<String, dynamic> json) =>
+      _$MealPlanFromJson(json);
 
   /// What to call the plan: its title, or else its recipe's name.
   String get label => switch (title.trim()) {
@@ -50,6 +56,19 @@ abstract class MealPlan with _$MealPlan {
 
   /// The number of days the plan spans, at least 1.
   int get days => toDay.differenceInDays(fromDay) + 1;
+}
+
+/// The meal plans of some days, as the meal plan repository lists them.
+@freezed
+abstract class MealPlanList with _$MealPlanList {
+  const factory MealPlanList({
+    required List<MealPlan> plans,
+
+    /// When the plans were read from the server, if they come from the
+    /// offline cache because it can't be reached; `null` for plans read just
+    /// now.
+    DateTime? cachedAt,
+  }) = _MealPlanList;
 }
 
 /// A meal plan to create, for one day.

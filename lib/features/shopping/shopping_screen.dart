@@ -16,6 +16,7 @@ import '../../domain/services/shopping_list_groups.dart';
 import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
+import '../common/offline_as_of.dart';
 import '../search/option_sheet.dart';
 import 'add_item_field.dart';
 import 'shopping_providers.dart';
@@ -449,6 +450,14 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
                           l10n.shoppingShared(groups.openCount),
                           style: t.label.copyWith(color: t.inkMuted),
                         ),
+                      if (list.value?.cachedAt case final cachedAt?
+                          when !list.isReloading) ...[
+                        SizedBox(height: t.space1),
+                        OfflineAsOf(
+                          cachedAt: cachedAt,
+                          now: ref.watch(clockProvider)(),
+                        ),
+                      ],
                       SizedBox(height: t.space3),
                       AddItemField(
                         onAdd: _addLine,

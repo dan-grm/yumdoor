@@ -170,7 +170,7 @@ class _EditPlanSheetState extends ConsumerState<EditPlanSheet> {
     final plan = widget.plan;
     final today = CalendarDay.of(ref.watch(clockProvider)());
     final weekStart = startOfWeek(_day, firstWeekdayOf(context));
-    final plans = ref.watch(weekPlansProvider(weekStart)).value;
+    final plans = ref.watch(weekPlansProvider(weekStart)).value?.plans;
     final mealTypes = ref.watch(mealTypesProvider);
     final servingsText = plan.recipe?.servingsText.trim() ?? '';
     final changes = _changes;
@@ -282,7 +282,7 @@ class _MovePlanSheetState extends ConsumerState<MovePlanSheet> {
     final l10n = context.l10n;
     final today = CalendarDay.of(ref.watch(clockProvider)());
     final weekStart = startOfWeek(_day, firstWeekdayOf(context));
-    final plans = ref.watch(weekPlansProvider(weekStart)).value;
+    final plans = ref.watch(weekPlansProvider(weekStart)).value?.plans;
     return _SheetBody(
       title: l10n.planMoveTitle,
       subtitle: widget.plan.label,

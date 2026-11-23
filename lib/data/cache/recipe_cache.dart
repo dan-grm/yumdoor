@@ -104,8 +104,16 @@ class RecipeCache implements OfflineCache {
   }
 
   @override
-  Future<void> clear() => _db.transaction(() async {
-    // Every table, saved searches included. The editor's drafts aren't
+  Future<void> clear() {
+    // Before the transaction starts: writes that read the server before
+    // this are dropped, even if they come first.
+    _db.clears++;
+    return _clearTables();
+  }
+
+  Future<void> _clearTables() => _db.transaction(() async {
+    // Every table: saved searches, meal plans and the shopping list too.
+    // The editor's drafts aren't
     // cached server content; DraftStore.clear deletes them.
     for (final table in _db.allTables) {
       if (table.actualTableName == _db.editorDrafts.actualTableName) continue;

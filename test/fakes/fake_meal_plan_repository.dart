@@ -40,14 +40,21 @@ class FakeMealPlanRepository implements MealPlanRepository {
   /// The [list] calls so far.
   final listCalls = <ListCall>[];
 
+  /// When set, [list] answers as from the offline cache, read at this
+  /// time ([MealPlanList.cachedAt]).
+  DateTime? cachedAt;
+
   @override
-  Future<List<MealPlan>> list(CalendarDay from, CalendarDay to) async {
+  Future<MealPlanList> list(CalendarDay from, CalendarDay to) async {
     listCalls.add((from: from, to: to));
     if (failure case final failure?) throw failure;
-    return [
-      for (final plan in plans)
-        if (!plan.toDay.isBefore(from) && !plan.fromDay.isAfter(to)) plan,
-    ];
+    return MealPlanList(
+      plans: [
+        for (final plan in plans)
+          if (!plan.toDay.isBefore(from) && !plan.fromDay.isAfter(to)) plan,
+      ],
+      cachedAt: cachedAt,
+    );
   }
 
   @override

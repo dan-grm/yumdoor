@@ -275,7 +275,7 @@ void main() {
       /// What the planner's "Einkauf für die Woche" does.
       Future<int> addWeek() async {
         var added = 0;
-        for (final plan in await anna.mealPlans.list(first, last)) {
+        for (final plan in (await anna.mealPlans.list(first, last)).plans) {
           if (plan.recipe == null || plan.onShoppingList) continue;
           final fresh = await anna.recipes.fetchRecipe(
             plan.recipe!.id,
@@ -295,7 +295,7 @@ void main() {
         expect(await addWeek(), 3);
         final once = ours(await anna.shopping.fetch());
         expect(once, hasLength(3 * 3));
-        for (final plan in await anna.mealPlans.list(first, last)) {
+        for (final plan in (await anna.mealPlans.list(first, last)).plans) {
           expect(plan.onShoppingList, isTrue);
         }
 
@@ -432,5 +432,5 @@ void main() {
 /// Whether [plan] is on the shopping list, as the meal plan list says.
 Future<bool> onShoppingList(TandoorRepositories as, MealPlan plan) async {
   final plans = await as.mealPlans.list(plan.fromDay, plan.toDay);
-  return plans.singleWhere((p) => p.id == plan.id).onShoppingList;
+  return plans.plans.singleWhere((p) => p.id == plan.id).onShoppingList;
 }

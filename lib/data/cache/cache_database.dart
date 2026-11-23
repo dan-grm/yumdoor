@@ -61,6 +61,58 @@ class CachedSavedFilters extends Table {
   Set<Column<Object>> get primaryKey => {id};
 }
 
+/// The meal plans of the days the planner showed, as JSON of a list of the
+/// domain `MealPlan` model, by the days asked for.
+@DataClassName('CachedMealPlansRow')
+class CachedMealPlans extends Table {
+  @override
+  String get tableName => 'cached_meal_plans';
+
+  /// The first and last day asked for, as `CalendarDay.toString`.
+  TextColumn get fromDay => text()();
+  TextColumn get toDay => text()();
+  TextColumn get json => text()();
+
+  /// When they were read from the server, in milliseconds since the epoch;
+  /// the oldest go first.
+  IntColumn get storedAt => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {fromDay, toDay};
+}
+
+/// The entries of the shopping list as last read from the server (with the
+/// changes made on this device since that the server accepted), as JSON of
+/// the domain `ShoppingEntry` model. The rest of the list is in
+/// [CachedValues] (`ShoppingCache`).
+@DataClassName('CachedShoppingEntryRow')
+class CachedShoppingEntries extends Table {
+  @override
+  String get tableName => 'cached_shopping_entry';
+
+  IntColumn get id => integer()();
+
+  /// The position in the list, as the server sent it.
+  IntColumn get position => integer()();
+  TextColumn get json => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {id};
+}
+
+/// Single values stored for offline use, as JSON by key.
+@DataClassName('CachedValueRow')
+class CachedValues extends Table {
+  @override
+  String get tableName => 'cached_value';
+
+  TextColumn get key => text()();
+  TextColumn get json => text()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {key};
+}
+
 /// The recipe editor's unsaved drafts (`DraftStore`), one per recipe.
 ///
 /// Unlike the other tables, these are the user's own work and can't be
@@ -98,10 +150,24 @@ const newRecipeDraftId = 0;
 /// The offline cache, and the editor's drafts. Everything but the drafts can
 /// be fetched again, so migrations start over instead of converting rows.
 @DriftDatabase(
-  tables: [CachedRecipes, CachedImages, CachedSavedFilters, EditorDrafts],
+  tables: [
+    CachedRecipes,
+    CachedImages,
+    CachedSavedFilters,
+    CachedMealPlans,
+    CachedShoppingEntries,
+    CachedValues,
+    EditorDrafts,
+  ],
 )
 class CacheDatabase extends _$CacheDatabase {
   CacheDatabase(super.executor);
+
+  /// How many times the cache was cleared (`RecipeCache.clear`) since the
+  /// database was opened. Server content read before a clear, e.g. for the
+  /// user who just logged out, must not be stored after it: writers note
+  /// this before they ask the server and store nothing once it changed.
+  var clears = 0;
 
   /// The database on the device: IndexedDB or OPFS through a worker on the
   /// web (`web/drift_worker.js`, `web/sqlite3.wasm`), a file in the app's
@@ -117,11 +183,11 @@ class CacheDatabase extends _$CacheDatabase {
     ),
   );
 
-  /// Bump this whenever a cached domain model (`Recipe` and the models in
-  /// it) or a table changes; opening the database then drops all rows but
-  /// the drafts.
+  /// Bump this whenever a cached domain model (`Recipe`, `MealPlan`,
+  /// `ShoppingEntry`, `Supermarket` and the models in them) or a table
+  /// changes; opening the database then drops all rows but the drafts.
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(

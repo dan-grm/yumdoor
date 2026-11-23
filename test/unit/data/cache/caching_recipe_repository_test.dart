@@ -480,4 +480,51 @@ void main() {
       expect(await cache.get(7), isNull);
     });
   });
+
+  group('keepOffline', () {
+    final updated = DateTime.utc(2026, 10, 1, 9);
+
+    test('stores a planned recipe with its image', () async {
+      await repository.keepOffline(_karotten.summary);
+      await pumpEventQueue();
+
+      expect(await cache.get(7), _karotten);
+      expect(downloads, [_image]);
+    });
+
+    test('skips a recipe stored as it is on the server', () async {
+      remote.recipes[7] = _karotten.copyWith(updatedAt: updated);
+      await fetch(7);
+      final fetches = remote.fetchCount;
+
+      await repository.keepOffline(
+        _karotten.summary.copyWith(updatedAt: updated),
+      );
+      expect(remote.fetchCount, fetches);
+    });
+
+    test('fetches a recipe changed since it was stored', () async {
+      remote.recipes[7] = _karotten.copyWith(updatedAt: updated);
+      await fetch(7);
+      final changed = _karotten.copyWith(
+        name: 'Ofenkarotten mit Honig',
+        updatedAt: updated.add(const Duration(hours: 1)),
+      );
+      remote.recipes[7] = changed;
+
+      await repository.keepOffline(changed.summary);
+      await pumpEventQueue();
+      expect((await cache.get(7))?.name, 'Ofenkarotten mit Honig');
+    });
+
+    test('fails without falling back to the stored copy', () async {
+      await fetch(7);
+      remote.failure = const OfflineFailure();
+
+      await expectLater(
+        repository.keepOffline(_karotten.summary),
+        throwsA(isA<OfflineFailure>()),
+      );
+    });
+  });
 }

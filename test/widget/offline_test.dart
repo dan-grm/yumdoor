@@ -17,8 +17,8 @@ import '../fixtures/recipes.dart';
 import 'harness.dart';
 
 const _banner =
-    'Du bist offline. Rezepte, die du schon geöffnet hast, kannst du weiter '
-    'ansehen.';
+    'Du bist offline. Du siehst geöffnete Rezepte, Wochenplan und '
+    'Einkaufsliste, wie sie zuletzt geladen wurden.';
 const _writeDisabled =
     'Offline kannst du nichts ändern. Sobald du wieder verbunden bist, geht '
     'es weiter.';

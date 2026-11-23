@@ -85,7 +85,7 @@ final class WeekShoppingProvider
   }
 }
 
-String _$weekShoppingHash() => r'94303c4ce9d71878e231c86f9b89eaa36cbd54f4';
+String _$weekShoppingHash() => r'6204506cb722d277e1eb1a48e4f96ae831196526';
 
 /// Counts the ingredients the meals of the week from [start] still need, as
 /// adding them would ([buildRecipeShopping]): meals with a recipe that

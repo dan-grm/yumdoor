@@ -41,7 +41,7 @@ typedef WeekShoppingPreview = ({
 /// Failures are shown on the card instead of retrying on their own.
 @Riverpod(retry: _noRetry)
 Future<WeekShoppingPreview> weekShopping(Ref ref, CalendarDay start) async {
-  final plans = await ref.watch(weekPlansProvider(start).future);
+  final plans = (await ref.watch(weekPlansProvider(start).future)).plans;
   final recipes = ref.watch(recipeRepositoryProvider);
   final withRecipe = [
     for (final plan in plans)

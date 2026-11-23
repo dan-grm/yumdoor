@@ -1,3 +1,5 @@
+import 'package:json_annotation/json_annotation.dart';
+
 /// A day in the calendar, without a time or a time zone, such as the day a
 /// meal is planned for.
 class CalendarDay implements Comparable<CalendarDay> {
@@ -83,4 +85,18 @@ class CalendarDay implements Comparable<CalendarDay> {
       '${year.toString().padLeft(4, '0')}-'
       '${month.toString().padLeft(2, '0')}-'
       '${day.toString().padLeft(2, '0')}';
+}
+
+/// Stores a [CalendarDay] as written by [CalendarDay.toString], for the
+/// offline cache's JSON.
+class CalendarDayConverter implements JsonConverter<CalendarDay, String> {
+  const CalendarDayConverter();
+
+  @override
+  CalendarDay fromJson(String json) =>
+      CalendarDay.tryParse(json) ??
+      (throw FormatException('Not a calendar day', json));
+
+  @override
+  String toJson(CalendarDay day) => day.toString();
 }

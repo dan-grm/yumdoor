@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../app/offline.dart';
 import '../../app/platform_providers.dart';
 import '../../app/repository_providers.dart';
 import '../../core/failures.dart';
@@ -13,13 +14,31 @@ import '../../domain/services/week_plan.dart';
 
 part 'planner_providers.g.dart';
 
-/// The plans of the household on the seven days from [start].
+/// The plans of the household on the seven days from [start]; offline, as
+/// last read, if they were ([MealPlanList.cachedAt]).
 ///
 /// Failures are shown with a retry button instead of retrying on their own.
 @Riverpod(retry: _noRetry)
-Future<List<MealPlan>> weekPlans(Ref ref, CalendarDay start) => ref
-    .watch(mealPlanRepositoryProvider)
-    .list(start, start.addDays(daysInWeek - 1));
+Future<MealPlanList> weekPlans(Ref ref, CalendarDay start) async {
+  final MealPlanList plans;
+  try {
+    plans = await ref
+        .watch(mealPlanRepositoryProvider)
+        .list(start, start.addDays(daysInWeek - 1));
+  } on OfflineFailure {
+    _reloadOnline(ref);
+    rethrow;
+  }
+  if (plans.cachedAt != null) _reloadOnline(ref);
+  return plans;
+}
+
+/// Loads [ref]'s provider again once the server can be reached.
+void _reloadOnline(Ref ref) {
+  ref.listen(isOfflineProvider, (_, offline) {
+    if (!offline) ref.invalidateSelf();
+  });
+}
 
 Duration? _noRetry(int retryCount, Object error) => null;
 

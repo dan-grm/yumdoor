@@ -187,6 +187,34 @@ void main() {
     );
   });
 
+  testWidgets(
+    'offline, shows the list as last loaded; ticking stays disabled',
+    (tester) async {
+      repository.cachedAt = DateTime(2026, 11, 17, 19, 30);
+      final connectivity = FakeConnectivityService(isOnline: false);
+      await pumpList(tester, connectivity: connectivity);
+
+      expect(find.text('Offline · Stand vom 17. Nov., 19:30'), findsOneWidget);
+      expect(
+        find.text('Geteilt mit deinem Haushalt · 7 offen'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Feta'));
+      await tester.pumpAndSettle();
+      expect(repository.checkCalls, isEmpty);
+      expect(
+        find.textContaining('Offline kannst du nichts ändern'),
+        findsOneWidget,
+      );
+
+      // Back online: read from the server, and the note goes.
+      repository.cachedAt = null;
+      connectivity.isOnline = true;
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Offline · Stand vom'), findsNothing);
+    },
+  );
+
   testWidgets('remembers the chosen supermarket', (tester) async {
     await pumpList(tester, size: const Size(390, 1400));
     // Without one, the categories go by name.
@@ -425,5 +453,20 @@ void main() {
         );
       });
     }
+
+    testWidgets('offline in light', tags: goldenTags, (tester) async {
+      store.write('shopping.supermarket', storedChoice);
+      repository.cachedAt = DateTime(2026, 11, 17, 19, 30);
+      await pumpList(
+        tester,
+        theme: lightTheme,
+        connectivity: FakeConnectivityService(isOnline: false),
+      );
+
+      await expectLater(
+        find.byType(ShoppingScreen),
+        matchesGoldenFile('../goldens/shopping_list_offline_light.png'),
+      );
+    });
   });
 }

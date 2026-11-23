@@ -16,13 +16,22 @@ part 'shopping_providers.g.dart';
 /// The shopping list as shown: the entries with the check states set on
 /// this device.
 class ShoppingListView {
-  const ShoppingListView({required this.entries, this.truncated = false});
+  const ShoppingListView({
+    required this.entries,
+    this.truncated = false,
+    this.cachedAt,
+  });
 
   final List<ShoppingEntry> entries;
 
   /// Whether Tandoor cut the list off ([ShoppingListSnapshot.truncated]), so
   /// the newest entries may be missing.
   final bool truncated;
+
+  /// When the list was read from the server, if it comes from the offline
+  /// cache ([ShoppingListSnapshot.cachedAt]); `null` for a list from the
+  /// server.
+  final DateTime? cachedAt;
 }
 
 /// A check state set on this device and shown over the list as read from
@@ -92,7 +101,9 @@ class ShoppingList extends _$ShoppingList {
   }
 
   /// Reads the list again, keeping the one shown meanwhile. Throws the
-  /// [Failure] if the read fails; the list then stays as it was.
+  /// [Failure] if the read fails; the list then stays as it was. The list
+  /// stored for offline use is no news for a list already shown: then this
+  /// throws an [OfflineFailure].
   Future<void> refresh() async {
     // This build's ref: a new login starts over, and then this read is old.
     final ref = this.ref;
@@ -100,6 +111,9 @@ class ShoppingList extends _$ShoppingList {
     final read = ++_reads;
     final snapshot = await _fullRead(repository);
     if (!ref.mounted || !identical(repository, _repository)) return;
+    if (snapshot.cachedAt != null && _server != null) {
+      throw const OfflineFailure();
+    }
     _apply(read, snapshot);
     state = AsyncData(_view());
   }
@@ -410,6 +424,7 @@ class ShoppingList extends _$ShoppingList {
 
   ShoppingListView _view() => ShoppingListView(
     truncated: _server?.truncated ?? false,
+    cachedAt: _server?.cachedAt,
     entries: List.unmodifiable([
       for (final entry in _server?.entries ?? const <ShoppingEntry>[])
         switch (_changes[entry.id]) {

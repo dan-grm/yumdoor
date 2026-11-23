@@ -11,7 +11,10 @@ abstract interface class MealPlanRepository {
   ///
   /// A plan that starts before [from] is included. A plan that ends more
   /// than [maxPlanDays] days after [to] is not found.
-  Future<List<MealPlan>> list(CalendarDay from, CalendarDay to);
+  ///
+  /// When the server can't be reached, the plans of the same days as last
+  /// read may come from the offline cache ([MealPlanList.cachedAt]).
+  Future<MealPlanList> list(CalendarDay from, CalendarDay to);
 
   /// Saves [plan] as the current user's.
   Future<MealPlan> create(NewMealPlan plan);

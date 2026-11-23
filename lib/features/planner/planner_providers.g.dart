@@ -8,26 +8,29 @@ part of 'planner_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// The plans of the household on the seven days from [start].
+/// The plans of the household on the seven days from [start]; offline, as
+/// last read, if they were ([MealPlanList.cachedAt]).
 ///
 /// Failures are shown with a retry button instead of retrying on their own.
 
 @ProviderFor(weekPlans)
 final weekPlansProvider = WeekPlansFamily._();
 
-/// The plans of the household on the seven days from [start].
+/// The plans of the household on the seven days from [start]; offline, as
+/// last read, if they were ([MealPlanList.cachedAt]).
 ///
 /// Failures are shown with a retry button instead of retrying on their own.
 
 final class WeekPlansProvider
     extends
         $FunctionalProvider<
-          AsyncValue<List<MealPlan>>,
-          List<MealPlan>,
-          FutureOr<List<MealPlan>>
+          AsyncValue<MealPlanList>,
+          MealPlanList,
+          FutureOr<MealPlanList>
         >
-    with $FutureModifier<List<MealPlan>>, $FutureProvider<List<MealPlan>> {
-  /// The plans of the household on the seven days from [start].
+    with $FutureModifier<MealPlanList>, $FutureProvider<MealPlanList> {
+  /// The plans of the household on the seven days from [start]; offline, as
+  /// last read, if they were ([MealPlanList.cachedAt]).
   ///
   /// Failures are shown with a retry button instead of retrying on their own.
   WeekPlansProvider._({
@@ -53,12 +56,12 @@ final class WeekPlansProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<MealPlan>> $createElement(
+  $FutureProviderElement<MealPlanList> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<List<MealPlan>> create(Ref ref) {
+  FutureOr<MealPlanList> create(Ref ref) {
     final argument = this.argument as CalendarDay;
     return weekPlans(ref, argument);
   }
@@ -74,14 +77,15 @@ final class WeekPlansProvider
   }
 }
 
-String _$weekPlansHash() => r'160f2591bee44402413b2eec082db85db44eaaa9';
+String _$weekPlansHash() => r'51cf88135c4d12366701ad2045b75047f789348f';
 
-/// The plans of the household on the seven days from [start].
+/// The plans of the household on the seven days from [start]; offline, as
+/// last read, if they were ([MealPlanList.cachedAt]).
 ///
 /// Failures are shown with a retry button instead of retrying on their own.
 
 final class WeekPlansFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<List<MealPlan>>, CalendarDay> {
+    with $FunctionalFamilyOverride<FutureOr<MealPlanList>, CalendarDay> {
   WeekPlansFamily._()
     : super(
         retry: _noRetry,
@@ -91,7 +95,8 @@ final class WeekPlansFamily extends $Family
         isAutoDispose: true,
       );
 
-  /// The plans of the household on the seven days from [start].
+  /// The plans of the household on the seven days from [start]; offline, as
+  /// last read, if they were ([MealPlanList.cachedAt]).
   ///
   /// Failures are shown with a retry button instead of retrying on their own.
 
