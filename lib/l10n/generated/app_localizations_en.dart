@@ -1642,4 +1642,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
     return 'Tandoor sends at most $countString entries. The newest may be missing here.';
   }
+
+  @override
+  String get shoppingAddLabel => 'Add item';
+
+  @override
+  String get shoppingAddHint => 'Add item';
+
+  @override
+  String shoppingAdded(String name) {
+    return '$name added to the list';
+  }
+
+  @override
+  String shoppingAddFailed(String reason) {
+    return 'Not added. $reason';
+  }
+
+  @override
+  String shoppingAddUnparsed(String text) {
+    return 'I didn\'t understand “$text”. Try an amount and an item, like “2 lemons”.';
+  }
+
+  @override
+  String shoppingActions(String name) {
+    return 'More for $name';
+  }
+
+  @override
+  String get shoppingOnHand => 'I have it at home';
+
+  @override
+  String get shoppingOnHandHint =>
+      'Applies to the whole household and checks the item off.';
+
+  @override
+  String get shoppingDelete => 'Delete';
+
+  @override
+  String shoppingOnHandDone(String name) {
+    return '$name marked as on hand';
+  }
+
+  @override
+  String shoppingOnHandFailed(String name, String reason) {
+    return '$name not marked as on hand. $reason';
+  }
+
+  @override
+  String shoppingDeleted(String name) {
+    return '$name deleted';
+  }
+
+  @override
+  String shoppingDeleteFailed(String name, String reason) {
+    return '$name not deleted. $reason';
+  }
+
+  @override
+  String shoppingRestoreFailed(String name, String reason) {
+    return '$name not brought back. $reason';
+  }
 }

@@ -418,5 +418,127 @@
   "shoppingCheckFailed": "{name} not checked off. {reason}",
   "shoppingUncheckFailed": "{name} not put back on the list. {reason}",
   "shoppingRefreshFailed": "Not updated. {reason}",
-  "shoppingTruncated": "Tandoor sends at most {count} entries. The newest may be missing here."
+  "shoppingTruncated": "Tandoor sends at most {count} entries. The newest may be missing here.",
+  "shoppingAddLabel": "Add item",
+  "@shoppingAddLabel": {
+    "description": "Accessible name of the field that adds a shopping item by hand."
+  },
+  "shoppingAddHint": "Add item",
+  "@shoppingAddHint": {
+    "description": "Hint of the field that adds a shopping item by hand."
+  },
+  "shoppingAdded": "{name} added to the list",
+  "@shoppingAdded": {
+    "description": "Snackbar after adding an item by hand.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Zitronen"
+      }
+    }
+  },
+  "shoppingAddFailed": "Not added. {reason}",
+  "@shoppingAddFailed": {
+    "description": "Snackbar when adding an item by hand failed.",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "Der Server ist nicht erreichbar."
+      }
+    }
+  },
+  "shoppingAddUnparsed": "I didn't understand “{text}”. Try an amount and an item, like “2 lemons”.",
+  "@shoppingAddUnparsed": {
+    "description": "Snackbar when Tandoor found no food in the typed line.",
+    "placeholders": {
+      "text": {
+        "type": "String",
+        "example": "xyz"
+      }
+    }
+  },
+  "shoppingActions": "More for {name}",
+  "@shoppingActions": {
+    "description": "Accessible name of the button that opens the actions of a shopping row.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      }
+    }
+  },
+  "shoppingOnHand": "I have it at home",
+  "@shoppingOnHand": {
+    "description": "Shopping row action: marks the food as on hand and checks the row off."
+  },
+  "shoppingOnHandHint": "Applies to the whole household and checks the item off.",
+  "@shoppingOnHandHint": {
+    "description": "Explains the on-hand action of a shopping row."
+  },
+  "shoppingDelete": "Delete",
+  "@shoppingDelete": {
+    "description": "Shopping row action: removes the row's entries."
+  },
+  "shoppingOnHandDone": "{name} marked as on hand",
+  "@shoppingOnHandDone": {
+    "description": "Snackbar after marking a food on hand.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      }
+    }
+  },
+  "shoppingOnHandFailed": "{name} not marked as on hand. {reason}",
+  "@shoppingOnHandFailed": {
+    "description": "Snackbar when marking a food on hand failed.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      },
+      "reason": {
+        "type": "String",
+        "example": "Der Server ist nicht erreichbar."
+      }
+    }
+  },
+  "shoppingDeleted": "{name} deleted",
+  "@shoppingDeleted": {
+    "description": "Snackbar after deleting a shopping row, with an undo action.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      }
+    }
+  },
+  "shoppingDeleteFailed": "{name} not deleted. {reason}",
+  "@shoppingDeleteFailed": {
+    "description": "Snackbar when deleting a shopping row failed.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      },
+      "reason": {
+        "type": "String",
+        "example": "Der Server ist nicht erreichbar."
+      }
+    }
+  },
+  "shoppingRestoreFailed": "{name} not brought back. {reason}",
+  "@shoppingRestoreFailed": {
+    "description": "Snackbar when undoing a delete failed.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      },
+      "reason": {
+        "type": "String",
+        "example": "Der Server ist nicht erreichbar."
+      }
+    }
+  }
 }

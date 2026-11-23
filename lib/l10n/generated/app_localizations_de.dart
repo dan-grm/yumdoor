@@ -1649,4 +1649,65 @@ class AppLocalizationsDe extends AppLocalizations {
 
     return 'Tandoor schickt höchstens $countString Einträge. Die neuesten fehlen hier vielleicht.';
   }
+
+  @override
+  String get shoppingAddLabel => 'Artikel hinzufügen';
+
+  @override
+  String get shoppingAddHint => 'Artikel hinzufügen';
+
+  @override
+  String shoppingAdded(String name) {
+    return '$name auf die Liste gesetzt';
+  }
+
+  @override
+  String shoppingAddFailed(String reason) {
+    return 'Nicht hinzugefügt. $reason';
+  }
+
+  @override
+  String shoppingAddUnparsed(String text) {
+    return '„$text“ habe ich nicht verstanden. Versuch es mit Menge und Artikel, etwa „2 Zitronen“.';
+  }
+
+  @override
+  String shoppingActions(String name) {
+    return 'Mehr zu $name';
+  }
+
+  @override
+  String get shoppingOnHand => 'Habe ich da';
+
+  @override
+  String get shoppingOnHandHint =>
+      'Gilt für den ganzen Haushalt und hakt den Eintrag ab.';
+
+  @override
+  String get shoppingDelete => 'Löschen';
+
+  @override
+  String shoppingOnHandDone(String name) {
+    return '$name ist als vorrätig markiert';
+  }
+
+  @override
+  String shoppingOnHandFailed(String name, String reason) {
+    return '$name nicht als vorrätig markiert. $reason';
+  }
+
+  @override
+  String shoppingDeleted(String name) {
+    return '$name gelöscht';
+  }
+
+  @override
+  String shoppingDeleteFailed(String name, String reason) {
+    return '$name nicht gelöscht. $reason';
+  }
+
+  @override
+  String shoppingRestoreFailed(String name, String reason) {
+    return '$name nicht zurückgeholt. $reason';
+  }
 }

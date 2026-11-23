@@ -155,6 +155,143 @@ class ShoppingList extends _$ShoppingList {
     return failure;
   }
 
+  /// Adds [amount] (0 for none) of the food [foodId] in [unitId] by hand and
+  /// shows it at once. Returns the [Failure] if it didn't work.
+  Future<Failure?> addItem(int foodId, double amount, {int? unitId}) =>
+      _edit((repository) async {
+        final entry = await repository.addItem(foodId, amount, unitId: unitId);
+        return (add: [entry], remove: const <int>{});
+      });
+
+  /// The entries of the list with these [ids], as shown.
+  List<ShoppingEntry> entriesOf(Iterable<int> ids) {
+    final wanted = ids.toSet();
+    return [
+      for (final entry in _view().entries)
+        if (wanted.contains(entry.id)) entry,
+    ];
+  }
+
+  /// Deletes [entries] for the whole household and takes them off the list.
+  /// Returns the [Failure] if it didn't work.
+  Future<Failure?> delete(List<ShoppingEntry> entries) =>
+      _edit((repository) async {
+        await repository.deleteEntries(entries);
+        return (
+          add: const <ShoppingEntry>[],
+          remove: {for (final e in entries) e.id},
+        );
+      });
+
+  /// Puts deleted [entries] back as items added by hand (their recipe link
+  /// is gone). Returns the [Failure] if it didn't work.
+  Future<Failure?> restore(List<ShoppingEntry> entries) =>
+      _edit((repository) async {
+        final added = <ShoppingEntry>[];
+        for (final entry in entries) {
+          final created = await repository.addItem(
+            entry.food.id,
+            entry.amount,
+            unitId: entry.unit?.id,
+          );
+          if (!entry.checked) {
+            added.add(created);
+            continue;
+          }
+          // Back where it was: checked off.
+          await repository.setChecked({created.id}, checked: true);
+          final at = ref.read(clockProvider)();
+          added.add(
+            created.copyWith(checked: true, completedAt: at, updatedAt: at),
+          );
+        }
+        return (add: added, remove: const <int>{});
+      });
+
+  /// Marks the food [foodId] on hand for the household and checks off
+  /// [ids]. Returns the [Failure] if the food couldn't be marked; checking
+  /// off then isn't tried.
+  Future<Failure?> markOnHand(int foodId, List<int> ids) async {
+    try {
+      await ref.read(foodRepositoryProvider).setOnHand(foodId, onHand: true);
+    } on Failure catch (error) {
+      return error;
+    }
+    final failure = await setChecked(ids, checked: true);
+    if (failure != null) {
+      // Not half done: the food isn't on hand if the row stays open.
+      try {
+        await ref.read(foodRepositoryProvider).setOnHand(foodId, onHand: false);
+      } on Object {
+        // Best effort; the failure below is what the user sees.
+      }
+    }
+    return failure;
+  }
+
+  /// Runs a write after the earlier ones, applies what it reports to the
+  /// list as shown and makes reads that started before it stale.
+  Future<Failure?> _edit(
+    Future<({List<ShoppingEntry> add, Set<int> remove})> Function(
+      ShoppingRepository repository,
+    )
+    write,
+  ) async {
+    final ref = this.ref;
+    final repository = _repository;
+    final done = _writes.then((_) => write(repository));
+    _writes = done.then((_) {}, onError: (Object _) {});
+    try {
+      final (:add, :remove) = await done;
+      if (!ref.mounted || !identical(repository, _repository)) return null;
+      final server = _server;
+      if (server == null) {
+        // Still loading: what that read shows may predate this edit.
+        unawaited(_resync());
+      } else {
+        _server = server.copyWith(
+          entries: [
+            for (final entry in server.entries)
+              if (!remove.contains(entry.id)) entry,
+            ...add,
+          ],
+        );
+        for (final id in remove) {
+          _changes.remove(id);
+        }
+        // A read that started before this edit can't bring it back.
+        _shownRead = ++_reads;
+        _publish();
+      }
+      return null;
+    } on Failure catch (error) {
+      // Some of it may have gone through (a delete or restore of several
+      // entries): show what the server has.
+      unawaited(_resync());
+      return error;
+    } on Object catch (error, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'shopping',
+        ),
+      );
+      unawaited(_resync());
+      return ServerFailure(cause: error);
+    }
+  }
+
+  /// Reads the list again after an edit that may have half worked; a
+  /// failing read leaves the list as it is.
+  Future<void> _resync() async {
+    try {
+      await refresh();
+    } on Object {
+      // Pull to refresh says why.
+    }
+  }
+
   /// Sends one check-off or uncheck to Tandoor.
   Future<void> _send(
     ShoppingRepository repository,
