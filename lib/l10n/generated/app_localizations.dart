@@ -329,7 +329,7 @@ abstract class AppLocalizations {
   /// Banner at the top of every screen while the server can't be reached.
   ///
   /// In de, this message translates to:
-  /// **'Du bist offline. Rezepte, die du schon geöffnet hast, kannst du weiter ansehen.'**
+  /// **'Du bist offline. Du siehst geöffnete Rezepte, Wochenplan und Einkaufsliste, wie sie zuletzt geladen wurden.'**
   String get offlineBanner;
 
   /// Tooltip and caption explaining why actions that change data are disabled while offline.
@@ -337,6 +337,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Offline kannst du nichts ändern. Sobald du wieder verbunden bist, geht es weiter.'**
   String get offlineWriteDisabled;
+
+  /// Above the week plan or the shopping list when it comes from the offline cache: when it was last loaded from the server.
+  ///
+  /// In de, this message translates to:
+  /// **'Offline · Stand vom {date}, {time}'**
+  String offlineAsOf(String date, String time);
 
   /// Error message when a recipe does not exist or is not visible to the user.
   ///

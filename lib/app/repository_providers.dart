@@ -5,8 +5,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../data/api/tandoor_dio.dart';
 import '../data/cache/cache_database.dart';
 import '../data/cache/draft_cache.dart';
+import '../data/cache/meal_plan_cache.dart';
 import '../data/cache/recipe_cache.dart';
 import '../data/cache/saved_filter_cache.dart';
+import '../data/cache/shopping_cache.dart';
 import '../data/repositories/tandoor_auth_repository.dart';
 import '../data/repositories/tandoor_repositories.dart';
 import '../data/repositories/tandoor_server_repository.dart';
@@ -71,6 +73,8 @@ TandoorRepositories _tandoorRepositories(Ref ref) {
     },
     cache: ref.watch(_recipeCacheProvider),
     savedFilterCache: SavedFilterCache(ref.watch(_cacheDatabaseProvider)),
+    mealPlanCache: MealPlanCache(ref.watch(_cacheDatabaseProvider)),
+    shoppingCache: ShoppingCache(ref.watch(_cacheDatabaseProvider)),
   );
   ref.onDispose(repositories.close);
   return repositories;

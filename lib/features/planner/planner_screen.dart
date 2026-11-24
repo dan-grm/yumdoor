@@ -18,6 +18,7 @@ import '../../domain/services/week_plan.dart';
 import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
+import '../common/offline_as_of.dart';
 import '../common/offline_disabled.dart';
 import '../common/recipe_image.dart';
 import '../search/search_location.dart';
@@ -101,7 +102,9 @@ class PlannerScreen extends ConsumerWidget {
       );
     }
 
-    final actions = offline
+    // A week from the offline cache is read-only too, even when a request
+    // only timed out and the app doesn't count as offline.
+    final actions = offline || plans.value?.cachedAt != null
         ? null
         : _PlanActions(
             move: move,
@@ -146,6 +149,17 @@ class PlannerScreen extends ConsumerWidget {
               onlyMine: onlyMine,
               onChanged: ref.read(plannerOnlyMineProvider.notifier).set,
             ),
+            if (plans case AsyncData(
+              value: MealPlanList(:final cachedAt?),
+              isLoading: false,
+            ))
+              Padding(
+                padding: EdgeInsets.fromLTRB(t.space5, t.space2, t.space5, 0),
+                child: OfflineAsOf(
+                  cachedAt: cachedAt,
+                  now: ref.watch(clockProvider)(),
+                ),
+              ),
             SizedBox(height: t.space3),
             Expanded(
               child: switch (plans) {
@@ -153,7 +167,7 @@ class PlannerScreen extends ConsumerWidget {
                   start: start,
                   today: today,
                   plans: [
-                    for (final loaded in value)
+                    for (final loaded in value.plans)
                       if ((pending.containsKey(loaded.id)
                               ? pending[loaded.id]
                               : loaded)

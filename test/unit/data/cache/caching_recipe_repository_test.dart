@@ -480,4 +480,68 @@ void main() {
       expect(await cache.get(7), isNull);
     });
   });
+
+  group('keepOffline', () {
+    final updated = DateTime.utc(2026, 10, 1, 9);
+
+    test('stores a planned recipe with its image', () async {
+      await repository.keepOffline(_karotten.summary);
+
+      expect(await cache.get(7), _karotten);
+      expect(downloads, [_image]);
+      expect(await cache.image(_image), isNotNull);
+    });
+
+    test('stores nothing once the cache was cleared', () async {
+      await cache.clear();
+
+      await repository.keepOffline(_karotten.summary);
+      await repository.fetchRecipe(8);
+      await pumpEventQueue();
+      expect(await cache.all(), isEmpty);
+    });
+
+    test('a second call waits for the first', () async {
+      final first = repository.keepOffline(_karotten.summary);
+      await repository.keepOffline(_karotten.summary);
+
+      expect(await cache.get(7), _karotten);
+      await first;
+      expect(remote.fetchCount, 1);
+    });
+
+    test('skips a recipe stored as it is on the server', () async {
+      remote.recipes[7] = _karotten.copyWith(updatedAt: updated);
+      await fetch(7);
+      final fetches = remote.fetchCount;
+
+      await repository.keepOffline(
+        _karotten.summary.copyWith(updatedAt: updated),
+      );
+      expect(remote.fetchCount, fetches);
+    });
+
+    test('fetches a recipe changed since it was stored', () async {
+      remote.recipes[7] = _karotten.copyWith(updatedAt: updated);
+      await fetch(7);
+      final changed = _karotten.copyWith(
+        name: 'Ofenkarotten mit Honig',
+        updatedAt: updated.add(const Duration(hours: 1)),
+      );
+      remote.recipes[7] = changed;
+
+      await repository.keepOffline(changed.summary);
+      expect((await cache.get(7))?.name, 'Ofenkarotten mit Honig');
+    });
+
+    test('fails without falling back to the stored copy', () async {
+      await fetch(7);
+      remote.failure = const OfflineFailure();
+
+      await expectLater(
+        repository.keepOffline(_karotten.summary),
+        throwsA(isA<OfflineFailure>()),
+      );
+    });
+  });
 }

@@ -82,6 +82,19 @@ void main() {
       expect(await cache.all(), listed);
     });
 
+    test('stores nothing once the cache was cleared', () async {
+      final repository = CachingSavedFilterRepository(
+        FakeSavedFilterRepository(filters),
+        cache,
+      );
+      await RecipeCache(db).clear();
+
+      await repository.savedFilters();
+      await pumpEventQueue();
+
+      expect(await cache.all(), isEmpty);
+    });
+
     test('stores nothing once closed', () async {
       final repository = CachingSavedFilterRepository(
         FakeSavedFilterRepository(filters),

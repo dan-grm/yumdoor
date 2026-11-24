@@ -15,10 +15,14 @@ import '../../domain/repositories/unit_repository.dart';
 import '../../domain/repositories/user_repository.dart';
 import '../api/image_downloader.dart';
 import '../api/tandoor_dio.dart';
+import '../cache/caching_meal_plan_repository.dart';
 import '../cache/caching_recipe_repository.dart';
 import '../cache/caching_saved_filter_repository.dart';
+import '../cache/caching_shopping_repository.dart';
+import '../cache/meal_plan_cache.dart';
 import '../cache/recipe_cache.dart';
 import '../cache/saved_filter_cache.dart';
+import '../cache/shopping_cache.dart';
 import 'tandoor_book_repository.dart';
 import 'tandoor_cook_log_repository.dart';
 import 'tandoor_food_repository.dart';
@@ -37,7 +41,8 @@ import 'tandoor_user_repository.dart';
 ///
 /// See [createTandoorDio] for [csrfToken], [onUnauthorized] and
 /// [onReachable]. With a [cache], recipes fall back to it offline (see
-/// [CachingRecipeRepository]).
+/// [CachingRecipeRepository]); so do saved searches, meal plans and the
+/// shopping list with theirs. Planned recipes are stored in [cache] too.
 class TandoorRepositories {
   factory TandoorRepositories(
     TandoorConnection connection, {
@@ -46,6 +51,8 @@ class TandoorRepositories {
     void Function(bool reachable)? onReachable,
     RecipeCache? cache,
     SavedFilterCache? savedFilterCache,
+    MealPlanCache? mealPlanCache,
+    ShoppingCache? shoppingCache,
   }) {
     final dio = createTandoorDio(
       connection.serverUrl,
@@ -73,17 +80,20 @@ class TandoorRepositories {
       lastCooked: cookLogs.lastCooked,
     );
     final images = cache == null ? null : ImageDownloader();
+    final cachingRecipes = switch (cache) {
+      final cache? => CachingRecipeRepository(
+        remoteRecipes,
+        cache,
+        downloadImage: images?.download,
+      ),
+      null => null,
+    };
+    final mealPlans = TandoorMealPlanRepository(apiClient, dio);
+    final shopping = TandoorShoppingRepository(apiClient, dio);
     return TandoorRepositories._(
       dio,
       images,
-      recipes: switch (cache) {
-        final cache? => CachingRecipeRepository(
-          remoteRecipes,
-          cache,
-          downloadImage: images?.download,
-        ),
-        null => remoteRecipes,
-      },
+      recipes: cachingRecipes ?? remoteRecipes,
       foods: TandoorFoodRepository(apiClient),
       keywords: TandoorKeywordRepository(apiClient),
       units: TandoorUnitRepository(apiClient),
@@ -95,9 +105,19 @@ class TandoorRepositories {
         final cache? => CachingSavedFilterRepository(savedFilters, cache),
         null => savedFilters,
       },
-      mealPlans: TandoorMealPlanRepository(apiClient, dio),
+      mealPlans: switch (mealPlanCache) {
+        final cache? => CachingMealPlanRepository(
+          mealPlans,
+          cache,
+          storeRecipe: cachingRecipes?.keepOffline,
+        ),
+        null => mealPlans,
+      },
       mealTypes: TandoorMealTypeRepository(apiClient),
-      shopping: TandoorShoppingRepository(apiClient, dio),
+      shopping: switch (shoppingCache) {
+        final cache? => CachingShoppingRepository(shopping, cache),
+        null => shopping,
+      },
     );
   }
 
@@ -138,6 +158,8 @@ class TandoorRepositories {
     if (savedFilters case final CachingSavedFilterRepository cached) {
       cached.close();
     }
+    if (mealPlans case final CachingMealPlanRepository cached) cached.close();
+    if (shopping case final CachingShoppingRepository cached) cached.close();
     _dio.close(force: true);
     _images?.close();
   }

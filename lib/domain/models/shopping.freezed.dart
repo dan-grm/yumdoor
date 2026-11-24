@@ -12,6 +12,7 @@ part of 'shopping.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$SupermarketCategory {
 
@@ -22,6 +23,8 @@ mixin _$SupermarketCategory {
 @pragma('vm:prefer-inline')
 $SupermarketCategoryCopyWith<SupermarketCategory> get copyWith => _$SupermarketCategoryCopyWithImpl<SupermarketCategory>(this as SupermarketCategory, _$identity);
 
+  /// Serializes this SupermarketCategory to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -30,7 +33,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is SupermarketCategory&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as SupermarketCategory;
@@ -210,11 +213,11 @@ return $default(_that.id,_that.name);case _:
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _SupermarketCategory implements SupermarketCategory {
   const _SupermarketCategory({required this.id, required this.name});
-  
+  factory _SupermarketCategory.fromJson(Map<String, dynamic> json) => _$SupermarketCategoryFromJson(json);
 
 @override final  int id;
 @override final  String name;
@@ -225,14 +228,17 @@ class _SupermarketCategory implements SupermarketCategory {
 @pragma('vm:prefer-inline')
 _$SupermarketCategoryCopyWith<_SupermarketCategory> get copyWith => __$SupermarketCategoryCopyWithImpl<_SupermarketCategory>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$SupermarketCategoryToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _SupermarketCategory&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
     return Object.hash(runtimeType,id,name);
@@ -279,6 +285,7 @@ as String,
 
 }
 
+
 /// @nodoc
 mixin _$Supermarket {
 
@@ -291,6 +298,8 @@ mixin _$Supermarket {
 @pragma('vm:prefer-inline')
 $SupermarketCopyWith<Supermarket> get copyWith => _$SupermarketCopyWithImpl<Supermarket>(this as Supermarket, _$identity);
 
+  /// Serializes this Supermarket to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -299,7 +308,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is Supermarket&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&const DeepCollectionEquality().equals(other.categoryIds, _this.categoryIds));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as Supermarket;
@@ -480,11 +489,11 @@ return $default(_that.id,_that.name,_that.categoryIds);case _:
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _Supermarket implements Supermarket {
   const _Supermarket({required this.id, required this.name,  List<int> categoryIds = const <int>[]}): _categoryIds = categoryIds;
-  
+  factory _Supermarket.fromJson(Map<String, dynamic> json) => _$SupermarketFromJson(json);
 
 @override final  int id;
 @override final  String name;
@@ -506,14 +515,17 @@ class _Supermarket implements Supermarket {
 @pragma('vm:prefer-inline')
 _$SupermarketCopyWith<_Supermarket> get copyWith => __$SupermarketCopyWithImpl<_Supermarket>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$SupermarketToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _Supermarket&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&const DeepCollectionEquality().equals(other.categoryIds, _categoryIds));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
     return Object.hash(runtimeType,id,name,const DeepCollectionEquality().hash(_categoryIds));
@@ -561,6 +573,7 @@ as List<int>,
 
 }
 
+
 /// @nodoc
 mixin _$ShoppingFood {
 
@@ -572,6 +585,8 @@ mixin _$ShoppingFood {
 @pragma('vm:prefer-inline')
 $ShoppingFoodCopyWith<ShoppingFood> get copyWith => _$ShoppingFoodCopyWithImpl<ShoppingFood>(this as ShoppingFood, _$identity);
 
+  /// Serializes this ShoppingFood to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -580,7 +595,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is ShoppingFood&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.pluralName, _this.pluralName) || other.pluralName == _this.pluralName)&&(identical(other.category, _this.category) || other.category == _this.category));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ShoppingFood;
@@ -774,11 +789,11 @@ return $default(_that.id,_that.name,_that.pluralName,_that.category);case _:
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _ShoppingFood implements ShoppingFood {
   const _ShoppingFood({required this.id, required this.name, this.pluralName, this.category});
-  
+  factory _ShoppingFood.fromJson(Map<String, dynamic> json) => _$ShoppingFoodFromJson(json);
 
 @override final  int id;
 @override final  String name;
@@ -792,14 +807,17 @@ class _ShoppingFood implements ShoppingFood {
 @pragma('vm:prefer-inline')
 _$ShoppingFoodCopyWith<_ShoppingFood> get copyWith => __$ShoppingFoodCopyWithImpl<_ShoppingFood>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$ShoppingFoodToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _ShoppingFood&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.pluralName, pluralName) || other.pluralName == pluralName)&&(identical(other.category, category) || other.category == category));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
     return Object.hash(runtimeType,id,name,pluralName,category);
@@ -860,6 +878,7 @@ $SupermarketCategoryCopyWith<$Res>? get category {
 }
 }
 
+
 /// @nodoc
 mixin _$ShoppingEntrySource {
 
@@ -876,6 +895,8 @@ mixin _$ShoppingEntrySource {
 @pragma('vm:prefer-inline')
 $ShoppingEntrySourceCopyWith<ShoppingEntrySource> get copyWith => _$ShoppingEntrySourceCopyWithImpl<ShoppingEntrySource>(this as ShoppingEntrySource, _$identity);
 
+  /// Serializes this ShoppingEntrySource to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -884,7 +905,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is ShoppingEntrySource&&(identical(other.listRecipeId, _this.listRecipeId) || other.listRecipeId == _this.listRecipeId)&&(identical(other.recipeId, _this.recipeId) || other.recipeId == _this.recipeId)&&(identical(other.recipeName, _this.recipeName) || other.recipeName == _this.recipeName)&&(identical(other.servings, _this.servings) || other.servings == _this.servings)&&(identical(other.mealPlan, _this.mealPlan) || other.mealPlan == _this.mealPlan));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ShoppingEntrySource;
@@ -1079,11 +1100,11 @@ return $default(_that.listRecipeId,_that.recipeId,_that.recipeName,_that.serving
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _ShoppingEntrySource implements ShoppingEntrySource {
   const _ShoppingEntrySource({required this.listRecipeId, this.recipeId, this.recipeName = '', required this.servings, this.mealPlan});
-  
+  factory _ShoppingEntrySource.fromJson(Map<String, dynamic> json) => _$ShoppingEntrySourceFromJson(json);
 
 /// The recipe on the shopping list (Tandoor's `ShoppingListRecipe`). All
 /// entries added for the recipe at once share it.
@@ -1103,14 +1124,17 @@ class _ShoppingEntrySource implements ShoppingEntrySource {
 @pragma('vm:prefer-inline')
 _$ShoppingEntrySourceCopyWith<_ShoppingEntrySource> get copyWith => __$ShoppingEntrySourceCopyWithImpl<_ShoppingEntrySource>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$ShoppingEntrySourceToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _ShoppingEntrySource&&(identical(other.listRecipeId, listRecipeId) || other.listRecipeId == listRecipeId)&&(identical(other.recipeId, recipeId) || other.recipeId == recipeId)&&(identical(other.recipeName, recipeName) || other.recipeName == recipeName)&&(identical(other.servings, servings) || other.servings == servings)&&(identical(other.mealPlan, mealPlan) || other.mealPlan == mealPlan));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
     return Object.hash(runtimeType,listRecipeId,recipeId,recipeName,servings,mealPlan);
@@ -1172,6 +1196,7 @@ $MealPlanCopyWith<$Res>? get mealPlan {
 }
 }
 
+
 /// @nodoc
 mixin _$ShoppingEntry {
 
@@ -1187,6 +1212,8 @@ mixin _$ShoppingEntry {
 @pragma('vm:prefer-inline')
 $ShoppingEntryCopyWith<ShoppingEntry> get copyWith => _$ShoppingEntryCopyWithImpl<ShoppingEntry>(this as ShoppingEntry, _$identity);
 
+  /// Serializes this ShoppingEntry to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -1195,7 +1222,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is ShoppingEntry&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.food, _this.food) || other.food == _this.food)&&(identical(other.unit, _this.unit) || other.unit == _this.unit)&&(identical(other.amount, _this.amount) || other.amount == _this.amount)&&(identical(other.checked, _this.checked) || other.checked == _this.checked)&&(identical(other.completedAt, _this.completedAt) || other.completedAt == _this.completedAt)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt)&&(identical(other.createdBy, _this.createdBy) || other.createdBy == _this.createdBy)&&(identical(other.source, _this.source) || other.source == _this.source));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as ShoppingEntry;
@@ -1424,11 +1451,11 @@ return $default(_that.id,_that.food,_that.unit,_that.amount,_that.checked,_that.
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _ShoppingEntry implements ShoppingEntry {
   const _ShoppingEntry({required this.id, required this.food, this.unit, required this.amount, this.checked = false, this.completedAt, required this.updatedAt, required this.createdBy, this.source});
-  
+  factory _ShoppingEntry.fromJson(Map<String, dynamic> json) => _$ShoppingEntryFromJson(json);
 
 @override final  int id;
 @override final  ShoppingFood food;
@@ -1451,14 +1478,17 @@ class _ShoppingEntry implements ShoppingEntry {
 @pragma('vm:prefer-inline')
 _$ShoppingEntryCopyWith<_ShoppingEntry> get copyWith => __$ShoppingEntryCopyWithImpl<_ShoppingEntry>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$ShoppingEntryToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _ShoppingEntry&&(identical(other.id, id) || other.id == id)&&(identical(other.food, food) || other.food == food)&&(identical(other.unit, unit) || other.unit == unit)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.checked, checked) || other.checked == checked)&&(identical(other.completedAt, completedAt) || other.completedAt == completedAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy)&&(identical(other.source, source) || other.source == source));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
     return Object.hash(runtimeType,id,food,unit,amount,checked,completedAt,updatedAt,createdBy,source);
@@ -1567,7 +1597,10 @@ mixin _$ShoppingListSnapshot {
  DateTime get syncedAt;/// Whether the list reached [maxShoppingEntries], where the server cuts
 /// it off. It keeps the oldest entries, so the newest may be missing; a
 /// list of exactly that many entries looks the same.
- bool get truncated;
+ bool get truncated;/// When the list was read from the server, if it comes from the offline
+/// cache because the server can't be reached; `null` for a list read
+/// just now.
+ DateTime? get cachedAt;
 /// Create a copy of ShoppingListSnapshot
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -1579,20 +1612,20 @@ $ShoppingListSnapshotCopyWith<ShoppingListSnapshot> get copyWith => _$ShoppingLi
 @override
 bool operator ==(Object other) {
   final _this = this as ShoppingListSnapshot;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ShoppingListSnapshot&&const DeepCollectionEquality().equals(other.entries, _this.entries)&&(identical(other.syncedAt, _this.syncedAt) || other.syncedAt == _this.syncedAt)&&(identical(other.truncated, _this.truncated) || other.truncated == _this.truncated));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ShoppingListSnapshot&&const DeepCollectionEquality().equals(other.entries, _this.entries)&&(identical(other.syncedAt, _this.syncedAt) || other.syncedAt == _this.syncedAt)&&(identical(other.truncated, _this.truncated) || other.truncated == _this.truncated)&&(identical(other.cachedAt, _this.cachedAt) || other.cachedAt == _this.cachedAt));
 }
 
 
 @override
 int get hashCode {
   final _this = this as ShoppingListSnapshot;
-  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.entries),_this.syncedAt,_this.truncated);
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.entries),_this.syncedAt,_this.truncated,_this.cachedAt);
 }
 
 @override
 String toString() {
   final _this = this as ShoppingListSnapshot;
-  return 'ShoppingListSnapshot(entries: ${_this.entries}, syncedAt: ${_this.syncedAt}, truncated: ${_this.truncated})';
+  return 'ShoppingListSnapshot(entries: ${_this.entries}, syncedAt: ${_this.syncedAt}, truncated: ${_this.truncated}, cachedAt: ${_this.cachedAt})';
 }
 
 
@@ -1603,7 +1636,7 @@ abstract mixin class $ShoppingListSnapshotCopyWith<$Res>  {
   factory $ShoppingListSnapshotCopyWith(ShoppingListSnapshot value, $Res Function(ShoppingListSnapshot) _then) = _$ShoppingListSnapshotCopyWithImpl;
 @useResult
 $Res call({
- List<ShoppingEntry> entries, DateTime syncedAt, bool truncated
+ List<ShoppingEntry> entries, DateTime syncedAt, bool truncated, DateTime? cachedAt
 });
 
 
@@ -1620,12 +1653,13 @@ class _$ShoppingListSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of ShoppingListSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? entries = null,Object? syncedAt = null,Object? truncated = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? entries = null,Object? syncedAt = null,Object? truncated = null,Object? cachedAt = freezed,}) {
   return _then(ShoppingListSnapshot(
 entries: null == entries ? _self.entries : entries // ignore: cast_nullable_to_non_nullable
 as List<ShoppingEntry>,syncedAt: null == syncedAt ? _self.syncedAt : syncedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,truncated: null == truncated ? _self.truncated : truncated // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,cachedAt: freezed == cachedAt ? _self.cachedAt : cachedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 
@@ -1710,10 +1744,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<ShoppingEntry> entries,  DateTime syncedAt,  bool truncated)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<ShoppingEntry> entries,  DateTime syncedAt,  bool truncated,  DateTime? cachedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ShoppingListSnapshot() when $default != null:
-return $default(_that.entries,_that.syncedAt,_that.truncated);case _:
+return $default(_that.entries,_that.syncedAt,_that.truncated,_that.cachedAt);case _:
   return orElse();
 
 }
@@ -1731,10 +1765,10 @@ return $default(_that.entries,_that.syncedAt,_that.truncated);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<ShoppingEntry> entries,  DateTime syncedAt,  bool truncated)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<ShoppingEntry> entries,  DateTime syncedAt,  bool truncated,  DateTime? cachedAt)  $default,) {final _that = this;
 switch (_that) {
 case _ShoppingListSnapshot():
-return $default(_that.entries,_that.syncedAt,_that.truncated);case _:
+return $default(_that.entries,_that.syncedAt,_that.truncated,_that.cachedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -1751,10 +1785,10 @@ return $default(_that.entries,_that.syncedAt,_that.truncated);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<ShoppingEntry> entries,  DateTime syncedAt,  bool truncated)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<ShoppingEntry> entries,  DateTime syncedAt,  bool truncated,  DateTime? cachedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _ShoppingListSnapshot() when $default != null:
-return $default(_that.entries,_that.syncedAt,_that.truncated);case _:
+return $default(_that.entries,_that.syncedAt,_that.truncated,_that.cachedAt);case _:
   return null;
 
 }
@@ -1766,7 +1800,7 @@ return $default(_that.entries,_that.syncedAt,_that.truncated);case _:
 
 
 class _ShoppingListSnapshot implements ShoppingListSnapshot {
-  const _ShoppingListSnapshot({required  List<ShoppingEntry> entries, required this.syncedAt, this.truncated = false}): _entries = entries;
+  const _ShoppingListSnapshot({required  List<ShoppingEntry> entries, required this.syncedAt, this.truncated = false, this.cachedAt}): _entries = entries;
   
 
 /// Unchecked entries and entries checked within the user's "recent days"
@@ -1791,6 +1825,10 @@ class _ShoppingListSnapshot implements ShoppingListSnapshot {
 /// it off. It keeps the oldest entries, so the newest may be missing; a
 /// list of exactly that many entries looks the same.
 @override@JsonKey() final  bool truncated;
+/// When the list was read from the server, if it comes from the offline
+/// cache because the server can't be reached; `null` for a list read
+/// just now.
+@override final  DateTime? cachedAt;
 
 /// Create a copy of ShoppingListSnapshot
 /// with the given fields replaced by the non-null parameter values.
@@ -1802,18 +1840,18 @@ _$ShoppingListSnapshotCopyWith<_ShoppingListSnapshot> get copyWith => __$Shoppin
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ShoppingListSnapshot&&const DeepCollectionEquality().equals(other.entries, _entries)&&(identical(other.syncedAt, syncedAt) || other.syncedAt == syncedAt)&&(identical(other.truncated, truncated) || other.truncated == truncated));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ShoppingListSnapshot&&const DeepCollectionEquality().equals(other.entries, _entries)&&(identical(other.syncedAt, syncedAt) || other.syncedAt == syncedAt)&&(identical(other.truncated, truncated) || other.truncated == truncated)&&(identical(other.cachedAt, cachedAt) || other.cachedAt == cachedAt));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_entries),syncedAt,truncated);
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_entries),syncedAt,truncated,cachedAt);
 }
 
 @override
 String toString() {
-    return 'ShoppingListSnapshot(entries: $entries, syncedAt: $syncedAt, truncated: $truncated)';
+    return 'ShoppingListSnapshot(entries: $entries, syncedAt: $syncedAt, truncated: $truncated, cachedAt: $cachedAt)';
 }
 
 
@@ -1824,7 +1862,7 @@ abstract mixin class _$ShoppingListSnapshotCopyWith<$Res> implements $ShoppingLi
   factory _$ShoppingListSnapshotCopyWith(_ShoppingListSnapshot value, $Res Function(_ShoppingListSnapshot) _then) = __$ShoppingListSnapshotCopyWithImpl;
 @override @useResult
 $Res call({
- List<ShoppingEntry> entries, DateTime syncedAt, bool truncated
+ List<ShoppingEntry> entries, DateTime syncedAt, bool truncated, DateTime? cachedAt
 });
 
 
@@ -1841,12 +1879,13 @@ class __$ShoppingListSnapshotCopyWithImpl<$Res>
 
 /// Create a copy of ShoppingListSnapshot
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? entries = null,Object? syncedAt = null,Object? truncated = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? entries = null,Object? syncedAt = null,Object? truncated = null,Object? cachedAt = freezed,}) {
   return _then(_ShoppingListSnapshot(
 entries: null == entries ? _self._entries : entries // ignore: cast_nullable_to_non_nullable
 as List<ShoppingEntry>,syncedAt: null == syncedAt ? _self.syncedAt : syncedAt // ignore: cast_nullable_to_non_nullable
 as DateTime,truncated: null == truncated ? _self.truncated : truncated // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,cachedAt: freezed == cachedAt ? _self.cachedAt : cachedAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,
   ));
 }
 

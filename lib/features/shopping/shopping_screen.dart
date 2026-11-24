@@ -16,6 +16,7 @@ import '../../domain/services/shopping_list_groups.dart';
 import '../../l10n/formatting.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
+import '../common/offline_as_of.dart';
 import '../search/option_sheet.dart';
 import 'add_item_field.dart';
 import 'shopping_providers.dart';
@@ -91,6 +92,12 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
         .onlineChanges
         .listen((_) => _updateSync());
   }
+
+  /// Whether changes are disabled: offline, or the list shown comes from
+  /// the offline cache (a request that only timed out).
+  bool get _readOnly =>
+      ref.read(isOfflineProvider) ||
+      ref.read(shoppingListProvider).value?.cachedAt != null;
 
   /// Inactive still counts: the app is in view, only without focus (a
   /// browser tab while another window has it, a system dialog).
@@ -222,7 +229,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     required bool checked,
   }) async {
     final messenger = ScaffoldMessenger.of(context);
-    if (ref.read(isOfflineProvider)) {
+    if (_readOnly) {
       _show(messenger, (context) => context.l10n.offlineWriteDisabled);
       return;
     }
@@ -237,7 +244,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
               : context.l10n.shoppingUnchecked(name),
           undo: () {
             // Gone offline meanwhile: undoing is a write like any other.
-            if (ref.read(isOfflineProvider)) {
+            if (_readOnly) {
               _show(messenger, (context) => context.l10n.offlineWriteDisabled);
               return;
             }
@@ -269,7 +276,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
   /// unit and food. Returns whether it is on the list now.
   Future<bool> _addLine(String line) async {
     final messenger = ScaffoldMessenger.of(context);
-    if (ref.read(isOfflineProvider)) {
+    if (_readOnly) {
       _show(messenger, (context) => context.l10n.offlineWriteDisabled);
       return false;
     }
@@ -325,7 +332,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
   /// The actions of [row]: on hand, or delete.
   Future<void> _more(ShoppingListRow row, String name) async {
     final messenger = ScaffoldMessenger.of(context);
-    if (ref.read(isOfflineProvider)) {
+    if (_readOnly) {
       _show(messenger, (context) => context.l10n.offlineWriteDisabled);
       return;
     }
@@ -341,7 +348,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     );
     if (action == null || !mounted) return;
     // Gone offline while choosing.
-    if (ref.read(isOfflineProvider)) {
+    if (_readOnly) {
       _show(messenger, (context) => context.l10n.offlineWriteDisabled);
       return;
     }
@@ -386,7 +393,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     List<ShoppingEntry> entries,
     String name,
   ) async {
-    if (ref.read(isOfflineProvider)) {
+    if (_readOnly) {
       _show(messenger, (context) => context.l10n.offlineWriteDisabled);
       return;
     }
@@ -449,10 +456,20 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
                           l10n.shoppingShared(groups.openCount),
                           style: t.label.copyWith(color: t.inkMuted),
                         ),
+                      if (list.value?.cachedAt case final cachedAt?
+                          when !list.isReloading) ...[
+                        SizedBox(height: t.space1),
+                        OfflineAsOf(
+                          cachedAt: cachedAt,
+                          now: ref.watch(clockProvider)(),
+                        ),
+                      ],
                       SizedBox(height: t.space3),
                       AddItemField(
                         onAdd: _addLine,
-                        enabled: !ref.watch(isOfflineProvider),
+                        enabled:
+                            !ref.watch(isOfflineProvider) &&
+                            list.value?.cachedAt == null,
                         onDisabledTap: () => _show(
                           ScaffoldMessenger.of(context),
                           (context) => context.l10n.offlineWriteDisabled,

@@ -14,6 +14,10 @@ abstract interface class ShoppingRepository {
   /// the entries created, changed, checked or unchecked since then, by
   /// anyone in the household. Deleted entries are not reported, so read the
   /// whole list now and then.
+  ///
+  /// When the server can't be reached, a full read may answer with the list
+  /// as last read, from the offline cache ([ShoppingListSnapshot.cachedAt]);
+  /// an incremental read fails.
   Future<ShoppingListSnapshot> fetch({DateTime? updatedAfter});
 
   /// Checks off ([checked] `true`) or unchecks the entries with [ids].

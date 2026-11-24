@@ -5,6 +5,7 @@ import 'unit.dart';
 import 'user_ref.dart';
 
 part 'shopping.freezed.dart';
+part 'shopping.g.dart';
 
 /// A section of a supermarket, such as "Obst & Gemüse". Foods have at most
 /// one.
@@ -12,6 +13,9 @@ part 'shopping.freezed.dart';
 abstract class SupermarketCategory with _$SupermarketCategory {
   const factory SupermarketCategory({required int id, required String name}) =
       _SupermarketCategory;
+
+  factory SupermarketCategory.fromJson(Map<String, dynamic> json) =>
+      _$SupermarketCategoryFromJson(json);
 }
 
 /// A supermarket and the order of its categories, for walking through it.
@@ -25,6 +29,9 @@ abstract class Supermarket with _$Supermarket {
     /// Categories not in it come after these.
     @Default(<int>[]) List<int> categoryIds,
   }) = _Supermarket;
+
+  factory Supermarket.fromJson(Map<String, dynamic> json) =>
+      _$SupermarketFromJson(json);
 }
 
 /// The food of a [ShoppingEntry], with what the list needs to group it.
@@ -38,6 +45,9 @@ abstract class ShoppingFood with _$ShoppingFood {
     /// `null` for a food without one; it is grouped as uncategorized.
     SupermarketCategory? category,
   }) = _ShoppingFood;
+
+  factory ShoppingFood.fromJson(Map<String, dynamic> json) =>
+      _$ShoppingFoodFromJson(json);
 }
 
 /// The recipe a [ShoppingEntry] was added for.
@@ -60,6 +70,9 @@ abstract class ShoppingEntrySource with _$ShoppingEntrySource {
     /// The meal plan it was added for, if any.
     MealPlan? mealPlan,
   }) = _ShoppingEntrySource;
+
+  factory ShoppingEntrySource.fromJson(Map<String, dynamic> json) =>
+      _$ShoppingEntrySourceFromJson(json);
 }
 
 /// One line on the shopping list of the current user's household.
@@ -86,6 +99,9 @@ abstract class ShoppingEntry with _$ShoppingEntry {
     /// `null` for an item added by hand.
     ShoppingEntrySource? source,
   }) = _ShoppingEntry;
+
+  factory ShoppingEntry.fromJson(Map<String, dynamic> json) =>
+      _$ShoppingEntryFromJson(json);
 }
 
 /// The shopping list as read from the server.
@@ -107,6 +123,11 @@ abstract class ShoppingListSnapshot with _$ShoppingListSnapshot {
     /// it off. It keeps the oldest entries, so the newest may be missing; a
     /// list of exactly that many entries looks the same.
     @Default(false) bool truncated,
+
+    /// When the list was read from the server, if it comes from the offline
+    /// cache because the server can't be reached; `null` for a list read
+    /// just now.
+    DateTime? cachedAt,
   }) = _ShoppingListSnapshot;
 }
 

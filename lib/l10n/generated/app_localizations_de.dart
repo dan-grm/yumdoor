@@ -144,11 +144,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get offlineBanner =>
-      'Du bist offline. Rezepte, die du schon geöffnet hast, kannst du weiter ansehen.';
+      'Du bist offline. Du siehst geöffnete Rezepte, Wochenplan und Einkaufsliste, wie sie zuletzt geladen wurden.';
 
   @override
   String get offlineWriteDisabled =>
       'Offline kannst du nichts ändern. Sobald du wieder verbunden bist, geht es weiter.';
+
+  @override
+  String offlineAsOf(String date, String time) {
+    return 'Offline · Stand vom $date, $time';
+  }
 
   @override
   String get recipeNotFound =>

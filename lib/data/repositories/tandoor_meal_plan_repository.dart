@@ -30,7 +30,7 @@ class TandoorMealPlanRepository implements MealPlanRepository {
   /// device's and the server's time zone (up to 26 hours), and [maxPlanDays]
   /// further for plans that end after the range; the rest is filtered here.
   @override
-  Future<List<MealPlan>> list(CalendarDay from, CalendarDay to) =>
+  Future<MealPlanList> list(CalendarDay from, CalendarDay to) =>
       guardRequest(() async {
         final plans = <MealPlan>[];
         for (var page = 1; ; page++) {
@@ -50,7 +50,7 @@ class TandoorMealPlanRepository implements MealPlanRepository {
           }
           if (response.next == null || response.results.isEmpty) break;
         }
-        return plans..sort(_compare);
+        return MealPlanList(plans: plans..sort(_compare));
       });
 
   static int _compare(MealPlan a, MealPlan b) {

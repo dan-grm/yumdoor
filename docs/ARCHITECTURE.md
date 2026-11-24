@@ -181,8 +181,8 @@ shows the origin and explains the constraint.
 
 ## Offline cache
 
-- Read-only offline: recipes the user has opened (and, from M2, recipes in the visible meal plan) are stored in Drift
-  (`lib/data/cache/`).
+- Read-only offline: recipes the user has opened (and, from M4, the recipes of the meal plans the planner shows), the
+  plans of the weeks the planner showed and the last loaded shopping list are stored in Drift (`lib/data/cache/`).
 - Stored as domain models serialized to JSON (`Recipe.fromJson`/`toJson`) in a `cached_recipe` table (id, name,
   imageUrl, updatedAt, json, lastOpenedAt), plus images as bytes in `cached_image`. Simple, and a domain model change
   only needs a bump of `CacheDatabase.schemaVersion`; any version change (up or down) drops all rows. No need to
@@ -193,6 +193,29 @@ shows the origin and explains the constraint.
   page 1 falls back to the cached recipes (the text against name, ingredient foods and keywords, plus exact
   food/keyword/rating filters without child foods) and `ResultPage.fromCache` makes the UI say so. The universal
   search then uses that one result instead of its separate food and keyword searches.
+- Meal plans (M4): `CachingMealPlanRepository` stores each list it reads (`cached_meal_plans`, the `MealPlan`s as JSON
+  by first and last day; the 26 most recently read ranges, so the current week and the ones visited). Offline, the same
+  days come from the cache with `MealPlanList.cachedAt`, and the planner says "Offline · Stand vom …" above the week
+  and reads it again once the server answers (or after 15 s when only a request timed out; the cached week is read-only
+  either way); a week never loaded shows the offline failure. After each list from the
+  server, the recipes of plans that aren't over yet are stored one after another in the background with their images
+  (`CachingRecipeRepository.keepOffline`, skipped without counting as opened when the stored copy has the same
+  `updatedAt`); past weeks store none, so browsing them doesn't push opened recipes out of the cache. Plans change only online; the planner reads the week again
+  after each change, which stores it anew.
+- Shopping list (M4): `CachingShoppingRepository` keeps the list the server last reported: entries as rows of their own
+  (`cached_shopping_entry`, `ShoppingEntry` JSON with their position), `syncedAt`, `truncated` and when it was stored in
+  `cached_value`, like the supermarkets. Full reads replace it, incremental reads are merged into it, and check-offs,
+  added items and deletions are applied once the server accepted them; recipes added to the list come with the next
+  read. A read that answers late can't undo that: a full read older than the stored one is dropped, and no read touches
+  entries changed on the device, or stored from a newer read, after it started; `syncedAt` never goes back. Offline, a full read answers from it (`ShoppingListSnapshot.cachedAt`, "Offline · Stand vom …" on the list);
+  an incremental read fails, pull to refresh on a list already shown says the server can't be reached, and the first
+  poll once the server answers reads the list in full. The cache
+  holds only what the server has, so the offline check-off queue (#116) can live in a table of its own and be shown on
+  top of it.
+- The caching repositories note `CacheDatabase.clears` when their session starts and store nothing once logout
+  cleared the cache, so a request that ends late (or starts before the session's repositories are gone) can't bring
+  back the previous user's recipes, saved searches, plans or list. A list shown from the cache is read-only even when
+  the app doesn't count as offline (a request that timed out).
 - `ConnectivityService` plus requests drive the `isOffline` provider (`lib/app/offline.dart`): a request that can't
   connect sets it, any answer from the server (errors included) or the network coming back clears it. When offline,
   a banner is shown on every screen (`MaterialApp.builder`) and write actions are disabled (not hidden) through

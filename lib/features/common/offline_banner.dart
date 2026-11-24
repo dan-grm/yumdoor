@@ -5,8 +5,8 @@ import '../../app/offline.dart';
 import '../../design/design.dart';
 import '../../l10n/l10n.dart';
 
-/// Puts a banner above [child] while the app is offline, saying that opened
-/// recipes still work.
+/// Puts a banner above [child] while the app is offline, saying what still
+/// works: what is stored for offline use.
 ///
 /// Wraps the whole app (`MaterialApp.builder`), so it is on every screen.
 class OfflineBanner extends ConsumerWidget {

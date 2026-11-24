@@ -313,7 +313,7 @@ class _PlanSheetState extends ConsumerState<PlanSheet> {
     final format = LocaleFormat.of(context);
     final today = CalendarDay.of(ref.watch(clockProvider)());
     final weekStart = startOfWeek(_day, firstWeekdayOf(context));
-    final plans = ref.watch(weekPlansProvider(weekStart)).value;
+    final plans = ref.watch(weekPlansProvider(weekStart)).value?.plans;
     final mealTypes = ref.watch(mealTypesProvider);
     final mealType = mealTypes.value == null
         ? null

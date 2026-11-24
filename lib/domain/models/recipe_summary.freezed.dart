@@ -12,6 +12,7 @@ part of 'recipe_summary.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$RecipeSummary {
 
@@ -27,6 +28,8 @@ mixin _$RecipeSummary {
 @pragma('vm:prefer-inline')
 $RecipeSummaryCopyWith<RecipeSummary> get copyWith => _$RecipeSummaryCopyWithImpl<RecipeSummary>(this as RecipeSummary, _$identity);
 
+  /// Serializes this RecipeSummary to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -35,7 +38,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is RecipeSummary&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.image, _this.image) || other.image == _this.image)&&const DeepCollectionEquality().equals(other.keywords, _this.keywords)&&const DeepCollectionEquality().equals(other.foods, _this.foods)&&(identical(other.servings, _this.servings) || other.servings == _this.servings)&&(identical(other.servingsText, _this.servingsText) || other.servingsText == _this.servingsText)&&(identical(other.workingTime, _this.workingTime) || other.workingTime == _this.workingTime)&&(identical(other.waitingTime, _this.waitingTime) || other.waitingTime == _this.waitingTime)&&(identical(other.rating, _this.rating) || other.rating == _this.rating)&&(identical(other.lastCooked, _this.lastCooked) || other.lastCooked == _this.lastCooked)&&(identical(other.createdBy, _this.createdBy) || other.createdBy == _this.createdBy)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as RecipeSummary;
@@ -239,11 +242,11 @@ return $default(_that.id,_that.name,_that.description,_that.image,_that.keywords
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _RecipeSummary implements RecipeSummary {
   const _RecipeSummary({required this.id, required this.name, this.description = '', this.image,  List<Keyword> keywords = const [],  List<Food> foods = const [], this.servings = 1, this.servingsText = '', this.workingTime = Duration.zero, this.waitingTime = Duration.zero, this.rating, this.lastCooked, this.createdBy, this.updatedAt}): _keywords = keywords,_foods = foods;
-  
+  factory _RecipeSummary.fromJson(Map<String, dynamic> json) => _$RecipeSummaryFromJson(json);
 
 @override final  int id;
 @override final  String name;
@@ -285,14 +288,17 @@ class _RecipeSummary implements RecipeSummary {
 @pragma('vm:prefer-inline')
 _$RecipeSummaryCopyWith<_RecipeSummary> get copyWith => __$RecipeSummaryCopyWithImpl<_RecipeSummary>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$RecipeSummaryToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _RecipeSummary&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.description, description) || other.description == description)&&(identical(other.image, image) || other.image == image)&&const DeepCollectionEquality().equals(other.keywords, _keywords)&&const DeepCollectionEquality().equals(other.foods, _foods)&&(identical(other.servings, servings) || other.servings == servings)&&(identical(other.servingsText, servingsText) || other.servingsText == servingsText)&&(identical(other.workingTime, workingTime) || other.workingTime == workingTime)&&(identical(other.waitingTime, waitingTime) || other.waitingTime == waitingTime)&&(identical(other.rating, rating) || other.rating == rating)&&(identical(other.lastCooked, lastCooked) || other.lastCooked == lastCooked)&&(identical(other.createdBy, createdBy) || other.createdBy == createdBy)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
     return Object.hash(runtimeType,id,name,description,image,const DeepCollectionEquality().hash(_keywords),const DeepCollectionEquality().hash(_foods),servings,servingsText,workingTime,waitingTime,rating,lastCooked,createdBy,updatedAt);

@@ -246,6 +246,58 @@ void main() {
     expect(container.read(shoppingListProvider).requireValue.truncated, isTrue);
   });
 
+  group('offline cache', () {
+    final cachedAt = DateTime(2026, 11, 17, 19, 30);
+
+    test('shows the stored list with when it was read', () async {
+      repository.cachedAt = cachedAt;
+      container = await create();
+
+      final view = await container.read(shoppingListProvider.future);
+      expect(view.cachedAt, cachedAt);
+      expect(view.entries, hasLength(mockupShoppingList().length));
+    });
+
+    test('a refresh from the cache keeps the list shown and fails', () async {
+      await container.read(shoppingListProvider.future);
+      repository
+        ..cachedAt = cachedAt
+        ..entries.removeAt(0);
+
+      await expectLater(list().refresh(), throwsA(isA<OfflineFailure>()));
+      final view = container.read(shoppingListProvider).requireValue;
+      expect(view.cachedAt, isNull);
+      expect(view.entries, hasLength(mockupShoppingList().length));
+    });
+
+    test('a poll on the stored list reads it in full', () async {
+      repository.cachedAt = cachedAt;
+      container = await create();
+      await container.read(shoppingListProvider.future);
+
+      repository.cachedAt = null;
+      await list().poll();
+      expect(repository.fetchedAfter.last, isNull);
+      expect(
+        container.read(shoppingListProvider).requireValue.cachedAt,
+        isNull,
+      );
+    });
+
+    test('the server list replaces the stored one', () async {
+      repository.cachedAt = cachedAt;
+      container = await create();
+      await container.read(shoppingListProvider.future);
+
+      repository.cachedAt = null;
+      await list().refresh();
+      expect(
+        container.read(shoppingListProvider).requireValue.cachedAt,
+        isNull,
+      );
+    });
+  });
+
   test('ignores a remembered supermarket the space no longer has', () async {
     store.write('shopping.supermarket', '99 $testServerUrl');
     await container.read(shoppingSupermarketsProvider.future);

@@ -12,6 +12,7 @@ part of 'meal_type.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
+
 /// @nodoc
 mixin _$MealType {
 
@@ -26,6 +27,8 @@ mixin _$MealType {
 @pragma('vm:prefer-inline')
 $MealTypeCopyWith<MealType> get copyWith => _$MealTypeCopyWithImpl<MealType>(this as MealType, _$identity);
 
+  /// Serializes this MealType to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -34,7 +37,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is MealType&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.order, _this.order) || other.order == _this.order)&&(identical(other.color, _this.color) || other.color == _this.color)&&(identical(other.time, _this.time) || other.time == _this.time));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as MealType;
@@ -217,11 +220,11 @@ return $default(_that.id,_that.name,_that.order,_that.color,_that.time);case _:
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _MealType implements MealType {
   const _MealType({required this.id, required this.name, this.order = 0, this.color, this.time});
-  
+  factory _MealType.fromJson(Map<String, dynamic> json) => _$MealTypeFromJson(json);
 
 @override final  int id;
 @override final  String name;
@@ -239,14 +242,17 @@ class _MealType implements MealType {
 @pragma('vm:prefer-inline')
 _$MealTypeCopyWith<_MealType> get copyWith => __$MealTypeCopyWithImpl<_MealType>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$MealTypeToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
     return identical(this, other) || (other.runtimeType == runtimeType&&other is _MealType&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.order, order) || other.order == order)&&(identical(other.color, color) || other.color == color)&&(identical(other.time, time) || other.time == time));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
     return Object.hash(runtimeType,id,name,order,color,time);

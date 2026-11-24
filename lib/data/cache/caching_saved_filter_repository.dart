@@ -10,10 +10,15 @@ import 'saved_filter_cache.dart';
 /// [SavedFilterCache], which answers when the server can't be reached
 /// ([OfflineFailure]). Changes are only made online (offline is read-only).
 class CachingSavedFilterRepository implements SavedFilterRepository {
-  CachingSavedFilterRepository(this._remote, this._cache);
+  CachingSavedFilterRepository(this._remote, this._cache)
+    : _epoch = _cache.epoch;
 
   final SavedFilterRepository _remote;
   final SavedFilterCache _cache;
+
+  /// [SavedFilterCache.epoch] when this session started: once logout
+  /// cleared the cache, nothing more is stored.
+  final int _epoch;
   var _closed = false;
 
   /// Stops storing lists: the session ended, and logout clears the cache. A
@@ -31,7 +36,9 @@ class CachingSavedFilterRepository implements SavedFilterRepository {
       if (stored == null || stored.isEmpty) rethrow;
       return stored;
     }
-    if (!_closed) unawaited(_ignoreErrors(_cache.putAll(filters)));
+    if (!_closed) {
+      unawaited(_ignoreErrors(_cache.putAll(filters, epoch: _epoch)));
+    }
     return filters;
   }
 

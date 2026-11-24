@@ -1,6 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'meal_type.freezed.dart';
+part 'meal_type.g.dart';
 
 /// A kind of meal a plan is for, such as breakfast or dinner. Meal types
 /// belong to the space: every member sees and can use all of them.
@@ -20,6 +21,9 @@ abstract class MealType with _$MealType {
     /// set.
     Duration? time,
   }) = _MealType;
+
+  factory MealType.fromJson(Map<String, dynamic> json) =>
+      _$MealTypeFromJson(json);
 }
 
 /// The most characters (code points) Tandoor stores in a meal type's name.

@@ -5,6 +5,7 @@ import 'keyword.dart';
 import 'user_ref.dart';
 
 part 'recipe_summary.freezed.dart';
+part 'recipe_summary.g.dart';
 
 /// A recipe in a list, such as a search result. Has no steps; load the
 /// [Recipe] for those.
@@ -35,4 +36,7 @@ abstract class RecipeSummary with _$RecipeSummary {
     UserRef? createdBy,
     DateTime? updatedAt,
   }) = _RecipeSummary;
+
+  factory RecipeSummary.fromJson(Map<String, dynamic> json) =>
+      _$RecipeSummaryFromJson(json);
 }

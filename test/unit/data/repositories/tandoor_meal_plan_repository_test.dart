@@ -102,7 +102,7 @@ void main() {
           expect(query['to_date'], '2026-12-25');
           expect(query['page_size'], '200');
           expect(adapter.requests, hasLength(2));
-          return [for (final plan in list) plan.id];
+          return [for (final plan in list.plans) plan.id];
         }),
         completion([1, 3, 4]),
       );
@@ -124,7 +124,7 @@ void main() {
 
       final list = await plans(adapter).list(monday, sunday);
 
-      expect([for (final plan in list) plan.id], [6, 7, 8, 9]);
+      expect([for (final plan in list.plans) plan.id], [6, 7, 8, 9]);
     });
 
     test('maps an error to a failure', () {

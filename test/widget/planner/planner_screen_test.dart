@@ -14,6 +14,7 @@ import 'package:yumdoor/features/planner/planner_screen.dart';
 
 import '../../fakes/app_overrides.dart';
 import '../../fakes/fake_book_user_repositories.dart';
+import '../../fakes/fake_connectivity_service.dart';
 import '../../fakes/in_memory_local_store.dart';
 import '../../fakes/fake_meal_plan_repository.dart';
 import '../../fakes/fake_recipe_repository.dart';
@@ -73,6 +74,7 @@ void main() {
     ThemeData? theme,
     FakeUserRepository? users,
     InMemoryLocalStore? store,
+    FakeConnectivityService? connectivity,
   }) => pumpRoutes(
     tester,
     // Tall enough for the whole week, whose days are taller with the add
@@ -94,6 +96,7 @@ void main() {
               UserRef(id: 2, name: 'Ben'),
             ]),
         localStore: store,
+        connectivity: connectivity,
       ),
       clockProvider.overrideWithValue(() => now),
     ],
@@ -263,6 +266,85 @@ void main() {
     expect(find.text('Neues Rezept'), findsOneWidget);
   });
 
+  group('offline', () {
+    final cachedAt = DateTime(2026, 11, 17, 19, 30);
+
+    testWidgets('shows the week as last loaded and says when', (tester) async {
+      repository.cachedAt = cachedAt;
+      await pumpPlanner(
+        tester,
+        connectivity: FakeConnectivityService(isOnline: false),
+      );
+
+      expect(find.text('Offline · Stand vom 17. Nov., 19:30'), findsOneWidget);
+      expect(find.text('Linsen-Bolognese'), findsOneWidget);
+      expect(find.text('Pizza bestellen'), findsOneWidget);
+      // Changes stay disabled.
+      final menu = tester.widget<PopupMenuButton<Object?>>(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is PopupMenuButton &&
+              widget.tooltip == 'Optionen für Linsen-Bolognese',
+        ),
+      );
+      expect(menu.enabled, isFalse);
+    });
+
+    testWidgets('loads the week from the server once back online', (
+      tester,
+    ) async {
+      repository.cachedAt = cachedAt;
+      final connectivity = FakeConnectivityService(isOnline: false);
+      await pumpPlanner(tester, connectivity: connectivity);
+      expect(repository.listCalls, hasLength(1));
+
+      repository.cachedAt = null;
+      connectivity.isOnline = true;
+      await tester.pumpAndSettle();
+
+      expect(repository.listCalls, hasLength(2));
+      expect(find.textContaining('Offline · Stand vom'), findsNothing);
+      expect(find.text('Linsen-Bolognese'), findsOneWidget);
+    });
+
+    testWidgets('a cached week after a timeout is read-only and retried', (
+      tester,
+    ) async {
+      // The request timed out: the app doesn't count as offline.
+      repository.cachedAt = cachedAt;
+      await pumpPlanner(tester);
+
+      expect(find.text('Offline · Stand vom 17. Nov., 19:30'), findsOneWidget);
+      final menu = tester.widget<PopupMenuButton<Object?>>(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is PopupMenuButton &&
+              widget.tooltip == 'Optionen für Linsen-Bolognese',
+        ),
+      );
+      expect(menu.enabled, isFalse);
+
+      repository.cachedAt = null;
+      await tester.pump(const Duration(seconds: 15));
+      await tester.pumpAndSettle();
+      expect(repository.listCalls, hasLength(2));
+      expect(find.textContaining('Offline · Stand vom'), findsNothing);
+    });
+
+    testWidgets('a week never loaded says it is offline', (tester) async {
+      final connectivity = FakeConnectivityService(isOnline: false);
+      repository.failure = const OfflineFailure();
+      await pumpPlanner(tester, connectivity: connectivity);
+      expect(find.text('Linsen-Bolognese'), findsNothing);
+
+      // Tried again by itself once the connection is back.
+      repository.failure = null;
+      connectivity.isOnline = true;
+      await tester.pumpAndSettle();
+      expect(find.text('Linsen-Bolognese'), findsOneWidget);
+    });
+  });
+
   group('household', () {
     final users = FakeUserRepository(const [
       UserRef(id: 1, name: 'Anna'),
@@ -347,5 +429,19 @@ void main() {
         );
       });
     }
+
+    testWidgets('offline in light', tags: goldenTags, (tester) async {
+      repository.cachedAt = DateTime(2026, 11, 17, 19, 30);
+      await pumpPlanner(
+        tester,
+        theme: lightTheme,
+        connectivity: FakeConnectivityService(isOnline: false),
+      );
+
+      await expectLater(
+        find.byType(PlannerScreen),
+        matchesGoldenFile('../goldens/planner_offline_light.png'),
+      );
+    });
   });
 }

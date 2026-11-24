@@ -36,6 +36,10 @@ class FakeShoppingRepository implements ShoppingRepository {
 
   /// Whether [fetch] reports the list as cut off at the server's maximum.
   bool truncated = false;
+
+  /// When set, a full [fetch] answers as from the offline cache, read at
+  /// this time ([ShoppingListSnapshot.cachedAt]).
+  DateTime? cachedAt;
   Failure? checkFailure;
 
   /// Whether [checkFailure] fails only the next [setChecked].
@@ -105,6 +109,7 @@ class FakeShoppingRepository implements ShoppingRepository {
       entries: read,
       syncedAt: now,
       truncated: truncated,
+      cachedAt: updatedAfter == null ? cachedAt : null,
     );
   }
 
