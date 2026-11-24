@@ -140,22 +140,30 @@ class RecipeCache implements OfflineCache {
   }
 
   @override
-  Future<void> clear() {
+  Future<void> clear({bool keepShoppingQueue = false}) {
     // Before the transaction starts: writes that read the server before
     // this are dropped, even if they come first.
     _db.clears++;
-    return _clearTables();
+    if (!keepShoppingQueue) _db.queueClears++;
+    return _clearTables(keepShoppingQueue: keepShoppingQueue);
   }
 
-  Future<void> _clearTables() => _db.transaction(() async {
-    // Every table: saved searches, meal plans and the shopping list too.
-    // The editor's drafts aren't
-    // cached server content; DraftStore.clear deletes them.
-    for (final table in _db.allTables) {
-      if (table.actualTableName == _db.editorDrafts.actualTableName) continue;
-      await _db.delete(table).go();
-    }
-  });
+  Future<void> _clearTables({required bool keepShoppingQueue}) =>
+      _db.transaction(() async {
+        // Every table: saved searches, meal plans and the shopping list too,
+        // and the check-offs not sent yet unless kept (logout asks before
+        // it drops them). The editor's drafts aren't cached server content;
+        // DraftStore.clear deletes them.
+        for (final table in _db.allTables) {
+          final name = table.actualTableName;
+          if (name == _db.editorDrafts.actualTableName) continue;
+          if (keepShoppingQueue &&
+              name == _db.pendingShoppingChecks.actualTableName) {
+            continue;
+          }
+          await _db.delete(table).go();
+        }
+      });
 
   /// The recipe in [row], or `null` (and the row deleted) if it can't be
   /// read, which only happens if a model changed without a new cache version.

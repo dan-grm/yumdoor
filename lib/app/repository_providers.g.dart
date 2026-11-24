@@ -926,3 +926,65 @@ final class DraftStoreProvider
 }
 
 String _$draftStoreHash() => r'b1fbc2dbd22756bef3e83cc5464a7e8167ea975c';
+
+/// The shopping check-offs made offline and not sent yet, in the offline
+/// cache's database, for the session's server. One per session, like the
+/// repositories: logout clears them; a session ended because the token was
+/// rejected leaves them to the next login to the same server.
+
+@ProviderFor(shoppingCheckQueue)
+final shoppingCheckQueueProvider = ShoppingCheckQueueProvider._();
+
+/// The shopping check-offs made offline and not sent yet, in the offline
+/// cache's database, for the session's server. One per session, like the
+/// repositories: logout clears them; a session ended because the token was
+/// rejected leaves them to the next login to the same server.
+
+final class ShoppingCheckQueueProvider
+    extends
+        $FunctionalProvider<
+          ShoppingCheckQueue,
+          ShoppingCheckQueue,
+          ShoppingCheckQueue
+        >
+    with $Provider<ShoppingCheckQueue> {
+  /// The shopping check-offs made offline and not sent yet, in the offline
+  /// cache's database, for the session's server. One per session, like the
+  /// repositories: logout clears them; a session ended because the token was
+  /// rejected leaves them to the next login to the same server.
+  ShoppingCheckQueueProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'shoppingCheckQueueProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$shoppingCheckQueueHash();
+
+  @$internal
+  @override
+  $ProviderElement<ShoppingCheckQueue> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ShoppingCheckQueue create(Ref ref) {
+    return shoppingCheckQueue(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ShoppingCheckQueue value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ShoppingCheckQueue>(value),
+    );
+  }
+}
+
+String _$shoppingCheckQueueHash() =>
+    r'f96c0d78e53f92c8f0292f594591eca917ff3b9b';

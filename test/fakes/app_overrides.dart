@@ -19,6 +19,7 @@ import 'fake_offline_cache.dart';
 import 'fake_recipe_repository.dart';
 import 'fake_saved_filter_repository.dart';
 import 'fake_server_repository.dart';
+import 'fake_shopping_check_queue.dart';
 import 'fake_shopping_repository.dart';
 import 'fake_unload_guard.dart';
 import 'in_memory_local_store.dart';
@@ -53,6 +54,7 @@ List<Override> appOverrides({
   FakeMealPlanRepository? mealPlans,
   FakeMealTypeRepository? mealTypes,
   FakeShoppingRepository? shopping,
+  FakeShoppingCheckQueue? shoppingQueue,
   FakeOfflineCache? offlineCache,
   FakeDraftStore? drafts,
   FakeUnloadGuard? unloadGuard,
@@ -91,6 +93,9 @@ List<Override> appOverrides({
   ),
   shoppingRepositoryProvider.overrideWithValue(
     shopping ?? FakeShoppingRepository(),
+  ),
+  shoppingCheckQueueProvider.overrideWithValue(
+    shoppingQueue ?? FakeShoppingCheckQueue(),
   ),
   offlineCacheProvider.overrideWithValue(offlineCache ?? FakeOfflineCache()),
   draftStoreProvider.overrideWithValue(drafts ?? FakeDraftStore()),

@@ -153,6 +153,8 @@ void main() {
       expect(store.token, isNull);
       expect(store.serverUrl, testServerUrl);
       expect(offlineCache.clearCount, 1);
+      // The user was asked before (confirmAndLogout).
+      expect(offlineCache.keptShoppingQueue, isFalse);
       expect(drafts.clearCount, 1);
     });
 
@@ -192,6 +194,8 @@ void main() {
       expect(store.token, isNull);
       expect(store.serverUrl, testServerUrl);
       expect(offlineCache.clearCount, 1);
+      // Nobody was asked: unsent check-offs wait for the next login.
+      expect(offlineCache.keptShoppingQueue, isTrue);
       expect(drafts.clearCount, 1);
     });
 

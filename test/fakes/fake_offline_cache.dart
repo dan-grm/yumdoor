@@ -9,12 +9,16 @@ class FakeOfflineCache implements OfflineCache {
   final Map<Uri, Uint8List> images;
   int clearCount = 0;
 
+  /// The `keepShoppingQueue` of the last [clear].
+  bool? keptShoppingQueue;
+
   @override
   Future<Uint8List?> image(Uri url) async => images[url];
 
   @override
-  Future<void> clear() async {
+  Future<void> clear({bool keepShoppingQueue = false}) async {
     clearCount++;
+    keptShoppingQueue = keepShoppingQueue;
     images.clear();
   }
 }
