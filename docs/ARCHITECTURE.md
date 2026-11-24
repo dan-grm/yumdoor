@@ -206,13 +206,14 @@ shows the origin and explains the constraint.
   `cached_value`, like the supermarkets. Full reads replace it, incremental reads are merged into it, and check-offs,
   added items and deletions are applied once the server accepted them; recipes added to the list come with the next
   read. A read that answers late can't undo that: a full read older than the stored one is dropped, and no read touches
-  entries changed on the device after it started. Offline, a full read answers from it (`ShoppingListSnapshot.cachedAt`, "Offline · Stand vom …" on the list);
+  entries changed on the device, or stored from a newer read, after it started; `syncedAt` never goes back. Offline, a full read answers from it (`ShoppingListSnapshot.cachedAt`, "Offline · Stand vom …" on the list);
   an incremental read fails, pull to refresh on a list already shown says the server can't be reached, and the first
   poll once the server answers reads the list in full. The cache
   holds only what the server has, so the offline check-off queue (#116) can live in a table of its own and be shown on
   top of it.
-- Each cache write notes `CacheDatabase.clears` before it asks the server and stores nothing if logout cleared the
-  cache since, so a read that ends late can't bring back the previous user's plans or list.
+- The caching repositories note `CacheDatabase.clears` when their session starts and store nothing once logout
+  cleared the cache, so a request that ends late (or starts before the session's repositories are gone) can't bring
+  back the previous user's recipes, plans or list.
 - `ConnectivityService` plus requests drive the `isOffline` provider (`lib/app/offline.dart`): a request that can't
   connect sets it, any answer from the server (errors included) or the network coming back clears it. When offline,
   a banner is shown on every screen (`MaterialApp.builder`) and write actions are disabled (not hidden) through

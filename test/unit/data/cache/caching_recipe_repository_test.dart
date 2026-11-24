@@ -485,7 +485,7 @@ void main() {
     final updated = DateTime.utc(2026, 10, 1, 9);
 
     test('stores a planned recipe with its image', () async {
-      await repository.keepOffline(_karotten.summary, epoch: cache.epoch);
+      await repository.keepOffline(_karotten.summary);
 
       expect(await cache.get(7), _karotten);
       expect(downloads, [_image]);
@@ -493,11 +493,21 @@ void main() {
     });
 
     test('stores nothing once the cache was cleared', () async {
-      final epoch = cache.epoch;
       await cache.clear();
 
-      await repository.keepOffline(_karotten.summary, epoch: epoch);
-      expect(await cache.get(7), isNull);
+      await repository.keepOffline(_karotten.summary);
+      await repository.fetchRecipe(8);
+      await pumpEventQueue();
+      expect(await cache.all(), isEmpty);
+    });
+
+    test('a second call waits for the first', () async {
+      final first = repository.keepOffline(_karotten.summary);
+      await repository.keepOffline(_karotten.summary);
+
+      expect(await cache.get(7), _karotten);
+      await first;
+      expect(remote.fetchCount, 1);
     });
 
     test('skips a recipe stored as it is on the server', () async {
@@ -507,7 +517,6 @@ void main() {
 
       await repository.keepOffline(
         _karotten.summary.copyWith(updatedAt: updated),
-        epoch: cache.epoch,
       );
       expect(remote.fetchCount, fetches);
     });
@@ -521,7 +530,7 @@ void main() {
       );
       remote.recipes[7] = changed;
 
-      await repository.keepOffline(changed.summary, epoch: cache.epoch);
+      await repository.keepOffline(changed.summary);
       expect((await cache.get(7))?.name, 'Ofenkarotten mit Honig');
     });
 
@@ -530,7 +539,7 @@ void main() {
       remote.failure = const OfflineFailure();
 
       await expectLater(
-        repository.keepOffline(_karotten.summary, epoch: cache.epoch),
+        repository.keepOffline(_karotten.summary),
         throwsA(isA<OfflineFailure>()),
       );
     });

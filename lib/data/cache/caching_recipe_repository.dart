@@ -22,11 +22,19 @@ import 'recipe_cache.dart';
 /// Every recipe fetched is stored, with its image if [downloadImage] is
 /// given. Search results are not stored; offline search goes through the
 /// stored recipes instead.
+///
+/// One repository serves one session: once the cache is cleared (logout),
+/// it stores nothing more, so a request that ends late can't bring the
+/// previous user's recipes back.
 class CachingRecipeRepository implements RecipeRepository {
-  CachingRecipeRepository(this._remote, this._cache, {this.downloadImage});
+  CachingRecipeRepository(this._remote, this._cache, {this.downloadImage})
+    : _epoch = _cache.epoch;
 
   final RecipeRepository _remote;
   final RecipeCache _cache;
+
+  /// `RecipeCache.epoch` when this session started.
+  final int _epoch;
 
   /// The image at a URL, `null` if it shouldn't be stored. May throw.
   final Future<Uint8List?> Function(Uri url)? downloadImage;
@@ -49,35 +57,37 @@ class CachingRecipeRepository implements RecipeRepository {
     return recipe;
   }
 
-  /// The recipes [keepOffline] is fetching.
-  final _keeping = <int>{};
+  /// The recipes [keepOffline] is storing, by id.
+  final _keeping = <int, Future<void>>{};
 
   /// Stores the recipe [summary] stands for, with its image, for recipes
   /// the user is likely to open, such as the planned ones; returns once both
-  /// are stored. A stored copy as new as [RecipeSummary.updatedAt] is left
-  /// as it is (and doesn't count as opened). Nothing is stored once the
-  /// cache was cleared since [epoch] (`RecipeCache.epoch`). Throws a
-  /// [Failure] if the recipe can't be fetched.
-  Future<void> keepOffline(RecipeSummary summary, {required int epoch}) async {
+  /// are stored (or the same recipe being stored already is). A stored copy
+  /// as new as [RecipeSummary.updatedAt] is left as it is (and doesn't count
+  /// as opened). Throws a [Failure] if the recipe can't be fetched.
+  Future<void> keepOffline(RecipeSummary summary) {
     final id = summary.id;
-    if (!_keeping.add(id)) return;
-    try {
-      if (_cache.epoch != epoch) return;
-      final updatedAt = summary.updatedAt;
-      if (updatedAt != null && await _cache.has(id, updatedAt: updatedAt)) {
-        return;
-      }
-      final Recipe recipe;
-      try {
-        recipe = await _remote.fetchRecipe(id);
-      } on NotFoundFailure {
-        await _ignoreErrors(_cache.remove(id));
-        rethrow;
-      }
-      await _storeImage(await _store(recipe, epoch: epoch), epoch: epoch);
-    } finally {
+    return _keeping[id] ??= _keepOffline(summary).whenComplete(() {
+      // A block: returning the removed future would wait for itself.
       _keeping.remove(id);
+    });
+  }
+
+  Future<void> _keepOffline(RecipeSummary summary) async {
+    final id = summary.id;
+    if (_cache.epoch != _epoch) return;
+    final updatedAt = summary.updatedAt;
+    if (updatedAt != null && await _cache.has(id, updatedAt: updatedAt)) {
+      return;
     }
+    final Recipe recipe;
+    try {
+      recipe = await _remote.fetchRecipe(id);
+    } on NotFoundFailure {
+      await _ignoreErrors(_cache.remove(id));
+      rethrow;
+    }
+    await _storeImage(await _store(recipe));
   }
 
   @override
@@ -195,27 +205,27 @@ class CachingRecipeRepository implements RecipeRepository {
     return recipe;
   }
 
-  /// Stores [recipe] and returns it as stored. With an [epoch], only if
-  /// the cache wasn't cleared since.
-  Future<Recipe> _store(Recipe recipe, {int? epoch}) async {
+  /// Stores [recipe], unless the cache was cleared since this session
+  /// started, and returns it as stored.
+  Future<Recipe> _store(Recipe recipe) async {
     // A missing date usually means the cook log couldn't be read (see
     // TandoorRecipeRepository.lastCooked); keep the one stored before.
     if (recipe.lastCooked == null) {
       final stored = (await _cache.get(recipe.id))?.lastCooked;
       if (stored != null) recipe = recipe.copyWith(lastCooked: stored);
     }
-    await _cache.put(recipe, epoch: epoch);
+    await _cache.put(recipe, epoch: _epoch);
     return recipe;
   }
 
-  Future<void> _storeImage(Recipe recipe, {int? epoch}) async {
+  Future<void> _storeImage(Recipe recipe) async {
     final url = recipe.image;
     final download = downloadImage;
     if (download == null || url == null) return;
     if (!url.isScheme('https') && !url.isScheme('http')) return;
     if (await _cache.hasImage(url)) return;
     final bytes = await download(url);
-    if (bytes != null) await _cache.putImage(url, bytes, epoch: epoch);
+    if (bytes != null) await _cache.putImage(url, bytes, epoch: _epoch);
   }
 }
 

@@ -182,6 +182,18 @@ void main() {
       expect(await cache.supermarkets(), isNull);
     });
 
+    test('stores an entry that comes twice once', () async {
+      final list = mockupShoppingList();
+      await cache.putList(
+        snapshot([...list, list[0].copyWith(amount: 9)]),
+        epoch: cache.epoch,
+      );
+
+      final stored = (await cache.list())!.entries;
+      expect(stored, hasLength(list.length));
+      expect(stored.firstWhere((e) => e.id == list[0].id).amount, 9);
+    });
+
     test('leaves out entries it cannot read', () async {
       await cache.putList(snapshot(mockupShoppingList()), epoch: cache.epoch);
       await db.customStatement(
@@ -333,6 +345,28 @@ void main() {
       // rather than showing an old state.
       final stored = {for (final e in (await offlineRead()).entries) e.id: e};
       expect(stored[101]?.checked ?? true, isTrue);
+    });
+
+    test('an older full read keeps what a newer poll stored', () async {
+      await repository.fetch();
+      await pumpEventQueue();
+      final older = Completer<void>();
+      remote.fetchGates.add(older);
+      final full = repository.fetch();
+      remote.entries[0] = remote.entries[0].copyWith(
+        checked: true,
+        updatedAt: DateTime.utc(2026, 11, 18, 11, 30),
+      );
+      final later = DateTime.utc(2026, 11, 18, 11, 59);
+      remote.now = later;
+      await repository.fetch(updatedAfter: DateTime.utc(2026, 11, 18, 11));
+      older.complete();
+      await full;
+      await pumpEventQueue();
+
+      final stored = await offlineRead();
+      expect(stored.entries.first.checked, isTrue);
+      expect(stored.syncedAt, later);
     });
 
     test('an older full read that answers last is dropped', () async {

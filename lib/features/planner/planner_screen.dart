@@ -147,7 +147,10 @@ class PlannerScreen extends ConsumerWidget {
               onlyMine: onlyMine,
               onChanged: ref.read(plannerOnlyMineProvider.notifier).set,
             ),
-            if (plans.value?.cachedAt case final cachedAt?)
+            if (plans case AsyncData(
+              value: MealPlanList(:final cachedAt?),
+              isLoading: false,
+            ))
               Padding(
                 padding: EdgeInsets.fromLTRB(t.space5, t.space2, t.space5, 0),
                 child: OfflineAsOf(

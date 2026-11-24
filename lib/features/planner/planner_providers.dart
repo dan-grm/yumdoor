@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -35,19 +33,14 @@ Future<MealPlanList> weekPlans(Ref ref, CalendarDay start) async {
   return plans;
 }
 
-/// Loads [ref]'s provider again once the server can be reached, at once if
-/// another request found it reachable meanwhile (the request that failed
-/// reported it unreachable).
+/// Loads [ref]'s provider again once the server can be reached.
+///
+/// Only on a change: a request that timed out fails offline without the
+/// app counting as offline, and reloading at once would just wait again.
 void _reloadOnline(Ref ref) {
   ref.listen(isOfflineProvider, (_, offline) {
     if (!offline) ref.invalidateSelf();
   });
-  if (!ref.read(isOfflineProvider)) {
-    // After this build has ended.
-    scheduleMicrotask(() {
-      if (ref.mounted) ref.invalidateSelf();
-    });
-  }
 }
 
 Duration? _noRetry(int retryCount, Object error) => null;

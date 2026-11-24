@@ -153,8 +153,7 @@ void main() {
       repository = CachingMealPlanRepository(
         remote,
         cache,
-        storeRecipe: (recipe, {required epoch}) async {
-          expect(epoch, cache.epoch);
+        storeRecipe: (recipe) async {
           storedRecipes.add(recipe.id);
         },
         clock: () => DateTime(2026, 11, 16, 20),
@@ -218,7 +217,7 @@ void main() {
       repository = CachingMealPlanRepository(
         remote,
         cache,
-        storeRecipe: (recipe, {required epoch}) async {
+        storeRecipe: (recipe) async {
           storedRecipes.add(recipe.id);
           if (recipe.id == 101) throw const ServerFailure();
         },
@@ -234,8 +233,7 @@ void main() {
       repository = CachingMealPlanRepository(
         remote,
         cache,
-        storeRecipe: (recipe, {required epoch}) async =>
-            storedRecipes.add(recipe.id),
+        storeRecipe: (recipe) async => storedRecipes.add(recipe.id),
         clock: () => DateTime(2026, 11, 17, 8),
       );
 
@@ -253,7 +251,7 @@ void main() {
       repository = CachingMealPlanRepository(
         remote,
         cache,
-        storeRecipe: (recipe, {required epoch}) async {
+        storeRecipe: (recipe) async {
           storedRecipes.add(recipe.id);
           await RecipeCache(db).clear();
         },

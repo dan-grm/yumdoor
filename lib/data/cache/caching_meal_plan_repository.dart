@@ -23,17 +23,20 @@ class CachingMealPlanRepository implements MealPlanRepository {
     this._cache, {
     this.storeRecipe,
     DateTime Function()? clock,
-  }) : _now = clock ?? DateTime.now;
+  }) : _now = clock ?? DateTime.now,
+       _epoch = _cache.epoch;
 
   final MealPlanRepository _remote;
   final MealPlanCache _cache;
   final DateTime Function() _now;
 
-  /// Stores a planned recipe for offline use, unless the cache was cleared
-  /// since `epoch` ([MealPlanCache.epoch]); returns once it is stored. May
-  /// throw.
-  final Future<void> Function(RecipeSummary recipe, {required int epoch})?
-  storeRecipe;
+  /// [MealPlanCache.epoch] when this session started: once logout cleared
+  /// the cache, nothing more is stored.
+  final int _epoch;
+
+  /// Stores a planned recipe for offline use and returns once it is stored.
+  /// May throw.
+  final Future<void> Function(RecipeSummary recipe)? storeRecipe;
 
   var _closed = false;
 
@@ -42,7 +45,6 @@ class CachingMealPlanRepository implements MealPlanRepository {
 
   @override
   Future<MealPlanList> list(CalendarDay from, CalendarDay to) async {
-    final epoch = _cache.epoch;
     final MealPlanList list;
     try {
       list = await _remote.list(from, to);
@@ -50,14 +52,14 @@ class CachingMealPlanRepository implements MealPlanRepository {
       return await _readCache(from, to) ?? (throw const OfflineFailure());
     }
     if (!_closed) {
-      unawaited(_ignoreErrors(_cache.put(from, to, list.plans, epoch: epoch)));
-      unawaited(_ignoreErrors(_storeRecipes(list.plans, epoch)));
+      unawaited(_ignoreErrors(_cache.put(from, to, list.plans, epoch: _epoch)));
+      unawaited(_ignoreErrors(_storeRecipes(list.plans)));
     }
     return list;
   }
 
   /// One after another, so a week doesn't send a burst of requests.
-  Future<void> _storeRecipes(List<MealPlan> plans, int epoch) async {
+  Future<void> _storeRecipes(List<MealPlan> plans) async {
     final store = storeRecipe;
     if (store == null) return;
     final today = CalendarDay.of(_now());
@@ -67,8 +69,8 @@ class CachingMealPlanRepository implements MealPlanRepository {
           recipe.id: recipe,
     };
     for (final recipe in recipes.values) {
-      if (_closed || _cache.epoch != epoch) return;
-      await _ignoreErrors(store(recipe, epoch: epoch));
+      if (_closed || _cache.epoch != _epoch) return;
+      await _ignoreErrors(store(recipe));
     }
   }
 
