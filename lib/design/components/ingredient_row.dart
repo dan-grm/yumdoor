@@ -19,7 +19,12 @@ class IngredientRow extends StatelessWidget {
     this.done = false,
     this.onToggle,
     this.toggleLabel = '',
+    this.status = '',
   }) : assert(onToggle == null || toggleLabel != '');
+
+  /// A state of the row under the note, with a sync icon ("wird
+  /// synchronisiert"), empty if none.
+  final String status;
 
   /// "Kreuzkümmel, gemahlen".
   final String name;
@@ -71,6 +76,23 @@ class IngredientRow extends StatelessWidget {
                     ),
                     if (note.isNotEmpty)
                       Text(note, style: t.caption.copyWith(color: t.inkMuted)),
+                    if (status.isNotEmpty)
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.sync_rounded,
+                            size: t.caption.fontSize,
+                            color: t.inkMuted,
+                          ),
+                          SizedBox(width: t.space1),
+                          Flexible(
+                            child: Text(
+                              status,
+                              style: t.caption.copyWith(color: t.inkMuted),
+                            ),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),
@@ -93,7 +115,7 @@ class IngredientRow extends StatelessWidget {
     return Semantics(
       checked: done,
       label: toggleLabel,
-      value: [amount, note].where((part) => part.isNotEmpty).join(', '),
+      value: [amount, note, status].where((part) => part.isNotEmpty).join(', '),
       onTap: onToggle,
       excludeSemantics: true,
       child: InkWell(

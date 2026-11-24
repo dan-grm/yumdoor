@@ -8,12 +8,14 @@ import 'package:yumdoor/app/router.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/domain/models/user_ref.dart';
+import 'package:yumdoor/domain/repositories/shopping_check_queue.dart';
 import 'package:yumdoor/features/shopping/shopping_screen.dart';
 import 'package:yumdoor/features/shopping/shopping_sync.dart';
 
 import '../../fakes/app_overrides.dart';
 import '../../fakes/fake_book_user_repositories.dart';
 import '../../fakes/fake_connectivity_service.dart';
+import '../../fakes/fake_shopping_check_queue.dart';
 import '../../fakes/fake_shopping_repository.dart';
 import '../../fakes/in_memory_local_store.dart';
 import '../../fixtures/shopping.dart';
@@ -26,6 +28,7 @@ void main() {
 
   late FakeShoppingRepository repository;
   late InMemoryLocalStore store;
+  late FakeShoppingCheckQueue queue;
 
   /// What remembers Markt am Eck on the test server.
   final storedChoice = '${marketAmEck.id} $testServerUrl';
@@ -36,6 +39,7 @@ void main() {
       supermarketList: const [marketAmEck, bioladen],
     );
     store = InMemoryLocalStore();
+    queue = FakeShoppingCheckQueue();
   });
 
   Future<GoRouter> pumpList(
@@ -51,6 +55,7 @@ void main() {
     overrides: [
       ...appOverrides(
         shopping: repository,
+        shoppingQueue: queue,
         localStore: store,
         connectivity: connectivity,
         tokenStore: loggedInTokenStore(),
@@ -155,44 +160,46 @@ void main() {
   });
 
   testWidgets('a failed check-off goes back and says why', (tester) async {
-    repository.checkFailure = const OfflineFailure();
+    repository.checkFailure = const ServerFailure(statusCode: 500);
     await pumpList(tester);
 
     await tester.tap(find.text('Feta'));
     await tester.pumpAndSettle();
 
-    expect(
-      find.text(
-        'Feta nicht abgehakt. Der Server ist gerade nicht erreichbar. '
-        'Prüf deine Verbindung.',
-      ),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Feta nicht abgehakt.'), findsOneWidget);
     expect(find.text('Erledigt · 3'), findsOneWidget);
     expect(row('Feta'), findsOneWidget);
     expect(find.text('Geteilt mit deinem Haushalt · 7 offen'), findsOneWidget);
   });
 
-  testWidgets('offline, ticking is disabled and says why', (tester) async {
-    final connectivity = FakeConnectivityService(isOnline: false);
-    await pumpList(tester, connectivity: connectivity);
+  testWidgets('a check-off the server can not get waits on the device', (
+    tester,
+  ) async {
+    repository
+      ..checkFailure = const OfflineFailure()
+      ..checkFailsOnce = true;
+    await pumpList(tester, size: const Size(390, 1400));
 
     await tester.tap(find.text('Feta'));
     await tester.pumpAndSettle();
 
-    expect(repository.checkCalls, isEmpty);
-    expect(
-      find.textContaining('Offline kannst du nichts ändern'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('nicht abgehakt'), findsNothing);
+    expect(find.text('Erledigt · 4'), findsOneWidget);
+    expect(find.text('1 Änderung noch nicht gesendet'), findsOneWidget);
+    expect(queue.pending.keys, [105]);
   });
 
   testWidgets(
-    'offline, shows the list as last loaded; ticking stays disabled',
+    'offline, ticking works and is sent once back online; the rest is '
+    'disabled',
     (tester) async {
       repository.cachedAt = DateTime(2026, 11, 17, 19, 30);
       final connectivity = FakeConnectivityService(isOnline: false);
-      await pumpList(tester, connectivity: connectivity);
+      await pumpList(
+        tester,
+        connectivity: connectivity,
+        size: const Size(390, 1400),
+      );
 
       expect(find.text('Offline · Stand vom 17. Nov., 19:30'), findsOneWidget);
       expect(
@@ -201,17 +208,47 @@ void main() {
       );
       await tester.tap(find.text('Feta'));
       await tester.pumpAndSettle();
+
+      // Moved to Erledigt, marked as waiting, nothing sent.
       expect(repository.checkCalls, isEmpty);
+      expect(find.text('Feta abgehakt'), findsOneWidget);
+      expect(
+        find.text('Geteilt mit deinem Haushalt · 6 offen'),
+        findsOneWidget,
+      );
+      expect(find.text('1 Änderung noch nicht gesendet'), findsOneWidget);
+      expect(find.text('Erledigt · 4'), findsOneWidget);
+      await tester.tap(find.text('Erledigt · 4'));
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: row('Feta'),
+          matching: find.text('wird synchronisiert'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('wird synchronisiert'), findsOneWidget);
+
+      // The other changes still need a connection.
+      await tester.tap(find.byTooltip('Mehr zu Karotten'));
+      await tester.pumpAndSettle();
+      expect(find.text('Habe ich da'), findsNothing);
       expect(
         find.textContaining('Offline kannst du nichts ändern'),
         findsOneWidget,
       );
 
-      // Back online: read from the server, and the note goes.
+      // Back online: sent, read from the server, and the marks go.
       repository.cachedAt = null;
       connectivity.isOnline = true;
       await tester.pumpAndSettle();
+      expect(repository.checkCalls.single.ids, {105});
+      expect(repository.checkCalls.single.checked, isTrue);
       expect(find.textContaining('Offline · Stand vom'), findsNothing);
+      expect(find.text('wird synchronisiert'), findsNothing);
+      expect(find.textContaining('noch nicht gesendet'), findsNothing);
+      expect(find.text('Erledigt · 4'), findsOneWidget);
+      expect(queue.pending, isEmpty);
     },
   );
 
@@ -405,11 +442,13 @@ void main() {
     expect(repository.fetchedAfter.last, isNull);
   });
 
-  testWidgets('undo after going offline is disabled and says why', (
-    tester,
-  ) async {
+  testWidgets('undo after going offline waits on the device', (tester) async {
     final connectivity = FakeConnectivityService();
-    await pumpList(tester, connectivity: connectivity);
+    await pumpList(
+      tester,
+      connectivity: connectivity,
+      size: const Size(390, 1400),
+    );
 
     await tester.tap(find.text('Feta'));
     await tester.pumpAndSettle();
@@ -419,10 +458,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.checkCalls, hasLength(1));
-    expect(
-      find.textContaining('Offline kannst du nichts ändern'),
-      findsOneWidget,
-    );
+    expect(row('Feta'), findsOneWidget);
+    expect(find.text('Erledigt · 3'), findsOneWidget);
+    expect(find.text('wird synchronisiert'), findsOneWidget);
+
+    connectivity.isOnline = true;
+    await tester.pumpAndSettle();
+    expect(repository.checkCalls.last.ids, {105});
+    expect(repository.checkCalls.last.checked, isFalse);
+    expect(find.text('wird synchronisiert'), findsNothing);
   });
 
   testWidgets('a failed read is tried again when the tab comes back', (
@@ -468,5 +512,32 @@ void main() {
         matchesGoldenFile('../goldens/shopping_list_offline_light.png'),
       );
     });
+
+    testWidgets(
+      'offline with a change not sent yet in light',
+      tags: goldenTags,
+      (tester) async {
+        store.write('shopping.supermarket', storedChoice);
+        repository.cachedAt = DateTime(2026, 11, 17, 19, 30);
+        // Olivenöl put back on the list offline, before a restart.
+        queue.pending[109] = PendingCheck(
+          checked: false,
+          at: DateTime.utc(2026, 11, 18, 11),
+        );
+        await pumpList(
+          tester,
+          theme: lightTheme,
+          size: const Size(390, 1100),
+          connectivity: FakeConnectivityService(isOnline: false),
+        );
+
+        expect(find.text('1 Änderung noch nicht gesendet'), findsOneWidget);
+        expect(find.text('wird synchronisiert'), findsOneWidget);
+        await expectLater(
+          find.byType(ShoppingScreen),
+          matchesGoldenFile('../goldens/shopping_list_pending_light.png'),
+        );
+      },
+    );
   });
 }

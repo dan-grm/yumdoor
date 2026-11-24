@@ -1,10 +1,15 @@
 @Tags(['integration'])
 library;
 
+import 'package:drift/drift.dart' show driftRuntimeOptions;
+import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/data/api/tandoor_dio.dart';
+import 'package:yumdoor/data/cache/cache_database.dart';
+import 'package:yumdoor/data/cache/shopping_check_cache.dart';
 import 'package:yumdoor/data/repositories/tandoor_repositories.dart';
 import 'package:yumdoor/domain/models/calendar_day.dart';
 import 'package:yumdoor/domain/models/meal_plan.dart';
@@ -14,12 +19,15 @@ import 'package:yumdoor/domain/models/shopping.dart';
 import 'package:yumdoor/features/shopping/shopping_providers.dart';
 
 import '../../tool/seed/data.dart';
+import '../fakes/fake_connectivity_service.dart';
+import '../fakes/fake_shopping_check_queue.dart';
 import 'seeded_tandoor.dart';
 
 // Other test files run at the same time and may change entries of meal plans
 // on the shopping list, so the checks on what changed look only at the items
 // added by hand.
 void main() {
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
   final tandoor = SeededTandoor.load();
   late TandoorRepositories anna;
   late TandoorRepositories ben;
@@ -392,7 +400,10 @@ void main() {
     final first = await ben.shopping.addItem(mozzarella.food!.id, 1);
     final added = <ShoppingEntry>[first];
     final annasPhone = ProviderContainer(
-      overrides: [shoppingRepositoryProvider.overrideWithValue(anna.shopping)],
+      overrides: [
+        shoppingRepositoryProvider.overrideWithValue(anna.shopping),
+        shoppingCheckQueueProvider.overrideWithValue(FakeShoppingCheckQueue()),
+      ],
     );
     try {
       ShoppingEntry? shown(int id) {
@@ -425,6 +436,65 @@ void main() {
     } finally {
       annasPhone.dispose();
       await ben.shopping.deleteEntries(added);
+    }
+  });
+
+  // Here for the same reason as the test above.
+  test('check-offs made offline are sent once back online', () async {
+    final recipe = await salad();
+    final mozzarella = recipe.steps
+        .expand((s) => s.ingredients)
+        .singleWhere((i) => i.food?.name == 'Mozzarella');
+    final kept = await ben.shopping.addItem(mozzarella.food!.id, 4);
+    final deleted = await ben.shopping.addItem(mozzarella.food!.id, 5);
+    final db = CacheDatabase(NativeDatabase.memory());
+    final queue = ShoppingCheckCache(db, server: tandoor.baseUrl);
+    final connectivity = FakeConnectivityService();
+    final annasPhone = ProviderContainer(
+      overrides: [
+        shoppingRepositoryProvider.overrideWithValue(anna.shopping),
+        shoppingCheckQueueProvider.overrideWithValue(queue),
+        connectivityServiceProvider.overrideWithValue(connectivity),
+      ],
+    );
+    try {
+      annasPhone.listen(shoppingListProvider, (_, _) {});
+      await annasPhone.read(shoppingListProvider.future);
+      final list = annasPhone.read(shoppingListProvider.notifier);
+
+      connectivity.isOnline = false;
+      expect(
+        await list.setChecked([kept.id, deleted.id], checked: true),
+        isNull,
+      );
+      expect((await queue.read()).keys, unorderedEquals([kept.id, deleted.id]));
+      Future<ShoppingEntry?> asBenSees(int id) async {
+        for (final entry in (await ben.shopping.fetch()).entries) {
+          if (entry.id == id) return entry;
+        }
+        return null;
+      }
+
+      expect((await asBenSees(kept.id))!.checked, isFalse);
+      // Ben deletes one of them meanwhile.
+      await ben.shopping.deleteEntries([deleted]);
+
+      connectivity.isOnline = true;
+      for (var i = 0; i < 50 && (await queue.read()).isNotEmpty; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+
+      expect(await queue.read(), isEmpty);
+      expect((await asBenSees(kept.id))!.checked, isTrue);
+      expect(await asBenSees(deleted.id), isNull);
+      expect(
+        annasPhone.read(shoppingListProvider).requireValue.pendingIds,
+        isEmpty,
+      );
+    } finally {
+      annasPhone.dispose();
+      await db.close();
+      await ben.shopping.deleteEntries([kept, deleted]);
     }
   });
 }

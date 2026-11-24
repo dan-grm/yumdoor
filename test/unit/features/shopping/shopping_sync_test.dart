@@ -10,6 +10,7 @@ import 'package:yumdoor/features/shopping/shopping_providers.dart';
 import 'package:yumdoor/features/shopping/shopping_sync.dart';
 
 import '../../../fakes/app_overrides.dart';
+import '../../../fakes/fake_shopping_check_queue.dart';
 import '../../../fakes/fake_shopping_repository.dart';
 import '../../../fakes/in_memory_local_store.dart';
 import '../../../fixtures/shopping.dart';
@@ -205,6 +206,9 @@ void main() {
         overrides: [
           tokenStoreProvider.overrideWithValue(loggedInTokenStore()),
           shoppingRepositoryProvider.overrideWithValue(repository),
+          shoppingCheckQueueProvider.overrideWithValue(
+            FakeShoppingCheckQueue(),
+          ),
           localStoreProvider.overrideWithValue(InMemoryLocalStore()),
           clockProvider.overrideWithValue(() => repository.now),
         ],

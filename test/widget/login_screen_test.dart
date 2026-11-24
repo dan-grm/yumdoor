@@ -3,13 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/app/app.dart';
 import 'package:yumdoor/core/failures.dart';
+import 'package:yumdoor/domain/repositories/shopping_check_queue.dart';
 import 'package:yumdoor/features/auth/login_screen.dart';
 import 'package:yumdoor/features/search/search_screen.dart';
 
 import '../fakes/app_overrides.dart';
 import '../fakes/fake_auth_repository.dart';
+import '../fakes/fake_offline_cache.dart';
 import '../fakes/fake_server_repository.dart';
+import '../fakes/fake_shopping_check_queue.dart';
+import '../fakes/fake_shopping_repository.dart';
 import '../fakes/in_memory_token_store.dart';
+import '../fixtures/shopping.dart';
 
 void main() {
   late InMemoryTokenStore store;
@@ -235,6 +240,65 @@ void main() {
         testServerUrl.toString(),
       );
     });
+  });
+
+  testWidgets('logout asks before it drops check-offs not sent yet', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    tester.platformDispatcher.localesTestValue = const [Locale('de')];
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    final tokens = loggedInTokenStore();
+    final offlineCache = FakeOfflineCache();
+    // Ticked off offline; the server can't be reached to send it.
+    final shopping = FakeShoppingRepository(entries: mockupShoppingList())
+      ..checkFailure = const OfflineFailure();
+    final queue = FakeShoppingCheckQueue({
+      105: PendingCheck(checked: true, at: DateTime.utc(2026, 11, 18, 12)),
+    });
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: appOverrides(
+          tokenStore: tokens,
+          auth: auth,
+          server: server,
+          shopping: shopping,
+          shoppingQueue: queue,
+          offlineCache: offlineCache,
+        ),
+        child: const YumdoorApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(SearchScreen), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Abmelden'));
+    await tester.pumpAndSettle();
+    expect(find.text('Abmelden?'), findsOneWidget);
+    expect(
+      find.text(
+        'Was du offline auf der Einkaufsliste abgehakt hast, ist noch nicht '
+        'an Tandoor gesendet. Beim Abmelden geht es verloren.',
+      ),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Angemeldet bleiben'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SearchScreen), findsOneWidget);
+    expect(tokens.token, isNotNull);
+    expect(offlineCache.clearCount, 0);
+
+    await tester.tap(find.byTooltip('Abmelden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Trotzdem abmelden'));
+    await tester.pumpAndSettle();
+    expect(find.byType(LoginScreen), findsOneWidget);
+    expect(tokens.token, isNull);
+    // The queue is in the offline cache's database, cleared with it.
+    expect(offlineCache.clearCount, 1);
   });
 
   group('token login', () {

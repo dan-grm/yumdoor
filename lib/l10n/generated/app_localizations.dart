@@ -290,6 +290,30 @@ abstract class AppLocalizations {
   /// **'Abmelden'**
   String get logout;
 
+  /// Title of the dialog before logging out while shopping check-offs are not sent yet.
+  ///
+  /// In de, this message translates to:
+  /// **'Abmelden?'**
+  String get logoutPendingTitle;
+
+  /// Body of the dialog before logging out while shopping check-offs (or uncheckings) made offline are not sent yet.
+  ///
+  /// In de, this message translates to:
+  /// **'Was du offline auf der Einkaufsliste abgehakt hast, ist noch nicht an Tandoor gesendet. Beim Abmelden geht es verloren.'**
+  String get logoutPendingBody;
+
+  /// Dialog action: log out and drop the unsent check-offs.
+  ///
+  /// In de, this message translates to:
+  /// **'Trotzdem abmelden'**
+  String get logoutPendingConfirm;
+
+  /// Dialog action: don't log out.
+  ///
+  /// In de, this message translates to:
+  /// **'Angemeldet bleiben'**
+  String get logoutPendingKeep;
+
   /// Accessible label of the round back button in top bars.
   ///
   /// In de, this message translates to:
@@ -2623,6 +2647,18 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Rückgängig'**
   String get shoppingUndo;
+
+  /// Small mark on a shopping row checked off (or back on) offline, not sent to the server yet.
+  ///
+  /// In de, this message translates to:
+  /// **'wird synchronisiert'**
+  String get shoppingSyncing;
+
+  /// Line above the shopping list: how many rows were checked off (or back on) offline and are not sent yet.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Änderung noch nicht gesendet} other{{count} Änderungen noch nicht gesendet}}'**
+  String shoppingPending(int count);
 
   /// Snackbar when checking off failed; the item is back on the list.
   ///
