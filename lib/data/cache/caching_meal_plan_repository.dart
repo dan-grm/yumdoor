@@ -40,11 +40,21 @@ class CachingMealPlanRepository implements MealPlanRepository {
 
   var _closed = false;
 
+  /// Counts the lists started, to order them.
+  var _clock = 0;
+
+  /// For each range stored, when the list stored for it started; an older
+  /// list that answers later is not stored over it.
+  final _storedRead = <String, int>{};
+
+  Future<void> _writes = Future.value();
+
   /// Stops storing: the session ended, and logout clears the cache.
   void close() => _closed = true;
 
   @override
   Future<MealPlanList> list(CalendarDay from, CalendarDay to) async {
+    final start = ++_clock;
     final MealPlanList list;
     try {
       list = await _remote.list(from, to);
@@ -52,7 +62,14 @@ class CachingMealPlanRepository implements MealPlanRepository {
       return await _readCache(from, to) ?? (throw const OfflineFailure());
     }
     if (!_closed) {
-      unawaited(_ignoreErrors(_cache.put(from, to, list.plans, epoch: _epoch)));
+      final key = '$from $to';
+      _writes = _writes.then((_) async {
+        if (_closed || (_storedRead[key] ?? -1) > start) return;
+        await _ignoreErrors(() async {
+          await _cache.put(from, to, list.plans, epoch: _epoch);
+          _storedRead[key] = start;
+        }());
+      });
       unawaited(_ignoreErrors(_storeRecipes(list.plans)));
     }
     return list;

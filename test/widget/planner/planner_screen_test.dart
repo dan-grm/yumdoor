@@ -307,6 +307,30 @@ void main() {
       expect(find.text('Linsen-Bolognese'), findsOneWidget);
     });
 
+    testWidgets('a cached week after a timeout is read-only and retried', (
+      tester,
+    ) async {
+      // The request timed out: the app doesn't count as offline.
+      repository.cachedAt = cachedAt;
+      await pumpPlanner(tester);
+
+      expect(find.text('Offline · Stand vom 17. Nov., 19:30'), findsOneWidget);
+      final menu = tester.widget<PopupMenuButton<Object?>>(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is PopupMenuButton &&
+              widget.tooltip == 'Optionen für Linsen-Bolognese',
+        ),
+      );
+      expect(menu.enabled, isFalse);
+
+      repository.cachedAt = null;
+      await tester.pump(const Duration(seconds: 15));
+      await tester.pumpAndSettle();
+      expect(repository.listCalls, hasLength(2));
+      expect(find.textContaining('Offline · Stand vom'), findsNothing);
+    });
+
     testWidgets('a week never loaded says it is offline', (tester) async {
       final connectivity = FakeConnectivityService(isOnline: false);
       repository.failure = const OfflineFailure();

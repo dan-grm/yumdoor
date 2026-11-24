@@ -102,7 +102,9 @@ class PlannerScreen extends ConsumerWidget {
       );
     }
 
-    final actions = offline
+    // A week from the offline cache is read-only too, even when a request
+    // only timed out and the app doesn't count as offline.
+    final actions = offline || plans.value?.cachedAt != null
         ? null
         : _PlanActions(
             move: move,

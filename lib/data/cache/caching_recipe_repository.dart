@@ -87,7 +87,7 @@ class CachingRecipeRepository implements RecipeRepository {
       await _ignoreErrors(_cache.remove(id));
       rethrow;
     }
-    await _storeImage(await _store(recipe));
+    await _storeImage(await _store(recipe, opened: false));
   }
 
   @override
@@ -206,15 +206,15 @@ class CachingRecipeRepository implements RecipeRepository {
   }
 
   /// Stores [recipe], unless the cache was cleared since this session
-  /// started, and returns it as stored.
-  Future<Recipe> _store(Recipe recipe) async {
+  /// started, and returns it as stored. See [RecipeCache.put] for [opened].
+  Future<Recipe> _store(Recipe recipe, {bool opened = true}) async {
     // A missing date usually means the cook log couldn't be read (see
     // TandoorRecipeRepository.lastCooked); keep the one stored before.
     if (recipe.lastCooked == null) {
-      final stored = (await _cache.get(recipe.id))?.lastCooked;
+      final stored = (await _cache.peek(recipe.id))?.lastCooked;
       if (stored != null) recipe = recipe.copyWith(lastCooked: stored);
     }
-    await _cache.put(recipe, epoch: _epoch);
+    await _cache.put(recipe, epoch: _epoch, opened: opened);
     return recipe;
   }
 

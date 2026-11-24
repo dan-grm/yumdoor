@@ -48,8 +48,10 @@ class MealPlanCache {
     final table = _db.cachedMealPlans;
     final oldest = _db.selectOnly(table)
       ..addColumns([table.fromDay, table.toDay])
+      // The row just written stays, whatever the clock says.
+      ..where((table.fromDay.equals('$from') & table.toDay.equals('$to')).not())
       ..orderBy([OrderingTerm.desc(table.storedAt)])
-      ..limit(-1, offset: maxRanges);
+      ..limit(-1, offset: maxRanges - 1);
     for (final row in await oldest.get()) {
       await _delete(row.read(table.fromDay)!, row.read(table.toDay)!);
     }

@@ -143,6 +143,22 @@ void main() {
     expect(await cache.image(recipeNo(1).image!), isNull);
   });
 
+  test('a recipe stored ahead keeps when it was last opened', () async {
+    await cache.put(recipeNo(1));
+    tick();
+    await cache.put(recipeNo(2));
+    tick();
+    // Stored again for the planner: not opened.
+    await cache.put(recipeNo(1), opened: false);
+    tick();
+    await cache.put(recipeNo(3));
+    tick();
+    await cache.put(recipeNo(4));
+
+    // Recipe 1 was opened first, so it goes first.
+    expect([for (final r in await cache.all()) r.id], [4, 3, 2]);
+  });
+
   test('clear deletes everything', () async {
     await cache.put(recipeNo(1));
     await cache.putImage(recipeNo(1).image!, Uint8List.fromList([1]));

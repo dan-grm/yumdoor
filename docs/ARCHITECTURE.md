@@ -196,7 +196,8 @@ shows the origin and explains the constraint.
 - Meal plans (M4): `CachingMealPlanRepository` stores each list it reads (`cached_meal_plans`, the `MealPlan`s as JSON
   by first and last day; the 26 most recently read ranges, so the current week and the ones visited). Offline, the same
   days come from the cache with `MealPlanList.cachedAt`, and the planner says "Offline · Stand vom …" above the week
-  and reads it again once the server answers; a week never loaded shows the offline failure. After each list from the
+  and reads it again once the server answers (or after 15 s when only a request timed out; the cached week is read-only
+  either way); a week never loaded shows the offline failure. After each list from the
   server, the recipes of plans that aren't over yet are stored one after another in the background with their images
   (`CachingRecipeRepository.keepOffline`, skipped without counting as opened when the stored copy has the same
   `updatedAt`); past weeks store none, so browsing them doesn't push opened recipes out of the cache. Plans change only online; the planner reads the week again
@@ -213,7 +214,8 @@ shows the origin and explains the constraint.
   top of it.
 - The caching repositories note `CacheDatabase.clears` when their session starts and store nothing once logout
   cleared the cache, so a request that ends late (or starts before the session's repositories are gone) can't bring
-  back the previous user's recipes, plans or list.
+  back the previous user's recipes, saved searches, plans or list. A list shown from the cache is read-only even when
+  the app doesn't count as offline (a request that timed out).
 - `ConnectivityService` plus requests drive the `isOffline` provider (`lib/app/offline.dart`): a request that can't
   connect sets it, any answer from the server (errors included) or the network coming back clears it. When offline,
   a banner is shown on every screen (`MaterialApp.builder`) and write actions are disabled (not hidden) through

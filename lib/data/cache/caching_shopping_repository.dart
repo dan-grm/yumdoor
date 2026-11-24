@@ -97,7 +97,6 @@ class CachingShoppingRepository implements ShoppingRepository {
       final keep = _setSince(start);
       final newest = start > _storedRead;
       if (updatedAfter == null) {
-        _storedFullRead = start;
         await _cache.putList(
           snapshot,
           keep: keep,
@@ -112,6 +111,7 @@ class CachingShoppingRepository implements ShoppingRepository {
           epoch: _epoch,
         );
       }
+      if (updatedAfter == null) _storedFullRead = start;
       if (newest) _storedRead = start;
       _set([for (final entry in snapshot.entries) entry.id], start);
     });

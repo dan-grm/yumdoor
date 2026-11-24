@@ -27,24 +27,41 @@ class RecipeCache implements OfflineCache {
   int get epoch => _db.clears;
 
   /// Stores [recipe] as just opened, replacing an older copy, and drops the
-  /// least recently opened recipes beyond [maxRecipes]. With an [epoch],
-  /// only if the cache wasn't cleared since.
-  Future<void> put(Recipe recipe, {int? epoch}) => _db.transaction(() async {
-    if (epoch != null && _db.clears != epoch) return;
-    await _db
-        .into(_db.cachedRecipes)
-        .insertOnConflictUpdate(
-          CachedRecipesCompanion(
-            id: Value(recipe.id),
-            name: Value(recipe.name),
-            imageUrl: Value(recipe.image?.toString()),
-            updatedAt: Value(recipe.updatedAt),
-            json: Value(jsonEncode(recipe.toJson())),
-            lastOpenedAt: Value(_now().millisecondsSinceEpoch),
-          ),
+  /// least recently opened recipes beyond [maxRecipes]. With [opened]
+  /// `false` (a recipe stored ahead, not opened), an older copy keeps when
+  /// it was last opened. With an [epoch], only if the cache wasn't cleared
+  /// since.
+  Future<void> put(Recipe recipe, {int? epoch, bool opened = true}) =>
+      _db.transaction(() async {
+        if (epoch != null && _db.clears != epoch) return;
+        final row = CachedRecipesCompanion(
+          id: Value(recipe.id),
+          name: Value(recipe.name),
+          imageUrl: Value(recipe.image?.toString()),
+          updatedAt: Value(recipe.updatedAt),
+          json: Value(jsonEncode(recipe.toJson())),
+          lastOpenedAt: Value(_now().millisecondsSinceEpoch),
         );
-    await _evict();
-  });
+        await _db
+            .into(_db.cachedRecipes)
+            .insert(
+              row,
+              onConflict: DoUpdate(
+                (_) => opened
+                    ? row
+                    : row.copyWith(lastOpenedAt: const Value.absent()),
+              ),
+            );
+        await _evict();
+      });
+
+  /// The stored recipe with [id], or `null`, without counting as opening
+  /// it.
+  Future<Recipe?> peek(int id) async {
+    final query = _db.select(_db.cachedRecipes)..where((r) => r.id.equals(id));
+    final row = await query.getSingleOrNull();
+    return row == null ? null : _decode(row);
+  }
 
   /// The stored recipe with [id], marked as just opened, or `null`.
   Future<Recipe?> get(int id) async {
@@ -67,11 +84,10 @@ class RecipeCache implements OfflineCache {
   /// Whether the recipe with [id] is stored, as last changed at
   /// [updatedAt] if given. Doesn't count as opening it.
   Future<bool> has(int id, {DateTime? updatedAt}) async {
-    final query = _db.select(_db.cachedRecipes)..where((r) => r.id.equals(id));
-    final row = await query.getSingleOrNull();
-    if (row == null) return false;
+    final recipe = await peek(id);
+    if (recipe == null) return false;
     if (updatedAt == null) return true;
-    final stored = (await _decode(row))?.updatedAt;
+    final stored = recipe.updatedAt;
     return stored != null && stored.isAtSameMomentAs(updatedAt);
   }
 

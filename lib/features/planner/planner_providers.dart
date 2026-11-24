@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -35,13 +37,21 @@ Future<MealPlanList> weekPlans(Ref ref, CalendarDay start) async {
 
 /// Loads [ref]'s provider again once the server can be reached.
 ///
-/// Only on a change: a request that timed out fails offline without the
-/// app counting as offline, and reloading at once would just wait again.
+/// If the app doesn't count as offline (the request timed out, or another
+/// one got an answer meanwhile), it tries again after [_retryOnline].
 void _reloadOnline(Ref ref) {
   ref.listen(isOfflineProvider, (_, offline) {
     if (!offline) ref.invalidateSelf();
   });
+  if (!ref.read(isOfflineProvider)) {
+    final timer = Timer(_retryOnline, ref.invalidateSelf);
+    ref.onDispose(timer.cancel);
+  }
 }
+
+/// How long a week shown from the offline cache waits before asking the
+/// server again while the app doesn't count as offline.
+const _retryOnline = Duration(seconds: 15);
 
 Duration? _noRetry(int retryCount, Object error) => null;
 

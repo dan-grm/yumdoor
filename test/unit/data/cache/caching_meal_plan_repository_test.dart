@@ -96,6 +96,18 @@ void main() {
       expect(await cache.get(_monday.addDays(7), _sunday.addDays(7)), isNull);
     });
 
+    test('keeps the week just stored, whatever the clock says', () async {
+      cache = MealPlanCache(db, maxRanges: 1, clock: () => now);
+      await cache.put(_monday, _sunday, [_bolognese], epoch: cache.epoch);
+      // The clock went back.
+      now = now.subtract(const Duration(hours: 1));
+      final next = _monday.addDays(7);
+      await cache.put(next, next.addDays(6), [_bolognese], epoch: cache.epoch);
+
+      expect(await cache.get(next, next.addDays(6)), isNotNull);
+      expect(await cache.get(_monday, _sunday), isNull);
+    });
+
     test('keeps the most recently read weeks', () async {
       cache = MealPlanCache(db, maxRanges: 2, clock: () => now);
       for (var week = 0; week < 3; week++) {
@@ -272,6 +284,29 @@ void main() {
       expect(storedRecipes, isEmpty);
     });
 
+    test('an older list that answers last is not stored', () async {
+      final gate = Completer<void>();
+      final slow = _GatedRepository(remote, gate.future);
+      var first = true;
+      final repo = CachingMealPlanRepository(
+        _SwitchingRepository(() {
+          if (!first) return remote;
+          first = false;
+          return slow;
+        }),
+        cache,
+      );
+
+      final older = repo.list(_monday, _sunday);
+      remote.plans.removeAt(0);
+      await repo.list(_monday, _sunday);
+      gate.complete();
+      await older;
+      await pumpEventQueue();
+
+      expect((await cache.get(_monday, _sunday))?.plans, [_leftovers]);
+    });
+
     test(
       'a list that ends after logout cleared the cache is not stored',
       () async {
@@ -289,6 +324,17 @@ void main() {
       },
     );
   });
+}
+
+/// Lists from the repository [next] picks for each call.
+class _SwitchingRepository extends FakeMealPlanRepository {
+  _SwitchingRepository(this.next) : super([]);
+
+  final FakeMealPlanRepository Function() next;
+
+  @override
+  Future<MealPlanList> list(CalendarDay from, CalendarDay to) =>
+      next().list(from, to);
 }
 
 /// Lists only once [listGate] completes.
