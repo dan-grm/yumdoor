@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../design/design.dart';
 import '../../domain/models/calendar_day.dart';
 import '../../l10n/l10n.dart';
 import '../common/layout.dart';
+import '../shopping/shopping_providers.dart';
 
 /// The path of the week planner tab.
 const planPath = '/plan';
@@ -26,7 +28,10 @@ typedef _Tab = ({IconData icon, IconData selectedIcon, String label});
 /// scroll position. Its branches are in the order of the destinations here.
 /// Screens that take the whole screen (recipe, cooking mode, editor) are
 /// routes above the shell, so the navigation is hidden there.
-class AppShell extends StatelessWidget {
+///
+/// It also sends shopping check-offs left unsent by an earlier start of the
+/// app, whichever tab is open ([shoppingQueueReplayProvider]).
+class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.shell});
 
   final StatefulNavigationShell shell;
@@ -37,14 +42,18 @@ class AppShell extends StatelessWidget {
       shell.goBranch(index, initialLocation: index == shell.currentIndex);
 
   @override
-  Widget build(BuildContext context) => PopScope(
-    // Back (Android) on another tab returns to search before leaving the app.
-    canPop: shell.currentIndex == 0,
-    onPopInvokedWithResult: (didPop, _) {
-      if (!didPop) shell.goBranch(0);
-    },
-    child: _navigation(context),
-  );
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(shoppingQueueReplayProvider);
+    return PopScope(
+      // Back (Android) on another tab returns to search before leaving the
+      // app.
+      canPop: shell.currentIndex == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) shell.goBranch(0);
+      },
+      child: _navigation(context),
+    );
+  }
 
   Widget _navigation(BuildContext context) {
     final t = context.tokens;

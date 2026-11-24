@@ -144,11 +144,41 @@ class EditorDrafts extends Table {
   Set<Column<Object>> get primaryKey => {recipeId};
 }
 
+/// Shopping list check states set offline and not sent yet
+/// (`ShoppingCheckCache`), one per entry.
+///
+/// Like the drafts, the user's own work: [CacheDatabase.migration] keeps
+/// them when the cache's version changes. Changing this table needs a real
+/// migration. Logout deletes them with the cached server content; a session
+/// that ended because the token was rejected keeps them for the next login
+/// to the same server.
+@DataClassName('PendingShoppingCheckRow')
+class PendingShoppingChecks extends Table {
+  @override
+  String get tableName => 'pending_shopping_check';
+
+  /// The server the entry is on, as `TandoorConnection.serverUrl`.
+  TextColumn get server => text()();
+
+  /// The shopping list entry's id.
+  IntColumn get entryId => integer()();
+
+  /// The state to send: checked off, or back on the list.
+  BoolColumn get checked => boolean()();
+
+  /// When it was set, in microseconds since the epoch (UTC).
+  IntColumn get at => integer()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {server, entryId};
+}
+
 /// The [EditorDrafts] key of a new recipe's draft; Tandoor's ids start at 1.
 const newRecipeDraftId = 0;
 
-/// The offline cache, and the editor's drafts. Everything but the drafts can
-/// be fetched again, so migrations start over instead of converting rows.
+/// The offline cache, the editor's drafts and the shopping check-offs still
+/// to be sent. Everything but those two can be fetched again, so migrations
+/// start over instead of converting rows.
 @DriftDatabase(
   tables: [
     CachedRecipes,
@@ -158,6 +188,7 @@ const newRecipeDraftId = 0;
     CachedShoppingEntries,
     CachedValues,
     EditorDrafts,
+    PendingShoppingChecks,
   ],
 )
 class CacheDatabase extends _$CacheDatabase {
@@ -168,6 +199,11 @@ class CacheDatabase extends _$CacheDatabase {
   /// user who just logged out, must not be stored after it: writers note
   /// this before they ask the server and store nothing once it changed.
   var clears = 0;
+
+  /// How many of the [clears] also deleted the shopping check-offs not sent
+  /// yet (`ShoppingCheckCache`), which a session ended by a rejected token
+  /// keeps.
+  var queueClears = 0;
 
   /// The database on the device: IndexedDB or OPFS through a worker on the
   /// web (`web/drift_worker.js`, `web/sqlite3.wasm`), a file in the app's
@@ -185,21 +221,38 @@ class CacheDatabase extends _$CacheDatabase {
 
   /// Bump this whenever a cached domain model (`Recipe`, `MealPlan`,
   /// `ShoppingEntry`, `Supermarket` and the models in them) or a table
-  /// changes; opening the database then drops all rows but the drafts.
+  /// changes; opening the database then drops all rows but the drafts and
+  /// the pending check-offs.
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
+
+  /// The first [schemaVersion] with [PendingShoppingChecks].
+  static const firstQueueVersion = 5;
+
+  /// The tables of the user's own work, which a version change keeps.
+  Set<String> get userTables => {
+    editorDrafts.actualTableName,
+    pendingShoppingChecks.actualTableName,
+  };
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     // Drift calls this for downgrades too, e.g. after rolling back the app.
     onUpgrade: (migrator, from, to) async {
       for (final table in allTables) {
-        // Drafts can't be fetched again: their table is only created if it
-        // is missing (e.g. coming from a version before it), even after a
-        // rollback to such a version. One that no longer decodes is dropped
-        // when it is read (DraftCache).
-        if (table.actualTableName == editorDrafts.actualTableName) {
+        // Drafts and pending check-offs can't be fetched again: their
+        // tables are only created if they are missing (e.g. coming from a
+        // version before them), even after a rollback to such a version. A
+        // draft that no longer decodes is dropped when it is read
+        // (DraftCache).
+        if (userTables.contains(table.actualTableName)) {
           await migrator.createTable(table);
+          // A version before the queue ran since its rows were stored, and
+          // its logout didn't clear them: they may be another session's.
+          if (table.actualTableName == pendingShoppingChecks.actualTableName &&
+              from < firstQueueVersion) {
+            await delete(pendingShoppingChecks).go();
+          }
           continue;
         }
         await migrator.deleteTable(table.actualTableName);

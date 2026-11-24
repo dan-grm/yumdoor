@@ -120,6 +120,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logout => 'Log out';
 
   @override
+  String get logoutPendingTitle => 'Log out?';
+
+  @override
+  String get logoutPendingBody =>
+      'What you checked off on the shopping list while offline isn\'t sent to Tandoor yet. Logging out loses it.';
+
+  @override
+  String get logoutPendingConfirm => 'Log out anyway';
+
+  @override
+  String get logoutPendingKeep => 'Stay logged in';
+
+  @override
   String get back => 'Back';
 
   @override
@@ -1669,6 +1682,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shoppingUndo => 'Undo';
+
+  @override
+  String get shoppingSyncing => 'syncing';
+
+  @override
+  String shoppingPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count changes not sent yet',
+      one: '1 change not sent yet',
+    );
+    return '$_temp0';
+  }
 
   @override
   String shoppingCheckFailed(String name, String reason) {

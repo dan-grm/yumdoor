@@ -93,20 +93,24 @@ class SessionController extends _$SessionController {
     try {
       await ref.read(authRepositoryProvider).verify(session);
     } on UnauthorizedFailure {
-      await _end(session);
+      // Not logged out by the user: shopping check-offs not sent yet stay
+      // for the next login to this server.
+      await _end(session, keepShoppingQueue: true);
     } on Failure {
       // Offline or a server error says nothing about the token.
     }
   }
 
-  Future<void> _end(Session session) async {
+  Future<void> _end(Session session, {bool keepShoppingQueue = false}) async {
     // Someone logged in again meanwhile.
     if (state.value != session) return;
     // The server URL stays, so login can prefill it. The offline cache goes:
     // the next login may be someone else, or another server. So do the
     // editor's drafts, which may hold their work.
     ref.read(cookingProgressStoreProvider).clear();
-    await ref.read(offlineCacheProvider).clear();
+    await ref
+        .read(offlineCacheProvider)
+        .clear(keepShoppingQueue: keepShoppingQueue);
     await ref.read(draftStoreProvider).clear();
     await ref.read(tokenStoreProvider).clearToken();
     state = const AsyncData(null);

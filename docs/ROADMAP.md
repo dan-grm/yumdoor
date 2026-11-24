@@ -21,7 +21,8 @@ An end-to-end slice through every layer, deployable as a PWA.
 - Search screen with food and keyword filter chips
 - Recipe detail with servings picker and scaled ingredients
 - Basic cooking mode: step by step, per-step ingredients, scaled amounts, read-only servings, wake lock
-- Offline cache of viewed recipes (Drift, read-only), offline banner, write actions disabled
+- Offline cache of viewed recipes (Drift, read-only), offline banner, write actions disabled (M4 lets shopping
+  check-offs through)
 - CI: format, analyze, import check, unit/widget tests, integration tests against Tandoor in Docker, web build
 - Docker image (nginx, configurable base path, SPA fallback, caching headers, own service worker) pushed to GHCR
 
@@ -64,6 +65,10 @@ An end-to-end slice through every layer, deployable as a PWA.
 - Shopping list grouped by supermarket category in store order, merged amounts, source recipes, fast check-off
   with the bulk endpoint, on-hand toggle
 - Incremental sync of the list (`updated_after`) while the screen is open
+- Week plan and shopping list readable offline
+- Checking shopping entries off works offline: the one exception to "offline is read-only". Ticks are kept on the
+  device and sent when the server answers again; the last tick sent wins. All other writes stay disabled offline
+  (decided 2026-11-20)
 
 ## M5 — Recommendations and home
 

@@ -2280,6 +2280,331 @@ class EditorDraftsCompanion extends UpdateCompanion<EditorDraftRow> {
   }
 }
 
+class $PendingShoppingChecksTable extends PendingShoppingChecks
+    with TableInfo<$PendingShoppingChecksTable, PendingShoppingCheckRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PendingShoppingChecksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _serverMeta = const VerificationMeta('server');
+  @override
+  late final GeneratedColumn<String> server = GeneratedColumn<String>(
+    'server',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entryIdMeta = const VerificationMeta(
+    'entryId',
+  );
+  @override
+  late final GeneratedColumn<int> entryId = GeneratedColumn<int>(
+    'entry_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _checkedMeta = const VerificationMeta(
+    'checked',
+  );
+  @override
+  late final GeneratedColumn<bool> checked = GeneratedColumn<bool>(
+    'checked',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("checked" IN (0, 1))',
+    ),
+  );
+  static const VerificationMeta _atMeta = const VerificationMeta('at');
+  @override
+  late final GeneratedColumn<int> at = GeneratedColumn<int>(
+    'at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [server, entryId, checked, at];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pending_shopping_check';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PendingShoppingCheckRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('server')) {
+      context.handle(
+        _serverMeta,
+        server.isAcceptableOrUnknown(data['server']!, _serverMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_serverMeta);
+    }
+    if (data.containsKey('entry_id')) {
+      context.handle(
+        _entryIdMeta,
+        entryId.isAcceptableOrUnknown(data['entry_id']!, _entryIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_entryIdMeta);
+    }
+    if (data.containsKey('checked')) {
+      context.handle(
+        _checkedMeta,
+        checked.isAcceptableOrUnknown(data['checked']!, _checkedMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_checkedMeta);
+    }
+    if (data.containsKey('at')) {
+      context.handle(_atMeta, at.isAcceptableOrUnknown(data['at']!, _atMeta));
+    } else if (isInserting) {
+      context.missing(_atMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {server, entryId};
+  @override
+  PendingShoppingCheckRow map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PendingShoppingCheckRow(
+      server: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server'],
+      )!,
+      entryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}entry_id'],
+      )!,
+      checked: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}checked'],
+      )!,
+      at: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}at'],
+      )!,
+    );
+  }
+
+  @override
+  $PendingShoppingChecksTable createAlias(String alias) {
+    return $PendingShoppingChecksTable(attachedDatabase, alias);
+  }
+}
+
+class PendingShoppingCheckRow extends DataClass
+    implements Insertable<PendingShoppingCheckRow> {
+  /// The server the entry is on, as `TandoorConnection.serverUrl`.
+  final String server;
+
+  /// The shopping list entry's id.
+  final int entryId;
+
+  /// The state to send: checked off, or back on the list.
+  final bool checked;
+
+  /// When it was set, in microseconds since the epoch (UTC).
+  final int at;
+  const PendingShoppingCheckRow({
+    required this.server,
+    required this.entryId,
+    required this.checked,
+    required this.at,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['server'] = Variable<String>(server);
+    map['entry_id'] = Variable<int>(entryId);
+    map['checked'] = Variable<bool>(checked);
+    map['at'] = Variable<int>(at);
+    return map;
+  }
+
+  PendingShoppingChecksCompanion toCompanion(bool nullToAbsent) {
+    return PendingShoppingChecksCompanion(
+      server: Value(server),
+      entryId: Value(entryId),
+      checked: Value(checked),
+      at: Value(at),
+    );
+  }
+
+  factory PendingShoppingCheckRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PendingShoppingCheckRow(
+      server: serializer.fromJson<String>(json['server']),
+      entryId: serializer.fromJson<int>(json['entryId']),
+      checked: serializer.fromJson<bool>(json['checked']),
+      at: serializer.fromJson<int>(json['at']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'server': serializer.toJson<String>(server),
+      'entryId': serializer.toJson<int>(entryId),
+      'checked': serializer.toJson<bool>(checked),
+      'at': serializer.toJson<int>(at),
+    };
+  }
+
+  PendingShoppingCheckRow copyWith({
+    String? server,
+    int? entryId,
+    bool? checked,
+    int? at,
+  }) => PendingShoppingCheckRow(
+    server: server ?? this.server,
+    entryId: entryId ?? this.entryId,
+    checked: checked ?? this.checked,
+    at: at ?? this.at,
+  );
+  PendingShoppingCheckRow copyWithCompanion(
+    PendingShoppingChecksCompanion data,
+  ) {
+    return PendingShoppingCheckRow(
+      server: data.server.present ? data.server.value : this.server,
+      entryId: data.entryId.present ? data.entryId.value : this.entryId,
+      checked: data.checked.present ? data.checked.value : this.checked,
+      at: data.at.present ? data.at.value : this.at,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingShoppingCheckRow(')
+          ..write('server: $server, ')
+          ..write('entryId: $entryId, ')
+          ..write('checked: $checked, ')
+          ..write('at: $at')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(server, entryId, checked, at);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PendingShoppingCheckRow &&
+          other.server == this.server &&
+          other.entryId == this.entryId &&
+          other.checked == this.checked &&
+          other.at == this.at);
+}
+
+class PendingShoppingChecksCompanion
+    extends UpdateCompanion<PendingShoppingCheckRow> {
+  final Value<String> server;
+  final Value<int> entryId;
+  final Value<bool> checked;
+  final Value<int> at;
+  final Value<int> rowid;
+  const PendingShoppingChecksCompanion({
+    this.server = const Value.absent(),
+    this.entryId = const Value.absent(),
+    this.checked = const Value.absent(),
+    this.at = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PendingShoppingChecksCompanion.insert({
+    required String server,
+    required int entryId,
+    required bool checked,
+    required int at,
+    this.rowid = const Value.absent(),
+  }) : server = Value(server),
+       entryId = Value(entryId),
+       checked = Value(checked),
+       at = Value(at);
+  static Insertable<PendingShoppingCheckRow> custom({
+    Expression<String>? server,
+    Expression<int>? entryId,
+    Expression<bool>? checked,
+    Expression<int>? at,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (server != null) 'server': server,
+      if (entryId != null) 'entry_id': entryId,
+      if (checked != null) 'checked': checked,
+      if (at != null) 'at': at,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PendingShoppingChecksCompanion copyWith({
+    Value<String>? server,
+    Value<int>? entryId,
+    Value<bool>? checked,
+    Value<int>? at,
+    Value<int>? rowid,
+  }) {
+    return PendingShoppingChecksCompanion(
+      server: server ?? this.server,
+      entryId: entryId ?? this.entryId,
+      checked: checked ?? this.checked,
+      at: at ?? this.at,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (server.present) {
+      map['server'] = Variable<String>(server.value);
+    }
+    if (entryId.present) {
+      map['entry_id'] = Variable<int>(entryId.value);
+    }
+    if (checked.present) {
+      map['checked'] = Variable<bool>(checked.value);
+    }
+    if (at.present) {
+      map['at'] = Variable<int>(at.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingShoppingChecksCompanion(')
+          ..write('server: $server, ')
+          ..write('entryId: $entryId, ')
+          ..write('checked: $checked, ')
+          ..write('at: $at, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$CacheDatabase extends GeneratedDatabase {
   _$CacheDatabase(QueryExecutor e) : super(e);
   $CacheDatabaseManager get managers => $CacheDatabaseManager(this);
@@ -2294,6 +2619,8 @@ abstract class _$CacheDatabase extends GeneratedDatabase {
       $CachedShoppingEntriesTable(this);
   late final $CachedValuesTable cachedValues = $CachedValuesTable(this);
   late final $EditorDraftsTable editorDrafts = $EditorDraftsTable(this);
+  late final $PendingShoppingChecksTable pendingShoppingChecks =
+      $PendingShoppingChecksTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2306,6 +2633,7 @@ abstract class _$CacheDatabase extends GeneratedDatabase {
     cachedShoppingEntries,
     cachedValues,
     editorDrafts,
+    pendingShoppingChecks,
   ];
 }
 
@@ -3708,6 +4036,218 @@ typedef $$EditorDraftsTableProcessedTableManager =
       EditorDraftRow,
       PrefetchHooks Function()
     >;
+typedef $$PendingShoppingChecksTableCreateCompanionBuilder =
+    PendingShoppingChecksCompanion Function({
+      required String server,
+      required int entryId,
+      required bool checked,
+      required int at,
+      Value<int> rowid,
+    });
+typedef $$PendingShoppingChecksTableUpdateCompanionBuilder =
+    PendingShoppingChecksCompanion Function({
+      Value<String> server,
+      Value<int> entryId,
+      Value<bool> checked,
+      Value<int> at,
+      Value<int> rowid,
+    });
+
+class $$PendingShoppingChecksTableFilterComposer
+    extends Composer<_$CacheDatabase, $PendingShoppingChecksTable> {
+  $$PendingShoppingChecksTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get server => $composableBuilder(
+    column: $table.server,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get checked => $composableBuilder(
+    column: $table.checked,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get at => $composableBuilder(
+    column: $table.at,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PendingShoppingChecksTableOrderingComposer
+    extends Composer<_$CacheDatabase, $PendingShoppingChecksTable> {
+  $$PendingShoppingChecksTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get server => $composableBuilder(
+    column: $table.server,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get entryId => $composableBuilder(
+    column: $table.entryId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get checked => $composableBuilder(
+    column: $table.checked,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get at => $composableBuilder(
+    column: $table.at,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PendingShoppingChecksTableAnnotationComposer
+    extends Composer<_$CacheDatabase, $PendingShoppingChecksTable> {
+  $$PendingShoppingChecksTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get server =>
+      $composableBuilder(column: $table.server, builder: (column) => column);
+
+  GeneratedColumn<int> get entryId =>
+      $composableBuilder(column: $table.entryId, builder: (column) => column);
+
+  GeneratedColumn<bool> get checked =>
+      $composableBuilder(column: $table.checked, builder: (column) => column);
+
+  GeneratedColumn<int> get at =>
+      $composableBuilder(column: $table.at, builder: (column) => column);
+}
+
+class $$PendingShoppingChecksTableTableManager
+    extends
+        RootTableManager<
+          _$CacheDatabase,
+          $PendingShoppingChecksTable,
+          PendingShoppingCheckRow,
+          $$PendingShoppingChecksTableFilterComposer,
+          $$PendingShoppingChecksTableOrderingComposer,
+          $$PendingShoppingChecksTableAnnotationComposer,
+          $$PendingShoppingChecksTableCreateCompanionBuilder,
+          $$PendingShoppingChecksTableUpdateCompanionBuilder,
+          (
+            PendingShoppingCheckRow,
+            BaseReferences<
+              _$CacheDatabase,
+              $PendingShoppingChecksTable,
+              PendingShoppingCheckRow
+            >,
+          ),
+          PendingShoppingCheckRow,
+          PrefetchHooks Function()
+        > {
+  $$PendingShoppingChecksTableTableManager(
+    _$CacheDatabase db,
+    $PendingShoppingChecksTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PendingShoppingChecksTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$PendingShoppingChecksTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PendingShoppingChecksTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> server = const Value.absent(),
+                Value<int> entryId = const Value.absent(),
+                Value<bool> checked = const Value.absent(),
+                Value<int> at = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PendingShoppingChecksCompanion(
+                server: server,
+                entryId: entryId,
+                checked: checked,
+                at: at,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String server,
+                required int entryId,
+                required bool checked,
+                required int at,
+                Value<int> rowid = const Value.absent(),
+              }) => PendingShoppingChecksCompanion.insert(
+                server: server,
+                entryId: entryId,
+                checked: checked,
+                at: at,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $PendingShoppingChecksTable,
+                    PendingShoppingCheckRow
+                  >(table),
+                  BaseReferences<
+                    _$CacheDatabase,
+                    $PendingShoppingChecksTable,
+                    PendingShoppingCheckRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PendingShoppingChecksTableProcessedTableManager =
+    ProcessedTableManager<
+      _$CacheDatabase,
+      $PendingShoppingChecksTable,
+      PendingShoppingCheckRow,
+      $$PendingShoppingChecksTableFilterComposer,
+      $$PendingShoppingChecksTableOrderingComposer,
+      $$PendingShoppingChecksTableAnnotationComposer,
+      $$PendingShoppingChecksTableCreateCompanionBuilder,
+      $$PendingShoppingChecksTableUpdateCompanionBuilder,
+      (
+        PendingShoppingCheckRow,
+        BaseReferences<
+          _$CacheDatabase,
+          $PendingShoppingChecksTable,
+          PendingShoppingCheckRow
+        >,
+      ),
+      PendingShoppingCheckRow,
+      PrefetchHooks Function()
+    >;
 
 class $CacheDatabaseManager {
   final _$CacheDatabase _db;
@@ -3726,4 +4266,6 @@ class $CacheDatabaseManager {
       $$CachedValuesTableTableManager(_db, _db.cachedValues);
   $$EditorDraftsTableTableManager get editorDrafts =>
       $$EditorDraftsTableTableManager(_db, _db.editorDrafts);
+  $$PendingShoppingChecksTableTableManager get pendingShoppingChecks =>
+      $$PendingShoppingChecksTableTableManager(_db, _db.pendingShoppingChecks);
 }

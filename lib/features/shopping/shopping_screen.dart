@@ -34,7 +34,10 @@ const shoppingFailureSnackBarDuration = Duration(seconds: 8);
 ///
 /// A tap checks a row off (or, under "Erledigt", back on), at once and
 /// straight to Tandoor ([ShoppingList.setChecked]); a snackbar offers to
-/// undo it. Offline, a tap only explains that ticking needs a connection.
+/// undo it. Ticking is the one change that works offline: it is kept on the
+/// device and sent once the server answers again; until then the row says
+/// "wird synchronisiert" and a line above the list counts the waiting rows.
+/// The other changes (adding, on hand, deleting) need a connection.
 ///
 /// While the list is in view and online, it stays in sync with the
 /// household's ([ShoppingSync]): what the others tick off or add shows up
@@ -229,10 +232,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     required bool checked,
   }) async {
     final messenger = ScaffoldMessenger.of(context);
-    if (_readOnly) {
-      _show(messenger, (context) => context.l10n.offlineWriteDisabled);
-      return;
-    }
+    // Works offline, too: then it waits on the device to be sent.
     final list = ref.read(shoppingListProvider.notifier);
 
     Future<void> set(bool checked, {bool undoable = true}) async {
@@ -242,14 +242,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
           (context) => checked
               ? context.l10n.shoppingChecked(name)
               : context.l10n.shoppingUnchecked(name),
-          undo: () {
-            // Gone offline meanwhile: undoing is a write like any other.
-            if (_readOnly) {
-              _show(messenger, (context) => context.l10n.offlineWriteDisabled);
-              return;
-            }
-            unawaited(set(!checked, undoable: false));
-          },
+          undo: () => unawaited(set(!checked, undoable: false)),
         );
       }
       final failure = await list.setChecked(row.entryIds, checked: checked);
@@ -429,6 +422,16 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     final supermarket = ref.watch(shoppingSupermarketProvider);
     final meValue = ref.watch(shoppingMeProvider);
     final me = meValue.isReloading ? null : meValue.value;
+    final pendingIds = list.isReloading
+        ? const <int>{}
+        : list.value?.pendingIds ?? const <int>{};
+    final pendingRows = switch (groups.value) {
+      final groups? when pendingIds.isNotEmpty => _pendingRows(
+        groups,
+        pendingIds,
+      ),
+      _ => 0,
+    };
 
     return Scaffold(
       body: SafeArea(
@@ -462,6 +465,25 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
                         OfflineAsOf(
                           cachedAt: cachedAt,
                           now: ref.watch(clockProvider)(),
+                        ),
+                      ],
+                      if (pendingRows > 0) ...[
+                        SizedBox(height: t.space1),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.sync_rounded,
+                              size: t.caption.fontSize,
+                              color: t.inkMuted,
+                            ),
+                            SizedBox(width: t.space1),
+                            Expanded(
+                              child: Text(
+                                l10n.shoppingPending(pendingRows),
+                                style: t.caption.copyWith(color: t.inkMuted),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                       SizedBox(height: t.space3),
@@ -508,6 +530,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
                   groups: groups,
                   truncated: list.value?.truncated ?? false,
                   me: me,
+                  pendingIds: pendingIds,
                   onRefresh: _refresh,
                   onToggle: _toggle,
                   onMore: _more,
@@ -546,6 +569,16 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
 }
 
 enum _RowAction { onHand, delete }
+
+/// Whether [row] has a check state that waits to be sent.
+bool _isPending(ShoppingListRow row, Set<int> pendingIds) =>
+    row.entryIds.any(pendingIds.contains);
+
+/// How many rows of [groups] wait to be sent.
+int _pendingRows(ShoppingListGroups groups, Set<int> pendingIds) => [
+  for (final section in groups.sections) ...section.rows,
+  ...groups.done,
+].where((row) => _isPending(row, pendingIds)).length;
 
 /// Shows the [message] built in the context of [messenger] in place of any
 /// snackbar shown before, so quick ticks don't queue up. With [undo], it
@@ -590,6 +623,7 @@ class _ListBody extends StatefulWidget {
     required this.groups,
     required this.truncated,
     required this.me,
+    required this.pendingIds,
     required this.onRefresh,
     required this.onToggle,
     required this.onMore,
@@ -600,6 +634,9 @@ class _ListBody extends StatefulWidget {
   /// Whether Tandoor cut the list off, so the newest items may be missing.
   final bool truncated;
   final int? me;
+
+  /// The entries whose check state waits to be sent.
+  final Set<int> pendingIds;
   final Future<void> Function() onRefresh;
   final _Toggle onToggle;
   final _More onMore;
@@ -615,7 +652,7 @@ class _ListBodyState extends State<_ListBody> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
-    final _ListBody(:groups, :me, :onToggle, :onMore) = widget;
+    final _ListBody(:groups, :me, :pendingIds, :onToggle, :onMore) = widget;
     final done = groups.done;
 
     return RefreshIndicator(
@@ -666,6 +703,7 @@ class _ListBodyState extends State<_ListBody> {
                 _RowCard(
                   rows: section.rows,
                   me: me,
+                  pendingIds: pendingIds,
                   onToggle: onToggle,
                   onMore: onMore,
                 ),
@@ -706,6 +744,7 @@ class _ListBodyState extends State<_ListBody> {
                   _RowCard(
                     rows: done,
                     me: me,
+                    pendingIds: pendingIds,
                     onToggle: onToggle,
                     onMore: onMore,
                   ),
@@ -724,12 +763,14 @@ class _RowCard extends StatelessWidget {
   const _RowCard({
     required this.rows,
     required this.me,
+    required this.pendingIds,
     required this.onToggle,
     required this.onMore,
   });
 
   final List<ShoppingListRow> rows;
   final int? me;
+  final Set<int> pendingIds;
   final _Toggle onToggle;
   final _More onMore;
 
@@ -753,6 +794,7 @@ class _RowCard extends StatelessWidget {
                 key: ValueKey(row.entryIds.first),
                 row: row,
                 me: me,
+                pending: _isPending(row, pendingIds),
                 onToggle: onToggle,
                 onMore: onMore,
               ),
@@ -770,12 +812,16 @@ class _Row extends StatelessWidget {
     super.key,
     required this.row,
     required this.me,
+    required this.pending,
     required this.onToggle,
     required this.onMore,
   });
 
   final ShoppingListRow row;
   final int? me;
+
+  /// Whether its check state waits to be sent.
+  final bool pending;
   final _Toggle onToggle;
   final _More onMore;
 
@@ -814,6 +860,7 @@ class _Row extends StatelessWidget {
                 ? l10n.shoppingAmountMore(amount)
                 : amount,
             done: checked,
+            status: pending ? l10n.shoppingSyncing : '',
             toggleLabel: l10n.ingredientTickOff(name),
             onToggle: () => unawaited(onToggle(row, name, checked: !checked)),
           ),

@@ -9,6 +9,7 @@ import '../data/cache/meal_plan_cache.dart';
 import '../data/cache/recipe_cache.dart';
 import '../data/cache/saved_filter_cache.dart';
 import '../data/cache/shopping_cache.dart';
+import '../data/cache/shopping_check_cache.dart';
 import '../data/repositories/tandoor_auth_repository.dart';
 import '../data/repositories/tandoor_repositories.dart';
 import '../data/repositories/tandoor_server_repository.dart';
@@ -25,6 +26,7 @@ import '../domain/repositories/offline_cache.dart';
 import '../domain/repositories/recipe_repository.dart';
 import '../domain/repositories/saved_filter_repository.dart';
 import '../domain/repositories/server_repository.dart';
+import '../domain/repositories/shopping_check_queue.dart';
 import '../domain/repositories/shopping_repository.dart';
 import '../domain/repositories/unit_repository.dart';
 import '../domain/repositories/user_repository.dart';
@@ -148,3 +150,14 @@ OfflineCache offlineCache(Ref ref) => ref.watch(_recipeCacheProvider);
 /// Kept across sessions until logout clears them.
 @Riverpod(keepAlive: true)
 DraftStore draftStore(Ref ref) => DraftCache(ref.watch(_cacheDatabaseProvider));
+
+/// The shopping check-offs made offline and not sent yet, in the offline
+/// cache's database, for the session's server. One per session, like the
+/// repositories: logout clears them; a session ended because the token was
+/// rejected leaves them to the next login to the same server.
+@Riverpod(keepAlive: true)
+ShoppingCheckQueue shoppingCheckQueue(Ref ref) {
+  // First: without a session, this throws before the database is opened.
+  final server = ref.watch(tandoorConnectionProvider).serverUrl;
+  return ShoppingCheckCache(ref.watch(_cacheDatabaseProvider), server: server);
+}

@@ -7,9 +7,12 @@ import 'package:yumdoor/app/repository_providers.dart';
 import 'package:yumdoor/app/session.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/domain/models/shopping.dart';
+import 'package:yumdoor/domain/repositories/shopping_check_queue.dart';
 import 'package:yumdoor/features/shopping/shopping_providers.dart';
 
 import '../../../fakes/app_overrides.dart';
+import '../../../fakes/fake_connectivity_service.dart';
+import '../../../fakes/fake_shopping_check_queue.dart';
 import '../../../fakes/fake_shopping_repository.dart';
 import '../../../fakes/in_memory_local_store.dart';
 import '../../../fixtures/shopping.dart';
@@ -17,6 +20,8 @@ import '../../../fixtures/shopping.dart';
 void main() {
   late FakeShoppingRepository repository;
   late InMemoryLocalStore store;
+  late FakeShoppingCheckQueue queue;
+  late FakeConnectivityService connectivity;
   late ProviderContainer container;
   final now = DateTime.utc(2026, 11, 18, 15);
 
@@ -28,6 +33,8 @@ void main() {
       overrides: [
         tokenStoreProvider.overrideWithValue(loggedInTokenStore()),
         shoppingRepositoryProvider.overrideWithValue(repository),
+        shoppingCheckQueueProvider.overrideWithValue(queue),
+        connectivityServiceProvider.overrideWithValue(connectivity),
         localStoreProvider.overrideWithValue(store),
         clockProvider.overrideWithValue(() => now),
       ],
@@ -44,6 +51,8 @@ void main() {
       supermarketList: const [marketAmEck, bioladen],
     );
     store = InMemoryLocalStore();
+    queue = FakeShoppingCheckQueue();
+    connectivity = FakeConnectivityService();
     container = await create();
   });
 
@@ -76,12 +85,13 @@ void main() {
 
   test('takes a failed check-off back', () async {
     await container.read(shoppingListProvider.future);
-    repository.checkFailure = const OfflineFailure();
+    repository.checkFailure = const ServerFailure(statusCode: 500);
 
     final failure = await list().setChecked([103], checked: true);
 
-    expect(failure, isA<OfflineFailure>());
+    expect(failure, isA<ServerFailure>());
     expect(entry(103).checked, isFalse);
+    expect(queue.pending, isEmpty);
   });
 
   test('sends an undo after the check-off it undoes', () async {
@@ -145,10 +155,10 @@ void main() {
     await container.read(shoppingListProvider.future);
     expect(await list().setChecked([103], checked: true), isNull);
 
-    repository.checkFailure = const OfflineFailure();
+    repository.checkFailure = const ServerFailure(statusCode: 500);
     final failure = await list().setChecked([103], checked: false);
 
-    expect(failure, isA<OfflineFailure>());
+    expect(failure, isA<ServerFailure>());
     expect(entry(103).checked, isTrue);
   });
 
@@ -295,6 +305,337 @@ void main() {
         container.read(shoppingListProvider).requireValue.cachedAt,
         isNull,
       );
+    });
+  });
+
+  group('offline check-offs', () {
+    Set<int> pendingIds() =>
+        container.read(shoppingListProvider).requireValue.pendingIds;
+
+    /// The check-offs sent, as "{ids} checked".
+    List<String> sent() => [
+      for (final call in repository.checkCalls)
+        '{${(call.ids.toList()..sort()).join(', ')}} ${call.checked}',
+    ];
+
+    Future<void> goOffline() async {
+      await container.read(shoppingListProvider.future);
+      connectivity.isOnline = false;
+    }
+
+    test('are kept on the device and shown as pending', () async {
+      await goOffline();
+
+      expect(await list().setChecked([101, 102], checked: true), isNull);
+      expect(await list().setChecked([109], checked: false), isNull);
+
+      expect(repository.checkCalls, isEmpty);
+      expect(entry(101).checked, isTrue);
+      expect(entry(101).completedAt, now);
+      expect(entry(109).checked, isFalse);
+      expect(pendingIds(), {101, 102, 109});
+      expect(queue.pending, {
+        101: PendingCheck(checked: true, at: now),
+        102: PendingCheck(checked: true, at: now),
+        109: PendingCheck(checked: false, at: now),
+      });
+    });
+
+    test('ticking and unticking again sends nothing', () async {
+      await goOffline();
+
+      await list().setChecked([105], checked: true);
+      await list().setChecked([105], checked: false);
+      await list().setChecked([109], checked: false);
+      await list().setChecked([109], checked: true);
+
+      expect(queue.pending, isEmpty);
+      expect(pendingIds(), isEmpty);
+      expect(entry(105).checked, isFalse);
+      expect(entry(109).checked, isTrue);
+
+      connectivity.isOnline = true;
+      await pumpEventQueue();
+      expect(repository.checkCalls, isEmpty);
+    });
+
+    test('compare with what was sent before going offline', () async {
+      await container.read(shoppingListProvider.future);
+      // Sent and saved; the list read before still has Feta open.
+      expect(await list().setChecked([105], checked: true), isNull);
+      connectivity.isOnline = false;
+
+      await list().setChecked([105], checked: false);
+      await list().setChecked([105], checked: true);
+      expect(queue.pending, isEmpty);
+      expect(entry(105).checked, isTrue);
+      await list().setChecked([105], checked: false);
+
+      expect(queue.pending, {105: PendingCheck(checked: false, at: now)});
+      connectivity.isOnline = true;
+      await pumpEventQueue();
+      expect(sent().last, '{105} false');
+      expect(repository.entries.firstWhere((e) => e.id == 105).checked, false);
+    });
+
+    test(
+      'a send that fails after going offline is no longer the base',
+      () async {
+        await container.read(shoppingListProvider.future);
+        repository
+          ..checkGate = Completer()
+          ..checkFailure = const ServerFailure(statusCode: 500)
+          ..checkFailsOnce = true;
+        // Ticked online; the request hangs, then the connection goes.
+        final ticked = list().setChecked([105], checked: true);
+        await pumpEventQueue();
+        connectivity.isOnline = false;
+        await list().setChecked([105], checked: false);
+        repository.checkGate!.complete();
+        expect(await ticked, isA<ServerFailure>());
+
+        // The server never got the tick: ticking again must be sent.
+        await list().setChecked([105], checked: true);
+        expect(queue.pending.keys, [105]);
+        expect(pendingIds(), {105});
+        connectivity.isOnline = true;
+        await pumpEventQueue();
+        expect(repository.entries.firstWhere((e) => e.id == 105).checked, true);
+        expect(pendingIds(), isEmpty);
+      },
+    );
+
+    test('a tick while the queue is being sent is sent after it', () async {
+      repository.cachedAt = DateTime(2026, 11, 18, 14);
+      connectivity = FakeConnectivityService(isOnline: false);
+      container = await create();
+      await container.read(shoppingListProvider.future);
+      await list().setChecked([105], checked: true);
+
+      // Back online: the queue goes out, slowly.
+      repository.checkGate = Completer();
+      connectivity.isOnline = true;
+      await pumpEventQueue();
+      expect(sent(), ['{105} true']);
+      // Still on the stored list, Feta is unticked meanwhile.
+      repository.cachedAt = null;
+      await list().setChecked([105], checked: false);
+      expect(entry(105).checked, isFalse);
+      expect(queue.pending, {105: PendingCheck(checked: false, at: now)});
+
+      repository.checkGate!.complete();
+      await pumpEventQueue();
+      expect(sent(), ['{105} true', '{105} false']);
+      expect(repository.entries.firstWhere((e) => e.id == 105).checked, false);
+      expect(queue.pending, isEmpty);
+      expect(entry(105).checked, isFalse);
+    });
+
+    test('ticking back to what is being sent queues nothing', () async {
+      repository.cachedAt = DateTime(2026, 11, 18, 14);
+      connectivity = FakeConnectivityService(isOnline: false);
+      container = await create();
+      await container.read(shoppingListProvider.future);
+      await list().setChecked([105], checked: true);
+      repository.checkGate = Completer();
+      connectivity.isOnline = true;
+      await pumpEventQueue();
+
+      await list().setChecked([105], checked: false);
+      await list().setChecked([105], checked: true);
+      expect(queue.pending, isEmpty);
+      expect(entry(105).checked, isTrue);
+
+      repository.checkGate!.complete();
+      await pumpEventQueue();
+      expect(sent(), ['{105} true']);
+      expect(repository.entries.firstWhere((e) => e.id == 105).checked, true);
+    });
+
+    test('one state failing does not hold back the other', () async {
+      await goOffline();
+      await list().setChecked([103], checked: true);
+      await list().setChecked([109], checked: false);
+      repository
+        ..checkFailure = const ServerFailure(statusCode: 500)
+        ..checkFailsOnce = true;
+
+      connectivity.isOnline = true;
+      await pumpEventQueue();
+
+      expect(sent(), ['{103} true', '{109} false']);
+      expect(queue.pending.keys, [103]);
+      expect(pendingIds(), {103});
+    });
+
+    test('the last tick of an entry replaces the one before', () async {
+      await goOffline();
+      final later = now;
+
+      await list().setChecked([105], checked: true);
+      await list().setChecked([105], checked: false);
+      await list().setChecked([105], checked: true);
+
+      expect(queue.pending, {105: PendingCheck(checked: true, at: later)});
+    });
+
+    test('are sent once back online, one request per state', () async {
+      await goOffline();
+      await list().setChecked([103], checked: true);
+      await list().setChecked([105], checked: true);
+      await list().setChecked([109], checked: false);
+
+      connectivity.isOnline = true;
+      await pumpEventQueue();
+
+      expect(sent(), ['{103, 105} true', '{109} false']);
+      expect(queue.pending, isEmpty);
+      expect(pendingIds(), isEmpty);
+      expect(entry(105).checked, isTrue);
+      expect(entry(109).checked, isFalse);
+      // A read after shows the server's state, the same.
+      await list().refresh();
+      expect(entry(105).checked, isTrue);
+      expect(entry(109).checked, isFalse);
+    });
+
+    test('a read while offline keeps them on top', () async {
+      await goOffline();
+      await list().setChecked([105], checked: true);
+
+      repository.cachedAt = DateTime(2026, 11, 18, 14);
+      container.invalidate(shoppingListProvider);
+      await container.read(shoppingListProvider.future);
+
+      expect(entry(105).checked, isTrue);
+      expect(pendingIds(), {105});
+    });
+
+    test('survive a restart of the app and are sent then', () async {
+      queue.pending[105] = PendingCheck(checked: true, at: now);
+      container = await create();
+
+      await container.read(shoppingListProvider.future);
+      await pumpEventQueue();
+
+      expect(sent(), ['{105} true']);
+      expect(queue.pending, isEmpty);
+      expect(entry(105).checked, isTrue);
+    });
+
+    test('an app started offline shows them and waits', () async {
+      queue.pending[105] = PendingCheck(checked: true, at: now);
+      connectivity = FakeConnectivityService(isOnline: false);
+      repository.cachedAt = DateTime(2026, 11, 18, 14);
+      container = await create();
+
+      await container.read(shoppingListProvider.future);
+      await pumpEventQueue();
+
+      expect(repository.checkCalls, isEmpty);
+      expect(entry(105).checked, isTrue);
+      expect(pendingIds(), {105});
+
+      repository.cachedAt = null;
+      connectivity.isOnline = true;
+      await pumpEventQueue();
+      expect(repository.checkCalls.single.ids, {105});
+      expect(pendingIds(), isEmpty);
+    });
+
+    test('an entry deleted on the server meanwhile is dropped', () async {
+      await goOffline();
+      await list().setChecked([105], checked: true);
+      // Lena deletes Feta while this device is offline.
+      repository.entries.removeWhere((e) => e.id == 105);
+
+      connectivity.isOnline = true;
+      await pumpEventQueue();
+
+      expect(repository.checkCalls.single.ids, {105});
+      expect(queue.pending, isEmpty);
+      await list().refresh();
+      expect(
+        container
+            .read(shoppingListProvider)
+            .requireValue
+            .entries
+            .map((e) => e.id),
+        isNot(contains(105)),
+      );
+      expect(pendingIds(), isEmpty);
+    });
+
+    for (final failure in [
+      const ServerFailure(statusCode: 502),
+      const UnauthorizedFailure(),
+      const OfflineFailure(),
+    ]) {
+      test('a failed send ($failure) keeps them and tries again', () async {
+        await goOffline();
+        await list().setChecked([105], checked: true);
+        repository
+          ..checkFailure = failure
+          ..checkFailsOnce = true;
+
+        connectivity.isOnline = true;
+        await pumpEventQueue();
+        expect(repository.checkCalls, hasLength(1));
+        expect(queue.pending.keys, [105]);
+        expect(pendingIds(), {105});
+        expect(entry(105).checked, isTrue);
+
+        // The next read the server answers takes them along; after an error
+        // from the server, not right away, but coming back to the list.
+        await list().poll();
+        await pumpEventQueue();
+        if (failure is! OfflineFailure) {
+          expect(repository.checkCalls, hasLength(1));
+          await list().catchUp();
+          await pumpEventQueue();
+        }
+        expect(repository.checkCalls, hasLength(2));
+        expect(queue.pending, isEmpty);
+        expect(pendingIds(), isEmpty);
+        expect(repository.entries.firstWhere((e) => e.id == 105).checked, true);
+      });
+    }
+
+    test('a tick sent while the server can not be reached is queued', () async {
+      await container.read(shoppingListProvider.future);
+      repository
+        ..checkFailure = const OfflineFailure()
+        ..checkFailsOnce = true;
+
+      expect(await list().setChecked([105], checked: true), isNull);
+
+      expect(entry(105).checked, isTrue);
+      expect(pendingIds(), {105});
+      expect(queue.pending.keys, [105]);
+
+      await list().catchUp();
+      expect(repository.checkCalls, hasLength(2));
+      expect(pendingIds(), isEmpty);
+      expect(entry(105).checked, isTrue);
+    });
+
+    test('online, a tick goes out at once in place of a queued one', () async {
+      await goOffline();
+      await list().setChecked([105], checked: true);
+      repository.checkGate = Completer();
+
+      // Back online, before the queue is sent: unticked again.
+      connectivity.isOnline = true;
+      final unticked = list().setChecked([105], checked: false);
+      await pumpEventQueue();
+      expect(queue.pending, isEmpty);
+
+      repository.checkGate!.complete();
+      expect(await unticked, isNull);
+      await pumpEventQueue();
+      expect(sent().last, '{105} false');
+      expect(repository.entries.firstWhere((e) => e.id == 105).checked, false);
+      expect(entry(105).checked, isFalse);
     });
   });
 

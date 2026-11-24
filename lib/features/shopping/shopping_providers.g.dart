@@ -21,9 +21,18 @@ part of 'shopping_providers.dart';
 /// started after they were saved, so a read that was already running can't
 /// bring back the old state.
 ///
-/// Sending goes through [_send], the one place a queue for offline
-/// check-offs (#116) can take over later. Until then, a tap offline only
-/// explains that ticking needs a connection.
+/// Checking off is the one write that works offline. Offline (or on a list
+/// from the offline cache), and when sending fails because the server can't
+/// be reached, the state goes into the [ShoppingCheckQueue] on the device
+/// instead and stays shown, marked as pending ([ShoppingListView.pendingIds]).
+/// Setting an entry again replaces its pending state; going back to what the
+/// server has takes it off the queue, so ticking and unticking offline sends
+/// nothing. The queue is sent ([sendQueued]) as soon as the server answers
+/// again: when the app is no longer offline and after each read of the
+/// list. One request per wanted state, through the bulk endpoint, which
+/// ignores entries deleted on the server meanwhile. A failure keeps the
+/// queue for the next try. The last state sent wins, also over a change
+/// someone else made meanwhile.
 
 @ProviderFor(ShoppingList)
 final shoppingListProvider = ShoppingListProvider._();
@@ -41,9 +50,18 @@ final shoppingListProvider = ShoppingListProvider._();
 /// started after they were saved, so a read that was already running can't
 /// bring back the old state.
 ///
-/// Sending goes through [_send], the one place a queue for offline
-/// check-offs (#116) can take over later. Until then, a tap offline only
-/// explains that ticking needs a connection.
+/// Checking off is the one write that works offline. Offline (or on a list
+/// from the offline cache), and when sending fails because the server can't
+/// be reached, the state goes into the [ShoppingCheckQueue] on the device
+/// instead and stays shown, marked as pending ([ShoppingListView.pendingIds]).
+/// Setting an entry again replaces its pending state; going back to what the
+/// server has takes it off the queue, so ticking and unticking offline sends
+/// nothing. The queue is sent ([sendQueued]) as soon as the server answers
+/// again: when the app is no longer offline and after each read of the
+/// list. One request per wanted state, through the bulk endpoint, which
+/// ignores entries deleted on the server meanwhile. A failure keeps the
+/// queue for the next try. The last state sent wins, also over a change
+/// someone else made meanwhile.
 final class ShoppingListProvider
     extends $AsyncNotifierProvider<ShoppingList, ShoppingListView> {
   /// The entries of the household's shopping list, with the check states set
@@ -59,9 +77,18 @@ final class ShoppingListProvider
   /// started after they were saved, so a read that was already running can't
   /// bring back the old state.
   ///
-  /// Sending goes through [_send], the one place a queue for offline
-  /// check-offs (#116) can take over later. Until then, a tap offline only
-  /// explains that ticking needs a connection.
+  /// Checking off is the one write that works offline. Offline (or on a list
+  /// from the offline cache), and when sending fails because the server can't
+  /// be reached, the state goes into the [ShoppingCheckQueue] on the device
+  /// instead and stays shown, marked as pending ([ShoppingListView.pendingIds]).
+  /// Setting an entry again replaces its pending state; going back to what the
+  /// server has takes it off the queue, so ticking and unticking offline sends
+  /// nothing. The queue is sent ([sendQueued]) as soon as the server answers
+  /// again: when the app is no longer offline and after each read of the
+  /// list. One request per wanted state, through the bulk endpoint, which
+  /// ignores entries deleted on the server meanwhile. A failure keeps the
+  /// queue for the next try. The last state sent wins, also over a change
+  /// someone else made meanwhile.
   ShoppingListProvider._()
     : super(
         from: null,
@@ -81,7 +108,7 @@ final class ShoppingListProvider
   ShoppingList create() => ShoppingList();
 }
 
-String _$shoppingListHash() => r'63df1cd6cf41abf817599fc0ba596dbbfb35b3f9';
+String _$shoppingListHash() => r'b77be94648100d84dfa6b05149fd97a216238e20';
 
 /// The entries of the household's shopping list, with the check states set
 /// on this device shown at once.
@@ -96,9 +123,18 @@ String _$shoppingListHash() => r'63df1cd6cf41abf817599fc0ba596dbbfb35b3f9';
 /// started after they were saved, so a read that was already running can't
 /// bring back the old state.
 ///
-/// Sending goes through [_send], the one place a queue for offline
-/// check-offs (#116) can take over later. Until then, a tap offline only
-/// explains that ticking needs a connection.
+/// Checking off is the one write that works offline. Offline (or on a list
+/// from the offline cache), and when sending fails because the server can't
+/// be reached, the state goes into the [ShoppingCheckQueue] on the device
+/// instead and stays shown, marked as pending ([ShoppingListView.pendingIds]).
+/// Setting an entry again replaces its pending state; going back to what the
+/// server has takes it off the queue, so ticking and unticking offline sends
+/// nothing. The queue is sent ([sendQueued]) as soon as the server answers
+/// again: when the app is no longer offline and after each read of the
+/// list. One request per wanted state, through the bulk endpoint, which
+/// ignores entries deleted on the server meanwhile. A failure keeps the
+/// queue for the next try. The last state sent wins, also over a change
+/// someone else made meanwhile.
 
 abstract class _$ShoppingList extends $AsyncNotifier<ShoppingListView> {
   FutureOr<ShoppingListView> build();
@@ -118,6 +154,54 @@ abstract class _$ShoppingList extends $AsyncNotifier<ShoppingListView> {
     return element.handleCreate(ref, build);
   }
 }
+
+/// Sends check-offs left in the queue by an earlier start of the app, even
+/// if the shopping list isn't opened: if there are any, it loads the
+/// [ShoppingList], which sends them as soon as the server answers. The app
+/// shell watches it.
+
+@ProviderFor(shoppingQueueReplay)
+final shoppingQueueReplayProvider = ShoppingQueueReplayProvider._();
+
+/// Sends check-offs left in the queue by an earlier start of the app, even
+/// if the shopping list isn't opened: if there are any, it loads the
+/// [ShoppingList], which sends them as soon as the server answers. The app
+/// shell watches it.
+
+final class ShoppingQueueReplayProvider
+    extends $FunctionalProvider<AsyncValue<void>, void, FutureOr<void>>
+    with $FutureModifier<void>, $FutureProvider<void> {
+  /// Sends check-offs left in the queue by an earlier start of the app, even
+  /// if the shopping list isn't opened: if there are any, it loads the
+  /// [ShoppingList], which sends them as soon as the server answers. The app
+  /// shell watches it.
+  ShoppingQueueReplayProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'shoppingQueueReplayProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$shoppingQueueReplayHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<void> create(Ref ref) {
+    return shoppingQueueReplay(ref);
+  }
+}
+
+String _$shoppingQueueReplayHash() =>
+    r'c76b1c4d49a5db7f3a69cbaf4f48a3e81395c743';
 
 /// The supermarkets of the space, for the picker. The list works without
 /// them, so a failure only hides the picker.

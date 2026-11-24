@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../app/offline.dart';
 import '../../app/platform_providers.dart';
 import '../../app/repository_providers.dart';
 import '../../app/session.dart';
 import '../../core/failures.dart';
 import '../../domain/models/shopping.dart';
+import '../../domain/repositories/shopping_check_queue.dart';
 import '../../domain/repositories/shopping_repository.dart';
 import '../../domain/services/shopping_list_groups.dart';
 
@@ -20,9 +22,14 @@ class ShoppingListView {
     required this.entries,
     this.truncated = false,
     this.cachedAt,
+    this.pendingIds = const {},
   });
 
   final List<ShoppingEntry> entries;
+
+  /// The ids of the entries whose check state was set offline and is not
+  /// sent yet (queued, [ShoppingList.sendQueued]).
+  final Set<int> pendingIds;
 
   /// Whether Tandoor cut the list off ([ShoppingListSnapshot.truncated]), so
   /// the newest entries may be missing.
@@ -45,8 +52,10 @@ class _CheckChange {
   final DateTime at;
 
   /// How many reads had started when it was saved; `null` while it is being
-  /// sent. Reads started later include it.
+  /// sent or waits in the queue. Reads started later include it.
   int? savedBeforeRead;
+
+  PendingCheck get pending => PendingCheck(checked: checked, at: at);
 }
 
 /// The entries of the household's shopping list, with the check states set
@@ -62,18 +71,54 @@ class _CheckChange {
 /// started after they were saved, so a read that was already running can't
 /// bring back the old state.
 ///
-/// Sending goes through [_send], the one place a queue for offline
-/// check-offs (#116) can take over later. Until then, a tap offline only
-/// explains that ticking needs a connection.
+/// Checking off is the one write that works offline. Offline (or on a list
+/// from the offline cache), and when sending fails because the server can't
+/// be reached, the state goes into the [ShoppingCheckQueue] on the device
+/// instead and stays shown, marked as pending ([ShoppingListView.pendingIds]).
+/// Setting an entry again replaces its pending state; going back to what the
+/// server has takes it off the queue, so ticking and unticking offline sends
+/// nothing. The queue is sent ([sendQueued]) as soon as the server answers
+/// again: when the app is no longer offline and after each read of the
+/// list. One request per wanted state, through the bulk endpoint, which
+/// ignores entries deleted on the server meanwhile. A failure keeps the
+/// queue for the next try. The last state sent wins, also over a change
+/// someone else made meanwhile.
 @Riverpod(keepAlive: true, retry: _noRetry)
 class ShoppingList extends _$ShoppingList {
   late ShoppingRepository _repository;
+  late ShoppingCheckQueue _queue;
 
   /// The list as last read from the server.
   ShoppingListSnapshot? _server;
 
   /// Check states set here, by entry id.
   final _changes = <int, _CheckChange>{};
+
+  /// The check states in the [ShoppingCheckQueue], by entry id; each is
+  /// also in [_changes] while it is the one shown.
+  final _queued = <int, _CheckChange>{};
+
+  /// For a queued entry, the change sent (or being sent) that the queued one
+  /// replaced, if any: with it, the server has, or gets, that state rather
+  /// than the one last read.
+  final _queuedOver = <int, _CheckChange>{};
+
+  /// The queued changes being sent right now, by entry id.
+  final _inFlight = <int, _CheckChange>{};
+
+  /// The read that tries the server again after a tick on a list from the
+  /// offline cache, while it runs.
+  Future<void>? _retrying;
+
+  /// When the server last answered sending the queue with an error; reads
+  /// don't send it again until [_retryAfterRejection] later.
+  DateTime? _rejectedAt;
+
+  /// Writes to the [ShoppingCheckQueue], in order.
+  Future<void> _queueWrites = Future.value();
+
+  /// The send of the queue that waits for its turn, if any.
+  Future<void>? _queuedSend;
 
   /// The changes being sent, in order. Kept when the list starts over, so
   /// a change still can't overtake an earlier one.
@@ -92,12 +137,245 @@ class ShoppingList extends _$ShoppingList {
   @override
   Future<ShoppingListView> build() async {
     _repository = ref.watch(shoppingRepositoryProvider);
+    final queue = _queue = ref.watch(shoppingCheckQueueProvider);
     _server = null;
     _changes.clear();
+    _queued.clear();
+    _queuedOver.clear();
+    // A send still waiting takes what is queued when its turn comes, but
+    // the next one is this build's.
+    _queuedSend = null;
+    // Back online, or the server answers again: send what waits.
+    ref.listen(isOfflineProvider, (_, offline) {
+      if (!offline) unawaited(_sendQueuedQuietly());
+    });
     final read = ++_reads;
+    // Written by an earlier build of this session, maybe not yet stored.
+    await _queueWrites;
+    final pending = await queue.read();
+    // A check-off made while this loaded is newer.
+    if (identical(queue, _queue)) {
+      for (final MapEntry(key: id, value: check) in pending.entries) {
+        if (_changes.containsKey(id)) continue;
+        final change = _CheckChange(checked: check.checked, at: check.at);
+        _changes[id] = change;
+        _queued[id] = change;
+      }
+    }
     final snapshot = await _fullRead(_repository);
     _apply(read, snapshot);
+    _sendAfterRead(snapshot);
     return _view();
+  }
+
+  /// Whether check states wait to be sent, once those just set are stored.
+  Future<bool> hasPending() async {
+    await _queueWrites;
+    return _queued.isNotEmpty;
+  }
+
+  /// Whether a check-off goes into the queue rather than to the server:
+  /// offline, or the list shown comes from the offline cache.
+  bool get _offline => ref.read(isOfflineProvider) || _server?.cachedAt != null;
+
+  /// The entry with [id] as last read from the server, if it was there.
+  ShoppingEntry? _serverEntry(int id) {
+    for (final entry in _server?.entries ?? const <ShoppingEntry>[]) {
+      if (entry.id == id) return entry;
+    }
+    return null;
+  }
+
+  /// Sends the check states waiting in the queue, if any, one request per
+  /// wanted state, after the changes sent before. Throws the [Failure] if
+  /// sending fails; what wasn't sent stays in the queue.
+  Future<void> sendQueued() {
+    if (_queued.isEmpty) return Future.value();
+    // One send waiting for its turn is enough: it takes what is queued then.
+    if (_queuedSend case final waiting?) return waiting;
+    final repository = _repository;
+    late final Future<void> send;
+    send = _writes.then((_) {
+      if (identical(_queuedSend, send)) _queuedSend = null;
+      return _sendQueue(repository);
+    });
+    _queuedSend = send;
+    _writes = send.then((_) {}, onError: (Object _) {});
+    return send;
+  }
+
+  /// Sends what is queued now for the session of [repository]. Each wanted
+  /// state is tried even if the other fails; then the first failure is
+  /// thrown.
+  Future<void> _sendQueue(ShoppingRepository repository) async {
+    if (!identical(repository, _repository)) return;
+    final batch = Map.of(_queued);
+    Object? failure;
+    StackTrace? failureStack;
+    for (final checked in [true, false]) {
+      final group = {
+        for (final MapEntry(key: id, value: change) in batch.entries)
+          if (change.checked == checked) id: change,
+      };
+      if (group.isEmpty) continue;
+      _inFlight.addAll(group);
+      try {
+        // Entries deleted on the server meanwhile are ignored there.
+        await repository.setChecked(group.keys.toSet(), checked: checked);
+      } on Object catch (error, stack) {
+        failure ??= error;
+        failureStack ??= stack;
+        _inFlight.removeWhere((id, _) => group.containsKey(id));
+        if (identical(repository, _repository)) _notSent(group);
+        continue;
+      }
+      _inFlight.removeWhere((id, _) => group.containsKey(id));
+      // Another login meanwhile: its queue is a new one.
+      if (!identical(repository, _repository)) return;
+      final sent = <int>[];
+      for (final MapEntry(key: id, value: change) in group.entries) {
+        // Reads that start from now on include it, also where it is shown
+        // through a copy loaded again meanwhile.
+        change.savedBeforeRead = _reads;
+        final shown = _changes[id];
+        if (shown != null &&
+            !_queued.containsKey(id) &&
+            shown.pending == change.pending) {
+          shown.savedBeforeRead ??= _reads;
+        }
+        // Set again while this was sent: that one waits for the next send.
+        // By value, as the list may have been loaded again meanwhile.
+        final queued = _queued[id];
+        if (queued != null && queued.pending != change.pending) continue;
+        _queued.remove(id)?.savedBeforeRead = _reads;
+        _queuedOver.remove(id);
+        sent.add(id);
+      }
+      _writeQueue((queue) => queue.remove(sent));
+      if (ref.mounted) _publish();
+    }
+    if (failure != null) Error.throwWithStackTrace(failure, failureStack!);
+  }
+
+  /// After sending [group] from the queue failed: what was set on top of it
+  /// while it was sent treated it as the server's state, which it isn't.
+  void _notSent(Map<int, _CheckChange> group) {
+    final requeued = <int, _CheckChange>{};
+    // By value: the list may have been loaded again since it was sent.
+    for (final MapEntry(key: id, value: change) in group.entries) {
+      if (_queuedOver[id]?.pending == change.pending) _queuedOver.remove(id);
+      // Taken off the queue as the state the server gets: queued again.
+      final shown = _changes[id];
+      if (shown != null &&
+          shown.savedBeforeRead == null &&
+          shown.pending == change.pending &&
+          !_queued.containsKey(id)) {
+        _queued[id] = shown;
+        requeued[id] = shown;
+      }
+    }
+    for (final MapEntry(key: id, value: change) in requeued.entries) {
+      final check = change.pending;
+      _writeQueue((queue) => queue.put([id], check));
+    }
+    if (requeued.isNotEmpty && ref.mounted) _publish();
+  }
+
+  /// [sendQueued], for when nobody waits for it: a failure keeps the queue
+  /// for the next try.
+  Future<void> _sendQueuedQuietly() async {
+    try {
+      await sendQueued();
+      _rejectedAt = null;
+    } on OfflineFailure {
+      // Tried again once the server answers a read, or back online.
+    } on Failure {
+      // The server answered with an error: tried again, but not after
+      // every poll.
+      _rejectedAt = ref.mounted ? ref.read(clockProvider)() : null;
+    } on Object catch (error, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'shopping',
+        ),
+      );
+    }
+  }
+
+  /// After a read: if the server answered it, it may take the queue now.
+  void _sendAfterRead(ShoppingListSnapshot snapshot) {
+    if (snapshot.cachedAt != null || _queued.isEmpty) return;
+    if (_rejectedAt case final at?
+        when ref.read(clockProvider)().difference(at) < _retryAfterRejection) {
+      return;
+    }
+    unawaited(_sendQueuedQuietly());
+  }
+
+  /// Runs [write] on the queue after the earlier writes.
+  void _writeQueue(Future<void> Function(ShoppingCheckQueue queue) write) {
+    final queue = _queue;
+    _queueWrites = _queueWrites
+        .then((_) => write(queue))
+        .then(
+          (_) {},
+          onError: (Object _) {
+            // The list still shows it and sends it while the app runs; only
+            // a restart before then would lose it.
+          },
+        );
+  }
+
+  /// Puts [change], just set offline, into the queue for [ids], or takes
+  /// them off it where [change] is what the server has (or gets from what
+  /// was sent): ticking and unticking offline sends nothing.
+  void _enqueue(List<int> ids, _CheckChange change) {
+    final put = <int>[];
+    final removed = <int>[];
+    for (final id in ids) {
+      final previous = _changes[id];
+      final queued = _queued.remove(id);
+      final wasQueued = queued != null;
+      // The change sent before (or being sent from the queue right now),
+      // which the queue goes on top of.
+      // By value: the list may have been loaded again since it was sent.
+      final sending = wasQueued && _inFlight[id]?.pending == queued.pending;
+      final over = wasQueued ? _queuedOver.remove(id) : previous;
+      final base =
+          (sending ? queued : over)?.checked ?? _serverEntry(id)?.checked;
+      if (sending) {
+        if (base == change.checked) {
+          // Back to what is being sent: shown as such, nothing to queue.
+          _changes[id] = queued;
+          removed.add(id);
+        } else {
+          _changes[id] = change;
+          _queued[id] = change;
+          _queuedOver[id] = queued;
+          put.add(id);
+        }
+        continue;
+      }
+      if (base == change.checked) {
+        if (wasQueued) {
+          if (over == null) {
+            _changes.remove(id);
+          } else {
+            _changes[id] = over;
+          }
+          removed.add(id);
+        }
+      } else {
+        _changes[id] = change;
+        _queued[id] = change;
+        if (over != null) _queuedOver[id] = over;
+        put.add(id);
+      }
+    }
+    if (removed.isNotEmpty) _writeQueue((queue) => queue.remove(removed));
+    if (put.isNotEmpty) _writeQueue((queue) => queue.put(put, change.pending));
   }
 
   /// Reads the list again, keeping the one shown meanwhile. Throws the
@@ -116,15 +394,18 @@ class ShoppingList extends _$ShoppingList {
     }
     _apply(read, snapshot);
     state = AsyncData(_view());
+    _sendAfterRead(snapshot);
   }
 
-  /// Sends what is waiting to be sent, then reads the list again
-  /// ([refresh]): for coming back to the list, or back online.
-  ///
-  /// The offline check-off queue (#116) hooks in here: once [_send] queues
-  /// check-offs while offline and chains sending them on [_writes] when the
-  /// connection is back, this read shows the list after they went through.
+  /// Sends what is waiting to be sent, the queue included, then reads the
+  /// list again ([refresh]): for coming back to the list, or back online.
+  /// A queue that can't be sent stays for the next try.
   Future<void> catchUp() async {
+    try {
+      await sendQueued();
+    } on Object {
+      // Kept; the read below says whether the server answers.
+    }
     await _writes;
     await refresh();
   }
@@ -145,11 +426,13 @@ class ShoppingList extends _$ShoppingList {
     final changes = await repository.fetch(updatedAfter: server.syncedAt);
     if (!ref.mounted || !identical(repository, _repository)) return;
     if (_merge(read, changes)) _publish();
+    _sendAfterRead(changes);
   }
 
   /// Checks off ([checked] `true`) or unchecks the entries with [ids],
   /// showing it at once and sending it right away. Returns `null` once it is
-  /// saved, or the [Failure] after taking it back.
+  /// saved, or queued because the server can't be reached; the [Failure]
+  /// after taking it back.
   Future<Failure?> setChecked(List<int> ids, {required bool checked}) async {
     if (ids.isEmpty) return null;
     final ref = this.ref;
@@ -158,8 +441,30 @@ class ShoppingList extends _$ShoppingList {
       checked: checked,
       at: ref.read(clockProvider)(),
     );
+    if (_offline) {
+      _enqueue(ids, change);
+      _publish();
+      // Online, only the list shown is from the cache (a request timed
+      // out): try the server again, which sends the queue if it answers.
+      if (!ref.read(isOfflineProvider) && _queued.isNotEmpty) {
+        // One try at a time, however many rows are ticked.
+        _retrying ??= _resync().whenComplete(() => _retrying = null);
+      }
+      await _queueWrites;
+      return null;
+    }
     // What each entry showed before, to go back to if this fails.
     final previous = {for (final id in ids) id: _changes[id]};
+    // Sent now, in place of what was queued for them.
+    final unqueued = {
+      for (final id in ids)
+        if (_queued.remove(id) != null) id,
+    };
+    // To put back with them if this fails.
+    final unqueuedOver = {
+      for (final id in unqueued) id: ?_queuedOver.remove(id),
+    };
+    if (unqueued.isNotEmpty) _writeQueue((queue) => queue.remove(unqueued));
     for (final id in ids) {
       _changes[id] = change;
     }
@@ -184,17 +489,59 @@ class ShoppingList extends _$ShoppingList {
       failure = ServerFailure(cause: error);
     }
     if (!ref.mounted || !identical(repository, _repository)) return failure;
+    if (failure != null) {
+      // A state queued offline meanwhile went on top of this one, as if the
+      // server had it: it didn't (or may not), so compare with what came
+      // before instead.
+      for (final id in ids) {
+        if (!identical(_queuedOver[id], change)) continue;
+        final before = unqueued.contains(id) ? unqueuedOver[id] : previous[id];
+        if (before == null) {
+          _queuedOver.remove(id);
+        } else {
+          _queuedOver[id] = before;
+        }
+      }
+    }
     if (failure == null) {
       change.savedBeforeRead = _reads;
+    } else if (failure is OfflineFailure) {
+      // Not lost: queued, and sent once the server answers again. The
+      // request may have arrived after all; sending it again does no harm.
+      final put = [
+        for (final id in ids)
+          if (identical(_changes[id], change)) id,
+      ];
+      for (final id in put) {
+        _queued[id] = change;
+        final over = unqueued.contains(id) ? unqueuedOver[id] : previous[id];
+        if (over != null) _queuedOver[id] = over;
+      }
+      if (put.isNotEmpty) {
+        _writeQueue((queue) => queue.put(put, change.pending));
+      }
+      _publish();
+      await _queueWrites;
+      return null;
     } else {
       // Back to what was shown before, where no later change took over.
+      final requeued = <int>[];
       for (final MapEntry(key: id, value: before) in previous.entries) {
         if (!identical(_changes[id], change)) continue;
         if (before == null) {
           _changes.remove(id);
         } else {
           _changes[id] = before;
+          if (unqueued.contains(id)) {
+            _queued[id] = before;
+            if (unqueuedOver[id] case final over?) _queuedOver[id] = over;
+            requeued.add(id);
+          }
         }
+      }
+      for (final id in requeued) {
+        final check = _queued[id]!.pending;
+        _writeQueue((queue) => queue.put([id], check));
       }
       _publish();
     }
@@ -312,6 +659,14 @@ class ShoppingList extends _$ShoppingList {
         );
         for (final id in remove) {
           _changes.remove(id);
+          _queuedOver.remove(id);
+        }
+        final unqueued = [
+          for (final id in remove)
+            if (_queued.remove(id) != null) id,
+        ];
+        if (unqueued.isNotEmpty) {
+          _writeQueue((queue) => queue.remove(unqueued));
         }
         // A read that started before this edit can't bring it back.
         _shownRead = ++_reads;
@@ -427,6 +782,7 @@ class ShoppingList extends _$ShoppingList {
   ShoppingListView _view() => ShoppingListView(
     truncated: _server?.truncated ?? false,
     cachedAt: _server?.cachedAt,
+    pendingIds: Set.unmodifiable(_queued.keys.toSet()),
     entries: List.unmodifiable([
       for (final entry in _server?.entries ?? const <ShoppingEntry>[])
         switch (_changes[entry.id]) {
@@ -442,6 +798,22 @@ class ShoppingList extends _$ShoppingList {
 }
 
 Duration? _noRetry(int retryCount, Object error) => null;
+
+/// How long reads of the list wait before they send the queue again after
+/// the server answered it with an error. Coming back online, or to the list,
+/// tries at once.
+const _retryAfterRejection = Duration(minutes: 1);
+
+/// Sends check-offs left in the queue by an earlier start of the app, even
+/// if the shopping list isn't opened: if there are any, it loads the
+/// [ShoppingList], which sends them as soon as the server answers. The app
+/// shell watches it.
+@Riverpod(keepAlive: true)
+Future<void> shoppingQueueReplay(Ref ref) async {
+  final pending = await ref.watch(shoppingCheckQueueProvider).read();
+  if (pending.isEmpty || !ref.mounted) return;
+  ref.listen(shoppingListProvider, (_, _) {});
+}
 
 /// The supermarkets of the space, for the picker. The list works without
 /// them, so a failure only hides the picker.

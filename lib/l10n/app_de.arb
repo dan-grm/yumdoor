@@ -146,6 +146,22 @@
   "@logout": {
     "description": "Action that ends the session."
   },
+  "logoutPendingTitle": "Abmelden?",
+  "@logoutPendingTitle": {
+    "description": "Title of the dialog before logging out while shopping check-offs are not sent yet."
+  },
+  "logoutPendingBody": "Was du offline auf der Einkaufsliste abgehakt hast, ist noch nicht an Tandoor gesendet. Beim Abmelden geht es verloren.",
+  "@logoutPendingBody": {
+    "description": "Body of the dialog before logging out while shopping check-offs (or uncheckings) made offline are not sent yet."
+  },
+  "logoutPendingConfirm": "Trotzdem abmelden",
+  "@logoutPendingConfirm": {
+    "description": "Dialog action: log out and drop the unsent check-offs."
+  },
+  "logoutPendingKeep": "Angemeldet bleiben",
+  "@logoutPendingKeep": {
+    "description": "Dialog action: don't log out."
+  },
   "back": "Zurück",
   "@back": {
     "description": "Accessible label of the round back button in top bars."
@@ -2423,6 +2439,20 @@
   "shoppingUndo": "Rückgängig",
   "@shoppingUndo": {
     "description": "Snackbar action that takes back a check-off."
+  },
+  "shoppingSyncing": "wird synchronisiert",
+  "@shoppingSyncing": {
+    "description": "Small mark on a shopping row checked off (or back on) offline, not sent to the server yet."
+  },
+  "shoppingPending": "{count, plural, =1{1 Änderung noch nicht gesendet} other{{count} Änderungen noch nicht gesendet}}",
+  "@shoppingPending": {
+    "description": "Line above the shopping list: how many rows were checked off (or back on) offline and are not sent yet.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
   },
   "shoppingCheckFailed": "{name} nicht abgehakt. {reason}",
   "@shoppingCheckFailed": {

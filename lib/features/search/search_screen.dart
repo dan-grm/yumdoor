@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../app/session.dart';
 import '../../design/components/buttons.dart';
 import '../../design/components/filter_chips.dart';
 import '../../design/components/recipe_card.dart';
@@ -17,6 +16,7 @@ import '../../domain/models/recipe_query.dart';
 import '../../domain/models/recipe_sort.dart';
 import '../../domain/services/scaling_service.dart';
 import '../../l10n/l10n.dart';
+import '../auth/logout.dart';
 import '../common/failure_view.dart';
 import '../common/offline_disabled.dart';
 import '../editor/editor_screen.dart';
@@ -217,9 +217,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                         RoundIconButton(
                           icon: Icons.logout_rounded,
                           label: l10n.logout,
-                          onPressed: () => ref
-                              .read(sessionControllerProvider.notifier)
-                              .logout(),
+                          onPressed: () =>
+                              unawaited(confirmAndLogout(context, ref)),
                         ),
                       ],
                     ),
