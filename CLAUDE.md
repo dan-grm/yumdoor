@@ -15,7 +15,9 @@ girlfriend, build it mostly through Claude Code. Read this file first, then the 
 - No ads, analytics, tracking or third-party requests at runtime.
 - Target Tandoor **2.6.15** (pinned in `TANDOOR_VERSION`). Only the latest 2.x line is supported.
 - Servings are chosen on the recipe screen and are read-only in cooking mode.
-- Offline is read-only. When offline, write actions are disabled (visible, with an explanation), never queued.
+- Offline is read-only, with one exception: checking shopping list entries off (and back on) works offline, is kept
+  on the device and is sent when the server answers again. Every other write action is disabled when offline
+  (visible, with an explanation), never queued.
 
 ## Architecture rules (enforced by `tool/check_imports.dart` in CI)
 

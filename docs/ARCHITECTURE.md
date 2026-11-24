@@ -181,7 +181,7 @@ shows the origin and explains the constraint.
 
 ## Offline cache
 
-- Read-only offline: recipes the user has opened (and, from M4, the recipes of the meal plans the planner shows), the
+- Read-only offline, except for checking shopping list entries off (below): recipes the user has opened (and, from M4, the recipes of the meal plans the planner shows), the
   plans of the weeks the planner showed and the last loaded shopping list are stored in Drift (`lib/data/cache/`).
 - Stored as domain models serialized to JSON (`Recipe.fromJson`/`toJson`) in a `cached_recipe` table (id, name,
   imageUrl, updatedAt, json, lastOpenedAt), plus images as bytes in `cached_image`. Simple, and a domain model change
@@ -210,8 +210,7 @@ shows the origin and explains the constraint.
   entries changed on the device, or stored from a newer read, after it started; `syncedAt` never goes back. Offline, a full read answers from it (`ShoppingListSnapshot.cachedAt`, "Offline · Stand vom …" on the list);
   an incremental read fails, pull to refresh on a list already shown says the server can't be reached, and the first
   poll once the server answers reads the list in full. The cache
-  holds only what the server has, so the offline check-off queue (#116) can live in a table of its own and be shown on
-  top of it.
+  holds only what the server has; the offline check-off queue lives in a table of its own and is shown on top of it.
 - The caching repositories note `CacheDatabase.clears` when their session starts and store nothing once logout
   cleared the cache, so a request that ends late (or starts before the session's repositories are gone) can't bring
   back the previous user's recipes, saved searches, plans or list. A list shown from the cache is read-only even when
@@ -219,13 +218,32 @@ shows the origin and explains the constraint.
 - `ConnectivityService` plus requests drive the `isOffline` provider (`lib/app/offline.dart`): a request that can't
   connect sets it, any answer from the server (errors included) or the network coming back clears it. When offline,
   a banner is shown on every screen (`MaterialApp.builder`) and write actions are disabled (not hidden) through
-  `OfflineDisabled`, with a tooltip explaining why. No writes are queued.
+  `OfflineDisabled`, with a tooltip explaining why. No writes are queued, except shopping check-offs (below).
 - Shopping list check-offs (`ShoppingList` in `lib/features/shopping/shopping_providers.dart`) are optimistic: the
   check state set on the device is shown over the list read from the server and sent to Tandoor at once (not after
   the undo snackbar), one request after another so an undo can't overtake its check-off. It stays on top until a
-  read that started after it was saved; a failure takes it back. Offline, a tap only explains that
-  ticking needs a connection, as in the planner; sending goes through one method so that #116 (offline check-offs, a decided rule change) can
-  put a queue there.
+  read that started after it was saved; a failure takes it back.
+- Checking off (and back on) is the one write that works offline (decided for M4, #116). Offline, on a list from
+  the cache, or when sending fails with `OfflineFailure`, the state goes into the `ShoppingCheckQueue`
+  (`pending_shopping_check`: per server and entry id the wanted `checked` and when it was set, `ShoppingCheckCache`) instead of
+  being taken back. It survives a reload or restart, and a cache version change keeps its table like the drafts'.
+  Setting an entry again replaces its pending state, and going back to what the server has (or will have from what
+  was already sent) takes it off the queue, so ticking and unticking offline sends nothing. Queued rows show "wird
+  synchronisiert" and a line above the list counts them. The queue is sent when `isOffline` clears (network back or
+  any answer from the server) and after every read of the list the server answered, as one bulk request per wanted
+  state, after the changes sent before it (one failing doesn't hold back the other). Entries deleted on the server
+  meanwhile are ignored by the bulk endpoint and dropped from the queue. A failure, a rejected token (403) included,
+  keeps the queue for the next try. An online
+  tick on a queued entry is sent at once and replaces its pending state. After a restart with a non-empty queue the
+  app shell loads the list in the background, so the queue goes out even if the list isn't opened.
+- Conflicts: the last check state sent wins. A check-off queued offline is sent even if someone else in the
+  household changed the same entry meanwhile, as the bulk endpoint has no condition; their change is overwritten.
+- Logout asks before it drops unsent check-offs ("Abmelden?"), then clears the queue with the rest of the database.
+  A session that ends because the token was rejected (`SessionController.checkToken`) keeps the queue: each row
+  carries the server it belongs to, and only a session on the same server reads (and sends) them; another server's
+  session deletes them. Whoever logs in there next can only tick entries of their own household (the bulk endpoint
+  ignores other ids), so at worst a household member's ticks are sent by another member. Coming back from an app
+  version that didn't know the queue (a rollback) drops it, since that version's logout left it behind.
 - The recipe editor keeps unsaved changes as drafts in the same database (`editor_draft`, `DraftStore`): one per
   recipe and one for a new recipe, the `RecipeDraft` as JSON plus a chosen photo's bytes, written a second after the
   last change and when the editor closes or the app is hidden. Reopening the editor offers a draft that differs from
@@ -234,7 +252,7 @@ shows the origin and explains the constraint.
   editing and drafts go on; saving waits until the app is online. Leaving the editor with changes asks first
   (`GoRoute.onExit`, so back, "Abbrechen" and any other navigation), and `UnloadGuard` makes the browser ask
   before the tab is closed or reloaded.
-- Logout (and so switching servers or users) clears the database, drafts included. Cache size is capped at 100 recipes (LRU by
+- Logout (and so switching servers or users) clears the database, drafts and unsent check-offs included. Cache size is capped at 100 recipes (LRU by
   `lastOpenedAt`); images no cached recipe uses are dropped with them.
 - Starting the PWA offline also needs the app shell from the service worker (#17); the data side doesn't depend on it.
 - Web: `web/drift_worker.js` and `web/sqlite3.wasm` are vendored and must match `pubspec.lock`. After bumping
