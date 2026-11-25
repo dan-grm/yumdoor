@@ -361,6 +361,73 @@ abstract class _$ShoppingSupermarketChoice extends $Notifier<int?> {
   }
 }
 
+/// Whether the rows of the shopping list say where they come from: the
+/// recipes, or who added them by hand. Off unless chosen, as most of the
+/// time only what to buy matters; remembered on this device.
+
+@ProviderFor(ShoppingShowSources)
+final shoppingShowSourcesProvider = ShoppingShowSourcesProvider._();
+
+/// Whether the rows of the shopping list say where they come from: the
+/// recipes, or who added them by hand. Off unless chosen, as most of the
+/// time only what to buy matters; remembered on this device.
+final class ShoppingShowSourcesProvider
+    extends $NotifierProvider<ShoppingShowSources, bool> {
+  /// Whether the rows of the shopping list say where they come from: the
+  /// recipes, or who added them by hand. Off unless chosen, as most of the
+  /// time only what to buy matters; remembered on this device.
+  ShoppingShowSourcesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'shoppingShowSourcesProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$shoppingShowSourcesHash();
+
+  @$internal
+  @override
+  ShoppingShowSources create() => ShoppingShowSources();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$shoppingShowSourcesHash() =>
+    r'18d1cdc31121c4b4e2c6b341d390c2fcc9f38e04';
+
+/// Whether the rows of the shopping list say where they come from: the
+/// recipes, or who added them by hand. Off unless chosen, as most of the
+/// time only what to buy matters; remembered on this device.
+
+abstract class _$ShoppingShowSources extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
 /// The chosen supermarket, if the space still has it.
 
 @ProviderFor(shoppingSupermarket)

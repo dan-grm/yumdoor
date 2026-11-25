@@ -1755,6 +1755,9 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get shoppingShowSources => 'Herkunft der Artikel';
+
+  @override
   String get shoppingOnHand => 'Habe ich da';
 
   @override

@@ -98,10 +98,12 @@ void main() {
     // Two entries of carrots, merged and in plural.
     expect(find.text('Karotten'), findsOneWidget);
     expect(find.text('1,1 kg'), findsOneWidget);
-    expect(find.text('Ofenkarotten, Linsen-Bolognese'), findsOneWidget);
     expect(find.text('½ Bund'), findsOneWidget);
     expect(find.text('Zitronen'), findsOneWidget);
-    expect(find.text('von Lena hinzugefügt'), findsOneWidget);
+    expect(find.text('2'), findsOneWidget);
+    // Where rows come from is hidden unless chosen.
+    expect(find.text('Ofenkarotten, Linsen-Bolognese'), findsNothing);
+    expect(find.text('von Lena hinzugefügt'), findsNothing);
     // The done rows are collapsed.
     expect(find.text('Erledigt · 3'), findsOneWidget);
     expect(find.text('Olivenöl'), findsNothing);
@@ -109,7 +111,29 @@ void main() {
     await tester.tap(find.text('Erledigt · 3'));
     await tester.pumpAndSettle();
     expect(find.text('Olivenöl'), findsOneWidget);
+  });
+
+  testWidgets('shows where rows come from when chosen, remembered', (
+    tester,
+  ) async {
+    await pumpList(tester, size: const Size(390, 1400));
+    final toggle = find.byTooltip('Herkunft der Artikel');
+    expect(tester.getSemantics(toggle), isSemantics(isSelected: false));
+
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(find.text('Ofenkarotten, Linsen-Bolognese'), findsOneWidget);
+    expect(find.text('von Lena hinzugefügt'), findsOneWidget);
+    expect(tester.getSemantics(toggle), isSemantics(isSelected: true));
+    await tester.tap(find.text('Erledigt · 3'));
+    await tester.pumpAndSettle();
     expect(find.text('von dir hinzugefügt'), findsOneWidget);
+    expect(store.read('shopping.showSources'), '1');
+
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(find.text('Ofenkarotten, Linsen-Bolognese'), findsNothing);
+    expect(store.read('shopping.showSources'), isNull);
   });
 
   testWidgets('checks a row off at once, and undo checks it back on', (
@@ -291,6 +315,8 @@ void main() {
     expect(find.text('Die Einkaufsliste ist leer.'), findsOneWidget);
     expect(find.text('Geteilt mit deinem Haushalt · 0 offen'), findsOneWidget);
     expect(find.textContaining('Erledigt'), findsNothing);
+    // Nothing whose origin could be shown.
+    expect(find.byTooltip('Herkunft der Artikel'), findsNothing);
   });
 
   testWidgets('everything checked off says so', (tester) async {
@@ -497,6 +523,18 @@ void main() {
         );
       });
     }
+
+    testWidgets('with sources in light', tags: goldenTags, (tester) async {
+      store
+        ..write('shopping.supermarket', storedChoice)
+        ..write('shopping.showSources', '1');
+      await pumpList(tester, theme: lightTheme);
+
+      await expectLater(
+        find.byType(ShoppingScreen),
+        matchesGoldenFile('../goldens/shopping_list_sources_light.png'),
+      );
+    });
 
     testWidgets('offline in light', tags: goldenTags, (tester) async {
       store.write('shopping.supermarket', storedChoice);
