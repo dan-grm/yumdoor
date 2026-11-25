@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/platform_providers.dart';
 import '../../design/components/buttons.dart';
 import '../../design/components/filter_chips.dart';
 import '../../design/components/recipe_card.dart';
@@ -19,10 +20,10 @@ import '../../l10n/l10n.dart';
 import '../auth/logout.dart';
 import '../common/failure_view.dart';
 import '../common/offline_disabled.dart';
+import '../common/up_scope.dart';
 import '../editor/editor_screen.dart';
 import '../planner/plan_sheet.dart';
 import '../planner/week_labels.dart';
-import '../shell/app_shell.dart';
 import '../recipe/recipe_meta.dart';
 import 'filter_picker_sheet.dart';
 import 'history_filters.dart';
@@ -99,8 +100,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     super.dispose();
   }
 
-  /// Shows [query] with the text as typed, replacing the current history
-  /// entry so typing doesn't fill the browser history.
+  /// Shows [query] with the text as typed, replacing the current location
+  /// rather than navigating to a new one.
   void _show(RecipeQuery query) {
     // A filter sheet may answer after the screen has gone.
     if (!mounted) return;
@@ -152,13 +153,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
+  /// From the picker opened directly, to the planner at the week of [day].
+  void _upToPlanner(CalendarDay day) => context.go(
+    plannerLocation(context, day, CalendarDay.of(ref.read(clockProvider)())),
+  );
+
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
     final query = widget.query;
 
-    return Scaffold(
+    final screen = Scaffold(
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -177,7 +183,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           label: l10n.back,
                           onPressed: () => context.canPop()
                               ? context.pop()
-                              : context.go(planPath),
+                              : _upToPlanner(day),
                         ),
                         SizedBox(width: t.space3),
                         Expanded(
@@ -289,6 +295,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ),
       ),
     );
+    // The picker opened directly (a link, a reload): back leads to the
+    // planner.
+    return widget.pickDay == null
+        ? screen
+        : UpScope(onUp: () => _upToPlanner(widget.pickDay!), child: screen);
   }
 }
 
