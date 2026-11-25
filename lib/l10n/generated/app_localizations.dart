@@ -2726,6 +2726,54 @@ abstract class AppLocalizations {
   /// **'Herkunft der Artikel'**
   String get shoppingShowSources;
 
+  /// Accessible name and tooltip of the button next to the shopping list heading that starts selecting rows, to delete several at once.
+  ///
+  /// In de, this message translates to:
+  /// **'Mehrere auswählen'**
+  String get shoppingSelectMany;
+
+  /// Accessible name of a shopping row while rows are being selected.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} auswählen'**
+  String shoppingSelect(String name);
+
+  /// Accessible name and tooltip of the button that ends selecting shopping rows without deleting them.
+  ///
+  /// In de, this message translates to:
+  /// **'Auswahl beenden'**
+  String get shoppingSelectionEnd;
+
+  /// In place of the shopping list heading while selecting rows: how many are selected.
+  ///
+  /// In de, this message translates to:
+  /// **'{count} ausgewählt'**
+  String shoppingSelectedCount(int count);
+
+  /// Accessible name and tooltip of the button that deletes the selected shopping rows.
+  ///
+  /// In de, this message translates to:
+  /// **'Ausgewählte löschen'**
+  String get shoppingDeleteSelected;
+
+  /// Snackbar after deleting the selected shopping rows, with an undo action.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Artikel gelöscht} other{{count} Artikel gelöscht}}'**
+  String shoppingDeletedSelected(int count);
+
+  /// Snackbar when deleting the selected shopping rows failed; some may be gone, the list shows what the server has.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht alles gelöscht. {reason}'**
+  String shoppingDeleteSelectedFailed(String reason);
+
+  /// Snackbar when undoing the deletion of several shopping rows failed.
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht zurückgeholt. {reason}'**
+  String shoppingRestoreSelectedFailed(String reason);
+
   /// Shopping row action: marks the food as on hand and checks the row off.
   ///
   /// In de, this message translates to:

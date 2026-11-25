@@ -1751,6 +1751,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shoppingShowSources => 'Where items come from';
 
   @override
+  String get shoppingSelectMany => 'Select several';
+
+  @override
+  String shoppingSelect(String name) {
+    return 'Select $name';
+  }
+
+  @override
+  String get shoppingSelectionEnd => 'Stop selecting';
+
+  @override
+  String shoppingSelectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get shoppingDeleteSelected => 'Delete selected';
+
+  @override
+  String shoppingDeletedSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items deleted',
+      one: '1 item deleted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String shoppingDeleteSelectedFailed(String reason) {
+    return 'Not everything was deleted. $reason';
+  }
+
+  @override
+  String shoppingRestoreSelectedFailed(String reason) {
+    return 'Not restored. $reason';
+  }
+
+  @override
   String get shoppingOnHand => 'I have it at home';
 
   @override

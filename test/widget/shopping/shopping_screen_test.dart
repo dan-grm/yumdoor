@@ -536,6 +536,20 @@ void main() {
       );
     });
 
+    testWidgets('selecting in light', tags: goldenTags, (tester) async {
+      store.write('shopping.supermarket', storedChoice);
+      await pumpList(tester, theme: lightTheme);
+      await tester.longPress(find.text('Karotten'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Feta'));
+      await tester.pumpAndSettle();
+
+      await expectLater(
+        find.byType(ShoppingScreen),
+        matchesGoldenFile('../goldens/shopping_list_selecting_light.png'),
+      );
+    });
+
     testWidgets('offline in light', tags: goldenTags, (tester) async {
       store.write('shopping.supermarket', storedChoice);
       repository.cachedAt = DateTime(2026, 11, 17, 19, 30);

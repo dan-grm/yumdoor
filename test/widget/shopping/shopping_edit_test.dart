@@ -171,6 +171,166 @@ void main() {
     expect(find.text('Karotten'), findsOneWidget);
   });
 
+  testWidgets('a long press selects rows, which are deleted together', (
+    tester,
+  ) async {
+    await pumpList(tester);
+
+    await tester.longPress(find.text('Karotten'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 ausgewählt'), findsOneWidget);
+    expect(find.text('Einkaufsliste'), findsNothing);
+    // The rows' own actions are away while selecting.
+    expect(find.byTooltip('Mehr zu Feta'), findsNothing);
+
+    // A tap selects instead of checking off.
+    await tester.tap(find.text('Feta'));
+    await tester.pumpAndSettle();
+    expect(find.text('2 ausgewählt'), findsOneWidget);
+    expect(repository.checkCalls, isEmpty);
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('Feta auswählen')),
+      isSemantics(isChecked: true),
+    );
+
+    await tester.tap(find.byTooltip('Ausgewählte löschen'));
+    await tester.pumpAndSettle();
+
+    expect(repository.deletedIds, unorderedEquals([101, 102, 105]));
+    expect(find.text('Karotten'), findsNothing);
+    expect(find.text('Feta'), findsNothing);
+    expect(find.text('2 Artikel gelöscht'), findsOneWidget);
+    // The selection is over.
+    expect(find.text('Einkaufsliste'), findsOneWidget);
+
+    await tester.tap(find.text('Rückgängig'));
+    await tester.pumpAndSettle();
+    expect(
+      repository.addedItems.map((i) => i.foodId),
+      unorderedEquals([1, 1, 4]),
+    );
+  });
+
+  testWidgets('selecting from the heading; a second tap unselects, '
+      'closing keeps everything', (tester) async {
+    await pumpList(tester);
+
+    await tester.tap(find.byTooltip('Mehrere auswählen'));
+    await tester.pumpAndSettle();
+    expect(find.text('0 ausgewählt'), findsOneWidget);
+    // Nothing to delete yet.
+    expect(
+      tester
+          .widget<IconButton>(
+            find.widgetWithIcon(IconButton, Icons.delete_outline_rounded),
+          )
+          .onPressed,
+      isNull,
+    );
+
+    await tester.tap(find.text('Feta'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 ausgewählt'), findsOneWidget);
+    await tester.tap(find.text('Feta'));
+    await tester.pumpAndSettle();
+    expect(find.text('0 ausgewählt'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Auswahl beenden'));
+    await tester.pumpAndSettle();
+    expect(find.text('Einkaufsliste'), findsOneWidget);
+    expect(repository.deletedIds, isEmpty);
+    expect(repository.checkCalls, isEmpty);
+    // Tapping checks off again.
+    await tester.tap(find.text('Feta'));
+    await tester.pump();
+    expect(repository.checkCalls.single.ids, {105});
+  });
+
+  testWidgets('a failed delete of the selection keeps it and says why', (
+    tester,
+  ) async {
+    repository.editFailure = const OfflineFailure();
+    await pumpList(tester);
+
+    await tester.longPress(find.text('Feta'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Ausgewählte löschen'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Nicht alles gelöscht.'), findsOneWidget);
+    expect(find.text('1 ausgewählt'), findsOneWidget);
+    expect(find.text('Feta'), findsOneWidget);
+  });
+
+  testWidgets('a selected row that someone else partly ticks off stays one '
+      'selected row', (tester) async {
+    await pumpList(tester);
+    await tester.longPress(find.text('Karotten'));
+    await tester.pumpAndSettle();
+
+    // Lena buys the carrots for one of the two recipes.
+    repository.entries[0] = repository.entries[0].copyWith(
+      checked: true,
+      completedAt: DateTime.utc(2026, 11, 18, 11),
+      updatedAt: DateTime.utc(2026, 11, 18, 11),
+    );
+    await tester.fling(find.text('Feta'), const Offset(0, 400), 1000);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Erledigt · 4'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1 ausgewählt'), findsOneWidget);
+    await tester.tap(find.byTooltip('Ausgewählte löschen'));
+    await tester.pumpAndSettle();
+    // Only what is still to buy.
+    expect(repository.deletedIds, [102]);
+  });
+
+  testWidgets('closing "Erledigt" takes its rows out of the selection', (
+    tester,
+  ) async {
+    await pumpList(tester);
+    await tester.tap(find.text('Erledigt · 3'));
+    await tester.pumpAndSettle();
+    await tester.longPress(find.text('Milch'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Feta'));
+    await tester.pumpAndSettle();
+    expect(find.text('2 ausgewählt'), findsOneWidget);
+
+    await tester.tap(find.text('Erledigt · 3'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 ausgewählt'), findsOneWidget);
+    await tester.tap(find.text('Erledigt · 3'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 ausgewählt'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Ausgewählte löschen'));
+    await tester.pumpAndSettle();
+    expect(repository.deletedIds, [105]);
+  });
+
+  testWidgets('offline, deleting the selection is disabled and says why', (
+    tester,
+  ) async {
+    await pumpList(
+      tester,
+      connectivity: FakeConnectivityService(isOnline: false),
+    );
+
+    await tester.longPress(find.text('Feta'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Ausgewählte löschen'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Offline kannst du nichts ändern'),
+      findsOneWidget,
+    );
+    expect(repository.deletedIds, isEmpty);
+    expect(find.text('Feta'), findsOneWidget);
+  });
+
   testWidgets('a failed delete keeps the row and says why', (tester) async {
     repository.editFailure = const OfflineFailure();
     await pumpList(tester);

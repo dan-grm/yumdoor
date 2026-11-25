@@ -10,6 +10,11 @@ import '../design.dart';
 ///
 /// With [onToggle], the row starts with a tick-off circle and the whole row
 /// toggles [done]; screen readers get a checkbox labeled [toggleLabel].
+///
+/// With [selected] not `null`, the row is part of a selection instead: a
+/// square box takes the circle's place, checked while [selected], and
+/// [onToggle] selects or unselects it. [onLongPress] can start such a
+/// selection.
 class IngredientRow extends StatelessWidget {
   const IngredientRow({
     super.key,
@@ -20,7 +25,16 @@ class IngredientRow extends StatelessWidget {
     this.onToggle,
     this.toggleLabel = '',
     this.status = '',
-  }) : assert(onToggle == null || toggleLabel != '');
+    this.selected,
+    this.onLongPress,
+  }) : assert(onToggle == null || toggleLabel != ''),
+       assert(selected == null || onToggle != null);
+
+  /// Whether the row is selected, in a selection; `null` for tick-off.
+  final bool? selected;
+
+  /// Called on a long press, such as to start a selection.
+  final VoidCallback? onLongPress;
 
   /// A state of the row under the note, with a sync icon ("wird
   /// synchronisiert"), empty if none.
@@ -58,7 +72,12 @@ class IngredientRow extends StatelessWidget {
                 SizedBox(
                   width: t.sizeTouch,
                   height: t.sizeTouch,
-                  child: Center(child: _CheckCircle(done: done)),
+                  child: Center(
+                    child: switch (selected) {
+                      null => _CheckCircle(done: done),
+                      final selected => _SelectBox(selected: selected),
+                    },
+                  ),
                 ),
                 SizedBox(width: t.space2),
               ],
@@ -113,13 +132,15 @@ class IngredientRow extends StatelessWidget {
     if (onToggle == null) return row;
     // One checkbox for screen readers: "Karotten abhaken", value "600 g".
     return Semantics(
-      checked: done,
+      checked: selected ?? done,
       label: toggleLabel,
       value: [amount, note, status].where((part) => part.isNotEmpty).join(', '),
       onTap: onToggle,
+      onLongPress: onLongPress,
       excludeSemantics: true,
       child: InkWell(
         onTap: onToggle,
+        onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(t.radiusM),
         child: row,
       ),
@@ -131,6 +152,10 @@ class IngredientRow extends StatelessWidget {
 /// (docs/design/components/IngredientRow.md).
 const _checkSize = 26.0;
 const _ringWidth = 2.0;
+
+/// Side of the selection box: a little under the circle's diameter, so both
+/// look the same size.
+const _boxSize = 22.0;
 
 class _CheckCircle extends StatelessWidget {
   const _CheckCircle({required this.done});
@@ -151,6 +176,33 @@ class _CheckCircle extends StatelessWidget {
             : Border.all(color: t.controlBorder, width: _ringWidth),
       ),
       child: done
+          ? Icon(Icons.check_rounded, size: t.label.fontSize, color: t.onSage)
+          : null,
+    );
+  }
+}
+
+/// The box of a row in a selection: a `control-border` square, `sage` with
+/// an `on-sage` check while selected.
+class _SelectBox extends StatelessWidget {
+  const _SelectBox({required this.selected});
+
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    return Container(
+      width: _boxSize,
+      height: _boxSize,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(t.radiusS),
+        color: selected ? t.sage : null,
+        border: selected
+            ? null
+            : Border.all(color: t.controlBorder, width: _ringWidth),
+      ),
+      child: selected
           ? Icon(Icons.check_rounded, size: t.label.fontSize, color: t.onSage)
           : null,
     );

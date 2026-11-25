@@ -1758,6 +1758,46 @@ class AppLocalizationsDe extends AppLocalizations {
   String get shoppingShowSources => 'Herkunft der Artikel';
 
   @override
+  String get shoppingSelectMany => 'Mehrere auswählen';
+
+  @override
+  String shoppingSelect(String name) {
+    return '$name auswählen';
+  }
+
+  @override
+  String get shoppingSelectionEnd => 'Auswahl beenden';
+
+  @override
+  String shoppingSelectedCount(int count) {
+    return '$count ausgewählt';
+  }
+
+  @override
+  String get shoppingDeleteSelected => 'Ausgewählte löschen';
+
+  @override
+  String shoppingDeletedSelected(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Artikel gelöscht',
+      one: '1 Artikel gelöscht',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String shoppingDeleteSelectedFailed(String reason) {
+    return 'Nicht alles gelöscht. $reason';
+  }
+
+  @override
+  String shoppingRestoreSelectedFailed(String reason) {
+    return 'Nicht zurückgeholt. $reason';
+  }
+
+  @override
   String get shoppingOnHand => 'Habe ich da';
 
   @override

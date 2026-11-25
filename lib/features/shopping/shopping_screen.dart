@@ -32,7 +32,9 @@ const shoppingFailureSnackBarDuration = Duration(seconds: 8);
 /// supermarket category in the order of the chosen store, merged per food
 /// and unit, and the checked-off ones in a collapsed "Erledigt" section.
 /// Where a row comes from (recipes, who added it) shows only when chosen
-/// with the button next to the heading ([ShoppingShowSources]).
+/// with the button next to the heading ([ShoppingShowSources]). Another
+/// button there, or a long press on a row, starts a selection of rows to
+/// delete them together.
 ///
 /// A tap checks a row off (or, under "Erledigt", back on), at once and
 /// straight to Tandoor ([ShoppingList.setChecked]); a snackbar offers to
@@ -71,6 +73,18 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
   /// list that is just being loaded again; later ones catch up.
   var _started = false;
 
+  /// The rows selected to delete them together; `null` while not
+  /// selecting. By food, unit and completion rather than by entry, so a row
+  /// that splits when someone else ticks part of it off stays one row.
+  Set<_RowKey>? _selected;
+
+  /// Whether the selected rows are being deleted.
+  var _deleting = false;
+
+  /// Whether the "Erledigt" section is open. Its rows can only be selected
+  /// while it is.
+  var _showDone = false;
+
   @override
   void initState() {
     super.initState();
@@ -81,6 +95,12 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
         _updateSync();
       },
     );
+    // Another login: its rows are not the ones selected.
+    ref.listenManual(shoppingListProvider, (_, list) {
+      if (list.isReloading && _selected != null) {
+        setState(() => _selected = null);
+      }
+    });
     ref.listenManual(isOfflineProvider, (wasOffline, offline) {
       final wasActive = _sync.active;
       _updateSync();
@@ -378,16 +398,24 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
         _show(
           messenger,
           (context) => context.l10n.shoppingDeleted(name),
-          undo: () => unawaited(_restore(messenger, entries, name)),
+          undo: () => unawaited(
+            _restore(
+              messenger,
+              entries,
+              failed: (context, reason) =>
+                  context.l10n.shoppingRestoreFailed(name, reason),
+            ),
+          ),
         );
     }
   }
 
+  /// Puts deleted [entries] back; [failed] says why it didn't work.
   Future<void> _restore(
     ScaffoldMessengerState messenger,
-    List<ShoppingEntry> entries,
-    String name,
-  ) async {
+    List<ShoppingEntry> entries, {
+    required String Function(BuildContext context, String reason) failed,
+  }) async {
     if (_readOnly) {
       _show(messenger, (context) => context.l10n.offlineWriteDisabled);
       return;
@@ -398,11 +426,80 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     if (failure == null) return;
     _show(
       messenger,
-      (context) => context.l10n.shoppingRestoreFailed(
-        name,
-        failureMessage(context, failure),
-      ),
+      (context) => failed(context, failureMessage(context, failure)),
       failed: true,
+    );
+  }
+
+  /// Starts selecting rows, none selected yet.
+  void _startSelection() => setState(() => _selected = {});
+
+  void _endSelection() => setState(() => _selected = null);
+
+  /// Puts [row] into the selection or takes it out; starts a selection with
+  /// it if there is none. Not while the selection is being deleted.
+  void _select(ShoppingListRow row) {
+    if (_deleting) return;
+    final key = _keyOf(row);
+    final selected = {...?_selected};
+    if (!selected.remove(key)) selected.add(key);
+    setState(() => _selected = selected);
+  }
+
+  /// Opens or closes "Erledigt"; closing takes its rows out of the
+  /// selection, so nothing hidden is deleted.
+  void _setShowDone(bool show) => setState(() {
+    _showDone = show;
+    if (!show) _selected?.removeWhere((key) => key.completedAt != null);
+  });
+
+  /// Deletes the selected rows for the whole household, with a snackbar to
+  /// undo it, and ends the selection.
+  Future<void> _deleteSelected() async {
+    final messenger = ScaffoldMessenger.of(context);
+    if (_deleting) return;
+    if (_readOnly) {
+      _show(messenger, (context) => context.l10n.offlineWriteDisabled);
+      return;
+    }
+    final groups = ref.read(shoppingGroupsProvider).value;
+    final selected = _selected;
+    if (groups == null || selected == null) return;
+    final rows = _selectedRows(groups, selected, withDone: _showDone);
+    if (rows.isEmpty) return;
+    final list = ref.read(shoppingListProvider.notifier);
+    // All entries of each row as shown, including ones merged into it since
+    // it was selected.
+    final entries = list.entriesOf([for (final row in rows) ...row.entryIds]);
+    setState(() => _deleting = true);
+    final failure = await list.delete(entries);
+    if (mounted) {
+      setState(() {
+        _deleting = false;
+        if (failure == null) _selected = null;
+      });
+    }
+    if (failure != null) {
+      _show(
+        messenger,
+        (context) => context.l10n.shoppingDeleteSelectedFailed(
+          failureMessage(context, failure),
+        ),
+        failed: true,
+      );
+      return;
+    }
+    _show(
+      messenger,
+      (context) => context.l10n.shoppingDeletedSelected(rows.length),
+      undo: () => unawaited(
+        _restore(
+          messenger,
+          entries,
+          failed: (context, reason) =>
+              context.l10n.shoppingRestoreSelectedFailed(reason),
+        ),
+      ),
     );
   }
 
@@ -428,6 +525,15 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     final pendingIds = list.isReloading
         ? const <int>{}
         : list.value?.pendingIds ?? const <int>{};
+    final selectedRows = switch ((groups.value, _selected)) {
+      (final groups?, final selected?) => _selectedRows(
+        groups,
+        selected,
+        withDone: _showDone,
+      ),
+      (null, final _?) => const <ShoppingListRow>[],
+      (_, null) => null,
+    };
     final pendingRows = switch (groups.value) {
       final groups? when pendingIds.isNotEmpty => _pendingRows(
         groups,
@@ -450,31 +556,47 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Semantics(
-                              header: true,
-                              child: Text(
-                                l10n.navShoppingTitle,
-                                style: t.titleL.copyWith(color: t.ink),
+                      if (selectedRows case final selectedRows?)
+                        _SelectionBar(
+                          count: selectedRows.length,
+                          deleting: _deleting,
+                          onDelete: () => unawaited(_deleteSelected()),
+                          onClose: _endSelection,
+                        )
+                      else
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Semantics(
+                                header: true,
+                                child: Text(
+                                  l10n.navShoppingTitle,
+                                  style: t.titleL.copyWith(color: t.ink),
+                                ),
                               ),
                             ),
-                          ),
-                          // Only where there are rows it could change.
-                          if (groups.value case final groups?
-                              when !groups.isEmpty)
-                            RoundIconButton(
-                              icon: Icons.menu_book_outlined,
-                              label: l10n.shoppingShowSources,
-                              outlined: true,
-                              selected: showSources,
-                              onPressed: () => ref
-                                  .read(shoppingShowSourcesProvider.notifier)
-                                  .set(show: !showSources),
-                            ),
-                        ],
-                      ),
+                            // Only where there are rows they could change.
+                            if (groups.value case final groups?
+                                when !groups.isEmpty) ...[
+                              RoundIconButton(
+                                icon: Icons.checklist_rounded,
+                                label: l10n.shoppingSelectMany,
+                                outlined: true,
+                                onPressed: _startSelection,
+                              ),
+                              SizedBox(width: t.space2),
+                              RoundIconButton(
+                                icon: Icons.menu_book_outlined,
+                                label: l10n.shoppingShowSources,
+                                outlined: true,
+                                selected: showSources,
+                                onPressed: () => ref
+                                    .read(shoppingShowSourcesProvider.notifier)
+                                    .set(show: !showSources),
+                              ),
+                            ],
+                          ],
+                        ),
                       if (groups.value case final groups?)
                         Text(
                           l10n.shoppingShared(groups.openCount),
@@ -550,12 +672,18 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
                 AsyncValue(value: final groups?) => _ListBody(
                   groups: groups,
                   truncated: list.value?.truncated ?? false,
-                  me: me,
-                  showSources: showSources,
-                  pendingIds: pendingIds,
+                  setup: _RowSetup(
+                    me: me,
+                    showSources: showSources,
+                    pendingIds: pendingIds,
+                    selected: _selected,
+                    onToggle: _toggle,
+                    onMore: _more,
+                    onSelect: _select,
+                  ),
+                  showDone: _showDone,
+                  onShowDone: _setShowDone,
                   onRefresh: _refresh,
-                  onToggle: _toggle,
-                  onMore: _more,
                 ),
                 _ => const Center(child: CircularProgressIndicator()),
               },
@@ -595,6 +723,27 @@ enum _RowAction { onHand, delete }
 /// Whether [row] has a check state that waits to be sent.
 bool _isPending(ShoppingListRow row, Set<int> pendingIds) =>
     row.entryIds.any(pendingIds.contains);
+
+/// What tells a row from the others: open rows are one per food and unit,
+/// checked ones also per completion time ([groupShoppingList]).
+typedef _RowKey = ({int food, int? unit, int? completedAt});
+
+_RowKey _keyOf(ShoppingListRow row) => (
+  food: row.food.id,
+  unit: row.unit?.id,
+  completedAt: row.completedAt?.microsecondsSinceEpoch,
+);
+
+/// The rows of [groups] in [selected], open ones first; checked ones only
+/// [withDone].
+List<ShoppingListRow> _selectedRows(
+  ShoppingListGroups groups,
+  Set<_RowKey> selected, {
+  required bool withDone,
+}) => [
+  for (final section in groups.sections) ...section.rows,
+  if (withDone) ...groups.done,
+].where((row) => selected.contains(_keyOf(row))).toList();
 
 /// How many rows of [groups] wait to be sent.
 int _pendingRows(ShoppingListGroups groups, Set<int> pendingIds) => [
@@ -638,24 +787,18 @@ typedef _Toggle = Future<void> Function(
   required bool checked,
 });
 
-/// The sections, the empty states and the "Erledigt" section, scrolling
-/// together, with pull to refresh.
-class _ListBody extends StatefulWidget {
-  const _ListBody({
-    required this.groups,
-    required this.truncated,
+/// What every row of the list needs besides its own data.
+class _RowSetup {
+  const _RowSetup({
     required this.me,
     required this.showSources,
     required this.pendingIds,
-    required this.onRefresh,
+    required this.selected,
     required this.onToggle,
     required this.onMore,
+    required this.onSelect,
   });
 
-  final ShoppingListGroups groups;
-
-  /// Whether Tandoor cut the list off, so the newest items may be missing.
-  final bool truncated;
   final int? me;
 
   /// Whether the rows say where they come from.
@@ -663,33 +806,49 @@ class _ListBody extends StatefulWidget {
 
   /// The entries whose check state waits to be sent.
   final Set<int> pendingIds;
-  final Future<void> Function() onRefresh;
+
+  /// The rows in the selection; `null` while not selecting.
+  final Set<_RowKey>? selected;
   final _Toggle onToggle;
   final _More onMore;
 
-  @override
-  State<_ListBody> createState() => _ListBodyState();
+  /// Puts a row into the selection or takes it out; starts a selection if
+  /// there is none.
+  final void Function(ShoppingListRow row) onSelect;
 }
 
-class _ListBodyState extends State<_ListBody> {
-  var _showDone = false;
+/// The sections, the empty states and the "Erledigt" section, scrolling
+/// together, with pull to refresh.
+class _ListBody extends StatelessWidget {
+  const _ListBody({
+    required this.groups,
+    required this.truncated,
+    required this.setup,
+    required this.showDone,
+    required this.onShowDone,
+    required this.onRefresh,
+  });
+
+  final ShoppingListGroups groups;
+
+  /// Whether Tandoor cut the list off, so the newest items may be missing.
+  final bool truncated;
+  final _RowSetup setup;
+
+  /// Whether "Erledigt" is open; [onShowDone] opens or closes it.
+  final bool showDone;
+  final void Function(bool show) onShowDone;
+  final Future<void> Function() onRefresh;
 
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
-    final _ListBody(
-      :groups,
-      :me,
-      :showSources,
-      :pendingIds,
-      :onToggle,
-      :onMore,
-    ) = widget;
+    final _ListBody(:groups, :setup, :showDone) = this;
     final done = groups.done;
 
     return RefreshIndicator(
-      onRefresh: widget.onRefresh,
+      onRefresh: onRefresh,
       child: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
@@ -698,7 +857,7 @@ class _ListBodyState extends State<_ListBody> {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.fromLTRB(t.space5, 0, t.space5, t.space5),
             children: [
-              if (widget.truncated)
+              if (truncated)
                 Padding(
                   padding: EdgeInsets.only(top: t.space2),
                   child: Text(
@@ -733,21 +892,14 @@ class _ListBodyState extends State<_ListBody> {
                     ),
                   ),
                 ),
-                _RowCard(
-                  rows: section.rows,
-                  me: me,
-                  showSources: showSources,
-                  pendingIds: pendingIds,
-                  onToggle: onToggle,
-                  onMore: onMore,
-                ),
+                _RowCard(rows: section.rows, setup: setup),
               ],
               if (done.isNotEmpty) ...[
                 SizedBox(height: t.space4),
                 Semantics(
-                  expanded: _showDone,
+                  expanded: showDone,
                   child: InkWell(
-                    onTap: () => setState(() => _showDone = !_showDone),
+                    onTap: () => onShowDone(!showDone),
                     borderRadius: BorderRadius.circular(t.radiusM),
                     child: ConstrainedBox(
                       constraints: BoxConstraints(minHeight: t.sizeTouch),
@@ -762,7 +914,7 @@ class _ListBodyState extends State<_ListBody> {
                               ),
                             ),
                             Icon(
-                              _showDone
+                              showDone
                                   ? Icons.expand_less_rounded
                                   : Icons.expand_more_rounded,
                               color: t.inkMuted,
@@ -773,16 +925,9 @@ class _ListBodyState extends State<_ListBody> {
                     ),
                   ),
                 ),
-                if (_showDone) ...[
+                if (showDone) ...[
                   SizedBox(height: t.space2),
-                  _RowCard(
-                    rows: done,
-                    me: me,
-                    showSources: showSources,
-                    pendingIds: pendingIds,
-                    onToggle: onToggle,
-                    onMore: onMore,
-                  ),
+                  _RowCard(rows: done, setup: setup),
                 ],
               ],
             ],
@@ -795,21 +940,10 @@ class _ListBodyState extends State<_ListBody> {
 
 /// [rows] in a card, with hairlines between them.
 class _RowCard extends StatelessWidget {
-  const _RowCard({
-    required this.rows,
-    required this.me,
-    required this.showSources,
-    required this.pendingIds,
-    required this.onToggle,
-    required this.onMore,
-  });
+  const _RowCard({required this.rows, required this.setup});
 
   final List<ShoppingListRow> rows;
-  final int? me;
-  final bool showSources;
-  final Set<int> pendingIds;
-  final _Toggle onToggle;
-  final _More onMore;
+  final _RowSetup setup;
 
   @override
   Widget build(BuildContext context) {
@@ -827,15 +961,7 @@ class _RowCard extends StatelessWidget {
           children: [
             for (final (index, row) in rows.indexed) ...[
               if (index > 0) Divider(height: 1, thickness: 1, color: t.line),
-              _Row(
-                key: ValueKey(row.entryIds.first),
-                row: row,
-                me: me,
-                showSources: showSources,
-                pending: _isPending(row, pendingIds),
-                onToggle: onToggle,
-                onMore: onMore,
-              ),
+              _Row(key: ValueKey(row.entryIds.first), row: row, setup: setup),
             ],
           ],
         ),
@@ -845,28 +971,13 @@ class _RowCard extends StatelessWidget {
 }
 
 /// One merged row: the food, the amount and, if chosen, where it comes
-/// from.
+/// from. While selecting, a tap selects it instead of checking it off; a
+/// long press starts a selection with it.
 class _Row extends StatelessWidget {
-  const _Row({
-    super.key,
-    required this.row,
-    required this.me,
-    required this.showSources,
-    required this.pending,
-    required this.onToggle,
-    required this.onMore,
-  });
+  const _Row({super.key, required this.row, required this.setup});
 
   final ShoppingListRow row;
-  final int? me;
-
-  /// Whether it says where it comes from, under the name.
-  final bool showSources;
-
-  /// Whether its check state waits to be sent.
-  final bool pending;
-  final _Toggle onToggle;
-  final _More onMore;
+  final _RowSetup setup;
 
   @override
   Widget build(BuildContext context) {
@@ -893,31 +1004,43 @@ class _Row extends StatelessWidget {
     ].where((part) => part.isNotEmpty).join(' ');
     final checked = row.completedAt != null;
     final t = context.tokens;
+    final selected = setup.selected?.contains(_keyOf(row));
     return Row(
       children: [
         Expanded(
           child: IngredientRow(
             name: name,
-            note: showSources ? _source(context) : '',
+            note: setup.showSources ? _source(context) : '',
             amount: row.someWithoutAmount && amount.isNotEmpty
                 ? l10n.shoppingAmountMore(amount)
                 : amount,
             done: checked,
-            status: pending ? l10n.shoppingSyncing : '',
-            toggleLabel: l10n.ingredientTickOff(name),
-            onToggle: () => unawaited(onToggle(row, name, checked: !checked)),
+            status: _isPending(row, setup.pendingIds)
+                ? l10n.shoppingSyncing
+                : '',
+            selected: selected,
+            toggleLabel: selected == null
+                ? l10n.ingredientTickOff(name)
+                : l10n.shoppingSelect(name),
+            onToggle: selected == null
+                ? () => unawaited(setup.onToggle(row, name, checked: !checked))
+                : () => setup.onSelect(row),
+            onLongPress: selected == null ? () => setup.onSelect(row) : null,
           ),
         ),
-        IconButton(
-          tooltip: l10n.shoppingActions(name),
-          icon: const Icon(Icons.more_vert_rounded),
-          color: t.inkMuted,
-          constraints: BoxConstraints(
-            minWidth: t.sizeTouch,
-            minHeight: t.sizeTouch,
+        // While selecting, the row's own actions would compete with the
+        // selection's.
+        if (selected == null)
+          IconButton(
+            tooltip: l10n.shoppingActions(name),
+            icon: const Icon(Icons.more_vert_rounded),
+            color: t.inkMuted,
+            constraints: BoxConstraints(
+              minWidth: t.sizeTouch,
+              minHeight: t.sizeTouch,
+            ),
+            onPressed: () => setup.onMore(row, name),
           ),
-          onPressed: () => onMore(row, name),
-        ),
       ],
     );
   }
@@ -927,7 +1050,7 @@ class _Row extends StatelessWidget {
     final l10n = context.l10n;
     final names = [
       for (final user in row.addedBy)
-        if (user.id == me)
+        if (user.id == setup.me)
           l10n.shoppingAddedByMe
         else if (user.name.trim().isNotEmpty)
           user.name.trim(),
@@ -936,6 +1059,56 @@ class _Row extends StatelessWidget {
       ...row.recipeNames,
       if (names.isNotEmpty) l10n.shoppingAddedBy(_joinNames(context, names)),
     ].join(', ');
+  }
+}
+
+/// In place of the heading while selecting: how many rows are selected, a
+/// button that deletes them and one that ends the selection.
+class _SelectionBar extends StatelessWidget {
+  const _SelectionBar({
+    required this.count,
+    required this.deleting,
+    required this.onDelete,
+    required this.onClose,
+  });
+
+  final int count;
+  final bool deleting;
+  final VoidCallback onDelete;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = context.tokens;
+    final l10n = context.l10n;
+    return Row(
+      children: [
+        RoundIconButton(
+          icon: Icons.close_rounded,
+          label: l10n.shoppingSelectionEnd,
+          outlined: true,
+          // The selection stays as it is until the delete has gone through.
+          onPressed: deleting ? null : onClose,
+        ),
+        SizedBox(width: t.space3),
+        Expanded(
+          child: Semantics(
+            header: true,
+            liveRegion: true,
+            child: Text(
+              l10n.shoppingSelectedCount(count),
+              style: t.titleL.copyWith(color: t.ink),
+            ),
+          ),
+        ),
+        RoundIconButton(
+          icon: Icons.delete_outline_rounded,
+          label: l10n.shoppingDeleteSelected,
+          outlined: true,
+          onPressed: count > 0 && !deleting ? onDelete : null,
+        ),
+      ],
+    );
   }
 }
 
