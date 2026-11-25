@@ -62,7 +62,7 @@ An end-to-end slice through every layer, deployable as a PWA.
 - Household view: plans of everyone in the household (Tandoor shares meal plans per household)
 - "Add the week to the shopping list": client-side entries, respects on-hand and ignore-shopping, skips meals
   already on the list
-- Shopping list grouped by supermarket category in store order, merged amounts, source recipes, fast check-off
+- Shopping list grouped by supermarket category in store order, merged amounts, source recipes (hidden by default since #135), fast check-off
   with the bulk endpoint, on-hand toggle
 - Incremental sync of the list (`updated_after`) while the screen is open
 - Week plan and shopping list readable offline

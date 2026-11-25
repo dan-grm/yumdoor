@@ -479,6 +479,10 @@
       }
     }
   },
+  "shoppingShowSources": "Where items come from",
+  "@shoppingShowSources": {
+    "description": "Accessible name and tooltip of the toggle button next to the shopping list heading that shows, under each item, the recipes it is for and who added it. Off by default; selected while on."
+  },
   "shoppingOnHand": "I have it at home",
   "@shoppingOnHand": {
     "description": "Shopping row action: marks the food as on hand and checks the row off."

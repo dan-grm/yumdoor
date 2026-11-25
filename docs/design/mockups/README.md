@@ -19,7 +19,7 @@ links between the HTML screens work. Copy is German on purpose; long German stri
 | `screens/09-rezept-bearbeiten` | Recipe editor, steps tab: reorder, inline edit, per-step ingredients, explicit duration. |
 | `screens/10-wochenplan` | Week planner: vertical days, drag and drop, shared plan, 'Einkauf für die Woche'. |
 | `screens/11-einplanen` | Plan sheet: day, meal type, servings, add missing ingredients to the list. |
-| `screens/12-einkaufsliste` | Shopping list: grouped by supermarket category, merged amounts, source recipes. |
+| `screens/12-einkaufsliste` | Shopping list: grouped by supermarket category, merged amounts, source recipes (in the app hidden until the "Herkunft" toggle next to the heading is on, #135). |
 | `screens/13-kochbuecher` | Cookbooks: own and shared books. |
 | `screens/14-einstellungen` | Settings: account, household sharing, appearance, cooking mode, offline cache, about. |
 

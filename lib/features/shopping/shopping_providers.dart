@@ -863,6 +863,27 @@ class ShoppingSupermarketChoice extends _$ShoppingSupermarketChoice {
   }
 }
 
+const _showSourcesKey = 'shopping.showSources';
+
+/// Whether the rows of the shopping list say where they come from: the
+/// recipes, or who added them by hand. Off unless chosen, as most of the
+/// time only what to buy matters; remembered on this device.
+@Riverpod(keepAlive: true)
+class ShoppingShowSources extends _$ShoppingShowSources {
+  @override
+  bool build() => ref.watch(localStoreProvider).read(_showSourcesKey) == '1';
+
+  void set({required bool show}) {
+    state = show;
+    final store = ref.read(localStoreProvider);
+    if (show) {
+      store.write(_showSourcesKey, '1');
+    } else {
+      store.delete(_showSourcesKey);
+    }
+  }
+}
+
 /// The chosen supermarket, if the space still has it.
 @riverpod
 Supermarket? shoppingSupermarket(Ref ref) {

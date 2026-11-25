@@ -31,6 +31,8 @@ const shoppingFailureSnackBarDuration = Duration(seconds: 8);
 /// The household's shopping list (mockup 12-einkaufsliste): open items by
 /// supermarket category in the order of the chosen store, merged per food
 /// and unit, and the checked-off ones in a collapsed "Erledigt" section.
+/// Where a row comes from (recipes, who added it) shows only when chosen
+/// with the button next to the heading ([ShoppingShowSources]).
 ///
 /// A tap checks a row off (or, under "Erledigt", back on), at once and
 /// straight to Tandoor ([ShoppingList.setChecked]); a snackbar offers to
@@ -420,6 +422,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
         ? const <Supermarket>[]
         : supermarketsValue.value ?? const <Supermarket>[];
     final supermarket = ref.watch(shoppingSupermarketProvider);
+    final showSources = ref.watch(shoppingShowSourcesProvider);
     final meValue = ref.watch(shoppingMeProvider);
     final me = meValue.isReloading ? null : meValue.value;
     final pendingIds = list.isReloading
@@ -447,12 +450,30 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Semantics(
-                        header: true,
-                        child: Text(
-                          l10n.navShoppingTitle,
-                          style: t.titleL.copyWith(color: t.ink),
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Semantics(
+                              header: true,
+                              child: Text(
+                                l10n.navShoppingTitle,
+                                style: t.titleL.copyWith(color: t.ink),
+                              ),
+                            ),
+                          ),
+                          // Only where there are rows it could change.
+                          if (groups.value case final groups?
+                              when !groups.isEmpty)
+                            RoundIconButton(
+                              icon: Icons.menu_book_outlined,
+                              label: l10n.shoppingShowSources,
+                              outlined: true,
+                              selected: showSources,
+                              onPressed: () => ref
+                                  .read(shoppingShowSourcesProvider.notifier)
+                                  .set(show: !showSources),
+                            ),
+                        ],
                       ),
                       if (groups.value case final groups?)
                         Text(
@@ -530,6 +551,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
                   groups: groups,
                   truncated: list.value?.truncated ?? false,
                   me: me,
+                  showSources: showSources,
                   pendingIds: pendingIds,
                   onRefresh: _refresh,
                   onToggle: _toggle,
@@ -623,6 +645,7 @@ class _ListBody extends StatefulWidget {
     required this.groups,
     required this.truncated,
     required this.me,
+    required this.showSources,
     required this.pendingIds,
     required this.onRefresh,
     required this.onToggle,
@@ -634,6 +657,9 @@ class _ListBody extends StatefulWidget {
   /// Whether Tandoor cut the list off, so the newest items may be missing.
   final bool truncated;
   final int? me;
+
+  /// Whether the rows say where they come from.
+  final bool showSources;
 
   /// The entries whose check state waits to be sent.
   final Set<int> pendingIds;
@@ -652,7 +678,14 @@ class _ListBodyState extends State<_ListBody> {
   Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
-    final _ListBody(:groups, :me, :pendingIds, :onToggle, :onMore) = widget;
+    final _ListBody(
+      :groups,
+      :me,
+      :showSources,
+      :pendingIds,
+      :onToggle,
+      :onMore,
+    ) = widget;
     final done = groups.done;
 
     return RefreshIndicator(
@@ -703,6 +736,7 @@ class _ListBodyState extends State<_ListBody> {
                 _RowCard(
                   rows: section.rows,
                   me: me,
+                  showSources: showSources,
                   pendingIds: pendingIds,
                   onToggle: onToggle,
                   onMore: onMore,
@@ -744,6 +778,7 @@ class _ListBodyState extends State<_ListBody> {
                   _RowCard(
                     rows: done,
                     me: me,
+                    showSources: showSources,
                     pendingIds: pendingIds,
                     onToggle: onToggle,
                     onMore: onMore,
@@ -763,6 +798,7 @@ class _RowCard extends StatelessWidget {
   const _RowCard({
     required this.rows,
     required this.me,
+    required this.showSources,
     required this.pendingIds,
     required this.onToggle,
     required this.onMore,
@@ -770,6 +806,7 @@ class _RowCard extends StatelessWidget {
 
   final List<ShoppingListRow> rows;
   final int? me;
+  final bool showSources;
   final Set<int> pendingIds;
   final _Toggle onToggle;
   final _More onMore;
@@ -794,6 +831,7 @@ class _RowCard extends StatelessWidget {
                 key: ValueKey(row.entryIds.first),
                 row: row,
                 me: me,
+                showSources: showSources,
                 pending: _isPending(row, pendingIds),
                 onToggle: onToggle,
                 onMore: onMore,
@@ -806,12 +844,14 @@ class _RowCard extends StatelessWidget {
   }
 }
 
-/// One merged row: the food, where it comes from and the amount.
+/// One merged row: the food, the amount and, if chosen, where it comes
+/// from.
 class _Row extends StatelessWidget {
   const _Row({
     super.key,
     required this.row,
     required this.me,
+    required this.showSources,
     required this.pending,
     required this.onToggle,
     required this.onMore,
@@ -819,6 +859,9 @@ class _Row extends StatelessWidget {
 
   final ShoppingListRow row;
   final int? me;
+
+  /// Whether it says where it comes from, under the name.
+  final bool showSources;
 
   /// Whether its check state waits to be sent.
   final bool pending;
@@ -855,7 +898,7 @@ class _Row extends StatelessWidget {
         Expanded(
           child: IngredientRow(
             name: name,
-            note: _source(context),
+            note: showSources ? _source(context) : '',
             amount: row.someWithoutAmount && amount.isNotEmpty
                 ? l10n.shoppingAmountMore(amount)
                 : amount,

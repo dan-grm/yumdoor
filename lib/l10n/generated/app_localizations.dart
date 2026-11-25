@@ -2720,6 +2720,12 @@ abstract class AppLocalizations {
   /// **'Mehr zu {name}'**
   String shoppingActions(String name);
 
+  /// Accessible name and tooltip of the toggle button next to the shopping list heading that shows, under each item, the recipes it is for and who added it. Off by default; selected while on.
+  ///
+  /// In de, this message translates to:
+  /// **'Herkunft der Artikel'**
+  String get shoppingShowSources;
+
   /// Shopping row action: marks the food as on hand and checks the row off.
   ///
   /// In de, this message translates to:
