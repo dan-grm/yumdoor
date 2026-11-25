@@ -157,6 +157,17 @@ class CachingShoppingRepository implements ShoppingRepository {
   }
 
   @override
+  Future<List<ShoppingEntry>> renameEntries(
+    Iterable<ShoppingEntry> entries,
+    String name,
+  ) async {
+    final renamed = await _remote.renameEntries(entries, name);
+    _changed([for (final entry in renamed) entry.id]);
+    _store(() => _cache.replace(renamed, epoch: _epoch));
+    return renamed;
+  }
+
+  @override
   Future<void> deleteEntries(Iterable<ShoppingEntry> entries) async {
     final list = entries.toList();
     await _remote.deleteEntries(list);

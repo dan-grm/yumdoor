@@ -110,6 +110,17 @@ class ShoppingCache {
     }
   });
 
+  /// Replaces the stored entries that [entries], just changed, have the ids
+  /// of, in their place. Others stay out, as when a cut-off list left them
+  /// out.
+  Future<void> replace(Iterable<ShoppingEntry> entries, {required int epoch}) =>
+      _db.transaction(() async {
+        if (_db.clears != epoch) return;
+        for (final entry in entries) {
+          await _replace(entry);
+        }
+      });
+
   /// Adds [entry], just created, at the end of the stored list, if one is
   /// stored.
   Future<void> add(ShoppingEntry entry, {required int epoch}) =>

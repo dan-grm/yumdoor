@@ -549,13 +549,91 @@
   "@shoppingOnHand": {
     "description": "Shopping row action: marks the food as on hand and checks the row off."
   },
-  "shoppingOnHandHint": "Applies to the whole household and checks the item off.",
+  "shoppingOnHandHint": "“I have it at home” applies to the whole household and checks the item off.",
   "@shoppingOnHandHint": {
     "description": "Explains the on-hand action of a shopping row."
   },
   "shoppingDelete": "Delete",
   "@shoppingDelete": {
     "description": "Shopping row action: removes the row's entries."
+  },
+  "shoppingRename": "Rename",
+  "@shoppingRename": {
+    "description": "Action of an open shopping row, and the confirm button of the rename dialog."
+  },
+  "shoppingRenameTitle": "Rename item",
+  "@shoppingRenameTitle": {
+    "description": "Title of the dialog that renames a shopping item."
+  },
+  "shoppingRenameHint": "For your whole household. If Tandoor already has a food with this name, the item moves there; otherwise it is created. Recipes stay as they are.",
+  "@shoppingRenameHint": {
+    "description": "Explains in the rename dialog what renaming a shopping item does in Tandoor: the item moves to the food with that name, which is created if missing; foods and recipes are not renamed."
+  },
+  "shoppingRenameLabel": "Name",
+  "@shoppingRenameLabel": {
+    "description": "Label of the name field in the dialog that renames a shopping item."
+  },
+  "shoppingRenameEmpty": "Enter a name.",
+  "@shoppingRenameEmpty": {
+    "description": "Error under the empty name field of the rename dialog."
+  },
+  "shoppingRenameTooLong": "At most {max} characters.",
+  "@shoppingRenameTooLong": {
+    "description": "Error under the name field of the rename dialog when the name is longer than Tandoor allows.",
+    "placeholders": {
+      "max": {
+        "type": "int",
+        "example": "128"
+      }
+    }
+  },
+  "shoppingRenamed": "{name} is now {newName}",
+  "@shoppingRenamed": {
+    "description": "Snackbar after renaming a shopping item.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      },
+      "newName": {
+        "type": "String",
+        "example": "Bio-Karotten"
+      }
+    }
+  },
+  "shoppingRenameFailed": "{name} not renamed. {reason}",
+  "@shoppingRenameFailed": {
+    "description": "Snackbar when renaming a shopping item failed.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Karotten"
+      },
+      "reason": {
+        "type": "String",
+        "example": "Der Server ist nicht erreichbar."
+      }
+    }
+  },
+  "shoppingRenameChecked": "{name} was checked off meanwhile and wasn't renamed.",
+  "@shoppingRenameChecked": {
+    "description": "Snackbar when the shopping item was checked off (by someone else) while its rename dialog was open; checked items are not renamed.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Feta"
+      }
+    }
+  },
+  "shoppingRenameNothing": "{name} is unchanged: Tandoor knows that name as this food, or it was just checked off.",
+  "@shoppingRenameNothing": {
+    "description": "Snackbar when a rename changed nothing: Tandoor matched the item's own food (e.g. another spelling), or the item was checked off in the meantime.",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "example": "Feta"
+      }
+    }
   },
   "shoppingOnHandDone": "{name} marked as on hand",
   "@shoppingOnHandDone": {

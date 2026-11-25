@@ -576,6 +576,28 @@ class ShoppingList extends _$ShoppingList {
         );
       });
 
+  /// Renames [entries] to [name] for the whole household
+  /// ([ShoppingRepository.renameEntries]) and shows it at once. Returns the
+  /// entries that changed, or the [Failure] if it didn't work.
+  Future<({Failure? failure, List<ShoppingEntry> renamed})> rename(
+    List<ShoppingEntry> entries,
+    String name,
+  ) async {
+    var renamed = const <ShoppingEntry>[];
+    final failure = await _edit((repository) async {
+      renamed = await repository.renameEntries(entries, name);
+      return (add: renamed, remove: const <int>{});
+    });
+    // Some were left out: ticked off or deleted on the server meanwhile.
+    if (failure == null && renamed.length < entries.length) {
+      unawaited(_resync());
+    }
+    return (
+      failure: failure,
+      renamed: failure == null ? renamed : const <ShoppingEntry>[],
+    );
+  }
+
   /// Puts deleted [entries] back as items added by hand (their recipe link
   /// is gone). Returns the [Failure] if it didn't work.
   Future<Failure?> restore(List<ShoppingEntry> entries) =>

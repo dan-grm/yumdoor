@@ -285,6 +285,21 @@ void main() {
       },
     );
 
+    test('keeps renamed entries in their place', () async {
+      await repository.fetch();
+      await repository.renameEntries(
+        remote.entries.where((e) => e.id == 105),
+        'Schafskäse',
+      );
+      await pumpEventQueue();
+
+      final stored = (await offlineRead()).entries;
+      expect(stored.map((e) => e.id), [
+        for (final e in mockupShoppingList()) e.id,
+      ]);
+      expect(stored.firstWhere((e) => e.id == 105).food.name, 'Schafskäse');
+    });
+
     test('a check-off the server rejected is not stored', () async {
       await repository.fetch();
       remote.checkFailure = const ServerFailure();

@@ -19,6 +19,7 @@ import '../common/failure_view.dart';
 import '../common/offline_as_of.dart';
 import '../search/option_sheet.dart';
 import 'add_item_field.dart';
+import 'rename_dialog.dart';
 import 'shopping_providers.dart';
 import 'shopping_sync.dart';
 
@@ -344,7 +345,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     return true;
   }
 
-  /// The actions of [row]: on hand, or delete.
+  /// The actions of [row]: rename (open rows only), on hand, or delete.
   Future<void> _more(ShoppingListRow row, String name) async {
     final messenger = ScaffoldMessenger.of(context);
     if (_readOnly) {
@@ -357,6 +358,8 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
       title: name,
       hint: l10n.shoppingOnHandHint,
       options: [
+        // A checked entry would get a new completion time.
+        if (row.completedAt == null) (l10n.shoppingRename, _RowAction.rename),
         (l10n.shoppingOnHand, _RowAction.onHand),
         (l10n.shoppingDelete, _RowAction.delete),
       ],
@@ -369,6 +372,8 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     }
     final list = ref.read(shoppingListProvider.notifier);
     switch (action) {
+      case _RowAction.rename:
+        await _rename(messenger, row, name);
       case _RowAction.onHand:
         final failure = await list.markOnHand(row.food.id, row.entryIds);
         _show(
@@ -408,6 +413,84 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
           ),
         );
     }
+  }
+
+  /// Asks for a new name for [row], shown as [name], and renames its
+  /// entries for the household.
+  ///
+  /// The food's own name or plural in another case is no new name: Tandoor
+  /// would find the same food, and only renaming the food itself, in every
+  /// recipe, could change how it is written.
+  Future<void> _rename(
+    ScaffoldMessengerState messenger,
+    ShoppingListRow row,
+    String name,
+  ) async {
+    final food = row.food;
+    final newName = await askShoppingItemName(context, initial: food.name);
+    if (newName == null || !mounted) return;
+    final wanted = newName.toLowerCase();
+    if (wanted == food.name.toLowerCase() ||
+        wanted == food.pluralName?.toLowerCase()) {
+      if (newName != food.name) {
+        _show(messenger, (context) => context.l10n.shoppingRenameNothing(name));
+      }
+      return;
+    }
+    if (_readOnly) {
+      _show(messenger, (context) => context.l10n.offlineWriteDisabled);
+      return;
+    }
+    final list = ref.read(shoppingListProvider.notifier);
+    // The item as it is now, in every unit, so it doesn't end up under two
+    // names: while the dialog was open, someone may have ticked entries off
+    // (checked ones are not renamed), deleted them, or added some.
+    final now = [
+      for (final section
+          in ref.read(shoppingGroupsProvider).value?.sections ??
+              const <ShoppingListSection>[])
+        for (final other in section.rows)
+          if (other.food.id == food.id) ...other.entryIds,
+    ];
+    final current = list.entriesOf({...row.entryIds, ...now});
+    final entries = [
+      for (final entry in current)
+        if (!entry.checked) entry,
+    ];
+    if (entries.isEmpty) {
+      _show(
+        messenger,
+        (context) => current.isEmpty
+            ? context.l10n.shoppingRenameFailed(
+                name,
+                failureMessage(context, const NotFoundFailure()),
+              )
+            : context.l10n.shoppingRenameChecked(name),
+        failed: true,
+      );
+      return;
+    }
+    final (:failure, :renamed) = await list.rename(entries, newName);
+    if (failure != null) {
+      _show(
+        messenger,
+        (context) => context.l10n.shoppingRenameFailed(
+          name,
+          failureMessage(context, failure),
+        ),
+        failed: true,
+      );
+      return;
+    }
+    if (renamed.isEmpty) {
+      // Tandoor found the food it already had, or someone ticked it off
+      // just now.
+      _show(messenger, (context) => context.l10n.shoppingRenameNothing(name));
+      return;
+    }
+    // The food Tandoor found may be written differently from what was typed.
+    final newFood = renamed.first.food.name;
+    _show(messenger, (context) => context.l10n.shoppingRenamed(name, newFood));
   }
 
   /// Puts deleted [entries] back; [failed] says why it didn't work.
@@ -718,7 +801,7 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
   }
 }
 
-enum _RowAction { onHand, delete }
+enum _RowAction { rename, onHand, delete }
 
 /// Whether [row] has a check state that waits to be sent.
 bool _isPending(ShoppingListRow row, Set<int> pendingIds) =>

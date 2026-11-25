@@ -1802,10 +1802,51 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get shoppingOnHandHint =>
-      'Gilt für den ganzen Haushalt und hakt den Eintrag ab.';
+      '„Habe ich da“ gilt für den ganzen Haushalt und hakt den Eintrag ab.';
 
   @override
   String get shoppingDelete => 'Löschen';
+
+  @override
+  String get shoppingRename => 'Umbenennen';
+
+  @override
+  String get shoppingRenameTitle => 'Artikel umbenennen';
+
+  @override
+  String get shoppingRenameHint =>
+      'Gilt für den ganzen Haushalt. Gibt es in Tandoor schon ein Lebensmittel mit diesem Namen, kommt der Artikel dorthin, sonst wird es angelegt. Rezepte bleiben, wie sie sind.';
+
+  @override
+  String get shoppingRenameLabel => 'Name';
+
+  @override
+  String get shoppingRenameEmpty => 'Gib einen Namen ein.';
+
+  @override
+  String shoppingRenameTooLong(int max) {
+    return 'Höchstens $max Zeichen.';
+  }
+
+  @override
+  String shoppingRenamed(String name, String newName) {
+    return '$name heißt jetzt $newName';
+  }
+
+  @override
+  String shoppingRenameFailed(String name, String reason) {
+    return '$name nicht umbenannt. $reason';
+  }
+
+  @override
+  String shoppingRenameChecked(String name) {
+    return '$name ist inzwischen abgehakt und wurde nicht umbenannt.';
+  }
+
+  @override
+  String shoppingRenameNothing(String name) {
+    return '$name ist unverändert: Tandoor kennt den Namen schon als dieses Lebensmittel, oder es wurde gerade abgehakt.';
+  }
 
   @override
   String shoppingOnHandDone(String name) {

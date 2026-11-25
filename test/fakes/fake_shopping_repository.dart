@@ -171,6 +171,46 @@ class FakeShoppingRepository implements ShoppingRepository {
     return entry;
   }
 
+  /// The [renameEntries] calls that succeeded: the entry ids and the name.
+  final renamed = <({List<int> ids, String name})>[];
+
+  /// Like Tandoor: the food of [foods] called [name] (or its plural),
+  /// ignoring case, else a new one in the first entry's category; returns
+  /// the entries that changed. [editFailure] makes it throw.
+  @override
+  Future<List<ShoppingEntry>> renameEntries(
+    Iterable<ShoppingEntry> toRename,
+    String name,
+  ) async {
+    if (editFailure case final failure?) throw failure;
+    final list = toRename.toList();
+    if (list.isEmpty) return const [];
+    final wanted = name.trim().toLowerCase();
+    final food = foods.values.firstWhere(
+      (food) =>
+          food.name.toLowerCase() == wanted ||
+          food.pluralName?.toLowerCase() == wanted,
+      orElse: () {
+        final created = ShoppingFood(
+          id: _nextId++,
+          name: name.trim(),
+          category: list.first.food.category,
+        );
+        return foods[created.id] = created;
+      },
+    );
+    renamed.add((ids: [for (final e in list) e.id], name: name));
+    final changed = <ShoppingEntry>[];
+    for (final entry in list) {
+      if (entry.food.id == food.id) continue;
+      final index = entries.indexWhere((e) => e.id == entry.id);
+      final updated = entry.copyWith(food: food, updatedAt: now);
+      if (index >= 0) entries[index] = updated;
+      changed.add(updated);
+    }
+    return changed;
+  }
+
   @override
   Future<void> deleteEntries(Iterable<ShoppingEntry> toDelete) async {
     if (editFailure case final failure?) throw failure;

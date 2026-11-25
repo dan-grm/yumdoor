@@ -550,6 +550,19 @@ void main() {
       );
     });
 
+    testWidgets('renaming in light', tags: goldenTags, (tester) async {
+      await pumpList(tester, theme: lightTheme);
+      await tester.tap(find.byTooltip('Mehr zu Karotten'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Umbenennen'));
+      await tester.pumpAndSettle();
+
+      await expectLater(
+        find.byType(MaterialApp),
+        matchesGoldenFile('../goldens/shopping_rename_light.png'),
+      );
+    });
+
     testWidgets('offline in light', tags: goldenTags, (tester) async {
       store.write('shopping.supermarket', storedChoice);
       repository.cachedAt = DateTime(2026, 11, 17, 19, 30);

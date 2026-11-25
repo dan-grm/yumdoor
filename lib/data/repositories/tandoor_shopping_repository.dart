@@ -201,6 +201,118 @@ class TandoorShoppingRepository implements ShoppingRepository {
         return _parseEntry(response.data).toDomain();
       });
 
+  /// `POST /api/food/` gets or creates the food; the category goes by name,
+  /// which Tandoor gets or creates too, and is only used for a new food.
+  /// Then each entry gets the food's id, never a nested food, which would
+  /// rename it (docs/TANDOOR_API.md#shopping-list). `checked` goes along, as
+  /// every entry PATCH needs it, and still such a PATCH clears the on-hand
+  /// flag of the food an open entry had when the user's `shopping_add_onhand`
+  /// is on (docs/TANDOOR_API.md#on-hand-foods), so flags that were set are
+  /// set again.
+  ///
+  /// Each entry is read first, so one ticked off or deleted meanwhile is
+  /// left alone rather than opened again. If moving an entry fails, the ones
+  /// sent so far are moved back (best effort); a food created for the new
+  /// name stays.
+  @override
+  Future<List<ShoppingEntry>> renameEntries(
+    Iterable<ShoppingEntry> entries,
+    String name,
+  ) => guardRequest(() async {
+    final list = entries.toList();
+    if (list.isEmpty) return const <ShoppingEntry>[];
+    final category = list.first.food.category;
+    final food = await _dio.post<Object?>(
+      '/api/food/',
+      data: {
+        'name': name.trim(),
+        if (category != null) 'supermarket_category': {'name': category.name},
+      },
+    );
+    final foodId = switch (food.data) {
+      {'id': final int id} => id,
+      _ => throw const FormatException('Food without id'),
+    };
+    final moving = [
+      for (final entry in list)
+        if (entry.food.id != foodId) entry,
+    ];
+    if (moving.isEmpty) return const <ShoppingEntry>[];
+    // The on-hand flags of the foods the entries have on the server before
+    // their PATCH, and of the new food (moving one back would clear it).
+    final read = <int>{};
+    final onHand = <int>{};
+    Future<void> note(int id) async {
+      if (read.add(id) && await _isOnHand(id)) onHand.add(id);
+    }
+
+    final renamed = <ShoppingEntry>[];
+    // Those sent, including one whose answer got lost.
+    final attempted = <ShoppingEntry>[];
+    try {
+      for (final shown in moving) {
+        // As the server has it now: the PATCH sets `checked`, and the list
+        // shown may not know yet that someone ticked it off or deleted it.
+        final entry = await _current(shown.id);
+        if (entry == null || entry.checked || entry.food.id == foodId) {
+          continue;
+        }
+        await note(foodId);
+        await note(entry.food.id);
+        attempted.add(entry);
+        final response = await _dio.patch<Object?>(
+          '/api/shopping-list-entry/${entry.id}/',
+          data: {'food': foodId, 'checked': entry.checked},
+        );
+        renamed.add(_parseEntry(response.data).toDomain());
+      }
+    } on Object {
+      for (final entry in attempted) {
+        try {
+          await _dio.patch<Object?>(
+            '/api/shopping-list-entry/${entry.id}/',
+            data: {'food': entry.food.id, 'checked': entry.checked},
+          );
+        } on Object {
+          // The list is read again after a failure and shows what is left.
+        }
+      }
+      rethrow;
+    } finally {
+      for (final id in onHand) {
+        try {
+          await _dio.patch<Object?>(
+            '/api/food/$id/',
+            data: {'food_onhand': true},
+          );
+        } on Object {
+          // Best effort: the rename itself is what was asked for.
+        }
+      }
+    }
+    return renamed;
+  });
+
+  /// The entry [id] as the server has it; `null` if it is gone.
+  Future<ShoppingEntry?> _current(int id) async {
+    try {
+      final response = await _dio.get<Object?>('/api/shopping-list-entry/$id/');
+      return _parseEntry(response.data).toDomain();
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
+  /// Whether anyone in the household has the food [id] on hand.
+  Future<bool> _isOnHand(int id) async {
+    final response = await _dio.get<Object?>('/api/food/$id/');
+    return switch (response.data) {
+      {'food_onhand': true} => true,
+      _ => false,
+    };
+  }
+
   /// One request per entry, [_parallelDeletes] at a time: Tandoor has no
   /// bulk delete. All are tried; the first failure is thrown at the end.
   ///

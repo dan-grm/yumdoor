@@ -514,6 +514,34 @@ amounts across recipes; merging per food and unit for display is our job. "Add t
   `{"food": {"id": 711, "name": "x"}}` saves "x" as that food's name for the whole space (writable nested
   serializer), and `name` is required in the nested form. Plain ids work and change nothing; that is what Yumdoor
   sends. An unknown food id gets a 500.
+- **Rename an item** (checked on 2.6.15): an entry has no name of its own, only its `food`. Tandoor's own entry
+  editor (`vue3/src/components/model_editors/ShoppingListEntryEditor.vue`) lets you pick or create another food;
+  Yumdoor does the same, and never renames the food itself (`PATCH /api/food/{id}/ {name}` would rename it in every
+  recipe of the space).
+  - `POST /api/food/ {name}` is get-or-create (`FoodSerializer.create`): the name is trimmed, and a food whose
+    `name` or `plural_name` matches ignoring case is returned as it is (201 either way, nothing else changes). A
+    blank name gets 400; `name` has at most 128 characters.
+  - For a new food, `supermarket_category: {name}` puts it in the category of that name, got or created by name
+    (category names are unique per space). Send the name only: a nested category with an `id` and another `name`
+    would rename the category. Yumdoor passes the old food's category, so a renamed item stays in its aisle.
+  - `PATCH /api/shopping-list-entry/{id}/ {food: <id>, checked}` moves the entry; a plain id works here as on create
+    (an unknown id gets a 500), the response is the changed entry, and `amount`, `unit` and the recipe link stay.
+    Send `checked` (see [On-hand foods](#on-hand-foods)); even so, for an open entry with the preference
+    `shopping_add_onhand` on, this clears the **old** food's on-hand flag (`ShoppingListEntrySerializer.update` runs
+    before the food changes). Yumdoor reads the old food's `food_onhand` first and sets it again afterwards.
+    For a checked entry it would reset `completed_at`, and `checked: false` would open it again, so Yumdoor renames
+    open entries only (all open entries of the food, in every unit), one PATCH each, and reads each entry first
+    (`GET /api/shopping-list-entry/{id}/`) to leave one alone that someone ticked off or deleted meanwhile. There is
+    no conditional update, so a check-off between that GET and the PATCH is still undone. If a PATCH fails, the ones
+    sent are moved back (best effort; a newly created food stays).
+  - Only the case differs, or the name is the food's plural: Tandoor returns the same food, so nothing changes.
+    Changing how a food is written would mean renaming the food itself, in every recipe; Yumdoor doesn't offer that.
+- **Notes:** there are none. `ShoppingListEntry` (2.6.15 and 2.7.8) has no note or comment field (`list_recipe`,
+  `shopping_lists`, `food`, `unit`, `ingredient`, `amount`, `order`, `checked`, `created_by`, `created_at`,
+  `updated_at`, `completed_at`, `delay_until`), and Tandoor's own UI offers none. The only free text near the list
+  is `ShoppingListRecipe.name` (32 characters, empty for recipes, shown nowhere in Tandoor's UI) and the
+  `description` of a named list (`ShoppingList`). A note per item would have to live elsewhere (a food named like
+  the note, or on the device only, not shared with the household).
 - Delete: `DELETE /api/shopping-list-entry/{id}/` (204; 404 when already gone). There is no bulk delete.
 - Supermarket categories: `Food.supermarket_category`. Per-store ordering:
   `GET /api/supermarket/` (all of the space's) → each has `category_to_supermarket` relations with an `order`.

@@ -497,6 +497,63 @@ void main() {
       await ben.shopping.deleteEntries([kept, deleted]);
     }
   });
+
+  // Here for the same reason as the tests above.
+  test('renames an item to a new food and to an existing one', () async {
+    final recipe = await salad();
+    final mozzarella = recipe.steps
+        .expand((s) => s.ingredients)
+        .singleWhere((i) => i.food?.name == 'Mozzarella')
+        .food!;
+    var item = await ben.shopping.addItem(mozzarella.id, 2);
+    final category = item.food.category;
+    expect(category, isNotNull);
+    final dio = createTandoorDio(tandoor.baseUrl, token: tandoor.token('anna'));
+    final name = 'Yumdoor Testkäse ${DateTime.now().microsecondsSinceEpoch}';
+    int? created;
+    try {
+      [item] = await anna.shopping.renameEntries([item], name);
+      created = item.food.id;
+      expect(item.food.name, name);
+      expect(created, isNot(mozzarella.id));
+      // A new food, in the category of the old one.
+      expect(item.food.category, category);
+      expect(item.amount, 2);
+      expect(item.checked, isFalse);
+      expect((await looseEntry(name)).id, item.id);
+
+      // An existing food, by name ignoring case: no new one.
+      [item] = await anna.shopping.renameEntries([item], ' mozzarella ');
+      expect(item.food.id, mozzarella.id);
+      expect(item.food.name, 'Mozzarella');
+      // The foods keep their names, so the recipe is as it was.
+      final again = await anna.recipes.fetchRecipe(
+        recipe.id,
+        allowCached: false,
+      );
+      expect(again.steps, recipe.steps);
+
+      // Ben ticks it off; Anna's list doesn't know yet. It stays checked.
+      await ben.shopping.setChecked({item.id}, checked: true);
+      expect(await anna.shopping.renameEntries([item], name), isEmpty);
+      final now = (await anna.shopping.fetch()).entries.singleWhere(
+        (e) => e.id == item.id,
+      );
+      expect(now.checked, isTrue);
+      expect(now.food.id, mozzarella.id);
+    } finally {
+      await ben.shopping.deleteEntries([item]);
+      // Also when the rename failed after creating the food.
+      created ??= [
+        for (final food in await anna.foods.autocomplete(name, limit: 5))
+          if (food.name == name) food.id,
+      ].firstOrNull;
+      if (created != null && created != mozzarella.id) {
+        await dio.delete<void>('/api/food/$created/');
+      }
+      dio.close();
+    }
+  });
 }
 
 /// Whether [plan] is on the shopping list, as the meal plan list says.
