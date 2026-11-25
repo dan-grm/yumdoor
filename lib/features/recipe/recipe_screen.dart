@@ -21,6 +21,7 @@ import '../common/markdown_text.dart';
 import '../common/offline_disabled.dart';
 import '../common/recipe_image.dart';
 import '../common/step_text.dart';
+import '../common/up_scope.dart';
 import '../cook_log/cook_log_screen.dart';
 import '../editor/editor_screen.dart';
 import '../planner/plan_sheet.dart';
@@ -47,25 +48,28 @@ class RecipeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recipe = ref.watch(recipeProvider(recipeId));
-    return Scaffold(
-      // While it reloads (after a cook log entry was saved) the recipe
-      // stays, and so do the chosen servings; a failed reload keeps it too.
-      body: switch (recipe) {
-        AsyncValue(value: final value?) => _RecipeView(recipe: value),
-        AsyncError(:final error) => SafeArea(
-          child: Stack(
-            children: [
-              FailureView(
-                error: error,
-                notFoundMessage: context.l10n.recipeNotFound,
-                onRetry: () => ref.invalidate(recipeProvider(recipeId)),
-              ),
-              const _BackButton(),
-            ],
+    return UpScope(
+      onUp: () => context.go('/'),
+      child: Scaffold(
+        // While it reloads (after a cook log entry was saved) the recipe
+        // stays, and so do the chosen servings; a failed reload keeps it too.
+        body: switch (recipe) {
+          AsyncValue(value: final value?) => _RecipeView(recipe: value),
+          AsyncError(:final error) => SafeArea(
+            child: Stack(
+              children: [
+                FailureView(
+                  error: error,
+                  notFoundMessage: context.l10n.recipeNotFound,
+                  onRetry: () => ref.invalidate(recipeProvider(recipeId)),
+                ),
+                const _BackButton(),
+              ],
+            ),
           ),
-        ),
-        _ => const Center(child: CircularProgressIndicator()),
-      },
+          _ => const Center(child: CircularProgressIndicator()),
+        },
+      ),
     );
   }
 }

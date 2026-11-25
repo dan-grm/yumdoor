@@ -19,6 +19,7 @@ import '../../l10n/l10n.dart';
 import '../auth/logout.dart';
 import '../common/failure_view.dart';
 import '../common/offline_disabled.dart';
+import '../common/up_scope.dart';
 import '../editor/editor_screen.dart';
 import '../planner/plan_sheet.dart';
 import '../planner/week_labels.dart';
@@ -158,7 +159,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final l10n = context.l10n;
     final query = widget.query;
 
-    return Scaffold(
+    final screen = Scaffold(
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -289,6 +290,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         ),
       ),
     );
+    // The picker opened directly (a link, a reload): back leads to the
+    // planner.
+    return widget.pickDay == null
+        ? screen
+        : UpScope(onUp: () => context.go(planPath), child: screen);
   }
 }
 

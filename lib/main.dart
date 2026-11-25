@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app.dart';
+import 'app/browser_history.dart';
 
 void main() {
+  AppBinding.ensureInitialized();
   LicenseRegistry.addLicense(_bundledFontLicenses);
   runApp(const ProviderScope(child: YumdoorApp()));
 }

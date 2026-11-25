@@ -19,6 +19,7 @@ import '../../platform/unload_guard/unload_guard.dart';
 import '../common/failure_view.dart';
 import '../common/layout.dart';
 import '../common/offline_disabled.dart';
+import '../common/up_scope.dart';
 import 'editor_controller.dart';
 import 'general_tab.dart';
 import 'image_area.dart';
@@ -326,7 +327,9 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
 
     final canSave = state != null && !saving && !offline;
 
-    return PopScope(
+    // Opened directly (a new recipe from a link), back leads to search.
+    return UpScope(
+      onUp: _leave,
       // Leaving while saving would race with the return after it.
       canPop: !saving,
       // Keyboard: Ctrl/Cmd+S saves, Esc leaves (through the same guard as
