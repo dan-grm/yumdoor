@@ -39,6 +39,7 @@ void main() {
             recipes: FakeRecipeRepository([ofenkarotten]),
           ),
           wakeLockServiceProvider.overrideWithValue(FakeWakeLockService()),
+          clockProvider.overrideWithValue(() => DateTime(2026, 11, 18, 12)),
         ],
         child: const YumdoorApp(),
       ),
@@ -96,14 +97,6 @@ void main() {
     expect(find.byType(RecipeScreen), findsNothing);
   });
 
-  testWidgets('back on the start of search stays in the app', (tester) async {
-    final router = await pumpApp(tester);
-
-    await back(tester);
-
-    expect(location(router), '/search');
-  });
-
   group('a screen opened from a link or after a reload', () {
     testWidgets('recipe: back leads to search', (tester) async {
       final router = await pumpApp(tester);
@@ -136,15 +129,29 @@ void main() {
       expect(location(router), '/search');
     });
 
-    testWidgets('recipe picker: back leads to the planner', (tester) async {
+    testWidgets('recipe picker: back leads to the planner at the day\'s '
+        'week', (tester) async {
       final router = await pumpApp(tester);
       router.go(
-        pickRecipeLocation(const RecipeQuery(), CalendarDay(2026, 11, 18)),
+        pickRecipeLocation(const RecipeQuery(), CalendarDay(2026, 12, 2)),
       );
       await tester.pumpAndSettle();
 
       await back(tester);
-      expect(location(router), '/plan?day=2026-11-18');
+      expect(location(router), '/plan?day=2026-11-30');
+    });
+
+    testWidgets('recipe picker for this week: back leads to the planner', (
+      tester,
+    ) async {
+      final router = await pumpApp(tester);
+      router.go(
+        pickRecipeLocation(const RecipeQuery(), CalendarDay(2026, 11, 20)),
+      );
+      await tester.pumpAndSettle();
+
+      await back(tester);
+      expect(location(router), '/plan');
     });
   });
 }

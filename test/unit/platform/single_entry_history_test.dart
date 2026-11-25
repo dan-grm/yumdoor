@@ -28,12 +28,16 @@ class _RecordingMessenger implements BinaryMessenger {
 
 class _FakeHistory implements BrowserHistory {
   int left = 0;
+  bool canLeave = true;
 
   @override
   bool get supported => true;
 
   @override
-  void leaveApp() => left++;
+  bool leaveApp() {
+    left++;
+    return canLeave;
+  }
 }
 
 void main() {
@@ -82,6 +86,15 @@ void main() {
 
     expect(history.left, 1);
     expect(engine.sent, isEmpty);
+  });
+
+  test('back from the first screen is left to the engine where the history '
+      'can\'t', () async {
+    history.canLeave = false;
+    await platform.invokeMethod<void>('SystemNavigator.pop');
+
+    expect(history.left, 1);
+    expect(sentMethods(), ['flutter/platform SystemNavigator.pop']);
   });
 
   test('passes other platform calls on with their answer', () async {

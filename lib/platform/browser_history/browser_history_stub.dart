@@ -6,5 +6,5 @@ class PlatformBrowserHistory implements BrowserHistory {
   bool get supported => false;
 
   @override
-  void leaveApp() {}
+  bool leaveApp() => false;
 }

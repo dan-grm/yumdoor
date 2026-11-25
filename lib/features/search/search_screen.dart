@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/platform_providers.dart';
 import '../../design/components/buttons.dart';
 import '../../design/components/filter_chips.dart';
 import '../../design/components/recipe_card.dart';
@@ -23,7 +24,6 @@ import '../common/up_scope.dart';
 import '../editor/editor_screen.dart';
 import '../planner/plan_sheet.dart';
 import '../planner/week_labels.dart';
-import '../shell/app_shell.dart';
 import '../recipe/recipe_meta.dart';
 import 'filter_picker_sheet.dart';
 import 'history_filters.dart';
@@ -153,6 +153,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
+  /// From the picker opened directly, to the planner at the week of [day].
+  void _upToPlanner(CalendarDay day) => context.go(
+    plannerLocation(context, day, CalendarDay.of(ref.read(clockProvider)())),
+  );
+
   @override
   Widget build(BuildContext context) {
     final t = context.tokens;
@@ -178,7 +183,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           label: l10n.back,
                           onPressed: () => context.canPop()
                               ? context.pop()
-                              : context.go(planLocation(day)),
+                              : _upToPlanner(day),
                         ),
                         SizedBox(width: t.space3),
                         Expanded(
@@ -294,10 +299,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     // planner.
     return widget.pickDay == null
         ? screen
-        : UpScope(
-            onUp: () => context.go(planLocation(widget.pickDay!)),
-            child: screen,
-          );
+        : UpScope(onUp: () => _upToPlanner(widget.pickDay!), child: screen);
   }
 }
 

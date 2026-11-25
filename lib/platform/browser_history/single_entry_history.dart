@@ -40,10 +40,10 @@ class AppBinding extends WidgetsFlutterBinding {
 /// - The router's request for one history entry per location
 ///   (`selectMultiEntryHistory`) becomes a request for a single one.
 /// - Leaving the app on back from its first screen (`SystemNavigator.pop`)
-///   goes to [BrowserHistory.leaveApp] instead. The engine's own exit
-///   removes its history entries first; with no page before the app (the
-///   installed app, a new tab) it then stays, but no longer hands the
-///   browser's back to the app.
+///   goes to [BrowserHistory.leaveApp] first. The engine's own exit removes
+///   the app's history entries and then goes back one more; if there is
+///   nothing to go back to, the app stays but no longer gets the browser's
+///   back.
 @visibleForTesting
 class SingleEntryHistoryMessenger implements BinaryMessenger {
   SingleEntryHistoryMessenger(this._inner, this._history);
@@ -65,8 +65,9 @@ class SingleEntryHistoryMessenger implements BinaryMessenger {
       }
       if (channel == SystemChannels.platform.name &&
           _method(message) == 'SystemNavigator.pop') {
-        _history.leaveApp();
-        return Future.value(_codec.encodeSuccessEnvelope(null));
+        if (_history.leaveApp()) {
+          return Future.value(_codec.encodeSuccessEnvelope(null));
+        }
       }
     }
     return _inner.send(channel, message);
