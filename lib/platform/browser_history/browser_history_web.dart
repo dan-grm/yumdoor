@@ -1,6 +1,3 @@
-import 'dart:js_interop';
-import 'dart:js_interop_unsafe';
-
 import 'package:web/web.dart' as web;
 
 import 'browser_history.dart';
@@ -17,17 +14,10 @@ class PlatformBrowserHistory implements BrowserHistory {
   bool get supported => true;
 
   @override
-  bool leaveApp() {
+  void leaveApp() {
     final history = web.window.history;
-    if (history.length > 2) {
-      // An earlier load of the app in the same tab (a typed URL) also counts
-      // as the page before; back from its first screen leads on from there.
-      history.go(-2);
-      return true;
-    }
-    // The installed app on iOS can't be left with back. The engine's exit
-    // would remove its entries for nothing, and the swipe back would no
-    // longer reach the app.
-    return web.window.navigator['standalone']?.dartify() == true;
+    // An earlier load of the app in the same tab (a typed URL) also counts
+    // as the page before; back from its first screen leads on from there.
+    if (history.length > 2) history.go(-2);
   }
 }

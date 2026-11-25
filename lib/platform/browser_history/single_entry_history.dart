@@ -40,10 +40,7 @@ class AppBinding extends WidgetsFlutterBinding {
 /// - The router's request for one history entry per location
 ///   (`selectMultiEntryHistory`) becomes a request for a single one.
 /// - Leaving the app on back from its first screen (`SystemNavigator.pop`)
-///   goes to [BrowserHistory.leaveApp] first. The engine's own exit removes
-///   the app's history entries and then goes back one more; if there is
-///   nothing to go back to, the app stays but no longer gets the browser's
-///   back.
+///   goes to [BrowserHistory.leaveApp] instead of the engine's exit.
 @visibleForTesting
 class SingleEntryHistoryMessenger implements BinaryMessenger {
   SingleEntryHistoryMessenger(this._inner, this._history);
@@ -65,16 +62,22 @@ class SingleEntryHistoryMessenger implements BinaryMessenger {
       }
       if (channel == SystemChannels.platform.name &&
           _method(message) == 'SystemNavigator.pop') {
-        if (_history.leaveApp()) {
-          return Future.value(_codec.encodeSuccessEnvelope(null));
-        }
+        _history.leaveApp();
+        return Future.value(_codec.encodeSuccessEnvelope(null));
       }
     }
     return _inner.send(channel, message);
   }
 
-  static String _method(ByteData message) =>
-      _codec.decodeMethodCall(message).method;
+  /// The method of a call on [SystemChannels.navigation] or
+  /// [SystemChannels.platform]; `null` for anything else, which is passed on.
+  static String? _method(ByteData message) {
+    try {
+      return _codec.decodeMethodCall(message).method;
+    } on FormatException {
+      return null;
+    }
+  }
 
   @override
   void setMessageHandler(String channel, MessageHandler? handler) =>
