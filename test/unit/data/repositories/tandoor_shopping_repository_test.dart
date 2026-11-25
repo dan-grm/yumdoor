@@ -477,6 +477,165 @@ void main() {
     });
   });
 
+  group('renameEntries', () {
+    ShoppingEntry domainEntry(int id, {SupermarketCategory? category}) =>
+        ShoppingEntry(
+          id: id,
+          food: ShoppingFood(
+            id: 100 + id,
+            name: 'Food $id',
+            category: category,
+          ),
+          amount: 1,
+          updatedAt: DateTime.utc(2026, 11, 20),
+          createdBy: const UserRef(id: 1, name: 'Anna'),
+        );
+
+    Map<String, Object?> renamedEntry(int id, int foodId) => {
+      ...entry(id),
+      'food': {
+        'id': foodId,
+        'name': 'Bio-Karotten',
+        'plural_name': null,
+        'supermarket_category': null,
+        'shopping_lists': <Object?>[],
+      },
+    };
+
+    /// Tandoor for a rename to food 900: [onHand] foods are on hand, the
+    /// entries in [checked] are checked off, those in [gone] deleted, and
+    /// moving the entries in [failing] there fails.
+    FakeHttpAdapter tandoor({
+      Set<int> onHand = const {},
+      Set<int> checked = const {},
+      Set<int> gone = const {},
+      Set<int> failing = const {},
+    }) => FakeHttpAdapter((request) {
+      final path = request.uri.path;
+      if (path == '/tandoor/api/food/') {
+        return jsonResponse({'id': 900, 'name': 'Bio-Karotten'}, status: 201);
+      }
+      final id = int.parse(path.split('/')[4]);
+      if (path.startsWith('/tandoor/api/food/')) {
+        return jsonResponse({'id': id, 'food_onhand': onHand.contains(id)});
+      }
+      if (request.method == 'GET') {
+        return gone.contains(id)
+            ? jsonResponse({'detail': 'Not found.'}, status: 404)
+            : jsonResponse(entry(id, checked: checked.contains(id)));
+      }
+      if (request.data case {'food': 900} when failing.contains(id)) {
+        return jsonResponse({'detail': 'boom'}, status: 500);
+      }
+      return jsonResponse(renamedEntry(id, 900));
+    });
+
+    /// The requests [adapter] got, as `METHOD path body`.
+    List<String> calls(FakeHttpAdapter adapter) => [
+      for (final r in adapter.requests)
+        '${r.method} ${r.uri.path.replaceFirst('/tandoor/api/', '')} '
+                '${r.data == null ? '' : jsonEncode(r.data)}'
+            .trimRight(),
+    ];
+
+    test('gets or creates the food, in the old category, then moves each '
+        'entry to it by id', () async {
+      final adapter = tandoor();
+      const produce = SupermarketCategory(id: 3, name: 'Obst & Gemüse');
+
+      final renamed = await shopping(adapter).renameEntries([
+        domainEntry(1, category: produce),
+        domainEntry(2),
+      ], '  Bio-Karotten ');
+
+      expect(
+        [for (final e in renamed) (e.id, e.food.id)],
+        [(1, 900), (2, 900)],
+      );
+      expect(calls(adapter), [
+        // By name only: a nested id and name would rename the category.
+        'POST food/ {"name":"Bio-Karotten",'
+            '"supermarket_category":{"name":"Obst & Gemüse"}}',
+        // Each entry as it is now, and the on-hand flags of its food and the
+        // new one, to set again what a move clears; checked goes along, or
+        // Tandoor clears the food's on-hand flag.
+        'GET shopping-list-entry/1/',
+        'GET food/900/',
+        'GET food/101/',
+        'PATCH shopping-list-entry/1/ {"food":900,"checked":false}',
+        'GET shopping-list-entry/2/',
+        'GET food/102/',
+        'PATCH shopping-list-entry/2/ {"food":900,"checked":false}',
+      ]);
+    });
+
+    test('leaves entries ticked off or deleted meanwhile alone', () async {
+      final adapter = tandoor(checked: {1}, gone: {2}, onHand: {101});
+
+      final renamed = await shopping(adapter)
+          .renameEntries([domainEntry(1), domainEntry(2)], 'Bio-Karotten');
+
+      expect(renamed, isEmpty);
+      expect(calls(adapter).where((c) => c.startsWith('PATCH')), isEmpty);
+    });
+
+    test('sets an on-hand flag the move may have cleared', () async {
+      final adapter = tandoor(onHand: {101});
+
+      await shopping(adapter).renameEntries([domainEntry(1)], 'Bio-Karotten');
+
+      expect(calls(adapter).last, 'PATCH food/101/ {"food_onhand":true}');
+    });
+
+    test(
+      'moves the entries back when one fails, and keeps on-hand flags',
+      () async {
+        final adapter = tandoor(failing: {2}, onHand: {900});
+
+        await expectLater(
+          shopping(adapter)
+              .renameEntries([domainEntry(1), domainEntry(2)], 'Bio-Karotten'),
+          throwsA(isA<ServerFailure>()),
+        );
+
+        expect(calls(adapter).skip(4).where((c) => !c.startsWith('GET')), [
+          'PATCH shopping-list-entry/1/ {"food":900,"checked":false}',
+          'PATCH shopping-list-entry/2/ {"food":900,"checked":false}',
+          // Also the one that failed: it may have gone through.
+          'PATCH shopping-list-entry/1/ {"food":101,"checked":false}',
+          'PATCH shopping-list-entry/2/ {"food":102,"checked":false}',
+          'PATCH food/900/ {"food_onhand":true}',
+        ]);
+      },
+    );
+
+    test('changes nothing for entries already of that food, and sends no '
+        'category without one', () async {
+      final adapter = FakeHttpAdapter(
+        (_) => jsonResponse({'id': 101, 'name': 'Food 1'}, status: 201),
+      );
+
+      final renamed = await shopping(adapter)
+          .renameEntries([domainEntry(1)], 'food 1');
+
+      expect(renamed, isEmpty);
+      expect(calls(adapter), ['POST food/ {"name":"food 1"}']);
+    });
+
+    test('maps an error to a failure', () {
+      final adapter = FakeHttpAdapter(
+        (_) => jsonResponse({
+          'name': ['This field may not be blank.'],
+        }, status: 400),
+      );
+
+      expect(
+        shopping(adapter).renameEntries([domainEntry(1)], 'x'),
+        throwsA(isA<Failure>()),
+      );
+    });
+  });
+
   group('deleteEntries', () {
     final plan = MealPlan(
       id: 9,

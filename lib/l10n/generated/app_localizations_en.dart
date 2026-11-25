@@ -1795,10 +1795,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shoppingOnHandHint =>
-      'Applies to the whole household and checks the item off.';
+      '“I have it at home” applies to the whole household and checks the item off.';
 
   @override
   String get shoppingDelete => 'Delete';
+
+  @override
+  String get shoppingRename => 'Rename';
+
+  @override
+  String get shoppingRenameTitle => 'Rename item';
+
+  @override
+  String get shoppingRenameHint =>
+      'For your whole household. If Tandoor already has a food with this name, the item moves there; otherwise it is created. Recipes stay as they are.';
+
+  @override
+  String get shoppingRenameLabel => 'Name';
+
+  @override
+  String get shoppingRenameEmpty => 'Enter a name.';
+
+  @override
+  String shoppingRenameTooLong(int max) {
+    return 'At most $max characters.';
+  }
+
+  @override
+  String shoppingRenamed(String name, String newName) {
+    return '$name is now $newName';
+  }
+
+  @override
+  String shoppingRenameFailed(String name, String reason) {
+    return '$name not renamed. $reason';
+  }
+
+  @override
+  String shoppingRenameChecked(String name) {
+    return '$name was checked off meanwhile and wasn\'t renamed.';
+  }
+
+  @override
+  String shoppingRenameNothing(String name) {
+    return '$name is unchanged: Tandoor knows that name as this food, or it was just checked off.';
+  }
 
   @override
   String shoppingOnHandDone(String name) {

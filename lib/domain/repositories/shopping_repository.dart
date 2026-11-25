@@ -53,6 +53,19 @@ abstract interface class ShoppingRepository {
   /// none) by hand, without a recipe.
   Future<ShoppingEntry> addItem(int foodId, double amount, {int? unitId});
 
+  /// Renames [entries] to [name] for the whole household and returns the
+  /// ones that changed, as changed. They are moved to the space's food
+  /// called [name] (Tandoor matches its name or plural name, ignoring case)
+  /// or, if there is none, to a new food of that name, in the supermarket
+  /// category of the first entry's food. Entries of that food already stay
+  /// as they are, and so do entries that are checked off (or gone) on the
+  /// server by now. The foods themselves keep their names and on-hand
+  /// flags, so recipes don't change.
+  Future<List<ShoppingEntry>> renameEntries(
+    Iterable<ShoppingEntry> entries,
+    String name,
+  );
+
   /// Deletes [entries]; ones already gone are ignored. A meal plan left
   /// without entries on the list is no longer [MealPlan.onShoppingList], so
   /// it can be added again.

@@ -2783,7 +2783,7 @@ abstract class AppLocalizations {
   /// Explains the on-hand action of a shopping row.
   ///
   /// In de, this message translates to:
-  /// **'Gilt für den ganzen Haushalt und hakt den Eintrag ab.'**
+  /// **'„Habe ich da“ gilt für den ganzen Haushalt und hakt den Eintrag ab.'**
   String get shoppingOnHandHint;
 
   /// Shopping row action: removes the row's entries.
@@ -2791,6 +2791,66 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Löschen'**
   String get shoppingDelete;
+
+  /// Action of an open shopping row, and the confirm button of the rename dialog.
+  ///
+  /// In de, this message translates to:
+  /// **'Umbenennen'**
+  String get shoppingRename;
+
+  /// Title of the dialog that renames a shopping item.
+  ///
+  /// In de, this message translates to:
+  /// **'Artikel umbenennen'**
+  String get shoppingRenameTitle;
+
+  /// Explains in the rename dialog what renaming a shopping item does in Tandoor: the item moves to the food with that name, which is created if missing; foods and recipes are not renamed.
+  ///
+  /// In de, this message translates to:
+  /// **'Gilt für den ganzen Haushalt. Gibt es in Tandoor schon ein Lebensmittel mit diesem Namen, kommt der Artikel dorthin, sonst wird es angelegt. Rezepte bleiben, wie sie sind.'**
+  String get shoppingRenameHint;
+
+  /// Label of the name field in the dialog that renames a shopping item.
+  ///
+  /// In de, this message translates to:
+  /// **'Name'**
+  String get shoppingRenameLabel;
+
+  /// Error under the empty name field of the rename dialog.
+  ///
+  /// In de, this message translates to:
+  /// **'Gib einen Namen ein.'**
+  String get shoppingRenameEmpty;
+
+  /// Error under the name field of the rename dialog when the name is longer than Tandoor allows.
+  ///
+  /// In de, this message translates to:
+  /// **'Höchstens {max} Zeichen.'**
+  String shoppingRenameTooLong(int max);
+
+  /// Snackbar after renaming a shopping item.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} heißt jetzt {newName}'**
+  String shoppingRenamed(String name, String newName);
+
+  /// Snackbar when renaming a shopping item failed.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} nicht umbenannt. {reason}'**
+  String shoppingRenameFailed(String name, String reason);
+
+  /// Snackbar when the shopping item was checked off (by someone else) while its rename dialog was open; checked items are not renamed.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} ist inzwischen abgehakt und wurde nicht umbenannt.'**
+  String shoppingRenameChecked(String name);
+
+  /// Snackbar when a rename changed nothing: Tandoor matched the item's own food (e.g. another spelling), or the item was checked off in the meantime.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} ist unverändert: Tandoor kennt den Namen schon als dieses Lebensmittel, oder es wurde gerade abgehakt.'**
+  String shoppingRenameNothing(String name);
 
   /// Snackbar after marking a food on hand.
   ///

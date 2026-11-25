@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/router.dart';
@@ -7,6 +8,7 @@ import 'package:yumdoor/domain/models/food.dart';
 import 'package:yumdoor/domain/models/parsed_ingredient.dart';
 import 'package:yumdoor/domain/models/recipe_draft.dart';
 import 'package:yumdoor/domain/models/shopping.dart';
+import 'package:yumdoor/features/shopping/shopping_providers.dart';
 
 import '../../fakes/app_overrides.dart';
 import '../../fakes/fake_book_user_repositories.dart';
@@ -169,6 +171,200 @@ void main() {
 
     expect(repository.addedItems.map((i) => i.foodId), [1, 1]);
     expect(find.text('Karotten'), findsOneWidget);
+  });
+
+  testWidgets('renames a row for the household', (tester) async {
+    await pumpList(tester);
+
+    await openActions(tester, 'Karotten');
+    await tester.tap(find.text('Umbenennen'));
+    await tester.pumpAndSettle();
+    // Starts with the food's name.
+    expect(find.widgetWithText(TextField, 'Karotte'), findsOneWidget);
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Karotte'),
+      ' Bio-Karotten ',
+    );
+    await tester.tap(find.widgetWithText(TextButton, 'Umbenennen'));
+    await tester.pumpAndSettle();
+
+    expect(repository.renamed.single.ids, [101, 102]);
+    expect(repository.renamed.single.name, 'Bio-Karotten');
+    expect(find.text('Karotten heißt jetzt Bio-Karotten'), findsOneWidget);
+    expect(find.text('Bio-Karotten'), findsOneWidget);
+    expect(find.text('1,1 kg'), findsOneWidget);
+    // In the same category, at its place by name.
+    expect(
+      tester.getTopLeft(find.text('Bio-Karotten')).dy,
+      lessThan(tester.getTopLeft(find.text('Hokkaido-Kürbis')).dy),
+    );
+  });
+
+  testWidgets('renaming to a food Tandoor has names it as Tandoor writes it', (
+    tester,
+  ) async {
+    repository.foods[30] = const ShoppingFood(id: 30, name: 'Schafskäse');
+    await pumpList(tester);
+
+    await openActions(tester, 'Feta');
+    await tester.tap(find.text('Umbenennen'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, 'schafskäse');
+    await tester.tap(find.widgetWithText(TextButton, 'Umbenennen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Feta heißt jetzt Schafskäse'), findsOneWidget);
+    expect(find.text('Schafskäse'), findsOneWidget);
+  });
+
+  testWidgets('the same name in another case or the plural changes nothing', (
+    tester,
+  ) async {
+    await pumpList(tester);
+
+    for (final same in ['karotte', 'KAROTTEN']) {
+      await openActions(tester, 'Karotten');
+      await tester.tap(find.text('Umbenennen'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).last, same);
+      await tester.tap(find.widgetWithText(TextButton, 'Umbenennen'));
+      await tester.pumpAndSettle();
+    }
+
+    expect(repository.renamed, isEmpty);
+    expect(find.textContaining('heißt jetzt'), findsNothing);
+    expect(find.textContaining('Karotten ist unverändert'), findsOneWidget);
+  });
+
+  testWidgets('a row ticked off while renaming is not renamed', (tester) async {
+    await pumpList(tester);
+    await openActions(tester, 'Feta');
+    await tester.tap(find.text('Umbenennen'));
+    await tester.pumpAndSettle();
+
+    // Lena buys it meanwhile; the list hears of it.
+    repository.entries[4] = repository.entries[4].copyWith(
+      checked: true,
+      completedAt: DateTime.utc(2026, 11, 18, 11),
+      updatedAt: DateTime.utc(2026, 11, 18, 11),
+    );
+    await ProviderScope.containerOf(tester.element(find.byType(TextField).last))
+        .read(shoppingListProvider.notifier)
+        .refresh();
+    await tester.enterText(find.byType(TextField).last, 'Schafskäse');
+    await tester.tap(find.widgetWithText(TextButton, 'Umbenennen'));
+    await tester.pumpAndSettle();
+
+    expect(repository.renamed, isEmpty);
+    expect(
+      find.text('Feta ist inzwischen abgehakt und wurde nicht umbenannt.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('renames the item in every unit', (tester) async {
+    repository.entries.add(
+      repository.entries[0].copyWith(id: 301, unit: null, amount: 3),
+    );
+    await pumpList(tester);
+    // Two rows: in kg, and without a unit.
+    expect(find.text('Karotten'), findsNWidgets(2));
+
+    await tester.tap(find.byTooltip('Mehr zu Karotten').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Umbenennen'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, 'Bio-Karotten');
+    await tester.tap(find.widgetWithText(TextButton, 'Umbenennen'));
+    await tester.pumpAndSettle();
+
+    expect(repository.renamed.single.ids, unorderedEquals([101, 102, 301]));
+    expect(find.text('Bio-Karotten'), findsNWidgets(2));
+  });
+
+  testWidgets('renames what merged into the row while the dialog was open', (
+    tester,
+  ) async {
+    await pumpList(tester);
+    await openActions(tester, 'Feta');
+    await tester.tap(find.text('Umbenennen'));
+    await tester.pumpAndSettle();
+
+    // Lena adds more feta meanwhile; the list hears of it.
+    repository.entries.add(
+      repository.entries[4].copyWith(id: 300, amount: 100),
+    );
+    await ProviderScope.containerOf(tester.element(find.byType(TextField).last))
+        .read(shoppingListProvider.notifier)
+        .refresh();
+    await tester.enterText(find.byType(TextField).last, 'Schafskäse');
+    await tester.tap(find.widgetWithText(TextButton, 'Umbenennen'));
+    await tester.pumpAndSettle();
+
+    expect(repository.renamed.single.ids, unorderedEquals([105, 300]));
+    expect(find.text('300 g'), findsOneWidget);
+  });
+
+  testWidgets('renaming refuses a name longer than Tandoor stores', (
+    tester,
+  ) async {
+    await pumpList(tester);
+    await openActions(tester, 'Feta');
+    await tester.tap(find.text('Umbenennen'));
+    await tester.pumpAndSettle();
+
+    // 100 characters as shown, 200 code points.
+    await tester.enterText(find.byType(TextField).last, 'é' * 100);
+    await tester.tap(find.widgetWithText(TextButton, 'Umbenennen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Höchstens 128 Zeichen.'), findsOneWidget);
+    expect(repository.renamed, isEmpty);
+  });
+
+  testWidgets('renaming needs a name; cancelling changes nothing', (
+    tester,
+  ) async {
+    await pumpList(tester);
+
+    await openActions(tester, 'Feta');
+    await tester.tap(find.text('Umbenennen'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, '   ');
+    await tester.tap(find.widgetWithText(TextButton, 'Umbenennen'));
+    await tester.pumpAndSettle();
+    expect(find.text('Gib einen Namen ein.'), findsOneWidget);
+
+    await tester.tap(find.text('Abbrechen'));
+    await tester.pumpAndSettle();
+    expect(repository.renamed, isEmpty);
+    expect(find.text('Feta'), findsOneWidget);
+  });
+
+  testWidgets('a failed rename keeps the name and says why', (tester) async {
+    repository.editFailure = const OfflineFailure();
+    await pumpList(tester);
+
+    await openActions(tester, 'Feta');
+    await tester.tap(find.text('Umbenennen'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, 'Schafskäse');
+    await tester.tap(find.widgetWithText(TextButton, 'Umbenennen'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Feta nicht umbenannt.'), findsOneWidget);
+    expect(find.text('Feta'), findsOneWidget);
+  });
+
+  testWidgets('checked-off rows cannot be renamed', (tester) async {
+    await pumpList(tester);
+    await tester.tap(find.text('Erledigt · 3'));
+    await tester.pumpAndSettle();
+
+    await openActions(tester, 'Milch');
+    expect(find.text('Umbenennen'), findsNothing);
+    expect(find.text('Löschen'), findsOneWidget);
   });
 
   testWidgets('a long press selects rows, which are deleted together', (
