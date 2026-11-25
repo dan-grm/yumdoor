@@ -144,7 +144,7 @@ void main() {
       await tester.pumpAndSettle();
 
       await back(tester);
-      expect(router.state.uri.path, '/plan');
+      expect(location(router), '/plan?day=2026-11-18');
     });
   });
 }

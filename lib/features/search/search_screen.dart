@@ -100,8 +100,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     super.dispose();
   }
 
-  /// Shows [query] with the text as typed, replacing the current history
-  /// entry so typing doesn't fill the browser history.
+  /// Shows [query] with the text as typed, replacing the current location
+  /// rather than navigating to a new one.
   void _show(RecipeQuery query) {
     // A filter sheet may answer after the screen has gone.
     if (!mounted) return;
@@ -178,7 +178,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           label: l10n.back,
                           onPressed: () => context.canPop()
                               ? context.pop()
-                              : context.go(planPath),
+                              : context.go(planLocation(day)),
                         ),
                         SizedBox(width: t.space3),
                         Expanded(
@@ -294,7 +294,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     // planner.
     return widget.pickDay == null
         ? screen
-        : UpScope(onUp: () => context.go(planPath), child: screen);
+        : UpScope(
+            onUp: () => context.go(planLocation(widget.pickDay!)),
+            child: screen,
+          );
   }
 }
 

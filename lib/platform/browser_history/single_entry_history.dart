@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
+import 'browser_history.dart';
+
 /// Makes the browser's back (the back button, Android's back, the swipe from
 /// the edge in the installed app on iOS) do what back does in the app: close
 /// the screen on top, so it follows the page hierarchy (#98).
@@ -18,16 +20,19 @@ import 'package:flutter/widgets.dart';
 /// Call [ensureInitialized] in `main` before `runApp`. Only the web is
 /// affected; elsewhere it is the plain [WidgetsFlutterBinding].
 class AppBinding extends WidgetsFlutterBinding {
-  AppBinding._();
+  AppBinding._(this._history);
+
+  final BrowserHistory _history;
 
   static WidgetsBinding ensureInitialized() {
-    if (kIsWeb) AppBinding._();
+    final history = BrowserHistory();
+    if (history.supported) AppBinding._(history);
     return WidgetsFlutterBinding.ensureInitialized();
   }
 
   @override
   BinaryMessenger createBinaryMessenger() =>
-      SingleEntryHistoryMessenger(super.createBinaryMessenger());
+      SingleEntryHistoryMessenger(super.createBinaryMessenger(), _history);
 }
 
 /// Passes platform messages on to [_inner], except two to the web engine:
@@ -35,14 +40,16 @@ class AppBinding extends WidgetsFlutterBinding {
 /// - The router's request for one history entry per location
 ///   (`selectMultiEntryHistory`) becomes a request for a single one.
 /// - Leaving the app on back from its first screen (`SystemNavigator.pop`)
-///   is dropped. The web engine can't leave a page with nothing before it
-///   (the installed app), and afterwards no longer passes the browser's back
-///   to the app. On the first screen, back does nothing.
+///   goes to [BrowserHistory.leaveApp] instead. The engine's own exit
+///   removes its history entries first; with no page before the app (the
+///   installed app, a new tab) it then stays, but no longer hands the
+///   browser's back to the app.
 @visibleForTesting
 class SingleEntryHistoryMessenger implements BinaryMessenger {
-  SingleEntryHistoryMessenger(this._inner);
+  SingleEntryHistoryMessenger(this._inner, this._history);
 
   final BinaryMessenger _inner;
+  final BrowserHistory _history;
 
   static const _codec = JSONMethodCodec();
 
@@ -58,6 +65,7 @@ class SingleEntryHistoryMessenger implements BinaryMessenger {
       }
       if (channel == SystemChannels.platform.name &&
           _method(message) == 'SystemNavigator.pop') {
+        _history.leaveApp();
         return Future.value(_codec.encodeSuccessEnvelope(null));
       }
     }

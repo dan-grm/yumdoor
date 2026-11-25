@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:yumdoor/app/browser_history.dart';
+import 'package:yumdoor/platform/browser_history/browser_history.dart';
+import 'package:yumdoor/platform/browser_history/single_entry_history.dart';
 
 /// Records what reaches the engine.
 class _RecordingMessenger implements BinaryMessenger {
@@ -25,16 +26,28 @@ class _RecordingMessenger implements BinaryMessenger {
   ) async {}
 }
 
+class _FakeHistory implements BrowserHistory {
+  int left = 0;
+
+  @override
+  bool get supported => true;
+
+  @override
+  void leaveApp() => left++;
+}
+
 void main() {
   const codec = JSONMethodCodec();
   late _RecordingMessenger engine;
+  late _FakeHistory history;
   late SingleEntryHistoryMessenger messenger;
   late MethodChannel navigation;
   late MethodChannel platform;
 
   setUp(() {
     engine = _RecordingMessenger();
-    messenger = SingleEntryHistoryMessenger(engine);
+    history = _FakeHistory();
+    messenger = SingleEntryHistoryMessenger(engine, history);
     navigation = MethodChannel(
       SystemChannels.navigation.name,
       codec,
@@ -63,9 +76,11 @@ void main() {
     expect(call.arguments, arguments);
   });
 
-  test('stays in the app on back from its first screen', () async {
+  test('back from the first screen goes to the page before the app, '
+      'keeping the engine\'s history', () async {
     await platform.invokeMethod<void>('SystemNavigator.pop');
 
+    expect(history.left, 1);
     expect(engine.sent, isEmpty);
   });
 
@@ -76,6 +91,7 @@ void main() {
 
     expect(sentMethods(), ['flutter/platform HapticFeedback.vibrate']);
     expect(answer, 'ok');
+    expect(history.left, 0);
   });
 
   test('passes binary messages and handlers on', () async {
