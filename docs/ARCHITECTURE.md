@@ -254,6 +254,11 @@ shows the origin and explains the constraint.
   before the tab is closed or reloaded.
 - Logout (and so switching servers or users) clears the database, drafts and unsent check-offs included. Cache size is capped at 100 recipes (LRU by
   `lastOpenedAt`); images no cached recipe uses are dropped with them.
+- The seasonal keyword mapping (month → keyword ids, `SeasonalKeywordStore`) lives in the `LocalStore`, keyed by
+  server URL and user id, and empty by default. Logout keeps it: it is a preference, not cached server content, and
+  is there again when the same account logs in. Ids of keywords deleted on the server are dropped when the mapping
+  is read against the keyword list (`SeasonalKeywords.retainKeywords`), not on save. Reading it needs the user id,
+  so it is unavailable until that has been fetched once in the session.
 - Starting the PWA offline also needs the app shell from the service worker (#17); the data side doesn't depend on it.
 - Web: `web/drift_worker.js` and `web/sqlite3.wasm` are vendored and must match `pubspec.lock`. After bumping
   `drift` or `sqlite3`, replace them from the releases:
