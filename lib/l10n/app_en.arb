@@ -346,7 +346,6 @@
   "homeGreetingEvening": "Good evening",
   "homeDate": "{weekday}, {date}",
   "homeToday": "Today · {meal}",
-  "homeServings": "{count, plural, =1{1 serving} other{{count} servings}}",
   "homeAllAtHome": "all ingredients at home",
   "homeMissing": "{count, plural, =1{1 ingredient missing} other{{count} ingredients missing}}",
   "homeViewRecipe": "View recipe",

@@ -13,6 +13,7 @@ import '../../domain/models/recipe_draft.dart';
 import '../../domain/models/stored_draft.dart';
 import '../../domain/repositories/draft_store.dart';
 import '../../domain/services/recipe_draft_validation.dart';
+import '../planner/planner_providers.dart';
 import '../recipe/recipe_providers.dart';
 import '../search/search_providers.dart';
 
@@ -582,8 +583,11 @@ class RecipeEditor extends _$RecipeEditor {
     }
     await discardChanges();
     if (ref.mounted) {
-      // Screens listing or showing the recipe load again.
-      ref.invalidate(searchResultsProvider);
+      // Screens listing or showing the recipe load again, also the meal
+      // plans, which Tandoor deletes with it.
+      ref
+        ..invalidate(searchResultsProvider)
+        ..invalidate(weekPlansProvider);
       state = AsyncData(state.requireValue._copyWith(deleted: true));
     }
     return null;

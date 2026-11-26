@@ -119,6 +119,18 @@ void main() {
       expect(afternoon.others.map((p) => p.id), [2, 3]);
     });
 
+    test('goes by time, not by the order of the meal types', () {
+      // Types created in Tandoor's UI all have order 0 and sort by name.
+      final plans = [
+        plan(1, day, type: dinner.copyWith(order: 0)),
+        plan(2, day, type: breakfast.copyWith(order: 0)),
+        plan(3, day, type: lunch.copyWith(order: 0)),
+      ];
+      expect(todaysMeals(plans, at(7))!.next.id, 2);
+      expect(todaysMeals(plans, at(11))!.next.id, 3);
+      expect(todaysMeals(plans, at(23))!.next.id, 1);
+    });
+
     test('keeps a meal next for a while after its time', () {
       final plans = [plan(1, day, type: dinner)];
       expect(todaysMeals(plans, at(20))!.next.id, 1);

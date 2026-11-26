@@ -21,6 +21,7 @@ import '../common/recipe_image.dart';
 import '../cooking/cooking_screen.dart';
 import '../planner/planner_providers.dart';
 import '../planner/week_labels.dart';
+import '../recipe/ingredient_lines.dart';
 import '../recipe/recipe_screen.dart';
 import '../search/search_location.dart';
 import '../settings/settings_screen.dart';
@@ -33,11 +34,54 @@ import 'home_providers.dart';
 ///
 /// Today's plans come from the week the planner shows, so offline they come
 /// from the same cache, with the time they were loaded.
-class HomeScreen extends ConsumerWidget {
+///
+/// The tab stays open in the background, so the screen follows the clock
+/// (greeting, day, next meal) once a minute, and counts what is missing
+/// again each time it is shown: the shopping list may have changed what is
+/// on hand.
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  late final Timer _clockTimer;
+
+  /// Whether the tab was shown at the last change of dependencies.
+  bool? _shown;
+
+  @override
+  void initState() {
+    super.initState();
+    _clockTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Hidden tabs have their tickers off (TabStack).
+    final shown = TickerMode.valuesOf(context).enabled;
+    if (shown && _shown == false) {
+      // Not while building.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.invalidate(plannedRecipeProvider);
+      });
+    }
+    _shown = shown;
+  }
+
+  @override
+  void dispose() {
+    _clockTimer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final t = context.tokens;
     final now = ref.watch(clockProvider)();
     final today = CalendarDay.of(now);
@@ -45,7 +89,9 @@ class HomeScreen extends ConsumerWidget {
     final plans = ref.watch(weekPlansProvider(week));
 
     Future<void> refresh() async {
-      ref.invalidate(weekPlansProvider(week));
+      ref
+        ..invalidate(weekPlansProvider(week))
+        ..invalidate(plannedRecipeProvider);
       try {
         await ref.read(weekPlansProvider(week).future);
       } on Object {
@@ -59,7 +105,7 @@ class HomeScreen extends ConsumerWidget {
           OfflineAsOf(cachedAt: cachedAt, now: now),
           SizedBox(height: t.space3),
         ],
-        ..._today(context, todaysMeals(value.plans, now), today),
+        ..._today(todaysMeals(value.plans, now), today),
       ],
       AsyncError(:final error) => [
         FailureView(
@@ -110,11 +156,7 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
-  List<Widget> _today(
-    BuildContext context,
-    TodaysMeals? meals,
-    CalendarDay today,
-  ) {
+  List<Widget> _today(TodaysMeals? meals, CalendarDay today) {
     final t = context.tokens;
     if (meals == null) return [_NothingPlanned(today: today)];
     return [
@@ -325,7 +367,7 @@ class _NextMealCard extends ConsumerWidget {
                 ),
               ),
               Text(
-                l10n.homeServings(plan.servings),
+                servingsLabel(context, servings, recipe?.servingsText ?? ''),
                 style: t.caption.copyWith(color: t.inkMuted),
               ),
             ],

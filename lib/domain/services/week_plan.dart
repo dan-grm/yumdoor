@@ -33,10 +33,11 @@ typedef TodaysMeals = ({MealPlan next, List<MealPlan> others});
 
 /// The meals of [plans] on the day of [now], `null` if there are none.
 ///
-/// The next meal is the first, in the order of [plansOnDay], whose meal
-/// type's time is set and not more than [mealTimeGrace] past. If every timed
-/// meal is past, or none has a time, it is the first meal without a time; if
-/// there is none, the last meal of the day.
+/// The next meal is the one whose meal type's time is the earliest that is
+/// not more than [mealTimeGrace] past; the order of the meal types (which
+/// need not follow their times) only breaks ties. If every timed meal is
+/// past, or none has a time, it is the first meal without a time in the
+/// order of [plansOnDay]; if there is none, the latest one.
 TodaysMeals? todaysMeals(Iterable<MealPlan> plans, DateTime now) {
   final today = plansOnDay(plans, CalendarDay.of(now));
   if (today.isEmpty) return null;
@@ -45,13 +46,22 @@ TodaysMeals? todaysMeals(Iterable<MealPlan> plans, DateTime now) {
     minutes: now.minute,
     seconds: now.second,
   );
+  // Meals at the same time keep the order of plansOnDay.
+  final order = {for (final (index, plan) in today.indexed) plan.id: index};
+  final timed =
+      [
+        for (final plan in today)
+          if (plan.mealType.time != null) plan,
+      ]..sort((a, b) {
+        final byTime = a.mealType.time!.compareTo(b.mealType.time!);
+        return byTime != 0 ? byTime : order[a.id]!.compareTo(order[b.id]!);
+      });
   final next =
-      today.where((plan) {
-        final time = plan.mealType.time;
-        return time != null && time + mealTimeGrace >= sinceMidnight;
-      }).firstOrNull ??
+      timed
+          .where((plan) => plan.mealType.time! + mealTimeGrace >= sinceMidnight)
+          .firstOrNull ??
       today.where((plan) => plan.mealType.time == null).firstOrNull ??
-      today.last;
+      timed.last;
   return (
     next: next,
     others: [

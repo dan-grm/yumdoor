@@ -1357,21 +1357,6 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String homeServings(num count) {
-    final intl.NumberFormat countNumberFormat =
-        intl.NumberFormat.decimalPattern(localeName);
-    final String countString = countNumberFormat.format(count);
-
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$countString Portionen',
-      one: '1 Portion',
-    );
-    return '$_temp0';
-  }
-
-  @override
   String get homeAllAtHome => 'alle Zutaten zu Hause';
 
   @override

@@ -2174,19 +2174,13 @@ abstract class AppLocalizations {
   /// **'Heute · {meal}'**
   String homeToday(String meal);
 
-  /// Planned servings of today's meal; may be fractional, e.g. '2,5 Portionen'.
-  ///
-  /// In de, this message translates to:
-  /// **'{count, plural, =1{1 Portion} other{{count} Portionen}}'**
-  String homeServings(num count);
-
   /// After the duration of today's meal (e.g. '40 Min · alle Zutaten zu Hause'): no ingredient needs to be bought.
   ///
   /// In de, this message translates to:
   /// **'alle Zutaten zu Hause'**
   String get homeAllAtHome;
 
-  /// After the duration of today's meal (e.g. '40 Min · alle Zutaten zu Hause'): how many ingredients are not on hand.
+  /// After the duration of today's meal (e.g. '40 Min · 2 Zutaten fehlen'): how many ingredients are not on hand.
   ///
   /// In de, this message translates to:
   /// **'{count, plural, =1{1 Zutat fehlt} other{{count} Zutaten fehlen}}'**

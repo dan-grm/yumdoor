@@ -250,13 +250,58 @@ void main() {
     await pumpHome(tester, now: DateTime(2026, 11, 18, 9));
 
     expect(find.text('Heute · Mittagessen'), findsOneWidget);
-    expect(find.text('2,5 Portionen'), findsOneWidget);
+    // Whole servings, as the recipe and cooking mode take them.
+    expect(find.text('3 Portionen'), findsOneWidget);
     // Ofenkarotten has six ingredients, none on hand.
     expect(find.text('35 Min · 6 Zutaten fehlen'), findsOneWidget);
 
     await tester.tap(find.text('Kochen starten'));
     await tester.pumpAndSettle();
     expect(find.text('cook /recipe/7/cook?servings=3'), findsOneWidget);
+  });
+
+  testWidgets('follows the clock while it stays open', (tester) async {
+    var now = DateTime(2026, 11, 18, 9);
+    await pumpRoutes(
+      tester,
+      location: '/',
+      overrides: [
+        ...appOverrides(mealPlans: plans, recipes: recipes),
+        clockProvider.overrideWithValue(() => now),
+      ],
+      routes: [tabsRoute()],
+    );
+    expect(find.text('Guten Morgen'), findsOneWidget);
+    expect(find.text('Heute · Mittagessen'), findsOneWidget);
+
+    now = DateTime(2026, 11, 18, 16, 5);
+    await tester.pump(const Duration(minutes: 1));
+    await tester.pumpAndSettle();
+    expect(find.text('Guten Tag'), findsOneWidget);
+    expect(find.text('Heute · Abendessen'), findsOneWidget);
+
+    // The next day, with tomorrow's plan.
+    now = DateTime(2026, 11, 19, 19);
+    await tester.pump(const Duration(minutes: 1));
+    await tester.pumpAndSettle();
+    expect(find.text('Donnerstag, 19. November'), findsOneWidget);
+    expect(find.text('Pizza bestellen'), findsOneWidget);
+  });
+
+  testWidgets('counts what is missing again when it is shown again', (
+    tester,
+  ) async {
+    await pumpHome(tester, now: DateTime(2026, 11, 18, 9));
+    expect(find.text('35 Min · 6 Zutaten fehlen'), findsOneWidget);
+
+    await tester.tap(find.text('Einkauf'));
+    await tester.pumpAndSettle();
+    // Bought and checked off: now on hand.
+    recipes.recipes[ofenkarotten.id] = _risotto.copyWith(id: ofenkarotten.id);
+    await tester.tap(find.text('Start'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('35 Min · alle Zutaten zu Hause'), findsOneWidget);
   });
 
   testWidgets('a meal without a recipe shows its title, without buttons', (
