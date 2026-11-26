@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:yumdoor/core/cancellation.dart';
 import 'package:yumdoor/core/failures.dart';
+import 'package:yumdoor/domain/models/calendar_day.dart';
 import 'package:yumdoor/domain/models/food.dart';
 import 'package:yumdoor/domain/models/image_upload.dart';
 import 'package:yumdoor/domain/models/ingredient.dart';
@@ -31,6 +32,8 @@ typedef SearchCall = ({
 /// (without child foods) and keywords against the recipe's keywords, in the
 /// order of [recipes], or in the query's order if it has a [RecipeQuery.sort]
 /// that summaries can be compared by (equal ones in the order of [recipes]).
+/// A minimum rating and a last-cooked day match [Recipe.rating] and
+/// [Recipe.lastCooked], like the user's own cook log does on Tandoor.
 /// Books match [bookEntries], saved searches [savedSearches] and
 /// [savedFilters].
 /// Like Tandoor, every part of the query must match.
@@ -258,6 +261,17 @@ class FakeRecipeRepository implements RecipeRepository {
         for (final ingredient in step.ingredients) ?ingredient.food?.id,
     };
     final keywords = {for (final k in recipe.keywords) k.id};
+    if (query.minRating case final min?
+        when (recipe.rating == null || recipe.rating! < min)) {
+      return false;
+    }
+    if (query.lastCookedBefore case final day?) {
+      final cooked = recipe.lastCooked;
+      if (cooked == null ||
+          CalendarDay.of(cooked.toLocal()).isAfter(CalendarDay.of(day))) {
+        return false;
+      }
+    }
     return recipe.name.toLowerCase().contains(query.text.toLowerCase()) &&
         foods.containsAll(query.foodIds) &&
         keywords.containsAll(query.keywordIds) &&
