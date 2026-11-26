@@ -220,10 +220,13 @@ class RuleBasedRecommendationProvider implements RecommendationProvider {
     final ids = (await seasonalKeywords()).forDay(today).toList()..sort();
     if (ids.isEmpty) return const [];
     // One search per keyword, so each recipe is known to have it. Searches
-    // include child keywords, which a recipe may have instead.
+    // include child keywords, which a recipe may have instead. "Any of" finds
+    // nothing for a deleted keyword; "all of" would ignore it and find every
+    // recipe (docs/TANDOOR_API.md).
     final pages = await _mapBounded(
       ids,
-      (id) => _search(RecipeQuery(keywordIds: {id}, sort: RecipeSort.rating)),
+      (id) =>
+          _search(RecipeQuery(anyKeywordIds: {id}, sort: RecipeSort.rating)),
     );
     // The mapped keywords that recipes have only through a child keyword,
     // loaded once each; `null` if that failed (deleted, say).

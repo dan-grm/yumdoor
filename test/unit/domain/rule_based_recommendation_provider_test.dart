@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/core/cancellation.dart';
 import 'package:yumdoor/core/failures.dart';
@@ -246,7 +244,7 @@ void main() {
 
       expect(await recommend(), isEmpty);
       expect(
-        recipes.searches.where((s) => s.query.keywordIds.isNotEmpty),
+        recipes.searches.where((s) => s.query.anyKeywordIds.isNotEmpty),
         isEmpty,
       );
     });
@@ -459,7 +457,7 @@ void main() {
       log(pizza, anna, daysAgo(1));
       recipes
         ..failure = const ServerFailure(statusCode: 500)
-        ..failWhen = (query) => query.keywordIds.isNotEmpty;
+        ..failWhen = (query) => query.anyKeywordIds.isNotEmpty;
 
       final result = await recommend();
 
@@ -546,8 +544,8 @@ class _ChildKeywordSearch extends FakeRecipeRepository {
     int pageSize = 25,
     CancelSignal? cancel,
   }) async {
-    if (query.keywordIds.length == 1) {
-      final items = byKeyword[query.keywordIds.single] ?? const [];
+    if (query.anyKeywordIds.length == 1) {
+      final items = byKeyword[query.anyKeywordIds.single] ?? const [];
       return ResultPage(items: items, totalCount: items.length, hasMore: false);
     }
     return super.search(query, page: page, pageSize: pageSize, cancel: cancel);
