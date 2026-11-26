@@ -294,22 +294,26 @@ Each service is an abstract class in `lib/platform/<name>/` with implementations
 ## Recommendations
 
 ```dart
-abstract interface class RecommendationProvider {
+abstract interface class RecommendationProvider {   // domain/services/recommendation_provider.dart
   String get id;
   Future<List<Recommendation>> recommend(RecommendationContext context, {int limit = 10});
 }
 
-class Recommendation {
+class Recommendation {                    // domain/models/recommendation.dart (freezed)
   final RecipeSummary recipe;
-  final double score;               // 0..1, only comparable within one provider
+  final double score;                       // 0..1, only comparable within one provider
   final List<RecommendationReason> reasons; // rendered by the UI, localized
 }
 
-sealed class RecommendationReason { … }   // highlyRated, notCookedSince(date), inSeason(keyword),
-                                          // cookedRecentlyBy(user), similarTo(recipe), freeText(String)
+sealed class RecommendationReason { … }   // highlyRated(rating), notCookedSince(date), inSeason(keyword),
+                                          // cookedRecentlyBy(user, date), similarTo(recipe), freeText(text)
 ```
 
-- `RecommendationContext` carries the date, the user, the current meal plan and an optional free-text wish.
+- `RecommendationContext` carries the day (`CalendarDay`), the current user's id, this week's meal plans and an
+  optional free-text wish.
+- `SeasonalKeywords` is the user's month (1–12) → keyword ids mapping, empty by default (nothing is hardcoded). It
+  keeps ids only, so renamed keywords stay mapped; ids of deleted keywords are dropped with `retainKeywords`.
+  `SeasonalKeywordStore` loads and saves it on the device.
 - The first implementation, `RuleBasedRecommendationProvider`, works on data from repositories: own ratings
   (search with `rating_gte`), last cooked (`cookedon_lte`), seasonal keywords (a configurable month → keyword
   mapping), recent cook logs by other people, and Jaccard similarity over foods and keywords of recently cooked
