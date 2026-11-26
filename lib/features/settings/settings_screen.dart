@@ -36,11 +36,15 @@ class SettingsScreen extends ConsumerWidget {
     final version = ref.watch(serverVersionProvider);
     final themeMode = ref.watch(themeModeSettingProvider);
     final locale = ref.watch(localeOverrideProvider);
-    final unavailable = l10n.settingsUnavailable;
+    // Empty while loading, so "nicht verfügbar" only shows when it is.
+    final unavailable = account.isLoading ? '' : l10n.settingsUnavailable;
+    final versionUnavailable = version.isLoading
+        ? ''
+        : l10n.settingsUnavailable;
     final host = session == null
         ? null
-        : '${session.serverUrl.host}'
-              '${session.serverUrl.hasPort ? ':${session.serverUrl.port}' : ''}';
+        : '${session.serverUrl.authority}'
+              '${session.serverUrl.path == '/' ? '' : session.serverUrl.path}';
 
     return Scaffold(
       body: SafeArea(
@@ -101,7 +105,7 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     _ValueRow(
                       label: l10n.settingsTandoorVersion,
-                      value: version.value ?? unavailable,
+                      value: version.value ?? versionUnavailable,
                     ),
                     SizedBox(height: t.space3),
                     Align(
