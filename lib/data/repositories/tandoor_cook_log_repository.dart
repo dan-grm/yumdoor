@@ -24,6 +24,10 @@ const _maxRecentPages = 5;
 /// How many recipes [TandoorCookLogRepository.recent] loads at once.
 const _parallelRecipes = 6;
 
+/// How long [TandoorCookLogRepository.recent] skips a recipe the server
+/// refused to send; its author may share it meanwhile.
+const _hiddenFor = Duration(minutes: 15);
+
 class TandoorCookLogRepository implements CookLogRepository {
   /// [storedRecipe] gives a recipe stored for offline use, if there is one,
   /// so [recent] doesn't have to fetch it. A stored copy is trusted: a
@@ -113,14 +117,17 @@ class TandoorCookLogRepository implements CookLogRepository {
           final page = lastPage == 1 ? first : await _pageIfAny(number);
           // Gone: entries were deleted since the count.
           if (page == null) continue;
+          // The last page may hold only a few entries; only a full one counts.
+          var allBefore = page.results.length >= _pageSize;
           for (final result in page.results) {
             final entry = result.toDomain();
-            if (since != null && entry.createdAt.isBefore(since)) {
-              reachedSince = true;
-            } else {
-              entries[entry.id] = entry;
-            }
+            if (since != null && entry.createdAt.isBefore(since)) continue;
+            allBefore = false;
+            entries[entry.id] = entry;
           }
+          // Dates don't follow ids exactly, so one old entry doesn't end
+          // it; a full page of only old ones does.
+          if (allBefore) reachedSince = true;
           // Entries created since the count are on the page after it.
           if (number == lastPage && number > 1 && page.next != null) {
             numbers.insert(i + 1, number + 1);
@@ -172,13 +179,16 @@ class TandoorCookLogRepository implements CookLogRepository {
     }
   }
 
-  /// Recipes the server refused to send (someone else's private ones), for
-  /// this session.
-  final _hiddenRecipes = <int>{};
+  /// Recipes the server refused to send (someone else's private ones), with
+  /// when it did. They aren't asked for again for [_hiddenFor].
+  final _hiddenRecipes = <int, DateTime>{};
 
   /// The recipe [id], `null` if it is gone or the user can't see it.
   Future<RecipeSummary?> _recipe(int id) async {
-    if (_hiddenRecipes.contains(id)) return null;
+    if (_hiddenRecipes[id] case final since?) {
+      if (DateTime.now().difference(since) < _hiddenFor) return null;
+      _hiddenRecipes.remove(id);
+    }
     try {
       if (await storedRecipe?.call(id) case final stored?) return stored;
     } on Object {
@@ -193,9 +203,9 @@ class TandoorCookLogRepository implements CookLogRepository {
       return null;
     } on UnauthorizedFailure {
       // Someone else's private recipe: Tandoor lists its cook log entries
-      // but answers 403 for the recipe. (The 403 also makes the app check
-      // its token once, which finds it valid.) Not asked for again.
-      _hiddenRecipes.add(id);
+      // but answers 403 for the recipe. (Each 403 also makes the app check
+      // its token, which finds it valid; hence [_hiddenRecipes].)
+      _hiddenRecipes[id] = DateTime.now();
       return null;
     } on ServerFailure {
       // One recipe the server can't send doesn't hide the others.

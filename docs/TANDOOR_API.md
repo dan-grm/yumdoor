@@ -350,9 +350,10 @@ steps and ingredients) plus `internal: true`.
   - The order is `Meta.ordering = ('pk',)`; `DefaultPagination` takes 50 by default and silently caps `page_size` at
     200. A page past the end is a **404** (`Invalid page.`). Reading from the end costs one extra request for the
     count (Yumdoor reads page 1 with its page size, which is the whole log in small spaces) and an `OFFSET` query
-    per page, which is cheap at the sizes a household reaches. Yumdoor reads at most the 5 newest pages of 100.
-    Pages shift when entries are added or deleted between requests: Yumdoor follows the last page's
-    `next`, skips a page that is gone and drops entries it already has.
+    per page, which is cheap at the sizes a household reaches. Yumdoor reads at most the 5 newest pages of 100
+    by the count, stopping early at the limit or at a full page entirely before `since`. Pages shift when entries are
+    added or deleted between requests: Yumdoor reads one page past the counted end if the last one has a `next`,
+    skips a page that is gone and drops entries it already has.
   - `created_at` is settable, so ids and dates disagree (the seed backdates its entries). Yumdoor sorts the pages it
     read by `created_at`; an entry created long ago with a newer date than everything on those pages is missed.
   - Entries carry only the recipe **id** and the author as a nested user (`display_name`). There is no way to load

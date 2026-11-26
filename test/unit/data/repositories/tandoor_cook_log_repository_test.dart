@@ -354,8 +354,24 @@ void main() {
       expect(recent.first.entry.id, 201);
       expect(recent, hasLength(9));
       expect(recent.every((r) => !r.entry.createdAt.isBefore(since)), isTrue);
-      // Page 2 reaches before since, so page 1 isn't read again.
-      expect(cookLogPages(adapter), ['1', '3', '2']);
+      // Page 1 is all before since, so nothing older would be read.
+      expect(cookLogPages(adapter), ['1', '3', '2', '1']);
+    });
+
+    test('goes on past a backdated entry on a newer page', () async {
+      final adapter = spaceServer([
+        [
+          for (var id = 1; id <= 100; id++)
+            logEntry(id, 58, '2026-11-20T19:00:00Z'),
+        ],
+        // Logged later, with a date from long ago.
+        [logEntry(101, 51, '2026-01-01T19:00:00Z')],
+      ]);
+
+      final recent = await TandoorCookLogRepository(client(adapter))
+          .recent(limit: 3, since: DateTime.utc(2026, 11));
+
+      expect([for (final r in recent) r.entry.id], [100, 99, 98]);
     });
 
     test('skips entries whose recipe is gone or private', () async {
