@@ -345,6 +345,22 @@ steps and ingredients) plus `internal: true`.
 - `GET /api/cook-log/` returns the **whole space**, readable by every member; only the owner or an admin may
   edit or delete (others get 403). The only filter is `recipe`. Ordering is by **id ascending** with no ordering
   parameter, so a newest-first feed reads `count` and then fetches pages from the end. `page_size` max 200.
+- **Recent activity** (`CookLogRepository.recent`, checked on 2.6.15; `CookLogViewSet` in `cookbook/views/api.py`,
+  `CookLog` in `cookbook/models.py:1492`):
+  - The order is `Meta.ordering = ('pk',)`; `DefaultPagination` takes 50 by default and silently caps `page_size` at
+    200. A page past the end is a **404** (`Invalid page.`). Reading from the end costs one extra request for the
+    count (Yumdoor reads page 1 with its page size, which is the whole log in small spaces) and an `OFFSET` query
+    per page, which is cheap at the sizes a household reaches. Yumdoor reads at most 5 pages of 100.
+  - `created_at` is settable, so ids and dates disagree (the seed backdates its entries). Yumdoor sorts the pages it
+    read by `created_at`; an entry created long ago with a newer date than everything on those pages is missed.
+  - Entries carry only the recipe **id** and the author as a nested user (`display_name`). There is no way to load
+    several recipes by id (the recipe list has no id filter), so Yumdoor loads each recipe it shows once
+    (`GET /api/recipe/<id>/`), or takes the copy stored for offline use.
+  - A **deleted recipe or user** leaves nothing behind: `recipe` and `created_by` are `on_delete=CASCADE`, so their
+    entries are gone from the list (checked: the count drops after deleting a recipe).
+  - **Someone else's private recipe** shows up: the cook log isn't filtered by recipe visibility, but
+    `GET /api/recipe/<id>/` answers **403** to everyone but its author and the users it is shared with. Yumdoor
+    leaves those entries out.
 - **`last_cooked` on recipes is always `null`** in 2.6.15, in the list and the detail: the queryset annotates
   `lastcooked` (`managers.py:60`), but `RecipeSerializer` reads `last_cooked`. The `cookedon_*` filters and the
   `lastcooked` sort order work. Yumdoor reads the recipe's cook log instead (`GET /api/cook-log/?recipe=<id>`,
