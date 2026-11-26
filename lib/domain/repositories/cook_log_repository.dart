@@ -10,6 +10,13 @@ abstract interface class CookLogRepository {
   /// it doesn't exist and [UnauthorizedFailure] if it is someone else's.
   Future<void> delete(int id);
 
+  /// What everyone in the space cooked recently, newest first: at most
+  /// [limit] entries, none from before [since]. Entries whose recipe is gone
+  /// or that the current user can't see (someone else's private recipe) are
+  /// left out. Online only: throws [OfflineFailure] when the server can't be
+  /// reached.
+  Future<List<RecentCookLog>> recent({int limit = 20, DateTime? since});
+
   /// When the current user last cooked the recipe, `null` if never.
   Future<DateTime?> lastCooked(int recipeId);
 }

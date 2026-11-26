@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/domain/models/cook_log.dart';
+import 'package:yumdoor/domain/models/recipe_summary.dart';
 import 'package:yumdoor/domain/repositories/cook_log_repository.dart';
 
 /// [CookLogRepository] for tests that keeps entries in [entries]. Set
@@ -13,6 +14,9 @@ class FakeCookLogRepository implements CookLogRepository {
   /// When new entries are created.
   DateTime now;
   final entries = <CookLog>[];
+
+  /// The recipes [recent] knows, by id; entries of others are left out.
+  final recipes = <int, RecipeSummary>{};
   Failure? failure;
 
   /// While set, [create] waits for it before answering.
@@ -40,6 +44,26 @@ class FakeCookLogRepository implements CookLogRepository {
     final before = entries.length;
     entries.removeWhere((e) => e.id == id);
     if (entries.length == before) throw const NotFoundFailure();
+  }
+
+  @override
+  Future<List<RecentCookLog>> recent({int limit = 20, DateTime? since}) async {
+    if (failure case final failure?) throw failure;
+    final sorted =
+        [
+          for (final entry in entries)
+            if (since == null || !entry.createdAt.isBefore(since)) entry,
+        ]..sort(
+          (a, b) => switch (b.createdAt.compareTo(a.createdAt)) {
+            0 => b.id.compareTo(a.id),
+            final order => order,
+          },
+        );
+    return [
+      for (final entry in sorted)
+        if (recipes[entry.recipeId] case final recipe?)
+          RecentCookLog(entry: entry, recipe: recipe),
+    ].take(limit).toList();
   }
 
   @override

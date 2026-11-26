@@ -98,6 +98,52 @@ void main() {
     expect(after, before == null || before == 1 ? 1 : lessThan(before));
   });
 
+  test('recent lists everyone\'s entries, newest first', () async {
+    final recent = await anna.cookLogs.recent(limit: 100);
+
+    // The seed's 32 entries by Anna and Ben, over the last eight weeks.
+    expect(recent.length, greaterThanOrEqualTo(32));
+    for (var i = 1; i < recent.length; i++) {
+      final (newer, older) = (recent[i - 1].entry, recent[i].entry);
+      expect(newer.createdAt.isBefore(older.createdAt), isFalse);
+    }
+    final bens = recent.where((r) => r.entry.createdBy?.name == 'Ben');
+    expect(bens, isNotEmpty);
+    for (final cooked in recent) {
+      expect(cooked.recipe.id, cooked.entry.recipeId);
+      expect(cooked.recipe.name, isNotEmpty);
+      expect(cooked.entry.createdBy?.name, isIn(['Anna', 'Ben']));
+    }
+
+    // limit and since.
+    final few = await anna.cookLogs.recent(limit: 3);
+    expect(
+      [for (final r in few) r.entry.id],
+      [for (final r in recent.take(3)) r.entry.id],
+    );
+    final since = recent[9].entry.createdAt;
+    final newest = await anna.cookLogs.recent(since: since);
+    expect(newest.every((r) => !r.entry.createdAt.isBefore(since)), isTrue);
+    expect(newest.length, greaterThanOrEqualTo(10));
+  });
+
+  test('recent shows someone else\'s new entry first', () async {
+    final id = await recipeId('Apfelkuchen vom Blech');
+    final entry = await ben.cookLogs.create(
+      NewCookLog(recipeId: id, servings: 2, rating: 4, comment: 'Gut'),
+    );
+    try {
+      final newest = (await anna.cookLogs.recent(limit: 1)).single;
+      expect(newest.entry.id, entry.id);
+      expect(newest.entry.createdBy?.name, 'Ben');
+      expect(newest.entry.rating, 4);
+      expect(newest.entry.comment, 'Gut');
+      expect(newest.recipe.name, 'Apfelkuchen vom Blech');
+    } finally {
+      await ben.cookLogs.delete(entry.id);
+    }
+  });
+
   test('only the author may delete an entry', () async {
     final id = await recipeId('Apfelkuchen vom Blech');
     final entry = await anna.cookLogs.create(

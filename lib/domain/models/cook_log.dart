@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import 'recipe_summary.dart';
 import 'user_ref.dart';
 
 part 'cook_log.freezed.dart';
@@ -27,6 +28,16 @@ abstract class CookLog with _$CookLog {
     UserRef? createdBy,
     required DateTime createdAt,
   }) = _CookLog;
+}
+
+/// A cook log entry with the recipe it is about, e.g. for "recently cooked"
+/// lists. Who cooked it is [CookLog.createdBy].
+@freezed
+abstract class RecentCookLog with _$RecentCookLog {
+  const factory RecentCookLog({
+    required CookLog entry,
+    required RecipeSummary recipe,
+  }) = _RecentCookLog;
 }
 
 /// A cook log entry to create, for the current user and the current time.

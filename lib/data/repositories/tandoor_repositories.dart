@@ -69,6 +69,10 @@ class TandoorRepositories {
     final cookLogs = TandoorCookLogRepository(
       apiClient,
       currentUser: currentUser,
+      storedRecipe: switch (cache) {
+        final cache? => (id) async => (await cache.peek(id))?.summary,
+        null => null,
+      },
     );
     final savedFilters = TandoorSavedFilterRepository(
       apiClient,
