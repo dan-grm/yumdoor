@@ -1932,4 +1932,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsLanguageEnglish => 'English';
+
+  @override
+  String get keywordPickerSearchHint => 'Search for a keyword';
+
+  @override
+  String get settingsSeasonal => 'Seasonal suggestions';
+
+  @override
+  String get settingsSeasonalBody =>
+      'Keywords that are in season in a month. Matching recipes are then suggested.';
+
+  @override
+  String settingsSeasonalAdd(String month) {
+    return 'Add keyword to $month';
+  }
+
+  @override
+  String settingsSeasonalRemove(String keyword, String month) {
+    return 'Remove $keyword from $month';
+  }
+
+  @override
+  String get settingsSeasonalCopy => 'Copy to several months';
+
+  @override
+  String settingsSeasonalCopyTitle(String month) {
+    return 'Copy keywords of $month';
+  }
+
+  @override
+  String get settingsSeasonalCopyBody =>
+      'Replaces the keywords of the chosen months.';
+
+  @override
+  String get settingsSeasonalCopyApply => 'Copy';
 }

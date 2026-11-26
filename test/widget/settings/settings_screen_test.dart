@@ -76,6 +76,11 @@ void main() {
     expect(find.text('anna'), findsOneWidget);
     expect(find.text('tandoor.example.com'), findsOneWidget);
     expect(find.text('2.6.15'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('AGPL-3.0'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text(appVersion), findsOneWidget);
     expect(find.text('AGPL-3.0'), findsOneWidget);
     expect(find.textContaining('nie dein Passwort'), findsOneWidget);
@@ -139,7 +144,13 @@ void main() {
   testWidgets('opens the source code link', (tester) async {
     await openSettings(tester);
 
+    await tester.scrollUntilVisible(
+      find.text('github.com/dan-grm/yumdoor'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.ensureVisible(find.text('github.com/dan-grm/yumdoor'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('github.com/dan-grm/yumdoor'));
     await tester.pump();
 

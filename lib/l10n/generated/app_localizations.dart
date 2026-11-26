@@ -3013,6 +3013,60 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'English'**
   String get settingsLanguageEnglish;
+
+  /// Hint of the keyword picker when keywords can't be created.
+  ///
+  /// In de, this message translates to:
+  /// **'Stichwort suchen'**
+  String get keywordPickerSearchHint;
+
+  /// Settings section: which keywords mean in season each month.
+  ///
+  /// In de, this message translates to:
+  /// **'Saisonale Vorschläge'**
+  String get settingsSeasonal;
+
+  /// Explains the seasonal keyword settings.
+  ///
+  /// In de, this message translates to:
+  /// **'Stichwörter, die in einem Monat Saison haben. Passende Rezepte erscheinen dann als Vorschlag.'**
+  String get settingsSeasonalBody;
+
+  /// Accessible label of the chip that adds a seasonal keyword to a month.
+  ///
+  /// In de, this message translates to:
+  /// **'Stichwort für {month} hinzufügen'**
+  String settingsSeasonalAdd(String month);
+
+  /// Accessible label of a seasonal keyword chip; tapping it removes the keyword from the month.
+  ///
+  /// In de, this message translates to:
+  /// **'{keyword} aus {month} entfernen'**
+  String settingsSeasonalRemove(String keyword, String month);
+
+  /// Button that copies a month's seasonal keywords to other months.
+  ///
+  /// In de, this message translates to:
+  /// **'Für mehrere Monate übernehmen'**
+  String get settingsSeasonalCopy;
+
+  /// Title of the sheet that picks the months to copy a month's keywords to.
+  ///
+  /// In de, this message translates to:
+  /// **'Stichwörter von {month} übernehmen'**
+  String settingsSeasonalCopyTitle(String month);
+
+  /// Explains that copying replaces the keywords of the chosen months.
+  ///
+  /// In de, this message translates to:
+  /// **'Ersetzt die Stichwörter der gewählten Monate.'**
+  String get settingsSeasonalCopyBody;
+
+  /// Button that copies the keywords to the chosen months.
+  ///
+  /// In de, this message translates to:
+  /// **'Übernehmen'**
+  String get settingsSeasonalCopyApply;
 }
 
 class _AppLocalizationsDelegate

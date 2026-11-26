@@ -1939,4 +1939,39 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsLanguageEnglish => 'English';
+
+  @override
+  String get keywordPickerSearchHint => 'Stichwort suchen';
+
+  @override
+  String get settingsSeasonal => 'Saisonale Vorschläge';
+
+  @override
+  String get settingsSeasonalBody =>
+      'Stichwörter, die in einem Monat Saison haben. Passende Rezepte erscheinen dann als Vorschlag.';
+
+  @override
+  String settingsSeasonalAdd(String month) {
+    return 'Stichwort für $month hinzufügen';
+  }
+
+  @override
+  String settingsSeasonalRemove(String keyword, String month) {
+    return '$keyword aus $month entfernen';
+  }
+
+  @override
+  String get settingsSeasonalCopy => 'Für mehrere Monate übernehmen';
+
+  @override
+  String settingsSeasonalCopyTitle(String month) {
+    return 'Stichwörter von $month übernehmen';
+  }
+
+  @override
+  String get settingsSeasonalCopyBody =>
+      'Ersetzt die Stichwörter der gewählten Monate.';
+
+  @override
+  String get settingsSeasonalCopyApply => 'Übernehmen';
 }
