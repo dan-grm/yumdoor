@@ -37,11 +37,9 @@ class SeasonalKeywords {
     return _months[month] ?? const {};
   }
 
-  /// The keyword ids of the month [day] is in, e.g. today.
+  /// The keyword ids of the month [day] is in: what is in season on
+  /// [day], e.g. `RecommendationContext.today`.
   Set<int> forDay(CalendarDay day) => forMonth(day.month);
-
-  /// The keyword ids of the current month on this device.
-  Set<int> get thisMonth => forDay(CalendarDay.today());
 
   /// Every keyword id in any month.
   Set<int> get keywordIds => {for (final ids in _months.values) ...ids};
@@ -82,7 +80,10 @@ class SeasonalKeywords {
       final months = <int, List<int>>{};
       for (final MapEntry(:key, :value) in json.entries) {
         final month = int.tryParse(key);
-        if (month == null || month < 1 || month > 12) return null;
+        // Only keys as toJson writes them, so "05" can't replace "5".
+        if (month == null || month < 1 || month > 12 || '$month' != key) {
+          return null;
+        }
         if (value is! List<Object?> || value.any((id) => id is! int)) {
           return null;
         }

@@ -12,7 +12,6 @@ void main() {
       for (var month = 1; month <= 12; month++) {
         expect(keywords.forMonth(month), isEmpty);
       }
-      expect(keywords.thisMonth, isEmpty);
       expect(SeasonalKeywords({}), const SeasonalKeywords.empty());
     });
 
@@ -45,14 +44,6 @@ void main() {
       expect(keywords.forDay(CalendarDay(2026, 11, 30)), {7});
       expect(keywords.forDay(CalendarDay(2026, 12, 1)), {9});
       expect(keywords.forDay(CalendarDay(2027, 1, 1)), isEmpty);
-    });
-
-    test('thisMonth is the month of today', () {
-      final keywords = SeasonalKeywords({
-        for (var month = 1; month <= 12; month++) month: [month * 10],
-      });
-
-      expect(keywords.thisMonth, {CalendarDay.today().month * 10});
     });
 
     test('rejects months outside 1 to 12', () {
@@ -182,6 +173,8 @@ void main() {
           '{"13":[1]}',
           '{"0":[1]}',
           '{"Mai":[1]}',
+          '{"05":[1]}',
+          '{" 5":[1]}',
           '{"5":1}',
           '{"5":["1"]}',
           '{"5":[1.5]}',

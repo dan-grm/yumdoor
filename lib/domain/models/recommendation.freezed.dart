@@ -16,7 +16,8 @@ T _$identity<T>(T value) => value;
 mixin _$Recommendation {
 
  RecipeSummary get recipe;/// 0 to 1, higher is a better fit. Only comparable between
-/// recommendations of the same provider.
+/// recommendations of the same provider. Providers keep it in range
+/// themselves: it is asserted, not checked in release builds.
  double get score;/// Why it is suggested, most important first. The UI words them in the
 /// user's language.
  List<RecommendationReason> get reasons;
@@ -232,7 +233,8 @@ class _Recommendation implements Recommendation {
 
 @override final  RecipeSummary recipe;
 /// 0 to 1, higher is a better fit. Only comparable between
-/// recommendations of the same provider.
+/// recommendations of the same provider. Providers keep it in range
+/// themselves: it is asserted, not checked in release builds.
 @override final  double score;
 /// Why it is suggested, most important first. The UI words them in the
 /// user's language.

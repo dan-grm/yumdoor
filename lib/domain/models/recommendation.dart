@@ -16,7 +16,8 @@ abstract class Recommendation with _$Recommendation {
     required RecipeSummary recipe,
 
     /// 0 to 1, higher is a better fit. Only comparable between
-    /// recommendations of the same provider.
+    /// recommendations of the same provider. Providers keep it in range
+    /// themselves: it is asserted, not checked in release builds.
     required double score,
 
     /// Why it is suggested, most important first. The UI words them in the
@@ -28,8 +29,8 @@ abstract class Recommendation with _$Recommendation {
 /// Why a recipe is suggested.
 @freezed
 sealed class RecommendationReason with _$RecommendationReason {
-  /// The current user rated it highly in their cook log: [rating] is their
-  /// average, 0 to 5 stars.
+  /// The current user rated it highly in their cook log: [rating] is the
+  /// average of their ratings, 1 to 5 stars ([RecipeSummary.rating]).
   const factory RecommendationReason.highlyRated(double rating) = HighlyRated;
 
   /// The current user last cooked it on [date], a while ago.
