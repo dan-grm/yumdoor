@@ -21,6 +21,9 @@ const _maxPages = 3;
 /// newest.
 const _maxRecentPages = 5;
 
+/// How many recipes [TandoorCookLogRepository.recent] loads at once.
+const _parallelRecipes = 6;
+
 class TandoorCookLogRepository implements CookLogRepository {
   /// [storedRecipe] gives a recipe stored for offline use, if there is one,
   /// so [recent] doesn't have to fetch it. A stored copy is trusted: a
@@ -93,22 +96,23 @@ class TandoorCookLogRepository implements CookLogRepository {
         if (limit == 0) return const [];
         final first = await _page(1);
         final lastPage = (first.count / _pageSize).ceil();
-        // The newest pages, and page 1, which is loaded already.
+        // The newest pages, without a gap.
         final numbers = [
-          for (var n = lastPage; n > lastPage - _maxRecentPages && n > 1; n--)
+          for (var n = lastPage; n > lastPage - _maxRecentPages && n >= 1; n--)
             n,
-          1,
         ];
         // By id: deletions between requests move entries across pages.
         final entries = <int, CookLog>{};
         final recipes = <int, RecipeSummary?>{};
         var picked = const <RecentCookLog>[];
+        var reachedSince = false;
         for (var i = 0; i < numbers.length; i++) {
           final number = numbers[i];
-          final page = number == 1 ? first : await _pageIfAny(number);
+          // Page 1 is read again if there are others: a deletion since may
+          // have moved an entry onto it.
+          final page = lastPage == 1 ? first : await _pageIfAny(number);
           // Gone: entries were deleted since the count.
           if (page == null) continue;
-          var reachedSince = false;
           for (final result in page.results) {
             final entry = result.toDomain();
             if (since != null && entry.createdAt.isBefore(since)) {
@@ -158,14 +162,23 @@ class TandoorCookLogRepository implements CookLogRepository {
         }
       }
       if (unknown.isEmpty) return picked;
-      await Future.wait([
-        for (final id in unknown) _recipe(id).then((r) => recipes[id] = r),
-      ]);
+      final ids = unknown.toList();
+      for (var start = 0; start < ids.length; start += _parallelRecipes) {
+        await Future.wait([
+          for (final id in ids.skip(start).take(_parallelRecipes))
+            _recipe(id).then((r) => recipes[id] = r),
+        ]);
+      }
     }
   }
 
+  /// Recipes the server refused to send (someone else's private ones), for
+  /// this session.
+  final _hiddenRecipes = <int>{};
+
   /// The recipe [id], `null` if it is gone or the user can't see it.
   Future<RecipeSummary?> _recipe(int id) async {
+    if (_hiddenRecipes.contains(id)) return null;
     try {
       if (await storedRecipe?.call(id) case final stored?) return stored;
     } on Object {
@@ -181,7 +194,8 @@ class TandoorCookLogRepository implements CookLogRepository {
     } on UnauthorizedFailure {
       // Someone else's private recipe: Tandoor lists its cook log entries
       // but answers 403 for the recipe. (The 403 also makes the app check
-      // its token once, which finds it valid.)
+      // its token once, which finds it valid.) Not asked for again.
+      _hiddenRecipes.add(id);
       return null;
     } on ServerFailure {
       // One recipe the server can't send doesn't hide the others.

@@ -398,6 +398,25 @@ void main() {
       expect(recipeRequests(adapter), ['/tandoor/api/recipe/51/']);
     });
 
+    test('reads at most the five newest pages, without a gap', () async {
+      final adapter = spaceServer([
+        for (var page = 0; page < 7; page++)
+          [
+            for (var id = 1; id <= 100; id++)
+              logEntry(page * 100 + id, 66, '2026-06-01T19:00:00Z'),
+          ],
+      ]);
+      final repository = TandoorCookLogRepository(client(adapter));
+
+      expect(await repository.recent(), isEmpty);
+      // Page 1 for the count, then 7 to 3; not page 1 after a gap.
+      expect(cookLogPages(adapter), ['1', '7', '6', '5', '4', '3']);
+
+      // The private recipe isn't asked for again.
+      await repository.recent();
+      expect(recipeRequests(adapter), hasLength(1));
+    });
+
     test('skips an entry whose recipe the server fails to send', () async {
       final adapter = spaceServer([
         [
