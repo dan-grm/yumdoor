@@ -59,6 +59,11 @@ class LocaleFormat {
   /// A calendar date without the year (`19. Okt.`, `Oct 19`).
   String dayMonth(DateTime value) => DateFormat.MMMd(_locale).format(value);
 
+  /// A calendar date without the year, with the month's full name
+  /// (`18. Oktober`, `October 18`).
+  String dayMonthLong(DateTime value) =>
+      DateFormat.MMMMd(_locale).format(value);
+
   /// A calendar date with the year when it isn't [today]'s (`19. Okt.`,
   /// `19. Okt. 2027`).
   String dayMonthOrDate(DateTime value, DateTime today) =>

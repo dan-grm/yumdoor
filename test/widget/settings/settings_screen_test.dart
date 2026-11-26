@@ -9,7 +9,7 @@ import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/domain/models/user_ref.dart';
 import 'package:yumdoor/features/auth/login_screen.dart';
-import 'package:yumdoor/features/search/search_screen.dart';
+import 'package:yumdoor/features/home/home_screen.dart';
 import 'package:yumdoor/features/settings/settings_screen.dart';
 
 import '../../fakes/app_overrides.dart';
@@ -47,7 +47,7 @@ void main() {
     linkOpener: linkOpener,
   );
 
-  /// The whole app on the search screen, at phone size.
+  /// The whole app on the start screen, at phone size.
   Future<void> pumpApp(WidgetTester tester) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = phoneSize;
@@ -66,7 +66,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('opens from the search header and shows the account', (
+  testWidgets('opens from the start screen header and shows the account', (
     tester,
   ) async {
     await openSettings(tester);
@@ -86,14 +86,14 @@ void main() {
     expect(find.textContaining('nie dein Passwort'), findsOneWidget);
   });
 
-  testWidgets('back returns to the search screen', (tester) async {
+  testWidgets('back returns to the start screen', (tester) async {
     await openSettings(tester);
 
     await tester.tap(find.byTooltip('Zurück'));
     await tester.pumpAndSettle();
 
     expect(find.byType(SettingsScreen), findsNothing);
-    expect(find.byType(SearchScreen), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
   });
 
   testWidgets('switches the theme', (tester) async {

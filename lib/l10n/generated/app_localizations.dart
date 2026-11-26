@@ -2138,6 +2138,84 @@ abstract class AppLocalizations {
   /// **'Einkaufsliste'**
   String get navShoppingTitle;
 
+  /// Main navigation tab for the start screen (today's plan).
+  ///
+  /// In de, this message translates to:
+  /// **'Start'**
+  String get navHome;
+
+  /// Heading of the start screen in the morning (5 to 11 o'clock).
+  ///
+  /// In de, this message translates to:
+  /// **'Guten Morgen'**
+  String get homeGreetingMorning;
+
+  /// Heading of the start screen during the day (11 to 18 o'clock).
+  ///
+  /// In de, this message translates to:
+  /// **'Guten Tag'**
+  String get homeGreetingDay;
+
+  /// Heading of the start screen in the evening and at night.
+  ///
+  /// In de, this message translates to:
+  /// **'Guten Abend'**
+  String get homeGreetingEvening;
+
+  /// Today's date under the greeting on the start screen, e.g. 'Sonntag, 18. Oktober'.
+  ///
+  /// In de, this message translates to:
+  /// **'{weekday}, {date}'**
+  String homeDate(String weekday, String date);
+
+  /// Label of the card with today's next meal on the start screen, with its meal type, e.g. 'Heute · Abendessen'.
+  ///
+  /// In de, this message translates to:
+  /// **'Heute · {meal}'**
+  String homeToday(String meal);
+
+  /// Planned servings of today's meal; may be fractional, e.g. '2,5 Portionen'.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Portion} other{{count} Portionen}}'**
+  String homeServings(num count);
+
+  /// After the duration of today's meal (e.g. '40 Min · alle Zutaten zu Hause'): no ingredient needs to be bought.
+  ///
+  /// In de, this message translates to:
+  /// **'alle Zutaten zu Hause'**
+  String get homeAllAtHome;
+
+  /// After the duration of today's meal (e.g. '40 Min · alle Zutaten zu Hause'): how many ingredients are not on hand.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Zutat fehlt} other{{count} Zutaten fehlen}}'**
+  String homeMissing(int count);
+
+  /// Button on today's meal that opens the recipe with the planned servings.
+  ///
+  /// In de, this message translates to:
+  /// **'Rezept ansehen'**
+  String get homeViewRecipe;
+
+  /// Button on today's meal that opens cooking mode with the planned servings.
+  ///
+  /// In de, this message translates to:
+  /// **'Kochen starten'**
+  String get homeStartCooking;
+
+  /// Heading above today's other meals on the start screen.
+  ///
+  /// In de, this message translates to:
+  /// **'Außerdem heute'**
+  String get homeAlsoToday;
+
+  /// Start screen when no meal is planned for today.
+  ///
+  /// In de, this message translates to:
+  /// **'Für heute ist nichts geplant.'**
+  String get homeNothingPlanned;
+
   /// Accessible label of the button that shows the week before.
   ///
   /// In de, this message translates to:

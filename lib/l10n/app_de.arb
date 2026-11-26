@@ -1870,6 +1870,85 @@
   "@navShoppingTitle": {
     "description": "Heading of the shopping list tab."
   },
+  "navHome": "Start",
+  "@navHome": {
+    "description": "Main navigation tab for the start screen (today's plan)."
+  },
+  "homeGreetingMorning": "Guten Morgen",
+  "@homeGreetingMorning": {
+    "description": "Heading of the start screen in the morning (5 to 11 o'clock)."
+  },
+  "homeGreetingDay": "Guten Tag",
+  "@homeGreetingDay": {
+    "description": "Heading of the start screen during the day (11 to 18 o'clock)."
+  },
+  "homeGreetingEvening": "Guten Abend",
+  "@homeGreetingEvening": {
+    "description": "Heading of the start screen in the evening and at night."
+  },
+  "homeDate": "{weekday}, {date}",
+  "@homeDate": {
+    "description": "Today's date under the greeting on the start screen, e.g. 'Sonntag, 18. Oktober'.",
+    "placeholders": {
+      "weekday": {
+        "type": "String",
+        "example": "Sonntag"
+      },
+      "date": {
+        "type": "String",
+        "example": "18. Oktober"
+      }
+    }
+  },
+  "homeToday": "Heute · {meal}",
+  "@homeToday": {
+    "description": "Label of the card with today's next meal on the start screen, with its meal type, e.g. 'Heute · Abendessen'.",
+    "placeholders": {
+      "meal": {
+        "type": "String",
+        "example": "Abendessen"
+      }
+    }
+  },
+  "homeServings": "{count, plural, =1{1 Portion} other{{count} Portionen}}",
+  "@homeServings": {
+    "description": "Planned servings of today's meal; may be fractional, e.g. '2,5 Portionen'.",
+    "placeholders": {
+      "count": {
+        "type": "num",
+        "format": "decimalPattern"
+      }
+    }
+  },
+  "homeAllAtHome": "alle Zutaten zu Hause",
+  "@homeAllAtHome": {
+    "description": "After the duration of today's meal (e.g. '40 Min · alle Zutaten zu Hause'): no ingredient needs to be bought."
+  },
+  "homeMissing": "{count, plural, =1{1 Zutat fehlt} other{{count} Zutaten fehlen}}",
+  "@homeMissing": {
+    "description": "After the duration of today's meal (e.g. '40 Min · alle Zutaten zu Hause'): how many ingredients are not on hand.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeViewRecipe": "Rezept ansehen",
+  "@homeViewRecipe": {
+    "description": "Button on today's meal that opens the recipe with the planned servings."
+  },
+  "homeStartCooking": "Kochen starten",
+  "@homeStartCooking": {
+    "description": "Button on today's meal that opens cooking mode with the planned servings."
+  },
+  "homeAlsoToday": "Außerdem heute",
+  "@homeAlsoToday": {
+    "description": "Heading above today's other meals on the start screen."
+  },
+  "homeNothingPlanned": "Für heute ist nichts geplant.",
+  "@homeNothingPlanned": {
+    "description": "Start screen when no meal is planned for today."
+  },
   "planWeekPrevious": "Vorherige Woche",
   "@planWeekPrevious": {
     "description": "Accessible label of the button that shows the week before."

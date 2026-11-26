@@ -23,6 +23,7 @@ import '../common/recipe_image.dart';
 import '../common/step_text.dart';
 import '../common/up_scope.dart';
 import '../cook_log/cook_log_screen.dart';
+import '../cooking/cooking_screen.dart';
 import '../editor/editor_screen.dart';
 import '../planner/plan_sheet.dart';
 import '../shell/app_shell.dart';
@@ -37,13 +38,24 @@ const _imageHeight = 200.0;
 const _snackBarDuration = Duration(seconds: 4);
 const _failureDuration = Duration(seconds: 8);
 
+/// The location of the recipe with [recipeId], its servings picker starting
+/// at [servings] if given (`/recipe/7?servings=4`).
+String recipeLocation(int recipeId, {int? servings}) => Uri(
+  path: '/recipe/$recipeId',
+  queryParameters: servings == null ? null : {'servings': '$servings'},
+).toString();
+
 /// A recipe with the servings picker and its scaled ingredients
 /// (mockup `04-rezept`). "Kochen starten" opens cooking mode with the chosen
 /// servings.
 class RecipeScreen extends ConsumerWidget {
-  const RecipeScreen({super.key, required this.recipeId});
+  const RecipeScreen({super.key, required this.recipeId, this.servings});
 
   final int recipeId;
+
+  /// The servings to start with, such as a meal plan's; `null` for the
+  /// recipe's own.
+  final int? servings;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -54,7 +66,10 @@ class RecipeScreen extends ConsumerWidget {
         // While it reloads (after a cook log entry was saved) the recipe
         // stays, and so do the chosen servings; a failed reload keeps it too.
         body: switch (recipe) {
-          AsyncValue(value: final value?) => _RecipeView(recipe: value),
+          AsyncValue(value: final value?) => _RecipeView(
+            recipe: value,
+            servings: servings,
+          ),
           AsyncError(:final error) => SafeArea(
             child: Stack(
               children: [
@@ -75,16 +90,17 @@ class RecipeScreen extends ConsumerWidget {
 }
 
 class _RecipeView extends ConsumerStatefulWidget {
-  const _RecipeView({required this.recipe});
+  const _RecipeView({required this.recipe, this.servings});
 
   final Recipe recipe;
+  final int? servings;
 
   @override
   ConsumerState<_RecipeView> createState() => _RecipeViewState();
 }
 
 class _RecipeViewState extends ConsumerState<_RecipeView> {
-  late int _servings = math.max(widget.recipe.servings, 1);
+  late int _servings = widget.servings ?? math.max(widget.recipe.servings, 1);
 
   /// Whether the ingredients are being put on the shopping list.
   var _shopping = false;
@@ -324,12 +340,7 @@ class _RecipeViewState extends ConsumerState<_RecipeView> {
                 icon: Icons.play_arrow_rounded,
                 onPressed: recipe.steps.isEmpty
                     ? null
-                    : () => context.push(
-                        Uri(
-                          path: '/recipe/${recipe.id}/cook',
-                          queryParameters: {'servings': '$_servings'},
-                        ).toString(),
-                      ),
+                    : () => context.push(cookingLocation(recipe.id, _servings)),
               ),
             ),
           ),

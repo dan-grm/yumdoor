@@ -1335,6 +1335,69 @@ class AppLocalizationsDe extends AppLocalizations {
   String get navShoppingTitle => 'Einkaufsliste';
 
   @override
+  String get navHome => 'Start';
+
+  @override
+  String get homeGreetingMorning => 'Guten Morgen';
+
+  @override
+  String get homeGreetingDay => 'Guten Tag';
+
+  @override
+  String get homeGreetingEvening => 'Guten Abend';
+
+  @override
+  String homeDate(String weekday, String date) {
+    return '$weekday, $date';
+  }
+
+  @override
+  String homeToday(String meal) {
+    return 'Heute · $meal';
+  }
+
+  @override
+  String homeServings(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString Portionen',
+      one: '1 Portion',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeAllAtHome => 'alle Zutaten zu Hause';
+
+  @override
+  String homeMissing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Zutaten fehlen',
+      one: '1 Zutat fehlt',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeViewRecipe => 'Rezept ansehen';
+
+  @override
+  String get homeStartCooking => 'Kochen starten';
+
+  @override
+  String get homeAlsoToday => 'Außerdem heute';
+
+  @override
+  String get homeNothingPlanned => 'Für heute ist nichts geplant.';
+
+  @override
   String get planWeekPrevious => 'Vorherige Woche';
 
   @override

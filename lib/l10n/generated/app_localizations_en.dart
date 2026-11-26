@@ -1328,6 +1328,69 @@ class AppLocalizationsEn extends AppLocalizations {
   String get navShoppingTitle => 'Shopping list';
 
   @override
+  String get navHome => 'Home';
+
+  @override
+  String get homeGreetingMorning => 'Good morning';
+
+  @override
+  String get homeGreetingDay => 'Good afternoon';
+
+  @override
+  String get homeGreetingEvening => 'Good evening';
+
+  @override
+  String homeDate(String weekday, String date) {
+    return '$weekday, $date';
+  }
+
+  @override
+  String homeToday(String meal) {
+    return 'Today · $meal';
+  }
+
+  @override
+  String homeServings(num count) {
+    final intl.NumberFormat countNumberFormat =
+        intl.NumberFormat.decimalPattern(localeName);
+    final String countString = countNumberFormat.format(count);
+
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$countString servings',
+      one: '1 serving',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeAllAtHome => 'all ingredients at home';
+
+  @override
+  String homeMissing(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ingredients missing',
+      one: '1 ingredient missing',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeViewRecipe => 'View recipe';
+
+  @override
+  String get homeStartCooking => 'Start cooking';
+
+  @override
+  String get homeAlsoToday => 'Also today';
+
+  @override
+  String get homeNothingPlanned => 'Nothing is planned for today.';
+
+  @override
   String get planWeekPrevious => 'Previous week';
 
   @override

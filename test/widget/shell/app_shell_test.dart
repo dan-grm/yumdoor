@@ -5,6 +5,7 @@ import 'package:yumdoor/app/platform_providers.dart';
 import 'package:yumdoor/app/router.dart';
 import 'package:yumdoor/design/design.dart';
 import 'package:yumdoor/domain/models/recipe.dart';
+import 'package:yumdoor/features/home/home_screen.dart';
 import 'package:yumdoor/features/search/search_providers.dart';
 import 'package:yumdoor/features/search/search_screen.dart';
 import 'package:yumdoor/features/shell/app_shell.dart';
@@ -60,26 +61,32 @@ void main() {
       tester.widget<NavigationBar>(find.byType(NavigationBar)).selectedIndex;
 
   testWidgets('switches tabs from the bottom bar', (tester) async {
-    final router = await pumpShell(tester);
-    expect(find.byType(SearchScreen), findsOneWidget);
+    final router = await pumpShell(tester, location: '/');
+    expect(find.byType(HomeScreen), findsOneWidget);
     expect(selectedTab(tester), 0);
+
+    await tester.tap(find.text('Suchen'));
+    await tester.pumpAndSettle();
+    expect(location(router), '/search');
+    expect(find.byType(SearchScreen), findsOneWidget);
+    expect(selectedTab(tester), 1);
 
     await tester.tap(find.text('Planer'));
     await tester.pumpAndSettle();
     expect(location(router), '/plan');
     expect(find.text('Wochenplan'), findsOneWidget);
-    expect(selectedTab(tester), 1);
+    expect(selectedTab(tester), 2);
 
     await tester.tap(find.text('Einkauf'));
     await tester.pumpAndSettle();
     expect(location(router), '/shopping');
     expect(find.text('Einkaufsliste'), findsOneWidget);
-    expect(selectedTab(tester), 2);
+    expect(selectedTab(tester), 3);
 
-    await tester.tap(find.text('Suchen').last);
+    await tester.tap(find.text('Start'));
     await tester.pumpAndSettle();
-    expect(location(router), '/search');
-    expect(find.byType(SearchScreen), findsOneWidget);
+    expect(location(router), '/');
+    expect(find.byType(HomeScreen), findsOneWidget);
     expect(selectedTab(tester), 0);
   });
 
@@ -136,13 +143,16 @@ void main() {
     expect(location(router), '/search?q=Suppe');
   });
 
-  testWidgets('back on another tab returns to search', (tester) async {
+  testWidgets('back on another tab returns to the start screen', (
+    tester,
+  ) async {
     final router = await pumpShell(tester, location: '/shopping');
 
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
-    expect(location(router), '/search');
+    expect(location(router), '/');
+    expect(find.byType(HomeScreen), findsOneWidget);
   });
 
   testWidgets('typing before opening a recipe keeps the recipe open', (
@@ -165,8 +175,9 @@ void main() {
   });
 
   for (final (path, index, title) in [
-    ('/plan', 1, 'Wochenplan'),
-    ('/shopping', 2, 'Einkaufsliste'),
+    ('/', 0, 'Guten Tag'),
+    ('/plan', 2, 'Wochenplan'),
+    ('/shopping', 3, 'Einkaufsliste'),
   ]) {
     testWidgets('a link to $path opens its tab', (tester) async {
       await pumpShell(tester, location: path);
@@ -190,7 +201,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(location(router), '/search?q=Rezept');
     expect(find.byType(SearchScreen), findsOneWidget);
-    expect(selectedTab(tester), 0);
+    expect(selectedTab(tester), 1);
   });
 
   testWidgets('shows a rail instead of the bar on a wide screen', (
@@ -205,7 +216,7 @@ void main() {
     expect(location(router), '/shopping');
     expect(
       tester.widget<NavigationRail>(find.byType(NavigationRail)).selectedIndex,
-      2,
+      3,
     );
   });
 

@@ -14,6 +14,7 @@ import '../../design/components/filter_chips.dart';
 import '../../design/design.dart';
 import '../../l10n/l10n.dart';
 import '../auth/logout.dart';
+import '../common/up_scope.dart';
 import 'seasonal_settings.dart';
 import 'settings_providers.dart';
 
@@ -47,136 +48,139 @@ class SettingsScreen extends ConsumerWidget {
         : '${session.serverUrl.authority}'
               '${session.serverUrl.path == '/' ? '' : session.serverUrl.path}';
 
-    return Scaffold(
-      body: SafeArea(
-        child: Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: t.sizeWide),
-            child: ListView(
-              padding: EdgeInsets.fromLTRB(
-                t.space5,
-                t.space3,
-                t.space5,
-                t.space6,
-              ),
-              children: [
-                Row(
-                  children: [
-                    RoundIconButton(
-                      icon: Icons.arrow_back_rounded,
-                      label: l10n.back,
-                      onPressed: () => _leave(context),
-                    ),
-                    SizedBox(width: t.space3),
-                    Expanded(
-                      child: Semantics(
-                        header: true,
-                        child: Text(
-                          l10n.settingsTitle,
-                          style: t.titleL.copyWith(color: t.ink),
+    return UpScope(
+      onUp: () => context.go('/'),
+      child: Scaffold(
+        body: SafeArea(
+          child: Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: t.sizeWide),
+              child: ListView(
+                padding: EdgeInsets.fromLTRB(
+                  t.space5,
+                  t.space3,
+                  t.space5,
+                  t.space6,
+                ),
+                children: [
+                  Row(
+                    children: [
+                      RoundIconButton(
+                        icon: Icons.arrow_back_rounded,
+                        label: l10n.back,
+                        onPressed: () => _leave(context),
+                      ),
+                      SizedBox(width: t.space3),
+                      Expanded(
+                        child: Semantics(
+                          header: true,
+                          child: Text(
+                            l10n.settingsTitle,
+                            style: t.titleL.copyWith(color: t.ink),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                _Section(
-                  title: l10n.settingsAccount,
-                  children: [
-                    _ValueRow(
-                      label: l10n.settingsName,
-                      value: switch (account) {
-                        AsyncData(:final value) when value != null =>
-                          value.name.isEmpty ? unavailable : value.name,
-                        _ => unavailable,
-                      },
-                    ),
-                    _ValueRow(
-                      label: l10n.settingsUsername,
-                      value: switch (account) {
-                        AsyncData(:final value)
-                            when value != null && value.username.isNotEmpty =>
-                          value.username,
-                        _ => unavailable,
-                      },
-                    ),
-                    _ValueRow(
-                      label: l10n.settingsServer,
-                      value: host ?? unavailable,
-                    ),
-                    _ValueRow(
-                      label: l10n.settingsTandoorVersion,
-                      value: version.value ?? versionUnavailable,
-                    ),
-                    SizedBox(height: t.space3),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: PillButton(
-                        label: l10n.logout,
-                        kind: PillButtonKind.secondary,
-                        icon: Icons.logout_rounded,
-                        compact: true,
-                        onPressed: () =>
-                            unawaited(confirmAndLogout(context, ref)),
+                    ],
+                  ),
+                  _Section(
+                    title: l10n.settingsAccount,
+                    children: [
+                      _ValueRow(
+                        label: l10n.settingsName,
+                        value: switch (account) {
+                          AsyncData(:final value) when value != null =>
+                            value.name.isEmpty ? unavailable : value.name,
+                          _ => unavailable,
+                        },
                       ),
-                    ),
-                  ],
-                ),
-                _Section(
-                  title: l10n.settingsAppearance,
-                  children: [
-                    _ChoiceRow<ThemeMode>(
-                      label: l10n.settingsTheme,
-                      selected: themeMode,
-                      onSelected: ref
-                          .read(themeModeSettingProvider.notifier)
-                          .set,
-                      choices: [
-                        (ThemeMode.light, l10n.settingsThemeLight),
-                        (ThemeMode.dark, l10n.settingsThemeDark),
-                        (ThemeMode.system, l10n.settingsSystem),
-                      ],
-                    ),
-                    _ChoiceRow<String?>(
-                      label: l10n.settingsLanguage,
-                      selected: locale?.languageCode,
-                      onSelected: (code) => ref
-                          .read(localeOverrideProvider.notifier)
-                          .set(code == null ? null : Locale(code)),
-                      choices: [
-                        ('de', l10n.settingsLanguageGerman),
-                        ('en', l10n.settingsLanguageEnglish),
-                        (null, l10n.settingsSystem),
-                      ],
-                    ),
-                  ],
-                ),
-                _Section(
-                  title: l10n.settingsSeasonal,
-                  children: const [SeasonalSettings()],
-                ),
-                _Section(
-                  title: l10n.settingsAbout,
-                  children: [
-                    _ValueRow(label: l10n.settingsVersion, value: appVersion),
-                    _ValueRow(label: l10n.settingsLicense, value: 'AGPL-3.0'),
-                    _SourceRow(),
-                    SizedBox(height: t.space3),
-                    Semantics(
-                      header: true,
-                      child: Text(
-                        l10n.settingsAuthTitle,
-                        style: t.label.copyWith(color: t.ink),
+                      _ValueRow(
+                        label: l10n.settingsUsername,
+                        value: switch (account) {
+                          AsyncData(:final value)
+                              when value != null && value.username.isNotEmpty =>
+                            value.username,
+                          _ => unavailable,
+                        },
                       ),
-                    ),
-                    SizedBox(height: t.space1),
-                    Text(
-                      l10n.settingsAuthBody,
-                      style: t.body.copyWith(color: t.inkMuted),
-                    ),
-                  ],
-                ),
-              ],
+                      _ValueRow(
+                        label: l10n.settingsServer,
+                        value: host ?? unavailable,
+                      ),
+                      _ValueRow(
+                        label: l10n.settingsTandoorVersion,
+                        value: version.value ?? versionUnavailable,
+                      ),
+                      SizedBox(height: t.space3),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: PillButton(
+                          label: l10n.logout,
+                          kind: PillButtonKind.secondary,
+                          icon: Icons.logout_rounded,
+                          compact: true,
+                          onPressed: () =>
+                              unawaited(confirmAndLogout(context, ref)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  _Section(
+                    title: l10n.settingsAppearance,
+                    children: [
+                      _ChoiceRow<ThemeMode>(
+                        label: l10n.settingsTheme,
+                        selected: themeMode,
+                        onSelected: ref
+                            .read(themeModeSettingProvider.notifier)
+                            .set,
+                        choices: [
+                          (ThemeMode.light, l10n.settingsThemeLight),
+                          (ThemeMode.dark, l10n.settingsThemeDark),
+                          (ThemeMode.system, l10n.settingsSystem),
+                        ],
+                      ),
+                      _ChoiceRow<String?>(
+                        label: l10n.settingsLanguage,
+                        selected: locale?.languageCode,
+                        onSelected: (code) => ref
+                            .read(localeOverrideProvider.notifier)
+                            .set(code == null ? null : Locale(code)),
+                        choices: [
+                          ('de', l10n.settingsLanguageGerman),
+                          ('en', l10n.settingsLanguageEnglish),
+                          (null, l10n.settingsSystem),
+                        ],
+                      ),
+                    ],
+                  ),
+                  _Section(
+                    title: l10n.settingsSeasonal,
+                    children: const [SeasonalSettings()],
+                  ),
+                  _Section(
+                    title: l10n.settingsAbout,
+                    children: [
+                      _ValueRow(label: l10n.settingsVersion, value: appVersion),
+                      _ValueRow(label: l10n.settingsLicense, value: 'AGPL-3.0'),
+                      _SourceRow(),
+                      SizedBox(height: t.space3),
+                      Semantics(
+                        header: true,
+                        child: Text(
+                          l10n.settingsAuthTitle,
+                          style: t.label.copyWith(color: t.ink),
+                        ),
+                      ),
+                      SizedBox(height: t.space1),
+                      Text(
+                        l10n.settingsAuthBody,
+                        style: t.body.copyWith(color: t.inkMuted),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

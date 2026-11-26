@@ -19,7 +19,6 @@ import '../../domain/services/scaling_service.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import '../common/offline_disabled.dart';
-import '../settings/settings_screen.dart';
 import '../common/up_scope.dart';
 import '../editor/editor_screen.dart';
 import '../planner/plan_sheet.dart';
@@ -217,14 +216,6 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                 ? () => context.push(newRecipeLocation)
                                 : null,
                           ),
-                        ),
-                        SizedBox(width: t.space2),
-                        // Moves to the home header with the start screen.
-                        RoundIconButton(
-                          icon: Icons.person_outline_rounded,
-                          label: l10n.settingsOpen,
-                          onPressed: () =>
-                              unawaited(context.push(settingsPath)),
                         ),
                       ],
                     ),

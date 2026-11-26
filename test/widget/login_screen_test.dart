@@ -5,7 +5,7 @@ import 'package:yumdoor/app/app.dart';
 import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/domain/repositories/shopping_check_queue.dart';
 import 'package:yumdoor/features/auth/login_screen.dart';
-import 'package:yumdoor/features/search/search_screen.dart';
+import 'package:yumdoor/features/home/home_screen.dart';
 import 'package:yumdoor/features/settings/settings_screen.dart';
 
 import '../fakes/app_overrides.dart';
@@ -224,7 +224,7 @@ void main() {
 
       await logInWithPassword(tester);
 
-      expect(find.byType(SearchScreen), findsOneWidget);
+      expect(find.byType(HomeScreen), findsOneWidget);
       expect(store.token?.token, FakeAuthRepository.deviceToken);
 
       await tester.tap(find.byTooltip('Einstellungen'));
@@ -275,7 +275,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byType(SearchScreen), findsOneWidget);
+    expect(find.byType(HomeScreen), findsOneWidget);
 
     await tester.tap(find.byTooltip('Einstellungen'));
     await tester.pumpAndSettle();
@@ -338,7 +338,7 @@ void main() {
       await tester.enterText(field('token'), '  Bearer tda_pasted ');
       await submit(tester);
 
-      expect(find.byType(SearchScreen), findsOneWidget);
+      expect(find.byType(HomeScreen), findsOneWidget);
       expect(store.token?.token, 'tda_pasted');
       expect(store.token?.id, isNull);
     });

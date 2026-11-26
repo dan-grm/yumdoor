@@ -35,9 +35,10 @@ void main() {
     int id, {
     ThemeData? theme,
     Size size = phoneSize,
+    int? servings,
   }) => pumpRoutes(
     tester,
-    location: '/recipe/$id',
+    location: recipeLocation(id, servings: servings),
     theme: theme,
     size: size,
     overrides: [
@@ -48,8 +49,10 @@ void main() {
     routes: [
       GoRoute(
         path: '/recipe/:id',
-        builder: (context, state) =>
-            RecipeScreen(recipeId: int.parse(state.pathParameters['id']!)),
+        builder: (context, state) => RecipeScreen(
+          recipeId: int.parse(state.pathParameters['id']!),
+          servings: int.tryParse(state.uri.queryParameters['servings'] ?? ''),
+        ),
       ),
       GoRoute(
         path: '/shopping',
@@ -152,6 +155,19 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('cook /recipe/7/cook?servings=3'), findsOneWidget);
+  });
+
+  testWidgets('starts with the servings it was opened for, as from a plan', (
+    tester,
+  ) async {
+    await pumpRecipe(tester, ofenkarotten.id, servings: 4);
+
+    expect(find.text('4 Portionen'), findsOneWidget);
+    expect(find.text('600 g'), findsOneWidget);
+    await tester.tap(find.text('Kochen starten · 4 Portionen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('cook /recipe/7/cook?servings=4'), findsOneWidget);
   });
 
   testWidgets('"Als gekocht eintragen" opens the cook log with the servings', (

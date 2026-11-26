@@ -56,6 +56,10 @@ abstract class MealPlan with _$MealPlan {
 
   /// The number of days the plan spans, at least 1.
   int get days => toDay.differenceInDays(fromDay) + 1;
+
+  /// [servings] as the recipe screen and cooking mode take them: whole
+  /// servings, rounded, at least 1.
+  int get wholeServings => servings < 1 ? 1 : servings.round();
 }
 
 /// The meal plans of some days, as the meal plan repository lists them.
