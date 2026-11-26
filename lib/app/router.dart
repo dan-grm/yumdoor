@@ -14,6 +14,7 @@ import '../features/planner/planner_screen.dart';
 import '../features/recipe/recipe_screen.dart';
 import '../features/search/search_location.dart';
 import '../features/search/search_screen.dart';
+import '../features/settings/settings_screen.dart';
 import '../features/shell/app_shell.dart';
 import '../features/shopping/shopping_screen.dart';
 import 'session.dart';
@@ -46,6 +47,10 @@ GoRouter router(Ref ref) {
           query: searchQueryFromUri(state.uri),
           pickDay: pickDayFromUri(state.uri),
         ),
+      ),
+      GoRoute(
+        path: settingsPath,
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: loadingPath, builder: (context, state) => const Scaffold()),

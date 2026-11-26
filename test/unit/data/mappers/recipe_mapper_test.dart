@@ -36,7 +36,10 @@ void main() {
       expect(summary.waitingTime, const Duration(minutes: 40));
       expect(summary.rating, isNull);
       expect(summary.lastCooked, isNull);
-      expect(summary.createdBy, const UserRef(id: 8, name: 'Anna'));
+      expect(
+        summary.createdBy,
+        const UserRef(id: 8, name: 'Anna', username: 'anna'),
+      );
       expect(summary.updatedAt, isNotNull);
     });
 

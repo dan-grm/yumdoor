@@ -1872,4 +1872,71 @@ class AppLocalizationsDe extends AppLocalizations {
   String shoppingRestoreFailed(String name, String reason) {
     return '$name nicht zurückgeholt. $reason';
   }
+
+  @override
+  String get settingsOpen => 'Einstellungen';
+
+  @override
+  String get settingsTitle => 'Einstellungen';
+
+  @override
+  String get settingsAccount => 'Konto';
+
+  @override
+  String get settingsName => 'Name';
+
+  @override
+  String get settingsUsername => 'Benutzername';
+
+  @override
+  String get settingsServer => 'Server';
+
+  @override
+  String get settingsTandoorVersion => 'Tandoor-Version';
+
+  @override
+  String get settingsUnavailable => 'nicht verfügbar';
+
+  @override
+  String get settingsAppearance => 'Darstellung';
+
+  @override
+  String get settingsTheme => 'Design';
+
+  @override
+  String get settingsThemeLight => 'Hell';
+
+  @override
+  String get settingsThemeDark => 'Dunkel';
+
+  @override
+  String get settingsSystem => 'System';
+
+  @override
+  String get settingsLanguage => 'Sprache';
+
+  @override
+  String get settingsAbout => 'Über Yumdoor';
+
+  @override
+  String get settingsVersion => 'Version';
+
+  @override
+  String get settingsLicense => 'Lizenz';
+
+  @override
+  String get settingsSource => 'Quellcode';
+
+  @override
+  String get settingsAuthTitle => 'Authentication';
+
+  @override
+  String get settingsAuthBody =>
+      'Yumdoor speichert nur ein Zugriffstoken, nie dein Passwort. In der App liegt es im sicheren Speicher des Geräts. Im Browser gibt es keinen sicheren Speicher: Der Token liegt im lokalen Speicher der Seite, verschlüsselt, aber der Schlüssel liegt daneben. Da Yumdoor im Browser dieselbe Adresse wie Tandoor nutzt, könnte eine Sicherheitslücke in Tandoors eigener Oberfläche den Token lesen, so wie sie schon jetzt in deinem Namen handeln könnte. Dieses Risiko nehmen wir in Kauf.';
+
+  @override
+  String get settingsLanguageGerman => 'Deutsch';
+
+  @override
+  String get settingsLanguageEnglish => 'English';
 }

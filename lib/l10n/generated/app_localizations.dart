@@ -2881,6 +2881,138 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{name} nicht zurückgeholt. {reason}'**
   String shoppingRestoreFailed(String name, String reason);
+
+  /// Button label that opens the settings screen.
+  ///
+  /// In de, this message translates to:
+  /// **'Einstellungen'**
+  String get settingsOpen;
+
+  /// Title of the settings screen.
+  ///
+  /// In de, this message translates to:
+  /// **'Einstellungen'**
+  String get settingsTitle;
+
+  /// Settings section: the logged-in account.
+  ///
+  /// In de, this message translates to:
+  /// **'Konto'**
+  String get settingsAccount;
+
+  /// Settings row: display name of the user.
+  ///
+  /// In de, this message translates to:
+  /// **'Name'**
+  String get settingsName;
+
+  /// Settings row: login name of the user.
+  ///
+  /// In de, this message translates to:
+  /// **'Benutzername'**
+  String get settingsUsername;
+
+  /// Settings row: host of the Tandoor server.
+  ///
+  /// In de, this message translates to:
+  /// **'Server'**
+  String get settingsServer;
+
+  /// Settings row: version of the Tandoor server.
+  ///
+  /// In de, this message translates to:
+  /// **'Tandoor-Version'**
+  String get settingsTandoorVersion;
+
+  /// Shown instead of a settings value that can't be read, e.g. offline.
+  ///
+  /// In de, this message translates to:
+  /// **'nicht verfügbar'**
+  String get settingsUnavailable;
+
+  /// Settings section: theme and language.
+  ///
+  /// In de, this message translates to:
+  /// **'Darstellung'**
+  String get settingsAppearance;
+
+  /// Settings row: light, dark or system theme.
+  ///
+  /// In de, this message translates to:
+  /// **'Design'**
+  String get settingsTheme;
+
+  /// Theme choice.
+  ///
+  /// In de, this message translates to:
+  /// **'Hell'**
+  String get settingsThemeLight;
+
+  /// Theme choice.
+  ///
+  /// In de, this message translates to:
+  /// **'Dunkel'**
+  String get settingsThemeDark;
+
+  /// Choice that follows the device (theme or language).
+  ///
+  /// In de, this message translates to:
+  /// **'System'**
+  String get settingsSystem;
+
+  /// Settings row: app language.
+  ///
+  /// In de, this message translates to:
+  /// **'Sprache'**
+  String get settingsLanguage;
+
+  /// Settings section: app information.
+  ///
+  /// In de, this message translates to:
+  /// **'Über Yumdoor'**
+  String get settingsAbout;
+
+  /// Settings row: app version.
+  ///
+  /// In de, this message translates to:
+  /// **'Version'**
+  String get settingsVersion;
+
+  /// Settings row: license.
+  ///
+  /// In de, this message translates to:
+  /// **'Lizenz'**
+  String get settingsLicense;
+
+  /// Settings row: link to the source code.
+  ///
+  /// In de, this message translates to:
+  /// **'Quellcode'**
+  String get settingsSource;
+
+  /// Heading of the explanation of how the login is stored. Same word in both languages.
+  ///
+  /// In de, this message translates to:
+  /// **'Authentication'**
+  String get settingsAuthTitle;
+
+  /// Explanation of how the access token is stored (docs/ARCHITECTURE.md, Authentication).
+  ///
+  /// In de, this message translates to:
+  /// **'Yumdoor speichert nur ein Zugriffstoken, nie dein Passwort. In der App liegt es im sicheren Speicher des Geräts. Im Browser gibt es keinen sicheren Speicher: Der Token liegt im lokalen Speicher der Seite, verschlüsselt, aber der Schlüssel liegt daneben. Da Yumdoor im Browser dieselbe Adresse wie Tandoor nutzt, könnte eine Sicherheitslücke in Tandoors eigener Oberfläche den Token lesen, so wie sie schon jetzt in deinem Namen handeln könnte. Dieses Risiko nehmen wir in Kauf.'**
+  String get settingsAuthBody;
+
+  /// Language choice, written in its own language in both locales.
+  ///
+  /// In de, this message translates to:
+  /// **'Deutsch'**
+  String get settingsLanguageGerman;
+
+  /// Language choice, written in its own language in both locales.
+  ///
+  /// In de, this message translates to:
+  /// **'English'**
+  String get settingsLanguageEnglish;
 }
 
 class _AppLocalizationsDelegate

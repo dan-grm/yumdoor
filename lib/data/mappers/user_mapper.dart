@@ -4,11 +4,8 @@ import '../../domain/models/user_ref.dart';
 import 'mapping.dart';
 
 extension UserMapper on api.User {
-  UserRef toDomain() => UserRef(
-    id: requireId(id, 'User'),
-    name: _name,
-    username: username ?? '',
-  );
+  UserRef toDomain() =>
+      UserRef(id: requireId(id, 'User'), name: _name, username: username ?? '');
 
   // Tandoor builds `display_name` from first and last name ("Anna " for an
   // empty last name) and sends `null` for some users.

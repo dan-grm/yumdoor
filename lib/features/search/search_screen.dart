@@ -17,9 +17,9 @@ import '../../domain/models/recipe_query.dart';
 import '../../domain/models/recipe_sort.dart';
 import '../../domain/services/scaling_service.dart';
 import '../../l10n/l10n.dart';
-import '../auth/logout.dart';
 import '../common/failure_view.dart';
 import '../common/offline_disabled.dart';
+import '../settings/settings_screen.dart';
 import '../common/up_scope.dart';
 import '../editor/editor_screen.dart';
 import '../planner/plan_sheet.dart';
@@ -219,12 +219,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           ),
                         ),
                         SizedBox(width: t.space2),
-                        // Moves to the settings screen once it exists.
+                        // Moves to the home header with the start screen.
                         RoundIconButton(
-                          icon: Icons.logout_rounded,
-                          label: l10n.logout,
+                          icon: Icons.person_outline_rounded,
+                          label: l10n.settingsOpen,
                           onPressed: () =>
-                              unawaited(confirmAndLogout(context, ref)),
+                              unawaited(context.push(settingsPath)),
                         ),
                       ],
                     ),

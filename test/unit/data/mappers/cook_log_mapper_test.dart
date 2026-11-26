@@ -25,12 +25,15 @@ void main() {
         recipeId: 21,
         servings: 2,
         rating: 4,
-        createdBy: const UserRef(id: 2, name: 'Anna'),
+        createdBy: const UserRef(id: 2, name: 'Anna', username: 'anna'),
         createdAt: DateTime.parse('2026-09-21T22:09:00+02:00'),
       ),
     );
     expect(entries.last.comment, 'Sehr lecker, gerne wieder!');
-    expect(entries[1].createdBy, const UserRef(id: 3, name: 'Ben'));
+    expect(
+      entries[1].createdBy,
+      const UserRef(id: 3, name: 'Ben', username: 'ben'),
+    );
   });
 
   test('maps missing values and a blank comment to null', () {
