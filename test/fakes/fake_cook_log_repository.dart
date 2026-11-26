@@ -49,10 +49,16 @@ class FakeCookLogRepository implements CookLogRepository {
   @override
   Future<List<RecentCookLog>> recent({int limit = 20, DateTime? since}) async {
     if (failure case final failure?) throw failure;
-    final sorted = [
-      for (final entry in entries)
-        if (since == null || !entry.createdAt.isBefore(since)) entry,
-    ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final sorted =
+        [
+          for (final entry in entries)
+            if (since == null || !entry.createdAt.isBefore(since)) entry,
+        ]..sort(
+          (a, b) => switch (b.createdAt.compareTo(a.createdAt)) {
+            0 => b.id.compareTo(a.id),
+            final order => order,
+          },
+        );
     return [
       for (final entry in sorted)
         if (recipes[entry.recipeId] case final recipe?)

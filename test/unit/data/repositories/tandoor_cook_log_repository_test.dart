@@ -223,16 +223,20 @@ void main() {
     }
 
     /// The recorded recipes, by their ids. 66 is someone else's private
-    /// recipe; any other id is gone.
+    /// recipe, 77 one the server fails to send; any other id is gone.
     const recipeFixtures = {
       58: 'recipe_apfelkuchen.json',
       51: 'recipe_karottensuppe.json',
     };
 
     /// [pages] are the space's cook log pages, oldest first, 100 entries
-    /// each as the repository asks for.
-    FakeHttpAdapter spaceServer(List<List<Map<String, Object?>>> pages) {
-      final count = pages.fold(0, (sum, page) => sum + page.length);
+    /// each as the repository asks for. [count] is what the server says, if
+    /// it changed between requests.
+    FakeHttpAdapter spaceServer(
+      List<List<Map<String, Object?>>> pages, {
+      int? count,
+    }) {
+      count ??= pages.fold<int>(0, (sum, page) => sum + page.length);
       return FakeHttpAdapter((request) {
         final path = request.uri.path;
         if (path.endsWith('/api/cook-log/')) {
@@ -258,6 +262,7 @@ void main() {
               'detail': 'You do not have permission to perform this action.',
             }, status: 403);
           }
+          if (id == 77) return jsonResponse('Server Error', status: 500);
           if (recipeFixtures[id] case final fixture?) {
             return jsonResponse(tandoorFixture(fixture));
           }
@@ -391,6 +396,48 @@ void main() {
 
       expect(recent.last.recipe, stored);
       expect(recipeRequests(adapter), ['/tandoor/api/recipe/51/']);
+    });
+
+    test('skips an entry whose recipe the server fails to send', () async {
+      final adapter = spaceServer([
+        [
+          logEntry(1, 58, '2026-11-01T19:00:00Z'),
+          logEntry(2, 77, '2026-11-02T19:00:00Z'),
+        ],
+      ]);
+
+      final recent = await TandoorCookLogRepository(client(adapter)).recent();
+
+      expect([for (final r in recent) r.entry.id], [1]);
+    });
+
+    test('copes with entries deleted or added between requests', () async {
+      final page = [
+        for (var id = 1; id <= 100; id++)
+          logEntry(id, 58, '2026-06-01T19:00:00Z'),
+      ];
+      // Page 1 counted 301 entries, so a fourth page, deleted since.
+      final deleted = spaceServer([page, page, page], count: 301);
+      expect(
+        await TandoorCookLogRepository(client(deleted)).recent(limit: 3),
+        hasLength(3),
+      );
+      expect(cookLogPages(deleted), ['1', '4', '3']);
+
+      // Page 1 counted 200, so two pages; a third one was added since. The
+      // pages overlap, as a deletion moves entries between them.
+      final added = spaceServer([
+        page,
+        page,
+        [
+          logEntry(100, 58, '2026-06-01T19:00:00Z'),
+          logEntry(201, 51, '2026-11-02T19:00:00Z'),
+        ],
+      ], count: 200);
+      final recent = await TandoorCookLogRepository(client(added))
+          .recent(limit: 3);
+      expect([for (final r in recent) r.entry.id], [201, 100, 99]);
+      expect(cookLogPages(added), ['1', '2', '3']);
     });
 
     test('is empty for an empty cook log or a limit of 0', () async {

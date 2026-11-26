@@ -23,7 +23,8 @@ const _maxRecentPages = 5;
 
 class TandoorCookLogRepository implements CookLogRepository {
   /// [storedRecipe] gives a recipe stored for offline use, if there is one,
-  /// so [recent] doesn't have to fetch it.
+  /// so [recent] doesn't have to fetch it. A stored copy is trusted: a
+  /// recipe made private since it was stored still shows, as it was stored.
   TandoorCookLogRepository(
     this._api, {
     CurrentUser? currentUser,
@@ -92,35 +93,44 @@ class TandoorCookLogRepository implements CookLogRepository {
         if (limit == 0) return const [];
         final first = await _page(1);
         final lastPage = (first.count / _pageSize).ceil();
-        final entries = <CookLog>[];
+        // The newest pages, and page 1, which is loaded already.
+        final numbers = [
+          for (var n = lastPage; n > lastPage - _maxRecentPages && n > 1; n--)
+            n,
+          1,
+        ];
+        // By id: deletions between requests move entries across pages.
+        final entries = <int, CookLog>{};
         final recipes = <int, RecipeSummary?>{};
         var picked = const <RecentCookLog>[];
-        for (var number = lastPage; number >= 1; number--) {
-          final api.PaginatedCookLogList page;
-          try {
-            page = number == 1 ? first : await _page(number);
-          } on NotFoundFailure {
-            // Entries were deleted since the count; the page is gone.
-            continue;
-          }
+        for (var i = 0; i < numbers.length; i++) {
+          final number = numbers[i];
+          final page = number == 1 ? first : await _pageIfAny(number);
+          // Gone: entries were deleted since the count.
+          if (page == null) continue;
           var reachedSince = false;
           for (final result in page.results) {
             final entry = result.toDomain();
             if (since != null && entry.createdAt.isBefore(since)) {
               reachedSince = true;
             } else {
-              entries.add(entry);
+              entries[entry.id] = entry;
             }
           }
-          entries.sort(
-            (a, b) => switch (b.createdAt.compareTo(a.createdAt)) {
-              0 => b.id.compareTo(a.id),
-              final order => order,
-            },
-          );
-          picked = await _pick(entries, limit, recipes);
+          // Entries created since the count are on the page after it.
+          if (number == lastPage && number > 1 && page.next != null) {
+            numbers.insert(i + 1, number + 1);
+            continue;
+          }
+          final sorted = entries.values.toList()
+            ..sort(
+              (a, b) => switch (b.createdAt.compareTo(a.createdAt)) {
+                0 => b.id.compareTo(a.id),
+                final order => order,
+              },
+            );
+          picked = await _pick(sorted, limit, recipes);
           if (picked.length >= limit || reachedSince) break;
-          if (lastPage - number + 1 >= _maxRecentPages) break;
         }
         return picked;
       });
@@ -173,10 +183,26 @@ class TandoorCookLogRepository implements CookLogRepository {
       // but answers 403 for the recipe. (The 403 also makes the app check
       // its token once, which finds it valid.)
       return null;
+    } on ServerFailure {
+      // One recipe the server can't send doesn't hide the others.
+      return null;
     }
   }
 
-  Future<api.PaginatedCookLogList> _page(int number) async => requireBody(
-    (await _api.apiCookLogList(page: number, pageSize: _pageSize)).data,
-  );
+  Future<api.PaginatedCookLogList> _page(int number) => guardRequest(() async {
+    final response = await _api.apiCookLogList(
+      page: number,
+      pageSize: _pageSize,
+    );
+    return requireBody(response.data);
+  });
+
+  /// The page [number], `null` if there is no such page (any more).
+  Future<api.PaginatedCookLogList?> _pageIfAny(int number) async {
+    try {
+      return await _page(number);
+    } on NotFoundFailure {
+      return null;
+    }
+  }
 }
