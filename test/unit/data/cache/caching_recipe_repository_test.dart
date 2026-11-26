@@ -134,6 +134,17 @@ void main() {
       );
     });
 
+    test('forgets a deleted recipe also when not opened', () async {
+      await fetch(7);
+      remote.recipes.remove(7);
+
+      await expectLater(
+        repository.fetchRecipe(7, opened: false),
+        throwsA(isA<NotFoundFailure>()),
+      );
+      expect(await cache.get(7), isNull);
+    });
+
     test('does not fall back for other failures', () async {
       await fetch(7);
       remote.failure = const ServerFailure(statusCode: 500);

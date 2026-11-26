@@ -333,7 +333,8 @@ sealed class RecommendationReason { … }   // highlyRated(rating), notCookedSin
     the user's own recent cooking and the similarity sources; in a very active space older entries are missed.
   - Each rule scores a recipe 0–1; a recipe found by several rules gets all their reasons, strongest first, and the
     score `1 − Π(1 − sᵢ)`. Equal scores are ordered by a hash of recipe and day, so the list is stable within a day.
-    Recipes planned this week and recipes the user cooked in the last 7 days are left out.
+    Recipes planned this week and recipes the user cooked in the last 7 days are left out (the latter only when
+    the cook log could be read).
   - The rules run in parallel, each with at most 4 requests at once. A failing rule is left out; `recommend` throws
     only if every rule fails, or if nothing is left and one failed. Results from the offline cache count as offline.
 - "Cooked recently by household members" cannot be exact: normal users cannot list their household. The rule

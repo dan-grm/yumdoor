@@ -39,7 +39,8 @@ import 'recommendation_provider.dart';
 /// day to day, but not between calls on the same day.
 ///
 /// The rules run at the same time, and each makes at most [parallelRequests]
-/// requests at once. A rule that fails is left out. [recommend] throws the
+/// requests at once. A rule that fails with a [Failure] is left out (other
+/// errors are bugs and aren't caught). [recommend] throws the
 /// first failure only if every rule failed, or if nothing is left to suggest
 /// and a rule failed.
 class RuleBasedRecommendationProvider implements RecommendationProvider {

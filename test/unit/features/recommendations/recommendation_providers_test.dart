@@ -33,7 +33,8 @@ void main() {
       userId: 1,
     );
 
-    final rules = container.read(recommenderProvider);
+    final listened = container.listen(recommenderProvider, (_, _) {});
+    final rules = listened.read();
     expect(rules.id, RuleBasedRecommendationProvider.providerId);
     expect(await rules.recommend(context), isEmpty);
 
@@ -44,7 +45,9 @@ void main() {
             11: [autumn.id],
           }),
         );
-    final result = await container.read(recommenderProvider).recommend(context);
+    // Rebuilt with the new mapping while it is being watched.
+    expect(listened.read(), isNot(same(rules)));
+    final result = await listened.read().recommend(context);
 
     expect(result.single.reasons, [
       const RecommendationReason.inSeason(autumn),
