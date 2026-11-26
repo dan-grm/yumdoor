@@ -11,6 +11,9 @@ abstract class UserRef with _$UserRef {
 
     /// The display name, falling back to the username. Can be empty.
     required String name,
+
+    /// The login name; empty if the server didn't say or from an older cache.
+    @Default('') String username,
   }) = _UserRef;
 
   factory UserRef.fromJson(Map<String, dynamic> json) =>
