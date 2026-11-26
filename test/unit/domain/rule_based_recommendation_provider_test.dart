@@ -266,6 +266,34 @@ void main() {
       });
     });
 
+    test('fails when the mapped keyword cannot be loaded', () async {
+      seasonal = SeasonalKeywords({
+        11: [autumn.id],
+      });
+      keywords = _OfflineKeywords();
+      recipes = _ChildKeywordSearch(recipes.recipes.values, {
+        autumn.id: [pizza.summary],
+      });
+
+      await expectLater(recommend(), throwsA(isA<OfflineFailure>()));
+    });
+
+    test('a mapping that fails to load counts as none', () async {
+      log(pizza, anna, daysAgo(1));
+      final rules = RuleBasedRecommendationProvider(
+        recipes: recipes,
+        cookLogs: cookLogs,
+        keywords: keywords,
+        seasonalKeywords: () async => throw StateError('Not logged in'),
+      );
+
+      final result = await rules.recommend(
+        RecommendationContext(today: today, userId: me.id),
+      );
+
+      expect([for (final r in result) r.recipe.id], [pizza.id]);
+    });
+
     test('leaves out recipes whose mapped keyword is gone', () async {
       seasonal = SeasonalKeywords({
         11: [99],
@@ -327,6 +355,9 @@ void main() {
           RecommendationReason.similarTo(lentilBolognese.summary),
         ],
       });
+      // Loaded only to compare, not as if the user opened them.
+      expect(recipes.unopenedFetches, unorderedEquals([2, 3]));
+      expect(recipes.fetchCount, 2);
     });
 
     test('compares with the last three recipes the user cooked', () async {
@@ -425,7 +456,9 @@ void main() {
     for (var i = 1; i < result.length; i++) {
       expect(result[i - 1].score, greaterThanOrEqualTo(result[i].score));
     }
+    recipes.searches.clear();
     expect(await recommend(limit: 0), isEmpty);
+    expect(recipes.searches, isEmpty);
   });
 
   test('orders equal scores the same all day, differently by day', () async {
@@ -552,6 +585,12 @@ class _ChildKeywordSearch extends FakeRecipeRepository {
   }
 }
 
+/// A keyword repository that can't reach the server.
+class _OfflineKeywords extends FakeKeywordRepository {
+  @override
+  Future<Keyword> fetchKeyword(int id) async => throw const OfflineFailure();
+}
+
 /// Fails to load the recipes in [failing].
 class _FailingFetch extends FakeRecipeRepository {
   _FailingFetch(super.recipes, this.failing);
@@ -559,9 +598,13 @@ class _FailingFetch extends FakeRecipeRepository {
   final Set<int> failing;
 
   @override
-  Future<Recipe> fetchRecipe(int id, {bool allowCached = true}) async {
+  Future<Recipe> fetchRecipe(
+    int id, {
+    bool allowCached = true,
+    bool opened = true,
+  }) async {
     if (failing.contains(id)) throw const ServerFailure(statusCode: 500);
-    return super.fetchRecipe(id, allowCached: allowCached);
+    return super.fetchRecipe(id, allowCached: allowCached, opened: opened);
   }
 }
 

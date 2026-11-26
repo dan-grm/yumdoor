@@ -326,8 +326,11 @@ sealed class RecommendationReason { … }   // highlyRated(rating), notCookedSin
   - **Cooked recently by others:** cook log entries of other people in the last 14 days (`CookLogRepository.recent`),
     one reason per person, labelled by name.
   - **Similar to recently cooked:** Jaccard index ≥ 0.2 over foods and keywords against the user's last 3 cooked
-    recipes. Candidates come from `foods_or`/`keywords_or` searches; search results carry no ingredients, so the 8
-    best by keywords are loaded (`fetchRecipe`, which also stores them for offline use).
+    recipes. Candidates come from `foods_or`/`keywords_or` searches (50 each, by the user's rating); search results
+    carry no ingredients, so the 8 best by keywords are loaded with `fetchRecipe(opened: false)`, which neither
+    stores them in the offline cache nor looks up their last-cooked date.
+  - The cook log is read once (`recent`, the newest 100 entries of the last 6 weeks) for other people's cooking,
+    the user's own recent cooking and the similarity sources; in a very active space older entries are missed.
   - Each rule scores a recipe 0–1; a recipe found by several rules gets all their reasons, strongest first, and the
     score `1 − Π(1 − sᵢ)`. Equal scores are ordered by a hash of recipe and day, so the list is stable within a day.
     Recipes planned this week and recipes the user cooked in the last 7 days are left out.

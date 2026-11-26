@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yumdoor/data/api/tandoor_dio.dart';
 import 'package:yumdoor/data/repositories/tandoor_repositories.dart';
 import 'package:yumdoor/domain/models/calendar_day.dart';
-import 'package:yumdoor/domain/models/cook_log.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
 import 'package:yumdoor/domain/models/recommendation.dart';
 import 'package:yumdoor/domain/models/seasonal_keywords.dart';
@@ -16,44 +15,40 @@ import 'seeded_tandoor.dart';
 void main() {
   final tandoor = SeededTandoor.load();
   late TandoorRepositories anna;
-  late TandoorRepositories ben;
 
   setUp(() {
     anna = TandoorRepositories(
       TandoorConnection(tandoor.baseUrl, tandoor.token('anna')),
     );
-    ben = TandoorRepositories(
-      TandoorConnection(tandoor.baseUrl, tandoor.token('ben')),
-    );
   });
-  tearDown(() {
-    anna.close();
-    ben.close();
-  });
+  tearDown(() => anna.close());
 
+  // Reads only: other test files write cook logs at the same time.
   test('Anna gets recommendations with reasons', () async {
     final today = CalendarDay.today();
     final annaId = await anna.users.currentUserId();
-    // A recipe Anna didn't cook this week, which Ben cooks now.
-    final annaCooked = {
-      for (final log in await anna.cookLogs.recent(
-        limit: 100,
-        since: today.addDays(-7).atLocalTime(),
-      ))
-        if (log.entry.createdBy?.id == annaId) log.recipe.id,
-    };
-    final recipes = await anna.recipes.search(const RecipeQuery());
-    final recipe = recipes.items.firstWhere((r) => !annaCooked.contains(r.id));
-    final entry = await ben.cookLogs.create(
-      NewCookLog(recipeId: recipe.id, servings: 2),
+    // The keyword most seeded recipes have, in season this month.
+    final recipes = await anna.recipes.search(
+      const RecipeQuery(),
+      pageSize: 100,
     );
-    addTearDown(() => ben.cookLogs.delete(entry.id));
+    final counts = <int, int>{};
+    for (final recipe in recipes.items) {
+      for (final keyword in recipe.keywords) {
+        counts[keyword.id] = (counts[keyword.id] ?? 0) + 1;
+      }
+    }
+    final keyword = counts.entries
+        .reduce((a, b) => a.value >= b.value ? a : b)
+        .key;
 
     final provider = RuleBasedRecommendationProvider(
       recipes: anna.recipes,
       cookLogs: anna.cookLogs,
       keywords: anna.keywords,
-      seasonalKeywords: () async => const SeasonalKeywords.empty(),
+      seasonalKeywords: () async => SeasonalKeywords({
+        today.month: [keyword],
+      }),
     );
     final result = await provider.recommend(
       RecommendationContext(today: today, userId: annaId),
@@ -67,13 +62,17 @@ void main() {
     expect(result, isNotEmpty);
     for (final recommendation in result) {
       expect(recommendation.reasons, isNotEmpty);
+      expect(recommendation.score, inInclusiveRange(0, 1));
     }
-    final bens = result.firstWhere((r) => r.recipe.id == recipe.id);
+    final reasons = [for (final r in result) ...r.reasons];
     expect(
-      bens.reasons,
-      contains(
-        isA<CookedRecentlyBy>().having((r) => r.user.name, 'name', 'Ben'),
-      ),
+      reasons,
+      contains(isA<InSeason>().having((r) => r.keyword.id, 'keyword', keyword)),
     );
+    // Seeded cook logs: Anna's own ratings, and Ben's cooking by name.
+    expect(reasons, contains(isA<HighlyRated>()));
+    for (final reason in reasons.whereType<CookedRecentlyBy>()) {
+      expect(reason.user.name, 'Ben');
+    }
   });
 }

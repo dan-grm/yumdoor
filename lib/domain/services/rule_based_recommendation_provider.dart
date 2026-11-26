@@ -39,8 +39,9 @@ import 'recommendation_provider.dart';
 /// day to day, but not between calls on the same day.
 ///
 /// The rules run at the same time, and each makes at most [parallelRequests]
-/// requests at once. A rule that fails is left out; only if all of them fail
-/// does [recommend] throw (the first failure).
+/// requests at once. A rule that fails is left out. [recommend] throws the
+/// first failure only if every rule failed, or if nothing is left to suggest
+/// and a rule failed.
 class RuleBasedRecommendationProvider implements RecommendationProvider {
   RuleBasedRecommendationProvider({
     required this.recipes,
@@ -75,13 +76,18 @@ class RuleBasedRecommendationProvider implements RecommendationProvider {
   /// How many candidates each search rule considers.
   static const _searchSize = 20;
 
+  /// How many recipes each search of the similarity rule considers. Its
+  /// "any of these foods" search matches most recipes (salt, onions).
+  static const _similarSearchSize = 50;
+
   /// How many candidates of the similarity rule are loaded to compare foods.
   /// Search results don't carry ingredients.
   static const _similarCandidates = 8;
 
   /// How many cook log entries are read, and how far back, for other
-  /// people's cooking, the user's own and the similarity sources.
-  static const _recentLimit = 60;
+  /// people's cooking, the user's own and the similarity sources. In a space
+  /// that cooks more than this in [_recentDays] days, the oldest are missed.
+  static const _recentLimit = 100;
   static const _recentDays = 42;
 
   final RecipeRepository recipes;
@@ -103,6 +109,7 @@ class RuleBasedRecommendationProvider implements RecommendationProvider {
     int limit = 10,
   }) async {
     RangeError.checkNotNegative(limit, 'limit');
+    if (limit == 0) return const [];
     final today = context.today;
     final recent = _attempt(
       () => cookLogs.recent(
@@ -166,8 +173,11 @@ class RuleBasedRecommendationProvider implements RecommendationProvider {
 
   /// Searches the server. Recommendations are online only: results from the
   /// offline cache count as [OfflineFailure].
-  Future<List<RecipeSummary>> _search(RecipeQuery query) async {
-    final page = await recipes.search(query, pageSize: _searchSize);
+  Future<List<RecipeSummary>> _search(
+    RecipeQuery query, {
+    int pageSize = _searchSize,
+  }) async {
+    final page = await recipes.search(query, pageSize: pageSize);
     if (page.fromCache) throw const OfflineFailure();
     return page.items;
   }
@@ -203,11 +213,11 @@ class RuleBasedRecommendationProvider implements RecommendationProvider {
     DateTime? lastCooked,
     CalendarDay today,
   ) {
-    // 4 stars 0.3, 5 stars 0.4, plus up to 0.15 for three more months.
+    // 4 stars 0.3, 5 stars 0.4, plus up to 0.15 for up to 9 more weeks.
     var score = 0.3 + 0.1 * (rating - minRating).clamp(0, 1);
     if (lastCooked != null) {
-      final weeksOver = (_daysAgo(lastCooked, today) - notCookedForDays) / 63;
-      score += 0.15 * weeksOver.clamp(0, 1);
+      final overdue = (_daysAgo(lastCooked, today) - notCookedForDays) / 63;
+      score += 0.15 * overdue.clamp(0, 1);
     }
     return _Hit(recipe, score, [
       RecommendationReason.highlyRated(rating),
@@ -217,7 +227,16 @@ class RuleBasedRecommendationProvider implements RecommendationProvider {
 
   /// Recipes with a keyword mapped to [today]'s month.
   Future<List<_Hit>> _inSeason(CalendarDay today) async {
-    final ids = (await seasonalKeywords()).forDay(today).toList()..sort();
+    SeasonalKeywords mapping;
+    try {
+      mapping = await seasonalKeywords();
+    } on Failure {
+      rethrow;
+    } on Object {
+      // No mapping to read (not logged in, storage error): nothing in season.
+      mapping = const SeasonalKeywords.empty();
+    }
+    final ids = mapping.forDay(today).toList()..sort();
     if (ids.isEmpty) return const [];
     // One search per keyword, so each recipe is known to have it. Searches
     // include child keywords, which a recipe may have instead. "Any of" finds
@@ -229,13 +248,14 @@ class RuleBasedRecommendationProvider implements RecommendationProvider {
           _search(RecipeQuery(anyKeywordIds: {id}, sort: RecipeSort.rating)),
     );
     // The mapped keywords that recipes have only through a child keyword,
-    // loaded once each; `null` if that failed (deleted, say).
+    // loaded once each; `null` if it was deleted. Other failures fail the
+    // rule.
     final mapped = <int, Keyword?>{};
     Future<Keyword?> keyword(int id) async {
       if (mapped.containsKey(id)) return mapped[id];
       try {
         return mapped[id] = await keywords.fetchKeyword(id);
-      } on Failure {
+      } on NotFoundFailure {
         return mapped[id] = null;
       }
     }
@@ -314,11 +334,18 @@ class RuleBasedRecommendationProvider implements RecommendationProvider {
     final foodIds = {
       for (final source in features.keys) ...source.foods.map((f) => f.id),
     };
+    // By the user's rating, unrated last, rather than by name: which recipes
+    // make it onto the page shouldn't depend on their names.
     final searches = [
-      if (keywordIds.isNotEmpty) RecipeQuery(anyKeywordIds: keywordIds),
-      if (foodIds.isNotEmpty) RecipeQuery(anyFoodIds: foodIds),
+      if (keywordIds.isNotEmpty)
+        RecipeQuery(anyKeywordIds: keywordIds, sort: RecipeSort.rating),
+      if (foodIds.isNotEmpty)
+        RecipeQuery(anyFoodIds: foodIds, sort: RecipeSort.rating),
     ];
-    final pages = await _mapBounded(searches, _search);
+    final pages = await _mapBounded(
+      searches,
+      (query) => _search(query, pageSize: _similarSearchSize),
+    );
 
     // Search results carry keywords but not foods: rank them by keywords
     // (and whether they share a food) and load the best to compare foods.
@@ -357,7 +384,13 @@ class RuleBasedRecommendationProvider implements RecommendationProvider {
       candidate,
     ) async {
       try {
-        return (await recipes.fetchRecipe(candidate.recipe.id)).summary;
+        // Only to compare: not stored as opened, no offline copy.
+        final recipe = await recipes.fetchRecipe(
+          candidate.recipe.id,
+          allowCached: false,
+          opened: false,
+        );
+        return recipe.summary;
       } on Failure catch (e) {
         // One recipe that can't be loaded doesn't hide the others.
         failure ??= e;
