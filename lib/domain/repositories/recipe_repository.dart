@@ -25,7 +25,17 @@ abstract interface class RecipeRepository {
   /// returned if there is one. With [allowCached] `false` it throws
   /// [OfflineFailure] instead, e.g. for the editor, which must not save an
   /// old copy over newer changes.
-  Future<Recipe> fetchRecipe(int id, {bool allowCached = true});
+  ///
+  /// With [opened] `false`, for a recipe loaded to compare it rather than to
+  /// show it (the recommendations do this), it comes from the server only:
+  /// it isn't stored for offline use, no stored copy is returned, and
+  /// [Recipe.lastCooked] isn't looked up (one request less), so it is
+  /// `null` on Tandoor 2.6.15.
+  Future<Recipe> fetchRecipe(
+    int id, {
+    bool allowCached = true,
+    bool opened = true,
+  });
 
   /// Notes that the current user opened the recipe, for the "recently
   /// viewed" order. Only the user sees their views.

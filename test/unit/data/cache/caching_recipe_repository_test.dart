@@ -120,6 +120,20 @@ void main() {
       );
     });
 
+    test('neither stores nor returns a stored copy when not opened', () async {
+      expect(await repository.fetchRecipe(7, opened: false), _karotten);
+      await pumpEventQueue();
+      expect(await cache.get(7), isNull);
+      expect(remote.unopenedFetches, [7]);
+
+      await fetch(8);
+      remote.failure = const OfflineFailure();
+      await expectLater(
+        repository.fetchRecipe(8, opened: false),
+        throwsA(isA<OfflineFailure>()),
+      );
+    });
+
     test('does not fall back for other failures', () async {
       await fetch(7);
       remote.failure = const ServerFailure(statusCode: 500);

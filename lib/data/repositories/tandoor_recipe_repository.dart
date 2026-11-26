@@ -301,11 +301,15 @@ class TandoorRecipeRepository implements RecipeRepository {
   }
 
   @override
-  Future<Recipe> fetchRecipe(int id, {bool allowCached = true}) async {
+  Future<Recipe> fetchRecipe(
+    int id, {
+    bool allowCached = true,
+    bool opened = true,
+  }) async {
     // Nothing is cached here; see CachingRecipeRepository.
     // In parallel with the recipe. It's a detail: if it fails, the recipe
     // is shown without it.
-    final cooked = _lastCooked(id);
+    final cooked = opened ? _lastCooked(id) : Future<DateTime?>.value();
     final recipe = await guardRequest(() async {
       final response = await _api.apiRecipeRetrieve(id: id);
       return requireBody(response.data).toDomain();

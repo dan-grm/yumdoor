@@ -921,8 +921,11 @@ class _SlowRepository extends FakeRecipeRepository {
   final Error? _error;
 
   @override
-  Future<Recipe> fetchRecipe(int id, {bool allowCached = true}) =>
-      _inner.fetchRecipe(id, allowCached: allowCached);
+  Future<Recipe> fetchRecipe(
+    int id, {
+    bool allowCached = true,
+    bool opened = true,
+  }) => _inner.fetchRecipe(id, allowCached: allowCached, opened: opened);
 
   @override
   Future<Recipe> updateRecipe(int id, RecipeDraft draft) async {

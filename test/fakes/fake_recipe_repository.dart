@@ -62,6 +62,9 @@ class FakeRecipeRepository implements RecipeRepository {
   bool fromCache = false;
   int fetchCount = 0;
 
+  /// The recipes [fetchRecipe] loaded with `opened: false`, in order.
+  final unopenedFetches = <int>[];
+
   /// The recipes [recordView] was called for, in order.
   final views = <int>[];
   final searches = <SearchCall>[];
@@ -74,8 +77,13 @@ class FakeRecipeRepository implements RecipeRepository {
   bool offline = false;
 
   @override
-  Future<Recipe> fetchRecipe(int id, {bool allowCached = true}) async {
+  Future<Recipe> fetchRecipe(
+    int id, {
+    bool allowCached = true,
+    bool opened = true,
+  }) async {
     fetchCount++;
+    if (!opened) unopenedFetches.add(id);
     if (failure case final failure?) throw failure;
     if (offline && !allowCached) throw const OfflineFailure();
     return recipes[id] ?? (throw const NotFoundFailure());
