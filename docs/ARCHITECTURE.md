@@ -319,13 +319,27 @@ sealed class RecommendationReason { … }   // highlyRated(rating), notCookedSin
 - `SeasonalKeywords` is the user's month (1–12) → keyword ids mapping, empty by default (nothing is hardcoded). It
   keeps ids only, so renamed keywords stay mapped; ids of deleted keywords are dropped with `retainKeywords`.
   `SeasonalKeywordStore` loads and saves it on the device.
-- The first implementation, `RuleBasedRecommendationProvider`, works on data from repositories: own ratings
-  (search with `rating_gte`), last cooked (`cookedon_lte`), seasonal keywords (a configurable month → keyword
-  mapping), recent cook logs by other people, and Jaccard similarity over foods and keywords of recently cooked
-  recipes.
+- The first implementation, `RuleBasedRecommendationProvider` (`domain/services/`), works on the repositories:
+  - **Highly rated, not cooked for a while:** own rating ≥ 4 and not cooked in the last 21 days (search with
+    `rating_gte`, `cookedon_lte`, by rating); the last-cooked date for the reason comes from the cook log.
+  - **In season:** recipes with a keyword mapped to the current month (one `keywords_or` search per keyword).
+  - **Cooked recently by others:** cook log entries of other people in the last 14 days (`CookLogRepository.recent`),
+    one reason per person, labelled by name.
+  - **Similar to recently cooked:** Jaccard index ≥ 0.2 over foods and keywords against the user's last 3 cooked
+    recipes. Candidates come from `foods_or`/`keywords_or` searches (50 each, by the user's rating); search results
+    carry no ingredients, so the 8 best by keywords are loaded with `fetchRecipe(opened: false)`, which neither
+    stores them in the offline cache nor looks up their last-cooked date.
+  - The cook log is read once (`recent`, the newest 100 entries of the last 6 weeks) for other people's cooking,
+    the user's own recent cooking and the similarity sources; in a very active space older entries are missed.
+  - Each rule scores a recipe 0–1; a recipe found by several rules gets all their reasons, strongest first, and the
+    score `1 − Π(1 − sᵢ)`. Equal scores are ordered by a hash of recipe and day, so the list is stable within a day.
+    Recipes planned this week and recipes the user cooked in the last 7 days are left out (the latter only when
+    the cook log could be read).
+  - The rules run in parallel, each with at most 4 requests at once. A failing rule is left out; `recommend` throws
+    only if every rule fails, or if nothing is left and one failed. Results from the offline cache count as offline.
 - "Cooked recently by household members" cannot be exact: normal users cannot list their household. The rule
   provider uses cook logs from **everyone in the space** and labels them by name ("Anna hat das letzte Woche
-  gekocht"). If the user is a space admin, it narrows this to the household.
+  gekocht"), for space admins too: no narrowing to the household (decided 2026-11-26).
 - An LLM provider later implements the same interface (OpenAI-compatible endpoint, URL and key in settings) and
   returns `freeText` reasons. The UI does not change.
 

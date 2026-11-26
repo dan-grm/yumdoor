@@ -525,5 +525,23 @@ void main() {
 
       expect(recipe.lastCooked, isNull);
     });
+
+    test('skips the cook log for a recipe that is not opened', () async {
+      final asked = <int>[];
+      final repository = TandoorRecipeRepository(
+        client(recipeServer()),
+        dio: Dio(),
+        lastCooked: (id) async {
+          asked.add(id);
+          return DateTime.utc(2026, 11, 2);
+        },
+      );
+
+      final recipe = await repository.fetchRecipe(8, opened: false);
+
+      expect(recipe.name, isNotEmpty);
+      expect(recipe.lastCooked, isNull);
+      expect(asked, isEmpty);
+    });
   });
 }

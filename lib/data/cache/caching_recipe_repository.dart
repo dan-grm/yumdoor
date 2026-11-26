@@ -40,12 +40,19 @@ class CachingRecipeRepository implements RecipeRepository {
   final Future<Uint8List?> Function(Uri url)? downloadImage;
 
   @override
-  Future<Recipe> fetchRecipe(int id, {bool allowCached = true}) async {
+  Future<Recipe> fetchRecipe(
+    int id, {
+    bool allowCached = true,
+    bool opened = true,
+  }) async {
     final Recipe recipe;
     try {
+      // Not opened: neither stored nor taken from the cache, which would
+      // count it as opened and could push out recipes the user did open.
+      if (!opened) return await _remote.fetchRecipe(id, opened: false);
       recipe = await _remote.fetchRecipe(id);
     } on OfflineFailure {
-      if (!allowCached) rethrow;
+      if (!allowCached || !opened) rethrow;
       return await _cache.get(id) ?? (throw const OfflineFailure());
     } on NotFoundFailure {
       // Deleted, or no longer shared with the user.

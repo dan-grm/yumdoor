@@ -98,8 +98,9 @@ Native store builds, push notifications, LLM provider, recipe import from URLs o
 
 ## Open decisions
 
-- **Household activity for recommendations.** Normal users cannot list household members. M5 uses everyone in the
-  space unless the user is admin; revisit if Tandoor exposes household members.
+- **Household activity for recommendations.** Normal users cannot list household members, so "cooked recently by
+  others" uses everyone in the space, labelled by name, for admins too (decided 2026-11-26: the same for every user,
+  no admin-only household narrowing). Revisit if Tandoor lets normal users see their household.
 - **Licensing for outside contributions.** No outside PRs until a CLA is chosen (possible App Store dual license).
   See `CONTRIBUTING.md`.
 - **Tandoor auth changes.** Tandoor is working on new frontend auth (`feature-frontend-auth` branch). Recheck token

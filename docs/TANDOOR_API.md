@@ -116,6 +116,12 @@ overlaps) when the results don't fit on the first pages. `foods_or` and `keyword
 keywords (`include_children`), and a `RecipeOverview` has no ingredients, so a food match can't tell which of the
 foods the recipe contains.
 
+**Unknown ids** (deleted foods or keywords; `RecipeQuerySet.by_keywords`/`by_foods`, `managers.py:215`, checked on
+2.6.15): `keywords_and` and `foods_and` look the ids up and filter by each object found, so an unknown id is
+**ignored** and `keywords_and=<deleted>` returns every recipe. `keywords_or` and `foods_or` filter by the found set,
+so an unknown id matches nothing. The recommendations search a stored seasonal keyword with `keywords_or` for this
+reason.
+
 **Sort order** (`cookbook/helper/recipe_search.py`, `_build_sort_order`; checked on 2.6.15): `sort_order` takes a
 **single** key; a second key or an unknown one (also a comma list) is a 500. Without `sort_order` the order is
 `-score, name` when the search preference scores text (trigram or full text), else `name`; `score` is dropped
