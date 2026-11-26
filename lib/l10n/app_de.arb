@@ -2767,5 +2767,93 @@
         "example": "Der Server ist nicht erreichbar."
       }
     }
+  },
+  "settingsOpen": "Einstellungen",
+  "@settingsOpen": {
+    "description": "Button label that opens the settings screen."
+  },
+  "settingsTitle": "Einstellungen",
+  "@settingsTitle": {
+    "description": "Title of the settings screen."
+  },
+  "settingsAccount": "Konto",
+  "@settingsAccount": {
+    "description": "Settings section: the logged-in account."
+  },
+  "settingsName": "Name",
+  "@settingsName": {
+    "description": "Settings row: display name of the user."
+  },
+  "settingsUsername": "Benutzername",
+  "@settingsUsername": {
+    "description": "Settings row: login name of the user."
+  },
+  "settingsServer": "Server",
+  "@settingsServer": {
+    "description": "Settings row: host of the Tandoor server."
+  },
+  "settingsTandoorVersion": "Tandoor-Version",
+  "@settingsTandoorVersion": {
+    "description": "Settings row: version of the Tandoor server."
+  },
+  "settingsUnavailable": "nicht verfügbar",
+  "@settingsUnavailable": {
+    "description": "Shown instead of a settings value that can't be read, e.g. offline."
+  },
+  "settingsAppearance": "Darstellung",
+  "@settingsAppearance": {
+    "description": "Settings section: theme and language."
+  },
+  "settingsTheme": "Design",
+  "@settingsTheme": {
+    "description": "Settings row: light, dark or system theme."
+  },
+  "settingsThemeLight": "Hell",
+  "@settingsThemeLight": {
+    "description": "Theme choice."
+  },
+  "settingsThemeDark": "Dunkel",
+  "@settingsThemeDark": {
+    "description": "Theme choice."
+  },
+  "settingsSystem": "System",
+  "@settingsSystem": {
+    "description": "Choice that follows the device (theme or language)."
+  },
+  "settingsLanguage": "Sprache",
+  "@settingsLanguage": {
+    "description": "Settings row: app language."
+  },
+  "settingsAbout": "Über Yumdoor",
+  "@settingsAbout": {
+    "description": "Settings section: app information."
+  },
+  "settingsVersion": "Version",
+  "@settingsVersion": {
+    "description": "Settings row: app version."
+  },
+  "settingsLicense": "Lizenz",
+  "@settingsLicense": {
+    "description": "Settings row: license."
+  },
+  "settingsSource": "Quellcode",
+  "@settingsSource": {
+    "description": "Settings row: link to the source code."
+  },
+  "settingsAuthTitle": "Authentication",
+  "@settingsAuthTitle": {
+    "description": "Heading of the explanation of how the login is stored. Same word in both languages."
+  },
+  "settingsAuthBody": "Yumdoor speichert nur ein Zugriffstoken, nie dein Passwort. In der App liegt es im sicheren Speicher des Geräts. Im Browser gibt es keinen sicheren Speicher: Der Token liegt im lokalen Speicher der Seite, verschlüsselt, aber der Schlüssel liegt daneben. Da Yumdoor im Browser dieselbe Adresse wie Tandoor nutzt, könnte eine Sicherheitslücke in Tandoors eigener Oberfläche den Token lesen, so wie sie schon jetzt in deinem Namen handeln könnte. Dieses Risiko nehmen wir in Kauf.",
+  "@settingsAuthBody": {
+    "description": "Explanation of how the access token is stored (docs/ARCHITECTURE.md, Authentication)."
+  },
+  "settingsLanguageGerman": "Deutsch",
+  "@settingsLanguageGerman": {
+    "description": "Language choice, written in its own language in both locales."
+  },
+  "settingsLanguageEnglish": "English",
+  "@settingsLanguageEnglish": {
+    "description": "Language choice, written in its own language in both locales."
   }
 }

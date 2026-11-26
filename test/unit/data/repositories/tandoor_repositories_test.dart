@@ -952,9 +952,9 @@ void main() {
 
     expect(adapter.requests.single.uri.path, '/tandoor/api/user/');
     expect(users, const [
-      UserRef(id: 1, name: 'Admin'),
-      UserRef(id: 2, name: 'Anna'),
-      UserRef(id: 3, name: 'Ben'),
+      UserRef(id: 1, name: 'Admin', username: 'admin'),
+      UserRef(id: 2, name: 'Anna', username: 'anna'),
+      UserRef(id: 3, name: 'Ben', username: 'ben'),
     ]);
   });
 

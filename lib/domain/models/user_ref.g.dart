@@ -6,10 +6,14 @@ part of 'user_ref.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_UserRef _$UserRefFromJson(Map<String, dynamic> json) =>
-    _UserRef(id: (json['id'] as num).toInt(), name: json['name'] as String);
+_UserRef _$UserRefFromJson(Map<String, dynamic> json) => _UserRef(
+  id: (json['id'] as num).toInt(),
+  name: json['name'] as String,
+  username: json['username'] as String? ?? '',
+);
 
 Map<String, dynamic> _$UserRefToJson(_UserRef instance) => <String, dynamic>{
   'id': instance.id,
   'name': instance.name,
+  'username': instance.username,
 };

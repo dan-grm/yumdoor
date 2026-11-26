@@ -696,5 +696,27 @@
         "example": "Der Server ist nicht erreichbar."
       }
     }
-  }
+  },
+  "settingsOpen": "Settings",
+  "settingsTitle": "Settings",
+  "settingsAccount": "Account",
+  "settingsName": "Name",
+  "settingsUsername": "Username",
+  "settingsServer": "Server",
+  "settingsTandoorVersion": "Tandoor version",
+  "settingsUnavailable": "unavailable",
+  "settingsAppearance": "Appearance",
+  "settingsTheme": "Theme",
+  "settingsThemeLight": "Light",
+  "settingsThemeDark": "Dark",
+  "settingsSystem": "System",
+  "settingsLanguage": "Language",
+  "settingsAbout": "About Yumdoor",
+  "settingsVersion": "Version",
+  "settingsLicense": "License",
+  "settingsSource": "Source code",
+  "settingsAuthTitle": "Authentication",
+  "settingsAuthBody": "Yumdoor only stores an access token, never your password. In the app it sits in the device's secure storage. A browser has no secure storage: the token is kept in the page's local storage, encrypted, but with the key stored next to it. Because Yumdoor in the browser shares its address with Tandoor, a security hole in Tandoor's own interface could read the token, just as it could already act on your behalf. We accept this risk.",
+  "settingsLanguageGerman": "Deutsch",
+  "settingsLanguageEnglish": "English"
 }

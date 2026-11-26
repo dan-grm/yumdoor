@@ -23,8 +23,8 @@ void main() {
         (e) => e.food.name == food && (amount == null || e.amount == amount),
       );
 
-  const ben = UserRef(id: 18, name: 'Ben');
-  const anna = UserRef(id: 17, name: 'Anna');
+  const ben = UserRef(id: 18, name: 'Ben', username: 'ben');
+  const anna = UserRef(id: 17, name: 'Anna', username: 'anna');
   const vegetables = SupermarketCategory(id: 41, name: 'Obst & Gemüse');
 
   group('ShoppingEntryMapper', () {

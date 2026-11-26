@@ -17,7 +17,8 @@ T _$identity<T>(T value) => value;
 mixin _$UserRef {
 
  int get id;/// The display name, falling back to the username. Can be empty.
- String get name;
+ String get name;/// The login name; empty if the server didn't say or from an older cache.
+ String get username;
 /// Create a copy of UserRef
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -31,20 +32,20 @@ $UserRefCopyWith<UserRef> get copyWith => _$UserRefCopyWithImpl<UserRef>(this as
 @override
 bool operator ==(Object other) {
   final _this = this as UserRef;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserRef&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserRef&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.username, _this.username) || other.username == _this.username));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
   final _this = this as UserRef;
-  return Object.hash(runtimeType,_this.id,_this.name);
+  return Object.hash(runtimeType,_this.id,_this.name,_this.username);
 }
 
 @override
 String toString() {
   final _this = this as UserRef;
-  return 'UserRef(id: ${_this.id}, name: ${_this.name})';
+  return 'UserRef(id: ${_this.id}, name: ${_this.name}, username: ${_this.username})';
 }
 
 
@@ -55,7 +56,7 @@ abstract mixin class $UserRefCopyWith<$Res>  {
   factory $UserRefCopyWith(UserRef value, $Res Function(UserRef) _then) = _$UserRefCopyWithImpl;
 @useResult
 $Res call({
- int id, String name
+ int id, String name, String username
 });
 
 
@@ -72,10 +73,11 @@ class _$UserRefCopyWithImpl<$Res>
 
 /// Create a copy of UserRef
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? username = null,}) {
   return _then(UserRef(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
@@ -161,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int id,  String name,  String username)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserRef() when $default != null:
-return $default(_that.id,_that.name);case _:
+return $default(_that.id,_that.name,_that.username);case _:
   return orElse();
 
 }
@@ -182,10 +184,10 @@ return $default(_that.id,_that.name);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int id,  String name,  String username)  $default,) {final _that = this;
 switch (_that) {
 case _UserRef():
-return $default(_that.id,_that.name);case _:
+return $default(_that.id,_that.name,_that.username);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +204,10 @@ return $default(_that.id,_that.name);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int id,  String name,  String username)?  $default,) {final _that = this;
 switch (_that) {
 case _UserRef() when $default != null:
-return $default(_that.id,_that.name);case _:
+return $default(_that.id,_that.name,_that.username);case _:
   return null;
 
 }
@@ -217,12 +219,14 @@ return $default(_that.id,_that.name);case _:
 @JsonSerializable()
 
 class _UserRef implements UserRef {
-  const _UserRef({required this.id, required this.name});
+  const _UserRef({required this.id, required this.name, this.username = ''});
   factory _UserRef.fromJson(Map<String, dynamic> json) => _$UserRefFromJson(json);
 
 @override final  int id;
 /// The display name, falling back to the username. Can be empty.
 @override final  String name;
+/// The login name; empty if the server didn't say or from an older cache.
+@override@JsonKey() final  String username;
 
 /// Create a copy of UserRef
 /// with the given fields replaced by the non-null parameter values.
@@ -237,18 +241,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserRef&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserRef&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.username, username) || other.username == username));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,name);
+    return Object.hash(runtimeType,id,name,username);
 }
 
 @override
 String toString() {
-    return 'UserRef(id: $id, name: $name)';
+    return 'UserRef(id: $id, name: $name, username: $username)';
 }
 
 
@@ -259,7 +263,7 @@ abstract mixin class _$UserRefCopyWith<$Res> implements $UserRefCopyWith<$Res> {
   factory _$UserRefCopyWith(_UserRef value, $Res Function(_UserRef) _then) = __$UserRefCopyWithImpl;
 @override @useResult
 $Res call({
- int id, String name
+ int id, String name, String username
 });
 
 
@@ -276,10 +280,11 @@ class __$UserRefCopyWithImpl<$Res>
 
 /// Create a copy of UserRef
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? username = null,}) {
   return _then(_UserRef(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as int,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

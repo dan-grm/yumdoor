@@ -6,6 +6,7 @@ import 'package:yumdoor/core/failures.dart';
 import 'package:yumdoor/domain/repositories/shopping_check_queue.dart';
 import 'package:yumdoor/features/auth/login_screen.dart';
 import 'package:yumdoor/features/search/search_screen.dart';
+import 'package:yumdoor/features/settings/settings_screen.dart';
 
 import '../fakes/app_overrides.dart';
 import '../fakes/fake_auth_repository.dart';
@@ -226,7 +227,9 @@ void main() {
       expect(find.byType(SearchScreen), findsOneWidget);
       expect(store.token?.token, FakeAuthRepository.deviceToken);
 
-      await tester.tap(find.byTooltip('Abmelden'));
+      await tester.tap(find.byTooltip('Einstellungen'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Abmelden'));
       await tester.pumpAndSettle();
 
       expect(find.byType(LoginScreen), findsOneWidget);
@@ -274,7 +277,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(SearchScreen), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Abmelden'));
+    await tester.tap(find.byTooltip('Einstellungen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abmelden'));
     await tester.pumpAndSettle();
     expect(find.text('Abmelden?'), findsOneWidget);
     expect(
@@ -287,11 +292,11 @@ void main() {
 
     await tester.tap(find.text('Angemeldet bleiben'));
     await tester.pumpAndSettle();
-    expect(find.byType(SearchScreen), findsOneWidget);
+    expect(find.byType(SettingsScreen), findsOneWidget);
     expect(tokens.token, isNotNull);
     expect(offlineCache.clearCount, 0);
 
-    await tester.tap(find.byTooltip('Abmelden'));
+    await tester.tap(find.text('Abmelden'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Trotzdem abmelden'));
     await tester.pumpAndSettle();
