@@ -2855,5 +2855,51 @@
   "settingsLanguageEnglish": "English",
   "@settingsLanguageEnglish": {
     "description": "Language choice, written in its own language in both locales."
+  },
+  "keywordPickerSearchHint": "Stichwort suchen",
+  "@keywordPickerSearchHint": {
+    "description": "Hint of the keyword picker when keywords can't be created."
+  },
+  "settingsSeasonal": "Saisonale Vorschläge",
+  "@settingsSeasonal": {
+    "description": "Settings section: which keywords mean in season each month."
+  },
+  "settingsSeasonalBody": "Stichwörter, die in einem Monat Saison haben. Passende Rezepte erscheinen dann als Vorschlag.",
+  "@settingsSeasonalBody": {
+    "description": "Explains the seasonal keyword settings."
+  },
+  "settingsSeasonalAdd": "Stichwort für {month} hinzufügen",
+  "@settingsSeasonalAdd": {
+    "description": "Accessible label of the chip that adds a seasonal keyword to a month.",
+    "placeholders": {
+      "month": {"type": "String"}
+    }
+  },
+  "settingsSeasonalRemove": "{keyword} aus {month} entfernen",
+  "@settingsSeasonalRemove": {
+    "description": "Accessible label of a seasonal keyword chip; tapping it removes the keyword from the month.",
+    "placeholders": {
+      "keyword": {"type": "String"},
+      "month": {"type": "String"}
+    }
+  },
+  "settingsSeasonalCopy": "Für mehrere Monate übernehmen",
+  "@settingsSeasonalCopy": {
+    "description": "Button that copies a month's seasonal keywords to other months."
+  },
+  "settingsSeasonalCopyTitle": "Stichwörter von {month} übernehmen",
+  "@settingsSeasonalCopyTitle": {
+    "description": "Title of the sheet that picks the months to copy a month's keywords to.",
+    "placeholders": {
+      "month": {"type": "String"}
+    }
+  },
+  "settingsSeasonalCopyBody": "Ersetzt die Stichwörter der gewählten Monate.",
+  "@settingsSeasonalCopyBody": {
+    "description": "Explains that copying replaces the keywords of the chosen months."
+  },
+  "settingsSeasonalCopyApply": "Übernehmen",
+  "@settingsSeasonalCopyApply": {
+    "description": "Button that copies the keywords to the chosen months."
   }
 }

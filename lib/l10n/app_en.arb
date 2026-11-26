@@ -718,5 +718,51 @@
   "settingsAuthTitle": "Authentication",
   "settingsAuthBody": "Yumdoor only stores an access token, never your password. In the app it sits in the device's secure storage. A browser has no secure storage: the token is kept in the page's local storage, encrypted, but with the key stored next to it. Because Yumdoor in the browser shares its address with Tandoor, a security hole in Tandoor's own interface could read the token, just as it could already act on your behalf. We accept this risk.",
   "settingsLanguageGerman": "Deutsch",
-  "settingsLanguageEnglish": "English"
+  "settingsLanguageEnglish": "English",
+  "keywordPickerSearchHint": "Search for a keyword",
+  "@keywordPickerSearchHint": {
+    "description": "Hint of the keyword picker when keywords can't be created."
+  },
+  "settingsSeasonal": "Seasonal suggestions",
+  "@settingsSeasonal": {
+    "description": "Settings section: which keywords mean in season each month."
+  },
+  "settingsSeasonalBody": "Keywords that are in season in a month. Matching recipes are then suggested.",
+  "@settingsSeasonalBody": {
+    "description": "Explains the seasonal keyword settings."
+  },
+  "settingsSeasonalAdd": "Add keyword to {month}",
+  "@settingsSeasonalAdd": {
+    "description": "Accessible label of the chip that adds a seasonal keyword to a month.",
+    "placeholders": {
+      "month": {"type": "String"}
+    }
+  },
+  "settingsSeasonalRemove": "Remove {keyword} from {month}",
+  "@settingsSeasonalRemove": {
+    "description": "Accessible label of a seasonal keyword chip; tapping it removes the keyword from the month.",
+    "placeholders": {
+      "keyword": {"type": "String"},
+      "month": {"type": "String"}
+    }
+  },
+  "settingsSeasonalCopy": "Copy to several months",
+  "@settingsSeasonalCopy": {
+    "description": "Button that copies a month's seasonal keywords to other months."
+  },
+  "settingsSeasonalCopyTitle": "Copy keywords of {month}",
+  "@settingsSeasonalCopyTitle": {
+    "description": "Title of the sheet that picks the months to copy a month's keywords to.",
+    "placeholders": {
+      "month": {"type": "String"}
+    }
+  },
+  "settingsSeasonalCopyBody": "Replaces the keywords of the chosen months.",
+  "@settingsSeasonalCopyBody": {
+    "description": "Explains that copying replaces the keywords of the chosen months."
+  },
+  "settingsSeasonalCopyApply": "Copy",
+  "@settingsSeasonalCopyApply": {
+    "description": "Button that copies the keywords to the chosen months."
+  }
 }

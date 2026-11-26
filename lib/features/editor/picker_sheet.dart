@@ -23,14 +23,19 @@ const _maxHeightFactor = 0.8;
 /// Lets the user find a keyword by name, or create one with the typed name,
 /// and returns it; `null` if the sheet was closed. Keywords with an id in
 /// [exclude] are already on the recipe and not offered.
+///
+/// With [allowCreate] false, only existing keywords can be picked.
 Future<Keyword?> showKeywordPicker(
   BuildContext context, {
   required Set<int> exclude,
+  bool allowCreate = true,
 }) => _showPicker(
   context,
   _PickerConfig<Keyword>(
     title: (l10n) => l10n.keywordPickerTitle,
-    hint: (l10n) => l10n.keywordPickerHint,
+    hint: (l10n) =>
+        allowCreate ? l10n.keywordPickerHint : l10n.keywordPickerSearchHint,
+    allowCreate: allowCreate,
     suggestions: keywordSuggestionsProvider.call,
     create: (ref, name) => ref.read(keywordRepositoryProvider).create(name),
     id: (keyword) => keyword.id,
@@ -77,6 +82,7 @@ final class _PickerConfig<T extends Object> {
     required this.id,
     required this.name,
     this.exclude = const {},
+    this.allowCreate = true,
   });
 
   final String Function(AppLocalizations l10n) title;
@@ -92,6 +98,9 @@ final class _PickerConfig<T extends Object> {
 
   /// Ids of items that aren't offered.
   final Set<int> exclude;
+
+  /// Whether a typed name that matches nothing can be created.
+  final bool allowCreate;
 }
 
 Future<T?> _showPicker<T extends Object>(
@@ -180,6 +189,7 @@ class _PickerSheetState<T extends Object>
     // Offered once the suggestions for the typed text are in and none of
     // them has that name; Tandoor finds names ignoring case.
     final canCreate =
+        config.allowCreate &&
         _query.isNotEmpty &&
         !found.isLoading &&
         !(found.value?.any(

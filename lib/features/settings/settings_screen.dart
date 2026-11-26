@@ -14,6 +14,7 @@ import '../../design/components/filter_chips.dart';
 import '../../design/design.dart';
 import '../../l10n/l10n.dart';
 import '../auth/logout.dart';
+import 'seasonal_settings.dart';
 import 'settings_providers.dart';
 
 /// Where [SettingsScreen] is.
@@ -149,6 +150,10 @@ class SettingsScreen extends ConsumerWidget {
                       ],
                     ),
                   ],
+                ),
+                _Section(
+                  title: l10n.settingsSeasonal,
+                  children: const [SeasonalSettings()],
                 ),
                 _Section(
                   title: l10n.settingsAbout,
