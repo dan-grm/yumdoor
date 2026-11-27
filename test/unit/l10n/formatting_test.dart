@@ -52,6 +52,8 @@ void main() {
     final evening = DateTime(2026, 10, 20, 18, 30);
     expect(de.date(evening), '20. Okt. 2026');
     expect(en.date(evening), 'Oct 20, 2026');
+    expect(de.dayMonthLong(evening), '20. Oktober');
+    expect(en.dayMonthLong(evening), 'October 20');
     expect(de.time(evening), '18:30');
     expect(en.time(evening), matches(RegExp(r'^6:30\sPM$')));
   });

@@ -21,6 +21,7 @@ import '../common/failure_view.dart';
 import '../common/offline_as_of.dart';
 import '../common/offline_disabled.dart';
 import '../common/recipe_image.dart';
+import '../recipe/recipe_screen.dart';
 import '../search/search_location.dart';
 import '../shell/app_shell.dart';
 import 'plan_actions.dart';
@@ -891,7 +892,8 @@ class _ReportingDelayedRecognizer extends DelayedMultiDragGestureRecognizer {
   }
 }
 
-/// One planned meal on [day], with its menu. Opens its recipe if it has one.
+/// One planned meal on [day], with its menu. Opens its recipe, for the
+/// planned servings, if it has one.
 /// Unless [actions] is `null` (offline, or a change of it is pending), it can
 /// be dragged to another day.
 class _PlanCard extends StatelessWidget {
@@ -1013,7 +1015,9 @@ class _PlanTile extends StatelessWidget {
       child: InkWell(
         onTap: recipe == null
             ? null
-            : () => context.push('/recipe/${recipe.id}'),
+            : () => context.push(
+                recipeLocation(recipe.id, servings: plan.wholeServings),
+              ),
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: t.sizeTouch + t.space3),
           child: Padding(

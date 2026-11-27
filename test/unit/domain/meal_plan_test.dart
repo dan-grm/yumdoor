@@ -41,6 +41,18 @@ void main() {
       expect(twoDays.isOn(saturday.addDays(2)), isFalse);
       expect(plan().days, 1);
     });
+
+    test('rounds its servings to whole ones, at least 1', () {
+      for (final (servings, whole) in [
+        (4.0, 4),
+        (2.5, 3),
+        (2.4, 2),
+        (0.5, 1),
+        (0.25, 1),
+      ]) {
+        expect(plan().copyWith(servings: servings).wholeServings, whole);
+      }
+    });
   });
 
   group('NewMealPlan', () {

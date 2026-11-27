@@ -166,14 +166,21 @@ void main() {
     expect(find.text('Reste'), findsNWidgets(2));
   });
 
-  testWidgets('tapping a planned recipe opens it', (tester) async {
+  testWidgets('tapping a planned recipe opens it for the planned servings', (
+    tester,
+  ) async {
     final router = await pumpPlanner(tester);
 
     await tester.tap(find.text('Ofenkarotten mit Feta'));
     await tester.pumpAndSettle();
-
-    expect(router.state.uri.toString(), '/recipe/102');
+    expect(router.state.uri.toString(), '/recipe/102?servings=4');
     expect(find.text('recipe 102'), findsOneWidget);
+
+    router.pop();
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Karotten-Ingwer-Suppe'));
+    await tester.pumpAndSettle();
+    expect(router.state.uri.toString(), '/recipe/104?servings=2');
   });
 
   testWidgets('browses to the next and the previous week and back', (

@@ -9,6 +9,7 @@ import 'package:yumdoor/domain/models/calendar_day.dart';
 import 'package:yumdoor/domain/models/recipe_query.dart';
 import 'package:yumdoor/features/cook_log/cook_log_screen.dart';
 import 'package:yumdoor/features/cooking/cooking_screen.dart';
+import 'package:yumdoor/features/home/home_screen.dart';
 import 'package:yumdoor/features/recipe/recipe_screen.dart';
 import 'package:yumdoor/features/search/search_location.dart';
 
@@ -61,7 +62,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> cookToTheEnd(WidgetTester tester) async {
+  Future<void> cookToTheEnd(WidgetTester tester, GoRouter router) async {
+    router.go('/search');
+    await tester.pumpAndSettle();
     await tap(tester, find.text('Ofenkarotten mit Feta'));
     await tap(tester, find.textContaining('Kochen starten'));
     await tap(tester, find.text('Weiter zu Schritt 2'));
@@ -74,7 +77,7 @@ void main() {
     tester,
   ) async {
     final router = await pumpApp(tester);
-    await cookToTheEnd(tester);
+    await cookToTheEnd(tester, router);
 
     await back(tester);
     expect(location(router), '/recipe/7');
@@ -87,7 +90,7 @@ void main() {
   testWidgets('after closing the cook log, back on the recipe leads to '
       'search', (tester) async {
     final router = await pumpApp(tester);
-    await cookToTheEnd(tester);
+    await cookToTheEnd(tester, router);
 
     await tap(tester, find.byTooltip('Schließen, ohne zu speichern'));
     expect(location(router), '/recipe/7');
@@ -98,18 +101,18 @@ void main() {
   });
 
   group('a screen opened from a link or after a reload', () {
-    testWidgets('recipe: back leads to search', (tester) async {
+    testWidgets('recipe: back leads to the start screen', (tester) async {
       final router = await pumpApp(tester);
       router.go('/recipe/7');
       await tester.pumpAndSettle();
 
       await back(tester);
-      expect(location(router), '/search');
+      expect(location(router), '/');
+      expect(find.byType(HomeScreen), findsOneWidget);
     });
 
-    testWidgets('cooking mode: back leads to the recipe, then to search', (
-      tester,
-    ) async {
+    testWidgets('cooking mode: back leads to the recipe, then to the start '
+        'screen', (tester) async {
       final router = await pumpApp(tester);
       router.go('/recipe/7/cook?servings=2');
       await tester.pumpAndSettle();
@@ -117,7 +120,16 @@ void main() {
       await back(tester);
       expect(router.state.uri.path, '/recipe/7');
       await back(tester);
-      expect(location(router), '/search');
+      expect(location(router), '/');
+    });
+
+    testWidgets('settings: back leads to the start screen', (tester) async {
+      final router = await pumpApp(tester);
+      router.go('/settings');
+      await tester.pumpAndSettle();
+
+      await back(tester);
+      expect(location(router), '/');
     });
 
     testWidgets('new recipe: back leads to search', (tester) async {

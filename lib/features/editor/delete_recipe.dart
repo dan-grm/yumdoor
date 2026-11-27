@@ -7,6 +7,7 @@ import '../../design/design.dart';
 import '../../l10n/l10n.dart';
 import '../common/failure_view.dart';
 import '../common/offline_disabled.dart';
+import '../search/search_location.dart';
 import 'editor_controller.dart';
 
 /// The end of the editor's Allgemein tab: "Rezept löschen" in the danger
@@ -99,6 +100,7 @@ Future<void> confirmAndDeleteRecipe(
   messenger.showSnackBar(SnackBar(content: Text(l10n.editorDeleted)));
   // The user left already (the editor is gone, with its locked state).
   if (!context.mounted) return;
-  // Not back: the recipe screen below the editor is gone too.
-  router.go('/');
+  // Not back: the recipe screen below the editor is gone too. To search,
+  // where the recipe was likely found.
+  router.go(searchPath);
 }

@@ -28,6 +28,13 @@ import '../recipe/recipe_providers.dart';
 import 'cooking_providers.dart';
 import 'timers.dart';
 
+/// The location of cooking mode for the recipe with [recipeId], for
+/// [servings].
+String cookingLocation(int recipeId, int servings) => Uri(
+  path: '/recipe/$recipeId/cook',
+  queryParameters: {'servings': '$servings'},
+).toString();
+
 /// Cooking mode: one step per page with its scaled ingredients
 /// (mockup `05-kochmodus`).
 ///

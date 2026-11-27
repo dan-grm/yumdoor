@@ -8,6 +8,9 @@ import '../../l10n/l10n.dart';
 import '../common/layout.dart';
 import '../shopping/shopping_providers.dart';
 
+/// The path of the start screen, the first tab and home of the app.
+const homePath = '/';
+
 /// The path of the week planner tab.
 const planPath = '/plan';
 
@@ -21,8 +24,8 @@ const shoppingPath = '/shopping';
 /// One tab of the main navigation.
 typedef _Tab = ({IconData icon, IconData selectedIcon, String label});
 
-/// The main navigation around the tabs (Suchen, Planer, Einkauf): a bar at
-/// the bottom on phones, a rail at the side on wide layouts.
+/// The main navigation around the tabs (Start, Suchen, Planer, Einkauf): a
+/// bar at the bottom on phones, a rail at the side on wide layouts.
 ///
 /// [shell] holds one navigator per tab, so each tab keeps its own stack and
 /// scroll position. Its branches are in the order of the destinations here.
@@ -45,8 +48,8 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(shoppingQueueReplayProvider);
     return PopScope(
-      // Back (Android) on another tab returns to search before leaving the
-      // app.
+      // Back (Android) on another tab returns to the start screen before
+      // leaving the app.
       canPop: shell.currentIndex == 0,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) shell.goBranch(0);
@@ -59,6 +62,11 @@ class AppShell extends ConsumerWidget {
     final t = context.tokens;
     final l10n = context.l10n;
     final List<_Tab> tabs = [
+      (
+        icon: Icons.home_outlined,
+        selectedIcon: Icons.home_rounded,
+        label: l10n.navHome,
+      ),
       (
         icon: Icons.search_rounded,
         selectedIcon: Icons.search_rounded,

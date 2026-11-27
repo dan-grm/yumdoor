@@ -20,6 +20,7 @@ import '../common/failure_view.dart';
 import '../common/layout.dart';
 import '../common/offline_disabled.dart';
 import '../common/up_scope.dart';
+import '../search/search_location.dart';
 import 'editor_controller.dart';
 import 'general_tab.dart';
 import 'image_area.dart';
@@ -270,15 +271,16 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     _editor.removeImage();
   }
 
-  /// Back to where the editor was opened from: the recipe, or search for a
-  /// new recipe if the editor was opened directly.
+  /// Back to where the editor was opened from: the recipe, or search (where
+  /// new recipes are started) for a new recipe if the editor was opened
+  /// directly.
   void _leave() {
     if (context.canPop()) {
       context.pop();
     } else {
       context.go(switch (widget.recipeId) {
         final id? => '/recipe/$id',
-        null => '/',
+        null => searchPath,
       });
     }
   }

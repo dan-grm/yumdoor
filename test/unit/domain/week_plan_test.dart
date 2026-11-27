@@ -75,4 +75,85 @@ void main() {
       expect(plansOnDay(plans, day.addDays(3)), isEmpty);
     });
   });
+
+  group('todaysMeals', () {
+    final day = CalendarDay(2026, 11, 18);
+    const breakfast = MealType(
+      id: 1,
+      name: 'Frühstück',
+      order: 0,
+      time: Duration(hours: 8),
+    );
+    const lunch = MealType(
+      id: 2,
+      name: 'Mittagessen',
+      order: 1,
+      time: Duration(hours: 12, minutes: 30),
+    );
+    const dinner = MealType(
+      id: 3,
+      name: 'Abendessen',
+      order: 2,
+      time: Duration(hours: 18),
+    );
+    const snack = MealType(id: 4, name: 'Snack', order: 3);
+    DateTime at(int hour, [int minute = 0]) =>
+        DateTime(2026, 11, 18, hour, minute);
+
+    test('is null without meals today', () {
+      expect(todaysMeals([plan(1, day.addDays(1))], at(12)), isNull);
+    });
+
+    test('picks the next meal by its type\'s time', () {
+      final plans = [
+        plan(1, day, type: dinner),
+        plan(2, day, type: breakfast),
+        plan(3, day, type: lunch),
+      ];
+      final morning = todaysMeals(plans, at(7))!;
+      expect(morning.next.id, 2);
+      expect(morning.others.map((p) => p.id), [3, 1]);
+      expect(todaysMeals(plans, at(13))!.next.id, 3);
+      final afternoon = todaysMeals(plans, at(15))!;
+      expect(afternoon.next.id, 1);
+      expect(afternoon.others.map((p) => p.id), [2, 3]);
+    });
+
+    test('goes by time, not by the order of the meal types', () {
+      // Types created in Tandoor's UI all have order 0 and sort by name.
+      final plans = [
+        plan(1, day, type: dinner.copyWith(order: 0)),
+        plan(2, day, type: breakfast.copyWith(order: 0)),
+        plan(3, day, type: lunch.copyWith(order: 0)),
+      ];
+      expect(todaysMeals(plans, at(7))!.next.id, 2);
+      expect(todaysMeals(plans, at(11))!.next.id, 3);
+      expect(todaysMeals(plans, at(23))!.next.id, 1);
+    });
+
+    test('keeps a meal next for a while after its time', () {
+      final plans = [plan(1, day, type: dinner)];
+      expect(todaysMeals(plans, at(20))!.next.id, 1);
+      final lunchOnly = [plan(2, day, type: lunch), plan(3, day, type: snack)];
+      expect(todaysMeals(lunchOnly, at(14, 30))!.next.id, 2);
+      expect(todaysMeals(lunchOnly, at(14, 31))!.next.id, 3);
+    });
+
+    test('without times, the first meal; all past, the last', () {
+      expect(
+        todaysMeals([plan(5, day, type: snack), plan(4, day)], at(9))!.next.id,
+        4,
+      );
+      final past = [plan(1, day, type: breakfast), plan(2, day, type: lunch)];
+      expect(todaysMeals(past, at(23))!.next.id, 2);
+    });
+
+    test('includes a plan of several days', () {
+      final meals = todaysMeals([
+        plan(1, day.addDays(-1), to: day.addDays(1)),
+      ], at(12))!;
+      expect(meals.next.id, 1);
+      expect(meals.others, isEmpty);
+    });
+  });
 }

@@ -10,6 +10,7 @@ import '../features/auth/login_screen.dart';
 import '../features/cook_log/cook_log_screen.dart';
 import '../features/cooking/cooking_screen.dart';
 import '../features/editor/editor_screen.dart';
+import '../features/home/home_screen.dart';
 import '../features/planner/planner_screen.dart';
 import '../features/recipe/recipe_screen.dart';
 import '../features/search/search_location.dart';
@@ -34,8 +35,6 @@ GoRouter router(Ref ref) {
     refreshListenable: session,
     redirect: (context, state) => sessionRedirect(session.value, state.uri),
     routes: [
-      // The start screen (M2) will live here; until then search is home.
-      GoRoute(path: '/', redirect: (context, state) => searchPath),
       tabsRoute(),
       // The search in picker mode, to choose a recipe for a day of the
       // planner. Before '/recipe/:id' is no matter; the paths differ.
@@ -64,8 +63,10 @@ GoRouter router(Ref ref) {
         path: '/recipe/:id',
         redirect: (context, state) =>
             int.tryParse(state.pathParameters['id']!) == null ? '/' : null,
-        builder: (context, state) =>
-            RecipeScreen(recipeId: int.parse(state.pathParameters['id']!)),
+        builder: (context, state) => RecipeScreen(
+          recipeId: int.parse(state.pathParameters['id']!),
+          servings: _servings(state),
+        ),
         routes: [
           // A sub-route, so a link straight into cooking mode still has the
           // recipe below it to return to.
@@ -105,14 +106,23 @@ GoRouter router(Ref ref) {
   return router;
 }
 
-/// The tabs of the main navigation (Suchen, Planer, Einkauf) in [AppShell],
-/// each with its own navigator. Routes outside it, like the recipe, cover the
-/// whole screen; back from them returns to the tab they were opened from.
+/// The tabs of the main navigation (Start, Suchen, Planer, Einkauf) in
+/// [AppShell], each with its own navigator. Routes outside it, like the
+/// recipe, cover the whole screen; back from them returns to the tab they
+/// were opened from.
 StatefulShellRoute tabsRoute() => StatefulShellRoute(
   builder: (context, state, shell) => AppShell(shell: shell),
   navigatorContainerBuilder: (context, shell, children) =>
       TabStack(currentIndex: shell.currentIndex, children: children),
   branches: [
+    StatefulShellBranch(
+      routes: [
+        GoRoute(
+          path: homePath,
+          builder: (context, state) => const HomeScreen(),
+        ),
+      ],
+    ),
     StatefulShellBranch(
       routes: [
         GoRoute(
@@ -143,7 +153,8 @@ StatefulShellRoute tabsRoute() => StatefulShellRoute(
   ],
 );
 
-/// The `?servings=` chosen on the recipe screen, `null` if missing or invalid.
+/// The `?servings=` chosen on the recipe screen or planned for a meal, `null`
+/// if missing or invalid.
 int? _servings(GoRouterState state) =>
     switch (int.tryParse(state.uri.queryParameters['servings'] ?? '')) {
       final servings? when servings >= 1 => servings,
