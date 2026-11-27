@@ -340,6 +340,12 @@ sealed class RecommendationReason { … }   // highlyRated(rating), notCookedSin
 - "Cooked recently by household members" cannot be exact: normal users cannot list their household. The rule
   provider uses cook logs from **everyone in the space** and labels them by name ("Anna hat das letzte Woche
   gekocht"), for space admins too: no narrowing to the household (decided 2026-11-26).
+- **Start screen:** "Vorschläge für dich" shows the first 10 suggestions as cards (image, name, first reason);
+  "Mehr" opens `/recommendations` with all 20 and every reason. `recommendationsProvider(day)` (keepAlive, by day)
+  computes them once per day, shared by both screens; pull to refresh invalidates it. Reasons are worded from the
+  sealed type in `features/recommendations/reason_text.dart` (ratings and "not cooked since" share one line).
+  Offline the section is replaced by one line saying suggestions need the server. Without a seasonal mapping a
+  dismissible hint (kept on the device) links to the settings section (`/settings?section=seasonal`).
 - An LLM provider later implements the same interface (OpenAI-compatible endpoint, URL and key in settings) and
   returns `freeText` reasons. The UI does not change.
 

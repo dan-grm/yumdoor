@@ -13,6 +13,7 @@ import '../features/editor/editor_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/planner/planner_screen.dart';
 import '../features/recipe/recipe_screen.dart';
+import '../features/recommendations/recommendations_screen.dart';
 import '../features/search/search_location.dart';
 import '../features/search/search_screen.dart';
 import '../features/settings/settings_screen.dart';
@@ -49,7 +50,13 @@ GoRouter router(Ref ref) {
       ),
       GoRoute(
         path: settingsPath,
-        builder: (context, state) => const SettingsScreen(),
+        builder: (context, state) => SettingsScreen(
+          showSeasonal: state.uri.queryParameters['section'] == 'seasonal',
+        ),
+      ),
+      GoRoute(
+        path: recommendationsPath,
+        builder: (context, state) => const RecommendationsScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: loadingPath, builder: (context, state) => const Scaffold()),

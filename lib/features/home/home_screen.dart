@@ -23,9 +23,11 @@ import '../planner/planner_providers.dart';
 import '../planner/week_labels.dart';
 import '../recipe/ingredient_lines.dart';
 import '../recipe/recipe_screen.dart';
+import '../recommendations/recommendation_providers.dart';
 import '../search/search_location.dart';
 import '../settings/settings_screen.dart';
 import 'home_providers.dart';
+import 'recommendation_section.dart';
 
 /// The start screen (mockup 02-start): a greeting, today's date and what is
 /// planned for today. The next meal ([todaysMeals]) is shown large, with
@@ -96,7 +98,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     Future<void> refresh() async {
       ref
         ..invalidate(weekPlansProvider(week))
-        ..invalidate(plannedRecipeProvider);
+        ..invalidate(plannedRecipeProvider)
+        ..invalidate(recommendationsProvider(today));
       try {
         await ref.read(weekPlansProvider(week).future);
       } on Object {
@@ -150,6 +153,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       _Header(now: now),
                       SizedBox(height: t.space5),
                       ...content,
+                      SizedBox(height: t.space6),
+                      RecommendationSection(today: today),
                     ],
                   ),
                 ),

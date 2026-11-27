@@ -776,5 +776,22 @@
   "settingsSeasonalCopyApply": "Copy",
   "@settingsSeasonalCopyApply": {
     "description": "Button that copies the keywords to the chosen months."
-  }
+  },
+  "homeSuggestions": "Suggestions for you",
+  "homeSuggestionsMore": "More",
+  "homeSuggestionsOffline": "Suggestions need a connection to the server.",
+  "homeSuggestionsFailed": "Suggestions could not be loaded.",
+  "homeSeasonalHint": "Tell us in the settings what is in season in which month. Then we can suggest fitting recipes.",
+  "homeSeasonalHintOpen": "Set up seasons",
+  "homeSeasonalHintDismiss": "Dismiss hint",
+  "suggestionsTitle": "Suggestions",
+  "suggestionsEmpty": "There are no suggestions today.",
+  "reasonHighlyRated": "{rating} ★",
+  "reasonNotCookedDays": "{count, plural, =1{1 day since last cooked} other{{count} days since last cooked}}",
+  "reasonNotCookedWeeks": "{count, plural, =1{1 week since last cooked} other{{count} weeks since last cooked}}",
+  "reasonNotCookedMonths": "{count, plural, =1{1 month since last cooked} other{{count} months since last cooked}}",
+  "reasonInSeason": "Fits {month}",
+  "reasonCookedByDays": "{name} cooked this {count, plural, =0{today} =1{yesterday} other{{count} days ago}}",
+  "reasonCookedByWeeks": "{name} cooked this {count, plural, =1{last week} other{{count} weeks ago}}",
+  "reasonSimilarTo": "Similar to {recipe}"
 }
