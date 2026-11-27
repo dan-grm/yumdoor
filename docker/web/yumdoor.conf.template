@@ -6,10 +6,13 @@
 
 # Flutter web doesn't put content hashes in file names (main.dart.js,
 # flutter_bootstrap.js, canvaskit/…), so files are revalidated with their ETag
-# on every load. Fonts and icons don't change between deploys.
+# on every load (a 304 when unchanged). Only the app icons, copied unchanged
+# from web/, may be cached longer. Never the fonts under assets/: the build
+# tree-shakes assets/fonts/MaterialIcons-Regular.otf to the icons the app uses,
+# so it changes under the same URL whenever an icon is added (#162).
 map $yumdoor_file $yumdoor_cache_control {
-    ~^(icons/|favicon\.png$|assets/fonts/|assets/assets/fonts/)  "public, max-age=2592000";
-    default                                                     "no-cache";
+    ~^(icons/|favicon\.png$)  "public, max-age=2592000";
+    default                   "no-cache";
 }
 
 server {

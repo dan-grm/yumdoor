@@ -164,15 +164,19 @@ shows the origin and explains the constraint.
 - nginx serves the SPA with a fallback to `index.html` for unknown paths under the base path; missing files (with
   an extension) are a 404. Everything outside the base path is a 404 too: it belongs to Tandoor's side of the proxy.
 - Flutter web does not content-hash its file names (`main.dart.js`, `flutter_bootstrap.js`, `canvaskit/`), so
-  everything is served with `Cache-Control: no-cache` (revalidate with ETag), except icons and fonts, which get a
-  30-day `max-age`. Security headers: a CSP with `'wasm-unsafe-eval'` but no `'unsafe-eval'` and `'self'` only,
+  everything is served with `Cache-Control: no-cache` (revalidate with ETag), fonts included, except the app icons
+  copied from `web/` (`icons/`, `favicon.png`), which get a 30-day `max-age`. The build tree-shakes
+  `MaterialIcons-Regular.otf` to the icons the app uses, so it changes under the same URL whenever an icon is added;
+  a 30-day `max-age` on fonts once left new icons blank in installed apps (#162).
+- Security headers: a CSP with `'wasm-unsafe-eval'` but no `'unsafe-eval'` and `'self'` only,
   `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`.
 - `tool/finish_web_build.dart` runs after `flutter build web`: it removes renderer files our dart2js + CanvasKit
   build never loads (skwasm, wimp, webparagraph, `.symbols`), which halves the image, and stamps the service worker.
 - Service worker: Flutter has deprecated its generated service worker, so `web/flutter_bootstrap.js` registers our
   own `web/service_worker.js`. It precaches the app shell (every file except the CanvasKit variants; the page
-  reports the variant it loaded after the first frame) and serves it network first, so a new deploy is used as soon
-  as the server is reachable. Its cache is named after the build (`version.json` plus a hash of all files); a new
+  reports the variant it loaded after the first frame) and serves it network first, fetching with
+  `cache: 'no-cache'` so the browser's HTTP cache can't answer with an older file; a new deploy is used as soon as
+  the server is reachable. Its cache is named after the build (`version.json` plus a hash of all files); a new
   build installs a new worker, which deletes the old cache. It handles only files of the build and navigations under
   its scope; API requests and media are never touched, and offline data lives in Drift.
 - Local development has the same constraint. `flutter run -d chrome` serves on its own port (8081), so dev

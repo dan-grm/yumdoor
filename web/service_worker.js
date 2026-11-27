@@ -5,8 +5,10 @@
 // - Only files of the build and navigations under the scope are handled. API
 //   requests, media and everything else of Tandoor go to the network untouched;
 //   offline data lives in Drift, not here.
-// - Network first, cache as fallback: online, the browser revalidates with the
-//   server (nginx sends `no-cache` and ETags), so a new deploy is used at once.
+// - Network first, cache as fallback: online, every file is revalidated with
+//   the server (nginx sends `no-cache` and ETags, and the worker fetches with
+//   `cache: 'no-cache'`, so a stale HTTP cache entry is never used), so a new
+//   deploy is used at once.
 // - The precache holds every file of the build except the CanvasKit variants;
 //   the page reports the variant it loaded, and that one is cached as well.
 //
@@ -104,7 +106,15 @@ async function focusApp() {
 async function networkFirst(event, request, key) {
   const cache = await caches.open(CACHE);
   try {
-    const response = await fetch(request);
+    // Revalidate even what the browser's HTTP cache holds as fresh: older
+    // images served fonts and icons with a 30-day max-age, and the tree-shaken
+    // icon font changes with every new icon (#162). Navigations are not
+    // rebuilt (that would change their mode); index.html was always no-cache.
+    const response = await fetch(
+      request.mode === 'navigate'
+        ? request
+        : new Request(request, { cache: 'no-cache' })
+    );
     if (isCacheable(response, key)) {
       event.waitUntil(cache.put(key, response.clone()));
     }
