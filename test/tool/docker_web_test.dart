@@ -57,4 +57,34 @@ void main() {
       contains('--base-href /__BASE_PATH__/'),
     );
   });
+
+  test('no file of the build is cached without revalidation', () {
+    // flutter build web tree-shakes assets/fonts/MaterialIcons-Regular.otf to
+    // the icons the app uses, so it changes with every new icon under the same
+    // URL, like every other file of the build. A max-age kept the old font on
+    // devices and new icons rendered blank (#162).
+    final nginx = File('docker/web/yumdoor.conf.template')
+        .readAsLinesSync()
+        .where((line) => !line.trimLeft().startsWith('#'))
+        .join('\n');
+    expect(nginx, isNot(matches(RegExp('max-age|immutable|expires'))));
+    final headers = RegExp(r'add_header Cache-Control (\S+)')
+        .allMatches(nginx)
+        .map((match) => match.group(1));
+    expect(headers, isNotEmpty);
+    expect(headers, everyElement('"no-cache"'));
+  });
+
+  test('the service worker bypasses the HTTP cache for files of the build', () {
+    // Devices still hold files that an older image served with a 30-day
+    // max-age; the worker's network fetch must not answer from that.
+    final worker = File('web/service_worker.js').readAsStringSync();
+    final networkFirst = RegExp(
+      r'\nasync function networkFirst\(.*?\n\}',
+      dotAll: true,
+    ).firstMatch(worker)?.group(0);
+    expect(networkFirst, isNotNull);
+    expect(networkFirst, contains("cache: 'no-cache'"));
+    expect(networkFirst, isNot(contains('fetch(request)')));
+  });
 }
