@@ -266,6 +266,25 @@ void main() {
       });
     });
 
+    test('uses the stored name when the keyword cannot be loaded', () async {
+      seasonal = SeasonalKeywords(
+        {
+          11: [autumn.id],
+        },
+        names: {autumn.id: autumn.name},
+      );
+      keywords = _OfflineKeywords();
+      recipes = _ChildKeywordSearch(recipes.recipes.values, {
+        autumn.id: [pizza.summary],
+      });
+
+      final result = await recommend();
+
+      expect(reasonsOf(result), {
+        pizza.id: [RecommendationReason.inSeason(autumn)],
+      });
+    });
+
     test('fails when the mapped keyword cannot be loaded', () async {
       seasonal = SeasonalKeywords({
         11: [autumn.id],

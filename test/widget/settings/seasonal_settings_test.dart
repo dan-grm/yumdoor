@@ -218,6 +218,59 @@ void main() {
     expect(find.text('Stichwörter von April übernehmen'), findsNothing);
   });
 
+  testWidgets('shows the stored names offline', (tester) async {
+    connectivity.isOnline = false;
+    keywords.keywords.clear();
+    final container = await pump(tester);
+    await container
+        .read(seasonalKeywordMappingProvider.notifier)
+        .setMapping(
+          SeasonalKeywords(
+            {
+              4: [1],
+            },
+            names: {1: 'Spargel'},
+          ),
+        );
+    await tester.pumpAndSettle();
+
+    await scrollTo(tester, find.text('Spargel'));
+    expect(find.text('Spargel'), findsOneWidget);
+    expect(find.text('#1'), findsNothing);
+  });
+
+  testWidgets('refreshes the stored name of a renamed keyword', (tester) async {
+    final container = await pump(tester);
+    await container
+        .read(seasonalKeywordMappingProvider.notifier)
+        .setMapping(
+          SeasonalKeywords(
+            {
+              4: [1],
+            },
+            names: {1: 'Alter Name'},
+          ),
+        );
+    await tester.pumpAndSettle();
+
+    await scrollTo(tester, find.text('Spargel'));
+    expect(find.text('Spargel'), findsOneWidget);
+    expect(
+      container.read(seasonalKeywordMappingProvider).value!.nameOf(1),
+      'Spargel',
+    );
+  });
+
+  testWidgets('remembers the name of a picked keyword', (tester) async {
+    final container = await pump(tester);
+    await addKeyword(tester, 'April', 'Spargel');
+
+    expect(
+      container.read(seasonalKeywordMappingProvider).value!.nameOf(1),
+      'Spargel',
+    );
+  });
+
   group('goldens', skip: goldenSkip, () {
     testWidgets('seasonal settings in light', tags: goldenTags, (tester) async {
       final container = await pump(tester, theme: lightTheme);

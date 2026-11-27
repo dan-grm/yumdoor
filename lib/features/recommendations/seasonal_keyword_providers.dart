@@ -22,4 +22,13 @@ class SeasonalKeywordMapping extends _$SeasonalKeywordMapping {
     await store.save(keywords);
     state = AsyncData(keywords);
   }
+
+  /// Remembers the current [names] (id → name) of mapped keywords, e.g.
+  /// after the server returned them. Does nothing if they are stored
+  /// already.
+  Future<void> rememberNames(Map<int, String> names) async {
+    final current = await future;
+    final updated = current.withNames(names);
+    if (updated != current) await setMapping(updated);
+  }
 }
