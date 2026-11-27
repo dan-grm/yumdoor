@@ -68,7 +68,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (shown && _shown == false) {
       // Not while building.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) ref.invalidate(plannedRecipeProvider);
+        if (!mounted) return;
+        // Plans may have changed on another device, on-hand foods on the
+        // shopping list.
+        ref
+          ..invalidate(weekPlansProvider)
+          ..invalidate(plannedRecipeProvider);
       });
     }
     _shown = shown;
@@ -304,8 +309,15 @@ class _NextMealCard extends ConsumerWidget {
       missing = null;
       hasSteps = false;
     } else {
-      final full = ref.watch(plannedRecipeProvider(recipe.id)).value;
-      hasSteps = full == null || full.steps.isNotEmpty;
+      final loaded = ref.watch(plannedRecipeProvider(recipe.id));
+      final full = loaded.value;
+      // While it loads, cooking mode can load it itself; if it can't be
+      // loaded, cooking mode couldn't either.
+      hasSteps = switch (loaded) {
+        AsyncValue(value: final full?) => full.steps.isNotEmpty,
+        AsyncError() => false,
+        _ => true,
+      };
       missing = switch (full) {
         null => null,
         final full => switch (buildRecipeShopping(
@@ -461,7 +473,7 @@ class _OtherMeal extends StatelessWidget {
                     Text(
                       context.l10n.planMealLine(
                         plan.mealType.name,
-                        LocaleFormat.of(context).amount(plan.servings),
+                        LocaleFormat.of(context).integer(plan.wholeServings),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

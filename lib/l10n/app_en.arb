@@ -342,7 +342,7 @@
   "navShoppingTitle": "Shopping list",
   "navHome": "Home",
   "homeGreetingMorning": "Good morning",
-  "homeGreetingDay": "Good afternoon",
+  "homeGreetingDay": "Hello",
   "homeGreetingEvening": "Good evening",
   "homeDate": "{weekday}, {date}",
   "homeToday": "Today · {meal}",

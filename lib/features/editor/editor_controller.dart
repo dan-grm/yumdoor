@@ -539,10 +539,12 @@ class RecipeEditor extends _$RecipeEditor {
     await discardChanges();
     _draftBase = saved.updatedAt;
     if (ref.mounted) {
-      // Screens showing the recipe load it again, as saved.
+      // Screens showing the recipe load it again, as saved, also the meal
+      // plans, which show its name and image.
       ref
         ..invalidate(recipeProvider(saved.id))
-        ..invalidate(searchResultsProvider);
+        ..invalidate(searchResultsProvider)
+        ..invalidate(weekPlansProvider);
       // A failed photo change is dropped too: the screen leaves and says it
       // wasn't saved (a new recipe saved again from here would be created
       // twice).

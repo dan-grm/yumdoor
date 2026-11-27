@@ -1334,7 +1334,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGreetingMorning => 'Good morning';
 
   @override
-  String get homeGreetingDay => 'Good afternoon';
+  String get homeGreetingDay => 'Hello';
 
   @override
   String get homeGreetingEvening => 'Good evening';

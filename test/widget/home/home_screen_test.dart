@@ -233,7 +233,7 @@ void main() {
     await pumpHome(tester);
 
     expect(find.text('Außerdem heute'), findsOneWidget);
-    expect(find.text('Mittagessen · 2,5 Port.'), findsOneWidget);
+    expect(find.text('Mittagessen · 3 Port.'), findsOneWidget);
     expect(
       tester.getTopLeft(find.text('Kürbis-Risotto')).dy,
       lessThan(tester.getTopLeft(find.text('Ofenkarotten mit Feta')).dy),
@@ -302,6 +302,38 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('35 Min · alle Zutaten zu Hause'), findsOneWidget);
+  });
+
+  testWidgets('loads today\'s plans again when it is shown again', (
+    tester,
+  ) async {
+    await pumpHome(tester);
+    expect(find.text('Kürbis-Risotto'), findsOneWidget);
+
+    await tester.tap(find.text('Einkauf'));
+    await tester.pumpAndSettle();
+    // Changed on another device.
+    plans.plans.removeAt(0);
+    await tester.tap(find.text('Start'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Heute · Mittagessen'), findsOneWidget);
+    expect(find.text('Kürbis-Risotto'), findsNothing);
+  });
+
+  testWidgets('cooking is disabled when the recipe can\'t be loaded', (
+    tester,
+  ) async {
+    recipes.failure = const OfflineFailure();
+    await pumpHome(tester);
+
+    final button = tester.widget<TextButton>(
+      find.ancestor(
+        of: find.text('Kochen starten'),
+        matching: find.byType(TextButton),
+      ),
+    );
+    expect(button.onPressed, isNull);
   });
 
   testWidgets('a meal without a recipe shows its title, without buttons', (
