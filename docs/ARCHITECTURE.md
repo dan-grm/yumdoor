@@ -166,7 +166,8 @@ shows the origin and explains the constraint.
 - Flutter web does not content-hash its file names (`main.dart.js`, `flutter_bootstrap.js`, `canvaskit/`), so
   everything is served with `Cache-Control: no-cache` (revalidate with ETag), fonts and icons included: the build
   tree-shakes `MaterialIcons-Regular.otf` to the icons the app uses, so it changes under the same URL whenever an
-  icon is added. A 30-day `max-age` once left new icons blank in installed apps (#162). Security headers: a CSP with `'wasm-unsafe-eval'` but no `'unsafe-eval'` and `'self'` only,
+  icon is added. A 30-day `max-age` once left new icons blank in installed apps (#162).
+- Security headers: a CSP with `'wasm-unsafe-eval'` but no `'unsafe-eval'` and `'self'` only,
   `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`.
 - `tool/finish_web_build.dart` runs after `flutter build web`: it removes renderer files our dart2js + CanvasKit
   build never loads (skwasm, wimp, webparagraph, `.symbols`), which halves the image, and stamps the service worker.
