@@ -8,15 +8,21 @@ part of 'locale.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// The locale chosen in settings, or `null` to follow the device.
+/// The locale chosen in settings, or `null` to follow the device (the
+/// default). Kept on the device in the `LocalStore`, across restarts and
+/// logout; unsupported values mean the device language.
 
 @ProviderFor(LocaleOverride)
 final localeOverrideProvider = LocaleOverrideProvider._();
 
-/// The locale chosen in settings, or `null` to follow the device.
+/// The locale chosen in settings, or `null` to follow the device (the
+/// default). Kept on the device in the `LocalStore`, across restarts and
+/// logout; unsupported values mean the device language.
 final class LocaleOverrideProvider
     extends $NotifierProvider<LocaleOverride, Locale?> {
-  /// The locale chosen in settings, or `null` to follow the device.
+  /// The locale chosen in settings, or `null` to follow the device (the
+  /// default). Kept on the device in the `LocalStore`, across restarts and
+  /// logout; unsupported values mean the device language.
   LocaleOverrideProvider._()
     : super(
         from: null,
@@ -44,9 +50,11 @@ final class LocaleOverrideProvider
   }
 }
 
-String _$localeOverrideHash() => r'2b635884191df5c00e50949d690af2d117dee780';
+String _$localeOverrideHash() => r'b08ddbb88be7948cf6762064c5e98ccacae3b201';
 
-/// The locale chosen in settings, or `null` to follow the device.
+/// The locale chosen in settings, or `null` to follow the device (the
+/// default). Kept on the device in the `LocalStore`, across restarts and
+/// logout; unsupported values mean the device language.
 
 abstract class _$LocaleOverride extends $Notifier<Locale?> {
   Locale? build();
