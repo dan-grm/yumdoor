@@ -92,6 +92,28 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets('opens scrolled to the seasonal section when asked', (
+    tester,
+  ) async {
+    await pumpRoutes(
+      tester,
+      location: settingsSeasonalLocation,
+      overrides: overrides(),
+      routes: [
+        GoRoute(
+          path: settingsPath,
+          builder: (context, state) => SettingsScreen(
+            showSeasonal: state.uri.queryParameters['section'] == 'seasonal',
+          ),
+        ),
+      ],
+    );
+
+    final top = tester.getTopLeft(find.text('Saisonale Vorschläge')).dy;
+    expect(top, greaterThanOrEqualTo(0));
+    expect(top, lessThan(400));
+  });
+
   testWidgets('starts with the current month and is empty', (tester) async {
     final container = await pump(tester);
 

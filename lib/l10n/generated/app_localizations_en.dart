@@ -2015,4 +2015,104 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsSeasonalCopyApply => 'Copy';
+
+  @override
+  String get homeSuggestions => 'Suggestions for you';
+
+  @override
+  String get homeSuggestionsMore => 'More';
+
+  @override
+  String get homeSuggestionsOffline =>
+      'Suggestions need a connection to the server.';
+
+  @override
+  String get homeSuggestionsFailed => 'Suggestions could not be loaded.';
+
+  @override
+  String get homeSeasonalHint =>
+      'Tell us in the settings what is in season in which month. Then we can suggest fitting recipes.';
+
+  @override
+  String get homeSeasonalHintOpen => 'Set up seasons';
+
+  @override
+  String get homeSeasonalHintDismiss => 'Dismiss hint';
+
+  @override
+  String get suggestionsTitle => 'Suggestions';
+
+  @override
+  String get suggestionsEmpty => 'There are no suggestions today.';
+
+  @override
+  String reasonHighlyRated(String rating) {
+    return '$rating ★';
+  }
+
+  @override
+  String reasonNotCookedDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days since last cooked',
+      one: '1 day since last cooked',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reasonNotCookedWeeks(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count weeks since last cooked',
+      one: '1 week since last cooked',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reasonNotCookedMonths(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count months since last cooked',
+      one: '1 month since last cooked',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String reasonInSeason(String month) {
+    return 'Fits $month';
+  }
+
+  @override
+  String reasonCookedByDays(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days ago',
+      one: 'yesterday',
+      zero: 'today',
+    );
+    return '$name cooked this $_temp0';
+  }
+
+  @override
+  String reasonCookedByWeeks(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count weeks ago',
+      one: 'last week',
+    );
+    return '$name cooked this $_temp0';
+  }
+
+  @override
+  String reasonSimilarTo(String recipe) {
+    return 'Similar to $recipe';
+  }
 }

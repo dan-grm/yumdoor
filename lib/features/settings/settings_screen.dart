@@ -21,16 +21,58 @@ import 'settings_providers.dart';
 /// Where [SettingsScreen] is.
 const settingsPath = '/settings';
 
+/// [settingsPath], scrolled to the section on seasonal suggestions.
+const settingsSeasonalLocation = '$settingsPath?section=seasonal';
+
 /// Account, appearance and app information in one place (mockup
 /// `14-einstellungen`, without the sections whose features don't exist yet).
 ///
 /// Everything it shows is read-only data or a device setting, so it also
 /// works offline; values that need the server show "nicht verfügbar" then.
-class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({super.key});
+class SettingsScreen extends ConsumerStatefulWidget {
+  const SettingsScreen({super.key, this.showSeasonal = false});
+
+  /// Scrolls to the section on seasonal suggestions once shown.
+  final bool showSeasonal;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final _seasonalKey = GlobalKey();
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.showSeasonal) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _showSeasonal());
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  /// Scrolls the seasonal section into view. The list builds only what is
+  /// near the screen, so it first goes to the end if the section isn't built.
+  void _showSeasonal({bool retry = true}) {
+    if (!mounted) return;
+    if (_seasonalKey.currentContext case final seasonal?) {
+      unawaited(Scrollable.ensureVisible(seasonal));
+    } else if (retry && _scrollController.hasClients) {
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _showSeasonal(retry: false),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final t = context.tokens;
     final l10n = context.l10n;
     final session = ref.watch(sessionControllerProvider).value;
@@ -57,6 +99,7 @@ class SettingsScreen extends ConsumerWidget {
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: t.sizeWide),
               child: ListView(
+                controller: _scrollController,
                 padding: EdgeInsets.fromLTRB(
                   t.space5,
                   t.space3,
@@ -155,6 +198,7 @@ class SettingsScreen extends ConsumerWidget {
                     ],
                   ),
                   _Section(
+                    key: _seasonalKey,
                     title: l10n.settingsSeasonal,
                     children: const [SeasonalSettings()],
                   ),
@@ -194,7 +238,7 @@ void _leave(BuildContext context) =>
     context.canPop() ? context.pop() : context.go('/');
 
 class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.children});
+  const _Section({super.key, required this.title, required this.children});
 
   final String title;
   final List<Widget> children;

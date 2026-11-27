@@ -3139,6 +3139,108 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Übernehmen'**
   String get settingsSeasonalCopyApply;
+
+  /// Heading of the recommendations section on the start screen.
+  ///
+  /// In de, this message translates to:
+  /// **'Vorschläge für dich'**
+  String get homeSuggestions;
+
+  /// Button next to the recommendations heading that opens the list of all suggestions.
+  ///
+  /// In de, this message translates to:
+  /// **'Mehr'**
+  String get homeSuggestionsMore;
+
+  /// Shown instead of the recommendations section on the start screen while offline.
+  ///
+  /// In de, this message translates to:
+  /// **'Vorschläge brauchen eine Verbindung zum Server.'**
+  String get homeSuggestionsOffline;
+
+  /// Shown in the recommendations section when computing them failed.
+  ///
+  /// In de, this message translates to:
+  /// **'Vorschläge konnten nicht geladen werden.'**
+  String get homeSuggestionsFailed;
+
+  /// One-time hint under the recommendations when no seasonal keywords are set up.
+  ///
+  /// In de, this message translates to:
+  /// **'Sag uns in den Einstellungen, was in welchem Monat Saison hat. Dann schlagen wir dir passende Rezepte vor.'**
+  String get homeSeasonalHint;
+
+  /// Button of the seasonal hint that opens the seasonal section of the settings.
+  ///
+  /// In de, this message translates to:
+  /// **'Saison einrichten'**
+  String get homeSeasonalHintOpen;
+
+  /// Accessible label of the button that dismisses the seasonal hint for good.
+  ///
+  /// In de, this message translates to:
+  /// **'Hinweis schließen'**
+  String get homeSeasonalHintDismiss;
+
+  /// Title of the screen listing all recommendations.
+  ///
+  /// In de, this message translates to:
+  /// **'Vorschläge'**
+  String get suggestionsTitle;
+
+  /// Recommendations screen when the list is empty.
+  ///
+  /// In de, this message translates to:
+  /// **'Heute gibt es keine Vorschläge.'**
+  String get suggestionsEmpty;
+
+  /// Reason of a recommendation: the user's average rating in stars, e.g. '4,5 ★'.
+  ///
+  /// In de, this message translates to:
+  /// **'{rating} ★'**
+  String reasonHighlyRated(String rating);
+
+  /// Reason of a recommendation: days since the user last cooked it.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Tag nicht gekocht} other{{count} Tage nicht gekocht}}'**
+  String reasonNotCookedDays(int count);
+
+  /// Reason of a recommendation: weeks since the user last cooked it.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Woche nicht gekocht} other{{count} Wochen nicht gekocht}}'**
+  String reasonNotCookedWeeks(int count);
+
+  /// Reason of a recommendation: months since the user last cooked it.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{1 Monat nicht gekocht} other{{count} Monate nicht gekocht}}'**
+  String reasonNotCookedMonths(int count);
+
+  /// Reason of a recommendation: it has a keyword the user mapped to the current month.
+  ///
+  /// In de, this message translates to:
+  /// **'Passt zum {month}'**
+  String reasonInSeason(String month);
+
+  /// Reason of a recommendation: someone else cooked it within the last week.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} hat das {count, plural, =0{heute} =1{gestern} other{vor {count} Tagen}} gekocht'**
+  String reasonCookedByDays(String name, int count);
+
+  /// Reason of a recommendation: someone else cooked it a week or more ago.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} hat das {count, plural, =1{letzte Woche} other{vor {count} Wochen}} gekocht'**
+  String reasonCookedByWeeks(String name, int count);
+
+  /// Reason of a recommendation: it resembles a recipe the user cooked recently.
+  ///
+  /// In de, this message translates to:
+  /// **'Ähnlich wie {recipe}'**
+  String reasonSimilarTo(String recipe);
 }
 
 class _AppLocalizationsDelegate

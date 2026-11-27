@@ -190,10 +190,13 @@ void main() {
     // Loading it to count what is missing is no view of the recipe.
     expect(recipes.views, isEmpty);
     // The week the planner shows, so they share the offline cache.
-    expect(plans.listCalls.single, (
-      from: CalendarDay(2026, 11, 16),
-      to: CalendarDay(2026, 11, 22),
-    ));
+    expect(
+      plans.listCalls,
+      contains((
+        from: CalendarDay(2026, 11, 16),
+        to: CalendarDay(2026, 11, 22),
+      )),
+    );
     // Tomorrow's meal isn't shown.
     expect(find.text('Pizza bestellen'), findsNothing);
   });
