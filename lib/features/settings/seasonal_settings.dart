@@ -69,11 +69,15 @@ class _MonthRow extends ConsumerWidget {
   final Set<int> keywordIds;
   final String Function(int month) monthNames;
 
-  Future<void> _set(WidgetRef ref, Iterable<int> ids) async {
+  Future<void> _set(
+    WidgetRef ref,
+    Iterable<int> ids, {
+    Map<int, String> names = const {},
+  }) async {
     final mapping = await ref.read(seasonalKeywordMappingProvider.future);
     await ref
         .read(seasonalKeywordMappingProvider.notifier)
-        .setMapping(mapping.withMonth(month, ids));
+        .setMapping(mapping.withMonth(month, ids, names: names));
   }
 
   Future<void> _add(BuildContext context, WidgetRef ref) async {
@@ -82,7 +86,13 @@ class _MonthRow extends ConsumerWidget {
       exclude: keywordIds,
       allowCreate: false,
     );
-    if (keyword != null) await _set(ref, {...keywordIds, keyword.id});
+    if (keyword != null) {
+      await _set(
+        ref,
+        {...keywordIds, keyword.id},
+        names: {keyword.id: keyword.name},
+      );
+    }
   }
 
   Future<void> _copy(BuildContext context, WidgetRef ref) async {
@@ -165,7 +175,8 @@ class _MonthRow extends ConsumerWidget {
   }
 }
 
-/// A keyword of a month; its name is fetched by id, as only ids are kept.
+/// A keyword of a month. Online its name is fetched by id and remembered;
+/// until then, and offline, the remembered name is shown.
 class _KeywordChip extends ConsumerWidget {
   const _KeywordChip({
     required this.id,
@@ -179,7 +190,22 @@ class _KeywordChip extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final name = ref.watch(keywordProvider(id)).value?.name ?? '#$id';
+    final stored = ref.watch(
+      seasonalKeywordMappingProvider.select((m) => m.value?.nameOf(id)),
+    );
+    final fresh = ref.watch(keywordProvider(id)).value?.name;
+    if (fresh != null && fresh != stored) {
+      // Not while building: the mapping must not change then.
+      unawaited(
+        Future.microtask(() async {
+          if (!context.mounted) return;
+          await ref.read(seasonalKeywordMappingProvider.notifier).rememberNames(
+            {id: fresh},
+          );
+        }),
+      );
+    }
+    final name = fresh ?? stored ?? '#$id';
     return SelectedFilterChip(
       label: name,
       removeLabel: context.l10n.settingsSeasonalRemove(name, monthName),

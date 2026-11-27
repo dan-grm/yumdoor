@@ -254,6 +254,8 @@ class RuleBasedRecommendationProvider implements RecommendationProvider {
     final mapped = <int, Keyword?>{};
     Future<Keyword?> keyword(int id) async {
       if (mapped.containsKey(id)) return mapped[id];
+      final stored = mapping.nameOf(id);
+      if (stored != null) return mapped[id] = Keyword(id: id, name: stored);
       try {
         return mapped[id] = await keywords.fetchKeyword(id);
       } on NotFoundFailure {

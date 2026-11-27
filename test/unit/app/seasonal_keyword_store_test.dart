@@ -26,6 +26,24 @@ void main() {
     expect(await store(server, 1).load(), keywords);
   });
 
+  test('saves and loads names', () async {
+    final keywords = SeasonalKeywords(
+      {
+        3: [4],
+      },
+      names: {4: 'Spargel'},
+    );
+    await store(server, 1).save(keywords);
+    expect((await store(server, 1).load()).nameOf(4), 'Spargel');
+  });
+
+  test('loads a mapping saved with ids only', () async {
+    local.write(LocalSeasonalKeywordStore.keyFor(server, 1), '{"3":[4]}');
+    final loaded = await store(server, 1).load();
+    expect(loaded.forMonth(3), {4});
+    expect(loaded.nameOf(4), isNull);
+  });
+
   test('is kept apart per user and per server', () async {
     final keywords = SeasonalKeywords({
       1: [1],
