@@ -137,7 +137,7 @@ void main() {
 
     expect(timers(), isEmpty);
     expect(alerts.chimes, 0);
-    expect(store.values, isEmpty);
+    expect(store.values.keys.where((k) => !k.startsWith('settings.')), isEmpty);
   });
 
   test('logout ends the timers', () async {
@@ -147,6 +147,6 @@ void main() {
     await container.read(sessionControllerProvider.notifier).logout();
 
     expect(timers(), isEmpty);
-    expect(store.values, isEmpty);
+    expect(store.values.keys.where((k) => !k.startsWith('settings.')), isEmpty);
   });
 }

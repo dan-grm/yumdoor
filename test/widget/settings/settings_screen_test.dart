@@ -17,6 +17,7 @@ import '../../fakes/fake_book_user_repositories.dart';
 import '../../fakes/fake_connectivity_service.dart';
 import '../../fakes/fake_link_opener.dart';
 import '../../fakes/fake_server_repository.dart';
+import '../../fakes/in_memory_local_store.dart';
 import '../fonts.dart';
 import '../golden.dart';
 import '../harness.dart';
@@ -39,7 +40,8 @@ void main() {
     linkOpener = FakeLinkOpener();
   });
 
-  List<Override> overrides() => appOverrides(
+  List<Override> overrides({InMemoryLocalStore? localStore}) => appOverrides(
+    localStore: localStore,
     tokenStore: loggedInTokenStore(),
     users: users,
     server: server,
@@ -48,14 +50,17 @@ void main() {
   );
 
   /// The whole app on the start screen, at phone size.
-  Future<void> pumpApp(WidgetTester tester) async {
+  Future<void> pumpApp(WidgetTester tester, {InMemoryLocalStore? store}) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = phoneSize;
     addTearDown(tester.view.reset);
     tester.platformDispatcher.localesTestValue = const [Locale('de')];
     addTearDown(tester.platformDispatcher.clearLocalesTestValue);
     await tester.pumpWidget(
-      ProviderScope(overrides: overrides(), child: const YumdoorApp()),
+      ProviderScope(
+        overrides: overrides(localStore: store),
+        child: const YumdoorApp(),
+      ),
     );
     await tester.pumpAndSettle();
   }
@@ -129,6 +134,29 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Einstellungen'), findsOneWidget);
+  });
+
+  testWidgets('remembers theme and language after a restart', (tester) async {
+    final store = InMemoryLocalStore();
+    await pumpApp(tester, store: store);
+    await tester.tap(find.byTooltip('Einstellungen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Dunkel'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('English'));
+    await tester.pumpAndSettle();
+
+    // A new app (new ProviderScope) on the same store.
+    await tester.pumpWidget(const SizedBox());
+    await pumpApp(tester, store: store);
+    await tester.tap(find.byTooltip('Settings'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Settings'), findsOneWidget);
+    expect(
+      Theme.of(tester.element(find.byType(SettingsScreen))).brightness,
+      Brightness.dark,
+    );
   });
 
   testWidgets('logging out ends the session and opens login', (tester) async {
