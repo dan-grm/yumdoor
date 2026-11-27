@@ -46,7 +46,7 @@ final class SeasonalKeywordMappingProvider
 }
 
 String _$seasonalKeywordMappingHash() =>
-    r'ea4e301e3fc1ef736f4857b2ad198c612fc85ddc';
+    r'7623a9167d9b01cf0c07f13fe06cda59b0ee85a4';
 
 /// The current account's month → keyword mapping, empty until the user sets
 /// one up. Ids of keywords deleted on the server stay stored; drop them
