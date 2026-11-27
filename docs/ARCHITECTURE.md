@@ -164,9 +164,10 @@ shows the origin and explains the constraint.
 - nginx serves the SPA with a fallback to `index.html` for unknown paths under the base path; missing files (with
   an extension) are a 404. Everything outside the base path is a 404 too: it belongs to Tandoor's side of the proxy.
 - Flutter web does not content-hash its file names (`main.dart.js`, `flutter_bootstrap.js`, `canvaskit/`), so
-  everything is served with `Cache-Control: no-cache` (revalidate with ETag), fonts and icons included: the build
-  tree-shakes `MaterialIcons-Regular.otf` to the icons the app uses, so it changes under the same URL whenever an
-  icon is added. A 30-day `max-age` once left new icons blank in installed apps (#162).
+  everything is served with `Cache-Control: no-cache` (revalidate with ETag), fonts included, except the app icons
+  copied from `web/` (`icons/`, `favicon.png`), which get a 30-day `max-age`. The build tree-shakes
+  `MaterialIcons-Regular.otf` to the icons the app uses, so it changes under the same URL whenever an icon is added;
+  a 30-day `max-age` on fonts once left new icons blank in installed apps (#162).
 - Security headers: a CSP with `'wasm-unsafe-eval'` but no `'unsafe-eval'` and `'self'` only,
   `X-Content-Type-Options: nosniff`, `Referrer-Policy: same-origin`.
 - `tool/finish_web_build.dart` runs after `flutter build web`: it removes renderer files our dart2js + CanvasKit

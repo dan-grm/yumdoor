@@ -5,10 +5,15 @@
 # letters, digits, _, - and / by 05-yumdoor-base-path.envsh.
 
 # Flutter web doesn't put content hashes in file names (main.dart.js,
-# flutter_bootstrap.js, canvaskit/…), so every file is revalidated with its ETag
-# on every load (a 304 when unchanged). No max-age, not even for fonts: the
-# build tree-shakes assets/fonts/MaterialIcons-Regular.otf to the icons the app
-# uses, so it changes under the same URL whenever an icon is added (#162).
+# flutter_bootstrap.js, canvaskit/…), so files are revalidated with their ETag
+# on every load (a 304 when unchanged). Only the app icons, copied unchanged
+# from web/, may be cached longer. Never the fonts under assets/: the build
+# tree-shakes assets/fonts/MaterialIcons-Regular.otf to the icons the app uses,
+# so it changes under the same URL whenever an icon is added (#162).
+map $yumdoor_file $yumdoor_cache_control {
+    ~^(icons/|favicon\.png$)  "public, max-age=2592000";
+    default                   "no-cache";
+}
 
 server {
     listen 8080;
@@ -34,7 +39,7 @@ server {
 
     location ~ ^${BASE_PATH}(?<yumdoor_file>.+)$ {
         try_files /$yumdoor_file @app;
-        add_header Cache-Control "no-cache" always;
+        add_header Cache-Control $yumdoor_cache_control always;
         include /etc/nginx/yumdoor/security-headers.conf;
     }
 
