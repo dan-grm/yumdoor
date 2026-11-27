@@ -1856,7 +1856,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shoppingRenameHint =>
-      'For your whole household. If Tandoor already has a food with this name, the item moves there; otherwise it is created. Recipes stay as they are.';
+      'For your whole household. If Tandoor already has a food with this name, the item moves there; otherwise it is created. Recipes stay as they are. What follows the first \", \" is shown as a note.';
 
   @override
   String get shoppingRenameLabel => 'Name';

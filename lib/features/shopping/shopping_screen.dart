@@ -10,7 +10,9 @@ import '../../core/failures.dart';
 import '../../design/components/buttons.dart';
 import '../../design/components/ingredient_row.dart';
 import '../../design/design.dart';
+import '../../domain/models/recipe_draft.dart';
 import '../../domain/models/shopping.dart';
+import '../../domain/services/food_note.dart';
 import '../../domain/services/scaling_service.dart';
 import '../../domain/services/shopping_list_groups.dart';
 import '../../l10n/formatting.dart';
@@ -302,13 +304,24 @@ class _ShoppingScreenState extends ConsumerState<ShoppingScreen> {
     final foodId = await () async {
       try {
         final parsed = await parser.parse(line);
-        if (parsed.food?.id case final id?) {
+        if (parsed.food case NamedRef(
+          id: final foodId?,
+          name: final foodName,
+        )) {
+          // Tandoor has no note on an entry: it goes into the food's name,
+          // which is found or created (docs/TANDOOR_API.md#shopping-list).
+          final noted = parsed.note.trim().isEmpty
+              ? foodId
+              : (await ref
+                        .read(foodRepositoryProvider)
+                        .create(joinFoodNote(foodName, parsed.note)))
+                    .id;
           failure = await list.addItem(
-            id,
+            noted,
             parsed.amount,
             unitId: parsed.unit?.id,
           );
-          return id;
+          return noted;
         }
       } on Failure catch (error) {
         failure = error;
@@ -1068,10 +1081,12 @@ class _Row extends StatelessWidget {
     final format = LocaleFormat.of(context);
     final quantity = row.hasAmount ? Quantity.of(row.amount) : null;
     final plural = ScalingService.isPlural(quantity);
-    final name = ScalingService.pickName(
-      row.food.name,
-      row.food.pluralName,
-      plural: plural,
+    final (:name, note: foodNote) = splitFoodNote(
+      ScalingService.pickName(
+        row.food.name,
+        row.food.pluralName,
+        plural: plural,
+      ),
     );
     final unit = switch (row.unit) {
       final unit? => ScalingService.pickName(
@@ -1093,7 +1108,10 @@ class _Row extends StatelessWidget {
         Expanded(
           child: IngredientRow(
             name: name,
-            note: setup.showSources ? _source(context) : '',
+            note: [
+              foodNote,
+              if (setup.showSources) _source(context),
+            ].where((part) => part.isNotEmpty).join(' · '),
             amount: row.someWithoutAmount && amount.isNotEmpty
                 ? l10n.shoppingAmountMore(amount)
                 : amount,

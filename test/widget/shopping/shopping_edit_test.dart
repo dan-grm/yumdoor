@@ -92,6 +92,34 @@ void main() {
     expect(find.text('Artikel hinzufügen'), findsOneWidget);
   });
 
+  testWidgets('a note goes into the food name and shows under the name', (
+    tester,
+  ) async {
+    const line = '4,0 Burger Patties, von Vegetarian Butcher';
+    parser.results[line] = const ParsedIngredient(
+      originalText: line,
+      food: NamedRef(id: 30, name: 'Burger Patties'),
+      amount: 4,
+      note: 'von Vegetarian Butcher',
+    );
+    repository.foods[21] = const ShoppingFood(
+      id: 21,
+      name: 'Burger Patties, von Vegetarian Butcher',
+    );
+    await pumpList(tester);
+
+    await type(tester, line);
+    await tester.testTextInput.receiveAction(TextInputAction.done);
+    await tester.pumpAndSettle();
+
+    expect(foods.created, ['Burger Patties, von Vegetarian Butcher']);
+    expect(repository.addedItems.single.foodId, 21);
+    expect(repository.addedItems.single.amount, 4.0);
+    expect(find.text('Burger Patties'), findsOneWidget);
+    expect(find.text('von Vegetarian Butcher'), findsOneWidget);
+    expect(find.text('Burger Patties, von Vegetarian Butcher'), findsNothing);
+  });
+
   testWidgets('suggests foods while typing', (tester) async {
     await pumpList(tester);
 
