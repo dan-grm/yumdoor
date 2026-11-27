@@ -27,6 +27,7 @@ import '../recommendations/recommendation_providers.dart';
 import '../search/search_location.dart';
 import '../settings/settings_screen.dart';
 import 'home_providers.dart';
+import 'activity_section.dart';
 import 'recommendation_section.dart';
 
 /// The start screen (mockup 02-start): a greeting, today's date and what is
@@ -75,7 +76,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         // shopping list.
         ref
           ..invalidate(weekPlansProvider)
-          ..invalidate(plannedRecipeProvider);
+          ..invalidate(plannedRecipeProvider)
+          ..invalidate(othersActivityProvider);
       });
     }
     _shown = shown;
@@ -99,9 +101,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ref
         ..invalidate(weekPlansProvider(week))
         ..invalidate(plannedRecipeProvider)
-        ..invalidate(recommendationsProvider(today));
+        ..invalidate(recommendationsProvider(today))
+        ..invalidate(othersActivityProvider);
       try {
-        await ref.read(weekPlansProvider(week).future);
+        await Future.wait([
+          ref.read(weekPlansProvider(week).future),
+          ref.read(othersActivityProvider.future),
+        ]);
       } on Object {
         // The screen shows the failure.
       }
@@ -155,6 +161,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ...content,
                       SizedBox(height: t.space6),
                       RecommendationSection(today: today),
+                      SizedBox(height: t.space6),
+                      ActivitySection(now: now),
                     ],
                   ),
                 ),

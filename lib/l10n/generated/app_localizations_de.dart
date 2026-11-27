@@ -2123,4 +2123,74 @@ class AppLocalizationsDe extends AppLocalizations {
   String reasonSimilarTo(String recipe) {
     return 'Ähnlich wie $recipe';
   }
+
+  @override
+  String get homeActivity => 'Was andere kochen';
+
+  @override
+  String get homeActivitySubtitle => 'alle auf diesem Server';
+
+  @override
+  String get homeActivityEmpty => 'Zuletzt hat sonst niemand gekocht.';
+
+  @override
+  String get homeActivityOffline =>
+      'Was andere kochen, braucht eine Verbindung zum Server.';
+
+  @override
+  String get homeActivityFailed => 'Das konnte nicht geladen werden.';
+
+  @override
+  String homeActivityCooked(String name, String recipe) {
+    return '$name hat $recipe gekocht';
+  }
+
+  @override
+  String get homeActivityUnknownUser => 'Jemand';
+
+  @override
+  String get homeActivityJustNow => 'gerade eben';
+
+  @override
+  String homeActivityMinutesAgo(int count) {
+    return 'vor $count Min.';
+  }
+
+  @override
+  String homeActivityHoursAgo(int count) {
+    return 'vor $count Std.';
+  }
+
+  @override
+  String homeActivityDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'vor $count Tagen',
+      one: 'gestern',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeActivityWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'vor $count Wochen',
+      one: 'vor 1 Woche',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String homeActivityMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'vor $count Monaten',
+      one: 'vor 1 Monat',
+    );
+    return '$_temp0';
+  }
 }

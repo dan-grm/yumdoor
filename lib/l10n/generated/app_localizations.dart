@@ -3241,6 +3241,84 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Ähnlich wie {recipe}'**
   String reasonSimilarTo(String recipe);
+
+  /// Heading of the section on the start screen that shows what other users cooked lately.
+  ///
+  /// In de, this message translates to:
+  /// **'Was andere kochen'**
+  String get homeActivity;
+
+  /// Subtitle of the others' activity section: it covers everyone on the server.
+  ///
+  /// In de, this message translates to:
+  /// **'alle auf diesem Server'**
+  String get homeActivitySubtitle;
+
+  /// Shown in the others' activity section when nobody else cooked recently.
+  ///
+  /// In de, this message translates to:
+  /// **'Zuletzt hat sonst niemand gekocht.'**
+  String get homeActivityEmpty;
+
+  /// Shown instead of the others' activity section while offline.
+  ///
+  /// In de, this message translates to:
+  /// **'Was andere kochen, braucht eine Verbindung zum Server.'**
+  String get homeActivityOffline;
+
+  /// Shown in the others' activity section when loading failed.
+  ///
+  /// In de, this message translates to:
+  /// **'Das konnte nicht geladen werden.'**
+  String get homeActivityFailed;
+
+  /// One entry of the others' activity section: who cooked which recipe.
+  ///
+  /// In de, this message translates to:
+  /// **'{name} hat {recipe} gekocht'**
+  String homeActivityCooked(String name, String recipe);
+
+  /// Name used for an entry whose user has no name.
+  ///
+  /// In de, this message translates to:
+  /// **'Jemand'**
+  String get homeActivityUnknownUser;
+
+  /// Relative time: less than a minute ago.
+  ///
+  /// In de, this message translates to:
+  /// **'gerade eben'**
+  String get homeActivityJustNow;
+
+  /// Relative time: minutes ago.
+  ///
+  /// In de, this message translates to:
+  /// **'vor {count} Min.'**
+  String homeActivityMinutesAgo(int count);
+
+  /// Relative time: hours ago.
+  ///
+  /// In de, this message translates to:
+  /// **'vor {count} Std.'**
+  String homeActivityHoursAgo(int count);
+
+  /// Relative time: days ago, at least one.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{gestern} other{vor {count} Tagen}}'**
+  String homeActivityDaysAgo(int count);
+
+  /// Relative time: weeks ago.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{vor 1 Woche} other{vor {count} Wochen}}'**
+  String homeActivityWeeksAgo(int count);
+
+  /// Relative time: months ago.
+  ///
+  /// In de, this message translates to:
+  /// **'{count, plural, =1{vor 1 Monat} other{vor {count} Monaten}}'**
+  String homeActivityMonthsAgo(int count);
 }
 
 class _AppLocalizationsDelegate

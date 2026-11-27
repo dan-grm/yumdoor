@@ -3084,5 +3084,90 @@
         "type": "String"
       }
     }
+  },
+  "homeActivity": "Was andere kochen",
+  "@homeActivity": {
+    "description": "Heading of the section on the start screen that shows what other users cooked lately."
+  },
+  "homeActivitySubtitle": "alle auf diesem Server",
+  "@homeActivitySubtitle": {
+    "description": "Subtitle of the others' activity section: it covers everyone on the server."
+  },
+  "homeActivityEmpty": "Zuletzt hat sonst niemand gekocht.",
+  "@homeActivityEmpty": {
+    "description": "Shown in the others' activity section when nobody else cooked recently."
+  },
+  "homeActivityOffline": "Was andere kochen, braucht eine Verbindung zum Server.",
+  "@homeActivityOffline": {
+    "description": "Shown instead of the others' activity section while offline."
+  },
+  "homeActivityFailed": "Das konnte nicht geladen werden.",
+  "@homeActivityFailed": {
+    "description": "Shown in the others' activity section when loading failed."
+  },
+  "homeActivityCooked": "{name} hat {recipe} gekocht",
+  "@homeActivityCooked": {
+    "description": "One entry of the others' activity section: who cooked which recipe.",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "recipe": {
+        "type": "String"
+      }
+    }
+  },
+  "homeActivityUnknownUser": "Jemand",
+  "@homeActivityUnknownUser": {
+    "description": "Name used for an entry whose user has no name."
+  },
+  "homeActivityJustNow": "gerade eben",
+  "@homeActivityJustNow": {
+    "description": "Relative time: less than a minute ago."
+  },
+  "homeActivityMinutesAgo": "vor {count} Min.",
+  "@homeActivityMinutesAgo": {
+    "description": "Relative time: minutes ago.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeActivityHoursAgo": "vor {count} Std.",
+  "@homeActivityHoursAgo": {
+    "description": "Relative time: hours ago.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeActivityDaysAgo": "{count, plural, =1{gestern} other{vor {count} Tagen}}",
+  "@homeActivityDaysAgo": {
+    "description": "Relative time: days ago, at least one.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeActivityWeeksAgo": "{count, plural, =1{vor 1 Woche} other{vor {count} Wochen}}",
+  "@homeActivityWeeksAgo": {
+    "description": "Relative time: weeks ago.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeActivityMonthsAgo": "{count, plural, =1{vor 1 Monat} other{vor {count} Monaten}}",
+  "@homeActivityMonthsAgo": {
+    "description": "Relative time: months ago.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

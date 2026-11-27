@@ -793,5 +793,18 @@
   "reasonInSeason": "Fits {month}",
   "reasonCookedByDays": "{name} cooked this {count, plural, =0{today} =1{yesterday} other{{count} days ago}}",
   "reasonCookedByWeeks": "{name} cooked this {count, plural, =1{last week} other{{count} weeks ago}}",
-  "reasonSimilarTo": "Similar to {recipe}"
+  "reasonSimilarTo": "Similar to {recipe}",
+  "homeActivity": "What others are cooking",
+  "homeActivitySubtitle": "everyone on this server",
+  "homeActivityEmpty": "Nobody else has cooked lately.",
+  "homeActivityOffline": "What others are cooking needs a connection to the server.",
+  "homeActivityFailed": "This could not be loaded.",
+  "homeActivityCooked": "{name} cooked {recipe}",
+  "homeActivityUnknownUser": "Someone",
+  "homeActivityJustNow": "just now",
+  "homeActivityMinutesAgo": "{count} min ago",
+  "homeActivityHoursAgo": "{count} h ago",
+  "homeActivityDaysAgo": "{count, plural, =1{yesterday} other{{count} days ago}}",
+  "homeActivityWeeksAgo": "{count, plural, =1{1 week ago} other{{count} weeks ago}}",
+  "homeActivityMonthsAgo": "{count, plural, =1{1 month ago} other{{count} months ago}}"
 }

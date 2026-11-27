@@ -115,3 +115,58 @@ final class PlannedRecipeFamily extends $Family
   @override
   String toString() => r'plannedRecipeProvider';
 }
+
+/// What other users of the space cooked lately, newest first, at most
+/// [homeActivityCount]. The current user's own entries are left out. Kept
+/// while the app runs; invalidated by pull to refresh, when the start tab is
+/// shown again and when the server can be reached again.
+
+@ProviderFor(othersActivity)
+final othersActivityProvider = OthersActivityProvider._();
+
+/// What other users of the space cooked lately, newest first, at most
+/// [homeActivityCount]. The current user's own entries are left out. Kept
+/// while the app runs; invalidated by pull to refresh, when the start tab is
+/// shown again and when the server can be reached again.
+
+final class OthersActivityProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<RecentCookLog>>,
+          List<RecentCookLog>,
+          FutureOr<List<RecentCookLog>>
+        >
+    with
+        $FutureModifier<List<RecentCookLog>>,
+        $FutureProvider<List<RecentCookLog>> {
+  /// What other users of the space cooked lately, newest first, at most
+  /// [homeActivityCount]. The current user's own entries are left out. Kept
+  /// while the app runs; invalidated by pull to refresh, when the start tab is
+  /// shown again and when the server can be reached again.
+  OthersActivityProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: _noRetry,
+        name: r'othersActivityProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$othersActivityHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<List<RecentCookLog>> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<List<RecentCookLog>> create(Ref ref) {
+    return othersActivity(ref);
+  }
+}
+
+String _$othersActivityHash() => r'd6575152cfc8e27f82b2c3caaa1f4e49aea2280f';
