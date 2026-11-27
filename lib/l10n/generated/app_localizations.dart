@@ -2879,7 +2879,7 @@ abstract class AppLocalizations {
   /// Explains in the rename dialog what renaming a shopping item does in Tandoor: the item moves to the food with that name, which is created if missing; foods and recipes are not renamed.
   ///
   /// In de, this message translates to:
-  /// **'Gilt für den ganzen Haushalt. Gibt es in Tandoor schon ein Lebensmittel mit diesem Namen, kommt der Artikel dorthin, sonst wird es angelegt. Rezepte bleiben, wie sie sind.'**
+  /// **'Gilt für den ganzen Haushalt. Gibt es in Tandoor schon ein Lebensmittel mit diesem Namen, kommt der Artikel dorthin, sonst wird es angelegt. Rezepte bleiben, wie sie sind. Was nach dem ersten „, “ steht, zeigt die Liste als Notiz.'**
   String get shoppingRenameHint;
 
   /// Label of the name field in the dialog that renames a shopping item.

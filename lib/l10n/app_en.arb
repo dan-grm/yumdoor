@@ -577,7 +577,7 @@
   "@shoppingRenameTitle": {
     "description": "Title of the dialog that renames a shopping item."
   },
-  "shoppingRenameHint": "For your whole household. If Tandoor already has a food with this name, the item moves there; otherwise it is created. Recipes stay as they are.",
+  "shoppingRenameHint": "For your whole household. If Tandoor already has a food with this name, the item moves there; otherwise it is created. Recipes stay as they are. What follows the first \", \" is shown as a note.",
   "@shoppingRenameHint": {
     "description": "Explains in the rename dialog what renaming a shopping item does in Tandoor: the item moves to the food with that name, which is created if missing; foods and recipes are not renamed."
   },

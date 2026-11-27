@@ -1863,7 +1863,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get shoppingRenameHint =>
-      'Gilt für den ganzen Haushalt. Gibt es in Tandoor schon ein Lebensmittel mit diesem Namen, kommt der Artikel dorthin, sonst wird es angelegt. Rezepte bleiben, wie sie sind.';
+      'Gilt für den ganzen Haushalt. Gibt es in Tandoor schon ein Lebensmittel mit diesem Namen, kommt der Artikel dorthin, sonst wird es angelegt. Rezepte bleiben, wie sie sind. Was nach dem ersten „, “ steht, zeigt die Liste als Notiz.';
 
   @override
   String get shoppingRenameLabel => 'Name';

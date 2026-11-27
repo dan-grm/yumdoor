@@ -561,12 +561,32 @@ amounts across recipes; merging per food and unit for display is our job. "Add t
     sent are moved back (best effort; a newly created food stays).
   - Only the case differs, or the name is the food's plural: Tandoor returns the same food, so nothing changes.
     Changing how a food is written would mean renaming the food itself, in every recipe; Yumdoor doesn't offer that.
-- **Notes:** there are none. `ShoppingListEntry` (2.6.15 and 2.7.8) has no note or comment field (`list_recipe`,
+- **Notes:** Tandoor has none. `ShoppingListEntry` (2.6.15 and 2.7.8) has no note or comment field (`list_recipe`,
   `shopping_lists`, `food`, `unit`, `ingredient`, `amount`, `order`, `checked`, `created_by`, `created_at`,
   `updated_at`, `completed_at`, `delay_until`), and Tandoor's own UI offers none. The only free text near the list
   is `ShoppingListRecipe.name` (32 characters, empty for recipes, shown nowhere in Tandoor's UI) and the
-  `description` of a named list (`ShoppingList`). A note per item would have to live elsewhere (a food named like
-  the note, or on the device only, not shared with the household).
+  `description` of a named list (`ShoppingList`). Yumdoor keeps the note in the **food name**: the text after the
+  first `", "` is the note (`lib/domain/services/food_note.dart`). Rows show the name and, smaller under it, the
+  note; this also applies to existing foods with a comma ("Kreuzkümmel, gemahlen"). Rows merge entries of the same
+  food and unit only, so different notes stay separate rows. Adding "Burger Patties, von Vegetarian Butcher" parses
+  the line (see [Ingredient parser](#ingredient-parser)), then gets or creates the food `"<food>, <note>"` with
+  `POST /api/food/` and adds the entry with it. Renaming edits the whole food name, note included. Checked on
+  2.6.15 against the parser (a comma inside the amount is never a note separator):
+
+  | Line | amount | unit | food | note |
+  | --- | --- | --- | --- | --- |
+  | `4,0 Burger Patties, von Vegetarian Butcher` | 4.0 | Burger | Patties | von Vegetarian Butcher |
+  | `1,5 kg Mehl, Type 405` | 1.5 | kg | Mehl | Type 405 |
+  | `1,000 g Zucker, fein` | 1.0 | g | Zucker | fein |
+  | `2 EL Öl, kaltgepresst, bio` | 2.0 | EL | Öl | kaltgepresst, bio |
+  | `3 Eier, groß` | 3.0 | none | Ei | groß |
+  | `Kreuzkümmel, gemahlen` | 0 | none | Kreuzkümmel | gemahlen |
+  | `Milch, laktosefrei (1 l)` | 1.0 | l | Milch, laktosefrei | none (the bracket is the amount) |
+
+  **Gotcha:** with an amount and a multi-word food, the parser takes the **first word as the unit** ("4 Burger
+  Patties" is unit "Burger", food "Patties", and creates the unit), as in Tandoor's own editor. The entry is
+  "4 Burger" + "Patties, von Vegetarian Butcher"; it looks the same on the list. Foods and units the parser created
+  stay in the space.
 - Delete: `DELETE /api/shopping-list-entry/{id}/` (204; 404 when already gone). There is no bulk delete.
 - Supermarket categories: `Food.supermarket_category`. Per-store ordering:
   `GET /api/supermarket/` (all of the space's) → each has `category_to_supermarket` relations with an `order`.
